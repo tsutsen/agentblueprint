@@ -58,37 +58,21 @@ beyond what is listed.
 > interview for this artifact type, skip orientation and resume from the first
 > unanswered question.
 
-### Missing ProjectManifest
-
-If `artifacts/ProjectManifest.md` does not exist and the command is `goal`,
-proceed normally — ProjectManifest will be generated after GoalSpec is complete.
-
-If `artifacts/ProjectManifest.md` does not exist and the command is anything
-other than `goal`, warn the user:
-
-> "No ProjectManifest found. This is usually generated automatically after
-> GoalSpec is complete. Run `/skill:blueprint goal` first."
-
-Ask whether to proceed without it or abort. Do not silently continue.
-
----
-
 ### Artifact Table
 
 | # | Command        | Artifact         | Schema                        | Dependencies                                                                                              | Output (Markdown + JSON)                                          |
 |---|----------------|------------------|-------------------------------|-----------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
-| 0 | `goal`         | GoalSpec         | `.pi/skills/blueprint/schemas/markdown/GoalSpec.md`         | `artifacts/ProjectManifest.md`                                                                            | `artifacts/GoalSpec.md` + `artifacts/GoalSpec.json`              |
-| 1 | `glossary`     | Glossary         | `.pi/skills/blueprint/schemas/markdown/Glossary.md`         | `artifacts/ProjectManifest.md`, `artifacts/GoalSpec.json`                                                 | `artifacts/Glossary.md` + `artifacts/Glossary.json`              |
-| 2 | `design`       | DesignSpec       | `.pi/skills/blueprint/schemas/markdown/DesignSpec.md`       | `artifacts/ProjectManifest.md`, `artifacts/GoalSpec.json`, `artifacts/Glossary.json`                      | `artifacts/DesignSpec.md` + `artifacts/DesignSpec.json`          |
-| 3 | `architecture` | ArchitectureSpec | `.pi/skills/blueprint/schemas/markdown/ArchitectureSpec.md` | `artifacts/ProjectManifest.md`, `artifacts/GoalSpec.json`, `artifacts/Glossary.json`                      | `artifacts/ArchitectureSpec.md` + `artifacts/ArchitectureSpec.json` |
-| 4 | `dataspec`     | DataSpec         | `.pi/skills/blueprint/schemas/markdown/DataSpec.md`         | `artifacts/ProjectManifest.md`, `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`              | `artifacts/DataSpec.md` + `artifacts/DataSpec.json`              |
-| 5 | `apispec`      | ApiSpec          | `.pi/skills/blueprint/schemas/markdown/ApiSpec.md`          | `artifacts/ProjectManifest.md`, `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json` | `artifacts/ApiSpec.md` + `artifacts/ApiSpec.json`   |
-| 6 | `testspec`     | TestSpec         | `.pi/skills/blueprint/schemas/markdown/TestSpec.md`         | `artifacts/ProjectManifest.md`, `artifacts/GoalSpec.json`, `artifacts/ApiSpec.json`, `artifacts/DataSpec.json` | `artifacts/TestSpec.md` + `artifacts/TestSpec.json` |
-| 7 | `plan`         | TaskPlan         | `.pi/skills/blueprint/schemas/markdown/TaskPlan.md`         | `artifacts/ProjectManifest.md`, `artifacts/GoalSpec.json`, `artifacts/DesignSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json`, `artifacts/ApiSpec.json`, `artifacts/TestSpec.json`              | `tasks/PLAN.md` + `tasks/epics/`                                 |
+| 0 | `goal`         | GoalSpec         | `.pi/skills/blueprint/schemas/markdown/GoalSpec.md`         | (none)                                                                                                  | `artifacts/GoalSpec.md` + `artifacts/GoalSpec.json`              |
+| 1 | `glossary`     | Glossary         | `.pi/skills/blueprint/schemas/markdown/Glossary.md`         | `artifacts/GoalSpec.json`                                                                                 | `artifacts/Glossary.md` + `artifacts/Glossary.json`              |
+| 2 | `design`       | DesignSpec       | `.pi/skills/blueprint/schemas/markdown/DesignSpec.md`       | `artifacts/GoalSpec.json`, `artifacts/Glossary.json`                                                      | `artifacts/DesignSpec.md` + `artifacts/DesignSpec.json`          |
+| 3 | `architecture` | ArchitectureSpec | `.pi/skills/blueprint/schemas/markdown/ArchitectureSpec.md` | `artifacts/GoalSpec.json`, `artifacts/Glossary.json`                                                      | `artifacts/ArchitectureSpec.md` + `artifacts/ArchitectureSpec.json` |
+| 4 | `dataspec`     | DataSpec         | `.pi/skills/blueprint/schemas/markdown/DataSpec.md`         | `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`                                              | `artifacts/DataSpec.md` + `artifacts/DataSpec.json`              |
+| 5 | `apispec`      | ApiSpec          | `.pi/skills/blueprint/schemas/markdown/ApiSpec.md`          | `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json`                   | `artifacts/ApiSpec.md` + `artifacts/ApiSpec.json`   |
+| 6 | `testspec`     | TestSpec         | `.pi/skills/blueprint/schemas/markdown/TestSpec.md`         | `artifacts/GoalSpec.json`, `artifacts/ApiSpec.json`, `artifacts/DataSpec.json`                            | `artifacts/TestSpec.md` + `artifacts/TestSpec.json` |
+| 7 | `plan`         | TaskPlan         | `.pi/skills/blueprint/schemas/markdown/TaskPlan.md`         | `artifacts/GoalSpec.json`, `artifacts/DesignSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json`, `artifacts/ApiSpec.json`, `artifacts/TestSpec.json` | `tasks/PLAN.md` + `tasks/epics/` |
 | 8 | `lintspec`     | (no artifact)    | (none)                        | All `artifacts/*.json`                                                                                    | Lint report only — no artifact produced                          |
 
 `plan` produces multiple files. All behaviour is defined in `.pi/skills/blueprint/schemas/markdown/TaskPlan.md`.
-`goal` generates `artifacts/ProjectManifest.md` automatically upon completion.
 `lintspec` runs the full suite linter and reports findings without starting an interview.
 
 **Dependency note:** JSON artifacts are preferred over Markdown as dependencies

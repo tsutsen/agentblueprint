@@ -83,21 +83,17 @@ interface DepDef {
 const DEPS: Record<string, { schema: string; dependencies: DepDef[] }> = {
   goal: {
     schema: "GoalSpec.md",
-    dependencies: [
-      { name: "ProjectManifest", jsonPath: "", mdPath: "artifacts/ProjectManifest.md", required: false },
-    ],
+    dependencies: [],
   },
   glossary: {
     schema: "Glossary.md",
     dependencies: [
-      { name: "ProjectManifest", jsonPath: "", mdPath: "artifacts/ProjectManifest.md", required: false },
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
     ],
   },
   design: {
     schema: "DesignSpec.md",
     dependencies: [
-      { name: "ProjectManifest", jsonPath: "", mdPath: "artifacts/ProjectManifest.md", required: false },
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
       { name: "Glossary", jsonPath: "artifacts/Glossary.json", mdPath: "artifacts/Glossary.md", required: true },
     ],
@@ -105,7 +101,6 @@ const DEPS: Record<string, { schema: string; dependencies: DepDef[] }> = {
   arch: {
     schema: "ArchitectureSpec.md",
     dependencies: [
-      { name: "ProjectManifest", jsonPath: "", mdPath: "artifacts/ProjectManifest.md", required: false },
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
       { name: "Glossary", jsonPath: "artifacts/Glossary.json", mdPath: "artifacts/Glossary.md", required: true },
     ],
@@ -113,7 +108,6 @@ const DEPS: Record<string, { schema: string; dependencies: DepDef[] }> = {
   data: {
     schema: "DataSpec.md",
     dependencies: [
-      { name: "ProjectManifest", jsonPath: "", mdPath: "artifacts/ProjectManifest.md", required: false },
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
       { name: "ArchitectureSpec", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
     ],
@@ -121,7 +115,6 @@ const DEPS: Record<string, { schema: string; dependencies: DepDef[] }> = {
   api: {
     schema: "ApiSpec.md",
     dependencies: [
-      { name: "ProjectManifest", jsonPath: "", mdPath: "artifacts/ProjectManifest.md", required: false },
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
       { name: "ArchitectureSpec", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
       { name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md", required: true },
@@ -130,7 +123,6 @@ const DEPS: Record<string, { schema: string; dependencies: DepDef[] }> = {
   test: {
     schema: "TestSpec.md",
     dependencies: [
-      { name: "ProjectManifest", jsonPath: "", mdPath: "artifacts/ProjectManifest.md", required: false },
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
       { name: "ApiSpec", jsonPath: "artifacts/ApiSpec.json", mdPath: "artifacts/ApiSpec.md", required: true },
       { name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md", required: true },
@@ -139,7 +131,6 @@ const DEPS: Record<string, { schema: string; dependencies: DepDef[] }> = {
   plan: {
     schema: "TaskPlan.md",
     dependencies: [
-      { name: "ProjectManifest", jsonPath: "", mdPath: "artifacts/ProjectManifest.md", required: false },
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
       { name: "DesignSpec", jsonPath: "artifacts/DesignSpec.json", mdPath: "artifacts/DesignSpec.md", required: true },
       { name: "ArchitectureSpec", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
@@ -543,7 +534,6 @@ function resolveCommand(name: string): string {
     DataSpec: "data",
     ApiSpec: "api",
     TestSpec: "test",
-    ProjectManifest: "goal",
   };
   return map[name] || name;
 }

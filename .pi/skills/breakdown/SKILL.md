@@ -68,7 +68,7 @@ not just because the task is complex.
 
 Read the following files:
 
-- `artifacts/ProjectManifest.md` — project context
+- (project context now comes from GoalSpec directly)
 - `artifacts/Glossary.md` — domain vocabulary (if present)
 - `artifacts/ArchitectureSpec.md` — architectural constraints (if present)
 - `tasks/PLAN.md` — milestone context
