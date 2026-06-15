@@ -3,7 +3,7 @@ name: blueprint
 description: >
   Orchestrates creation of software lifecycle artifacts (GoalSpec, Glossary,
   DesignSpec, ArchitectureSpec, DataSpec, ApiSpec, TestSpec) and epic
-  decomposition (breakdown). Loads schemas and dependencies, runs structural
+  decomposition (issues). Loads schemas and dependencies, runs structural
   linting, delegates interviewing to the interview skill. Writes sections via
   the write_section tool. Use when creating artifacts or breaking down epics
   into issues.
@@ -40,7 +40,7 @@ Blueprint is NOT responsible for interview methodology as it belongs to a dedica
 |----------------------|-------------------------|
 | Artifact orchestration | `/skill:blueprint`    |
 | Interview mechanics  | `/skill:interview`      |
-| Epic decomposition   | `/skill:blueprint breakdown` |
+| Epic decomposition   | `/skill:blueprint issues` |
 
 ---
 

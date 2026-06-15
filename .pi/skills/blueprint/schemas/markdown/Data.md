@@ -26,7 +26,7 @@ The DataSpec does NOT define:
 This artifact produces two files:
 
 - `artifacts/DataSpec.md` — human-readable document
-- `artifacts/DataSpec.json` — machine-readable, conforming to `schemas/dataspec.schema.json`
+- `artifacts/Data.json` — machine-readable, conforming to `schemas/data.schema.json`
 
 ---
 

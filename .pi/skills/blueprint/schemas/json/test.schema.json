@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "testspec.schema.json",
+  "$id": "test.schema.json",
   "title": "TestSpec",
   "description": "Test specification for all API functions. Produced before implementation. Source of truth for test authorship and independent verification. Version 1.0.0.",
   "type": "object",
@@ -36,7 +36,7 @@
 
     "version": {
       "type": "string",
-      "description": "Semver version of this testspec document instance.",
+      "description": "Semver version of this test document instance.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
 

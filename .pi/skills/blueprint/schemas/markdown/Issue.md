@@ -178,9 +178,9 @@ If blocking errors exist, report them to the user before proceeding:
 List each error with its category, message, and hint.
 
 Ask the user: "Fix these now before continuing, or proceed with the
-breakdown and address them in the affected issues?"
+issues and address them in the affected issues?"
 
-If the user chooses to fix now: do not proceed with the breakdown. Help
+If the user chooses to fix now: do not proceed with the issues. Help
 the user correct the affected issues, re-run the linter, and confirm clean
 before proceeding.
 
@@ -202,7 +202,7 @@ A slice is horizontal (wrong) if it only touches one layer (e.g., "add
 database migration"). Split or reframe horizontal slices as end-to-end
 behaviour.
 
-Present the proposed breakdown as a numbered list. For each slice show:
+Present the proposed issues as a numbered list. For each slice show:
 
 - **ID**: IS-NNN (proposed)
 - **Title**: short descriptive name using domain vocabulary
@@ -218,12 +218,12 @@ Then ask:
 4. HITL/AFK — are the assignments correct?
 5. Scope — should any slices be merged or split?
 
-Iterate until the user explicitly approves the breakdown. Do not write any
+Iterate until the user explicitly approves the issues. Do not write any
 files before approval.
 
 ### Step 5 — Instruction
 
-After the user approves the breakdown, present a brief instruction for each
+After the user approves the issues, present a brief instruction for each
 issue. For each issue show:
 
 - **ID**: IS-NNN
@@ -278,7 +278,7 @@ the fix and re-validate.
 Summarize the issues created and suggest next steps:
 
 ```
-breakdown complete for EP-NNN: <epic title>
+issues complete for EP-NNN: <epic title>
 Issues created:
   IS-NNN  <title>  [AFK]
   IS-NNN  <title>  [HITL]
