@@ -139,19 +139,6 @@ const DEPS: Record<string, { schema: string; dependencies: DepDef[] }> = {
       { name: "TestSpec", jsonPath: "artifacts/TestSpec.json", mdPath: "artifacts/TestSpec.md", required: true },
     ],
   },
-  lintspec: {
-    schema: "",
-    dependencies: [
-      { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: false },
-      { name: "Glossary", jsonPath: "artifacts/Glossary.json", mdPath: "artifacts/Glossary.md", required: false },
-      { name: "DesignSpec", jsonPath: "artifacts/DesignSpec.json", mdPath: "artifacts/DesignSpec.md", required: false },
-      { name: "ArchitectureSpec", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: false },
-      { name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md", required: false },
-      { name: "ApiSpec", jsonPath: "artifacts/ApiSpec.json", mdPath: "artifacts/ApiSpec.md", required: false },
-      { name: "TestSpec", jsonPath: "artifacts/TestSpec.json", mdPath: "artifacts/TestSpec.md", required: false },
-      { name: "TaskPlan", jsonPath: "", mdPath: "tasks/PLAN.md", required: false },
-    ],
-  },
   issue: {
     schema: "Issue.md",
     dependencies: [
@@ -172,7 +159,7 @@ function registerLoadArtifact(pi: ExtensionAPI) {
       "are present. Returns structured result for the blueprint orchestrator.",
     parameters: Type.Object({
       artifactType: Type.String({
-        description: "Artifact type: goal, design, arch, data, api, test, glossary, plan, lintspec, issue",
+        description: "Artifact type: goal, design, arch, data, api, test, glossary, plan, issue",
       }),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
@@ -747,7 +734,7 @@ function registerLint(pi: ExtensionAPI, extDir: string) {
       "artifact JSON files for structural errors, cross-spec consistency, " +
       "and completeness gates. " +
       'mode: "assess" (default) — runs linter, interprets results, returns "block" or "proceed". ' +
-      'mode: "raw" — returns raw JSON report (for lintspec command).',
+      'mode: "raw" — returns raw JSON report.',
     parameters: Type.Object({
       artifacts: Type.Optional(
         Type.Array(Type.String(), {
@@ -757,7 +744,7 @@ function registerLint(pi: ExtensionAPI, extDir: string) {
         }),
       ),
       mode: Type.Optional(Type.String({
-        description: 'Output mode: "assess" (default, decision-making) or "raw" (raw JSON report for lintspec).',
+        description: 'Output mode: "assess" (default, decision-making) or "raw" (raw JSON report).',
         default: "assess",
       })),
       epic: Type.Optional(Type.String({

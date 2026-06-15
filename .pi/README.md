@@ -130,7 +130,7 @@ Each spec depends on:
 | `/skill:blueprint apispec` | ApiSpec | Define API contracts |
 | `/skill:blueprint testspec` | TestSpec | Define test cases |
 | `/skill:blueprint plan` | TaskPlan | Generate task breakdown |
-| `/skill:blueprint lintspec` | — | Run linter without interview |
+
 
 ## Output Layout
 
@@ -160,7 +160,7 @@ project/
 | `load_artifact` | `artifactType` | Loads schema + dependencies, prefers JSON, validates required deps |
 | `write_section` | `filePath, section, content, sections_complete, sections_pending, jsonContent?` | Writes a confirmed section; optionally writes JSON artifact |
 | `dual_output` | `artifactType, filePath` | Validates existing JSON, sets status from frontmatter, finalizes JSON |
-| `lint` | `artifacts?[], mode?` | Structural linting (`assess` for decisions, `raw` for lintspec) |
+| `lint` | `artifacts?[], mode?` | Structural linting (`assess` for decisions, `raw` for full report) |
 | `handoff` | `{}` | Checks artifact availability against DEPS, produces handoff table |
 
 ## ID Naming Conventions

@@ -77,11 +77,9 @@ If the command is `breakdown <epic-id>` (e.g., `breakdown EP-001`):
 | 5 | `apispec`      | ApiSpec          | `.pi/skills/blueprint/schemas/markdown/ApiSpec.md`          | `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json`                   | `artifacts/ApiSpec.md` + `artifacts/ApiSpec.json`   |
 | 6 | `testspec`     | TestSpec         | `.pi/skills/blueprint/schemas/markdown/TestSpec.md`         | `artifacts/GoalSpec.json`, `artifacts/ApiSpec.json`, `artifacts/DataSpec.json`                            | `artifacts/TestSpec.md` + `artifacts/TestSpec.json` |
 | 7 | `plan`         | TaskPlan         | `.pi/skills/blueprint/schemas/markdown/TaskPlan.md`         | `artifacts/GoalSpec.json`, `artifacts/DesignSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json`, `artifacts/ApiSpec.json`, `artifacts/TestSpec.json` | `tasks/PLAN.md` + `tasks/epics/` |
-| 8 | `lintspec`     | (no artifact)    | (none)                        | All `artifacts/*.json`                                                                                    | Lint report only — no artifact produced                          |
-| 9 | `breakdown <epic-id>` | Issue | `.pi/skills/blueprint/schemas/markdown/Issue.md` | `tasks/PLAN.md`, `tasks/epics/EP-NNN/` | `epics/EP-NNN/IS-NNN/` (md + json) |
+| 8 | `breakdown <epic-id>` | Issue | `.pi/skills/blueprint/schemas/markdown/Issue.md` | `tasks/PLAN.md`, `tasks/epics/EP-NNN/` | `epics/EP-NNN/IS-NNN/` (md + json) |
 
 `plan` produces multiple files. All behaviour is defined in `.pi/skills/blueprint/schemas/markdown/TaskPlan.md`.
-`lintspec` runs the full suite linter and reports findings without starting an interview.
 `breakdown` decomposes an epic into independently-grabbable issues.
 
 **Dependency note:** JSON artifacts are preferred over Markdown as dependencies
@@ -101,13 +99,13 @@ Call the `load_artifact` tool:
 ```
 tool: load_artifact
 args:
-  artifactType: <goal|glossary|design|arch|data|api|test|plan|lintspec>
+  artifactType: <goal|glossary|design|arch|data|api|test|plan|issue>
 ```
 
 The tool resolves the schema and all dependencies (preferring JSON over Markdown),
 validates that required dependencies exist, and returns a structured result.
 
-**For `lintspec`:** the tool returns all available artifacts. Proceed to Step 2.
+**For `issue`:** the tool returns the Issue schema. Proceed to Step 2.
 
 **If required dependencies are missing:** the tool returns an error. Do not proceed.
 Ask the user to create the missing artifacts first.
@@ -154,10 +152,7 @@ Briefly note the warning count but do not block:
 
 Proceed silently.
 
-**For `lintspec` command:**
 
-Run the linter with `mode: "raw"`, print the full report, and stop. No interview.
-No artifact produced.
 
 ---
 
