@@ -2,10 +2,11 @@
 name: blueprint
 description: >
   Orchestrates creation of software lifecycle artifacts (GoalSpec, Glossary,
-  DesignSpec, ArchitectureSpec, DataSpec, ApiSpec, TestSpec). Loads schema and
-  dependencies, runs structural linting on existing artifacts, delegates
-  interviewing to the interview skill. Writes sections via the write_section
-  tool. Use when the user wants to create or continue a project artifact.
+  DesignSpec, ArchitectureSpec, DataSpec, ApiSpec, TestSpec) and epic
+  decomposition (breakdown). Loads schemas and dependencies, runs structural
+  linting, delegates interviewing to the interview skill. Writes sections via
+  the write_section tool. Use when creating artifacts or breaking down epics
+  into issues.
 version: 1.0.0
 ---
 
@@ -45,6 +46,7 @@ Those belong to dedicated skills.
 |----------------------|-------------------------|
 | Artifact orchestration | `/skill:blueprint`    |
 | Interview mechanics  | `/skill:interview`      |
+| Epic decomposition   | `/skill:blueprint breakdown` |
 
 ---
 
@@ -71,6 +73,15 @@ other than `goal`, warn the user:
 
 Ask whether to proceed without it or abort. Do not silently continue.
 
+### Breakdown command
+
+If the command is `breakdown <epic-id>` (e.g., `breakdown EP-001`):
+
+1. Extract the epic ID from the argument.
+2. Verify the epic exists at `tasks/epics/EP-NNN/EP-NNN-slug.md`.
+3. If not found, abort and ask the user to run `/skill:blueprint plan` first.
+4. Proceed to the schema's Process Override section (defined in Issue.md).
+
 ---
 
 ### Artifact Table
@@ -86,14 +97,20 @@ Ask whether to proceed without it or abort. Do not silently continue.
 | 6 | `testspec`     | TestSpec         | `.pi/skills/blueprint/schemas/markdown/TestSpec.md`         | `artifacts/ProjectManifest.md`, `artifacts/GoalSpec.json`, `artifacts/ApiSpec.json`, `artifacts/DataSpec.json` | `artifacts/TestSpec.md` + `artifacts/TestSpec.json` |
 | 7 | `plan`         | TaskPlan         | `.pi/skills/blueprint/schemas/markdown/TaskPlan.md`         | `artifacts/ProjectManifest.md`, `artifacts/GoalSpec.json`, `artifacts/DesignSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json`, `artifacts/ApiSpec.json`, `artifacts/TestSpec.json`              | `tasks/PLAN.md` + `tasks/epics/`                                 |
 | 8 | `lintspec`     | (no artifact)    | (none)                        | All `artifacts/*.json`                                                                                    | Lint report only — no artifact produced                          |
+| 9 | `breakdown <epic-id>` | Issue | `.pi/skills/blueprint/schemas/markdown/Issue.md` | `tasks/PLAN.md`, `tasks/epics/EP-NNN/` | `epics/EP-NNN/IS-NNN/` (md + json) |
 
 `plan` produces multiple files. All behaviour is defined in `.pi/skills/blueprint/schemas/markdown/TaskPlan.md`.
 `goal` generates `artifacts/ProjectManifest.md` automatically upon completion.
 `lintspec` runs the full suite linter and reports findings without starting an interview.
+`breakdown` decomposes an epic into independently-grabbable issues.
 
 **Dependency note:** JSON artifacts are preferred over Markdown as dependencies
 because they are machine-readable and can be validated. When loading dependencies,
 prefer `.json` over `.md` when both exist. Load `.md` only when `.json` is absent.
+
+**Process Override note:** If the loaded schema contains a `## Process Override`
+section, execute it instead of Steps 1–7 of the Standard Flow. Pass the schema's
+context (dependencies, loaded content) to the override steps.
 
 ---
 

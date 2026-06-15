@@ -161,6 +161,12 @@ const DEPS: Record<string, { schema: string; dependencies: DepDef[] }> = {
       { name: "TaskPlan", jsonPath: "", mdPath: "tasks/PLAN.md", required: false },
     ],
   },
+  issue: {
+    schema: "Issue.md",
+    dependencies: [
+      { name: "TaskPlan", jsonPath: "", mdPath: "tasks/PLAN.md", required: false },
+    ],
+  },
 };
 
 // ── Tool: load_artifact ──────────────────────────────────────────────────────
@@ -175,7 +181,7 @@ function registerLoadArtifact(pi: ExtensionAPI) {
       "are present. Returns structured result for the blueprint orchestrator.",
     parameters: Type.Object({
       artifactType: Type.String({
-        description: "Artifact type: goal, design, arch, data, api, test, glossary, plan, lintspec",
+        description: "Artifact type: goal, design, arch, data, api, test, glossary, plan, lintspec, issue",
       }),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
@@ -326,10 +332,10 @@ function registerDualOutput(pi: ExtensionAPI, extDir: string) {
       "Does NOT parse markdown — the JSON must already exist (written by write_section).",
     parameters: Type.Object({
       artifactType: Type.String({
-        description: "Artifact type: goal, design, arch, data, api, test, glossary",
+        description: "Artifact type: goal, design, arch, data, api, test, glossary, issue",
       }),
       filePath: Type.String({
-        description: "Path to the markdown file (e.g. artifacts/GoalSpec.md)",
+        description: "Path to the markdown file (e.g. artifacts/GoalSpec.md or tasks/epics/EP-001/IS-001/IS-001.md)",
       }),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
@@ -343,6 +349,7 @@ function registerDualOutput(pi: ExtensionAPI, extDir: string) {
         : artifactType === 'design' ? 'designspec'
         : artifactType === 'glossary' ? 'glossary'
         : artifactType === 'goal' ? 'goalspec'
+        : artifactType === 'issue' ? 'issue'
         : null;
 
       if (!schemaName) {
@@ -763,6 +770,12 @@ function registerLint(pi: ExtensionAPI, extDir: string) {
         description: 'Output mode: "assess" (default, decision-making) or "raw" (raw JSON report for lintspec).',
         default: "assess",
       })),
+      epic: Type.Optional(Type.String({
+        description: 'Epic ID for issues lint (e.g., "EP-001").',
+      })),
+      epicsDir: Type.Optional(Type.String({
+        description: 'Path to epics directory (default: "tasks/epics").',
+      })),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
       const linter = path.join(extDir, "linters/lint_all.py");
@@ -779,6 +792,12 @@ function registerLint(pi: ExtensionAPI, extDir: string) {
 
       try {
         const args = ["--json", "--suite", suiteFile];
+        if (params.epic) {
+          args.push("--epic", params.epic);
+        }
+        if (params.epicsDir) {
+          args.push("--epics-dir", params.epicsDir);
+        }
         if (params.artifacts && params.artifacts.length > 0) {
           const flagMap: Record<string, string> = {
             goal: "--goal",

@@ -13,8 +13,10 @@ Dependency order:
   5. dataspec    (standalone linter)
   6. apispec     (schema validation + cross-check with dataspec)
   7. testspec    (← apispec, dataspec)
-  8. cross       (dataspec ↔ apispec ↔ testspec)
-  9. glossary cross-check (← all)
+  8. taskplan    (← all prior specs)
+  9. cross       (dataspec ↔ apispec ↔ testspec)
+ 10. issues     (← taskplan, requires --epic)
+ 11. completeness (← all layers)
 
 Completeness gates:
   Each spec has a set of readiness conditions. A spec that fails its gate
@@ -373,7 +375,7 @@ def assess_glossary_full(spec: dict) -> CompletenessScore:
 # ── Suite-level completeness ──────────────────────────────────────────────────
 
 SPEC_ORDER = ["goalspec", "glossary", "designspec", "archspec",
-              "dataspec", "apispec", "testspec", "plan"]
+              "dataspec", "apispec", "testspec", "plan", "issues"]
 
 def suite_completeness_pct(scores: list[CompletenessScore]) -> int:
     if not scores:
@@ -535,6 +537,19 @@ def run_taskplan(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
     return layer
 
 
+def run_issues(linter_dir, paths, loaded, args, strict) -> LayerResult:
+    epic_id = getattr(args, 'epic', None)
+    epics_dir = getattr(args, 'epics_dir', 'tasks/epics')
+    if not epic_id:
+        return LayerResult(name="issues", skipped=True,
+                           skip_reason="No --epic provided (issues lint is optional).")
+    linter_path = linter_dir / "lint_issues.py"
+    mod = load_linter(linter_path)
+    layer = _run("issues", linter_path,
+                 lambda s: mod.run_lint(epic_id, epics_dir, s), strict)
+    return layer
+
+
 def run_cross(linter_dir, paths, loaded, strict) -> LayerResult:
     if not (paths.get("data") and paths.get("api")):
         return LayerResult(name="cross", skipped=True,
@@ -586,7 +601,7 @@ def run_completeness_gates(suite: "SuiteResult") -> LayerResult:
 
 # ── Main runner ───────────────────────────────────────────────────────────────
 
-def run_suite(paths, linter_dir, schema_dir, strict, stop_on_error) -> SuiteResult:
+def run_suite(paths, linter_dir, schema_dir, strict, stop_on_error, args=None) -> SuiteResult:
     suite = SuiteResult()
 
     def add(layer: LayerResult) -> bool:
@@ -614,6 +629,7 @@ def run_suite(paths, linter_dir, schema_dir, strict, stop_on_error) -> SuiteResu
     if not add(run_testspec(linter_dir, schema_dir, paths, loaded, strict)):  return suite
     if not add(run_taskplan(linter_dir, schema_dir, paths, loaded, strict)):   return suite
     if not add(run_cross(linter_dir, paths, loaded, strict)):                 return suite
+    if not add(run_issues(linter_dir, paths, loaded, args, strict)):           return suite
 
     # Completeness gates layer — runs after all linters
     suite.layers.append(run_completeness_gates(suite))
@@ -752,6 +768,9 @@ def main():
     parser.add_argument("--test",     help="Path to testspec JSON")
     parser.add_argument("--plan",     help="Path to taskplan JSON")
     parser.add_argument("--glossary", help="Path to glossary JSON")
+    parser.add_argument("--epic",     help="Epic ID for issues lint (e.g., EP-001)")
+    parser.add_argument("--epics-dir", default="tasks/epics",
+                        help="Path to epics directory (default: tasks/epics)")
     parser.add_argument("--schemas",  default=".", help="Directory with *.schema.json files")
     parser.add_argument("--linters",  default=".", help="Directory with lint_*.py files")
     parser.add_argument("--strict",   action="store_true", help="Treat warnings as errors")
@@ -788,6 +807,7 @@ def main():
         schema_dir=schema_dir if schema_dir.exists() else None,
         strict=args.strict,
         stop_on_error=args.stop_on_error,
+        args=args,
     )
 
     if args.json:

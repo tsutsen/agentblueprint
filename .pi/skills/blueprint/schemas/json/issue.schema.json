@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Issue",
+  "description": "A single vertical slice decomposed from an Epic. Each issue cuts end-to-end through all relevant integration layers and is independently implementable.",
+  "type": "object",
+  "required": ["artifact", "id", "title", "type", "status", "epic", "blocked_by", "milestone", "created", "updated"],
+  "properties": {
+    "artifact": {
+      "type": "string",
+      "const": "Issue",
+      "description": "Always 'Issue'."
+    },
+    "id": {
+      "type": "string",
+      "description": "Issue identifier. Format: IS-NNN (3-digit zero-padded, project-global, sequential).",
+      "pattern": "^IS-\\d{3}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "description": "Short, action-oriented title."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["AFK", "HITL"],
+      "description": "AFK: agent can implement without human interaction. HITL: requires human input at some point."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["not_started", "in_progress", "needs_review", "complete"],
+      "description": "Current status of the issue."
+    },
+    "epic": {
+      "type": "string",
+      "description": "Parent epic identifier. Format: EP-NNN (3-digit zero-padded).",
+      "pattern": "^EP-\\d{3}$"
+    },
+    "blocked_by": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^IS-\\d{3}$"
+      },
+      "description": "List of IS-NNN identifiers that block this issue. Empty array if none."
+    },
+    "milestone": {
+      "type": "string",
+      "description": "Milestone identifier. Format: M1, M2, etc.",
+      "pattern": "^M\\d+$"
+    },
+    "created": {
+      "type": "string",
+      "description": "Issue creation date. Format: YYYY-MM-DD.",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "updated": {
+      "type": "string",
+      "description": "Last update date. Format: YYYY-MM-DD.",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    }
+  },
+  "additionalProperties": false
+}
