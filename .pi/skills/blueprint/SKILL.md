@@ -7,7 +7,7 @@ description: >
   linting, delegates interviewing to the interview skill. Writes sections via
   the write_section tool. Use when creating artifacts or breaking down epics
   into issues.
-version: 1.0.0
+version: 2.0.0
 ---
 
 # Blueprint
@@ -27,10 +27,10 @@ Blueprint is responsible for:
 3. Loading dependency artifacts.
 4. Running structural lint on existing artifacts and surfacing findings.
 5. Invoking interview workflows and writing sections via tools.
-7. Producing JSON and Markdown output for every completed artifact.
-8. Producing handoff recommendations.
+6. Producing JSON and Markdown output for every completed artifact.
+7. Producing handoff recommendations.
 
-Blueprint is NOT responsible for interview methodology as it belongs to a dedicated skills.
+Blueprint is NOT responsible for interview methodology as it belongs to a dedicated skill.
 
 ---
 
@@ -54,7 +54,7 @@ beyond what is listed.
 > interview for this artifact type, skip orientation and resume from the first
 > unanswered question.
 
-### Breakdown command
+### Issues command
 
 If the command is `issues <epic-id>` (e.g., `issues EP-001`):
 
@@ -105,7 +105,7 @@ args:
 The tool resolves the schema and all dependencies (preferring JSON over Markdown),
 validates that required dependencies exist, and returns a structured result.
 
-**For `issue`:** the tool returns the Issue schema. Proceed to Step 2.
+**For `issues`:** the tool returns the Issue schema. Proceed to Step 2.
 
 **If required dependencies are missing:** the tool returns an error. Do not proceed.
 Ask the user to create the missing artifacts first.
