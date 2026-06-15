@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "dataspec.schema.json",
+  "$id": "data.schema.json",
   "title": "DataSpec",
   "description": "Structural specification of all entities, types, and relationships in a system. Source of truth for UML generation and cross-spec linting.",
   "type": "object",

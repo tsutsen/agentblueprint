@@ -26,7 +26,7 @@ The TestSpec does NOT define:
 This artifact produces two files:
 
 - `artifacts/TestSpec.md` — human-readable document
-- `artifacts/TestSpec.json` — machine-readable, conforming to `schemas/testspec.schema.json`
+- `artifacts/Test.json` — machine-readable, conforming to `schemas/test.schema.json`
 
 ---
 

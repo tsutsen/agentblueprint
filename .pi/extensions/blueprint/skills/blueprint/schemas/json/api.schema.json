@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "apispec.schema.json",
+  "$id": "api.schema.json",
   "title": "ApiSpec",
   "description": "Interface specification for all functions exposed by a module. Source of truth for test spec and cross-spec linting.",
   "type": "object",
@@ -57,7 +57,7 @@
 
     "version": {
       "type": "string",
-      "description": "Semver version of this apispec document instance.",
+      "description": "Semver version of this api document instance.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
 

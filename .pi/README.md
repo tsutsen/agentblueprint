@@ -42,9 +42,9 @@ Markdown document and a machine-readable JSON file.
 │               ├── glossary.schema.json
 │               ├── designspec.schema.json
 │               ├── archspec.schema.json
-│               ├── dataspec.schema.json
-│               ├── apispec.schema.json
-│               ├── testspec.schema.json
+│               ├── data.schema.json
+│               ├── api.schema.json
+│               ├── test.schema.json
 │               ├── example.goalspec.json
 │               ├── example.glossary.json
 │               ├── example.designspec.json
