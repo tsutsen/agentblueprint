@@ -126,9 +126,9 @@ Each spec depends on:
 | `/skill:blueprint glossary` | Glossary | Define domain terminology |
 | `/skill:blueprint design` | DesignSpec | Define user-facing design |
 | `/skill:blueprint architecture` | ArchitectureSpec | Define system structure |
-| `/skill:blueprint dataspec` | DataSpec | Define data model |
-| `/skill:blueprint apispec` | ApiSpec | Define API contracts |
-| `/skill:blueprint testspec` | TestSpec | Define test cases |
+| `/skill:blueprint data` | Data | Define data model |
+| `/skill:blueprint api` | Api | Define API contracts |
+| `/skill:blueprint test` | Test | Define test cases |
 | `/skill:blueprint plan` | TaskPlan | Generate task breakdown |
 
 

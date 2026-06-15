@@ -106,40 +106,40 @@ const DEPS: Record<string, { schema: string; dependencies: DepDef[] }> = {
     ],
   },
   data: {
-    schema: "DataSpec.md",
+    schema: "Data.md",
     dependencies: [
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
-      { name: "ArchitectureSpec", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
+      { name: "Architecture", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
     ],
   },
   api: {
-    schema: "ApiSpec.md",
+    schema: "Api.md",
     dependencies: [
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
-      { name: "ArchitectureSpec", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
-      { name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md", required: true },
+      { name: "Architecture", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
+      { name: "Data", jsonPath: "artifacts/Data.json", mdPath: "artifacts/Data.md", required: true },
     ],
   },
   test: {
-    schema: "TestSpec.md",
+    schema: "Test.md",
     dependencies: [
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
-      { name: "ApiSpec", jsonPath: "artifacts/ApiSpec.json", mdPath: "artifacts/ApiSpec.md", required: true },
-      { name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md", required: true },
+      { name: "Api", jsonPath: "artifacts/Api.json", mdPath: "artifacts/Api.md", required: true },
+      { name: "Data", jsonPath: "artifacts/Data.json", mdPath: "artifacts/Data.md", required: true },
     ],
   },
   plan: {
     schema: "TaskPlan.md",
     dependencies: [
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
-      { name: "DesignSpec", jsonPath: "artifacts/DesignSpec.json", mdPath: "artifacts/DesignSpec.md", required: true },
-      { name: "ArchitectureSpec", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
-      { name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md", required: true },
-      { name: "ApiSpec", jsonPath: "artifacts/ApiSpec.json", mdPath: "artifacts/ApiSpec.md", required: true },
-      { name: "TestSpec", jsonPath: "artifacts/TestSpec.json", mdPath: "artifacts/TestSpec.md", required: true },
+      { name: "Design", jsonPath: "artifacts/DesignSpec.json", mdPath: "artifacts/DesignSpec.md", required: true },
+      { name: "Architecture", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
+      { name: "Data", jsonPath: "artifacts/Data.json", mdPath: "artifacts/Data.md", required: true },
+      { name: "Api", jsonPath: "artifacts/Api.json", mdPath: "artifacts/Api.md", required: true },
+      { name: "Test", jsonPath: "artifacts/Test.json", mdPath: "artifacts/Test.md", required: true },
     ],
   },
-  issue: {
+  issues: {
     schema: "Issue.md",
     dependencies: [
       { name: "TaskPlan", jsonPath: "", mdPath: "tasks/PLAN.md", required: false },
@@ -159,7 +159,7 @@ function registerLoadArtifact(pi: ExtensionAPI) {
       "are present. Returns structured result for the blueprint orchestrator.",
     parameters: Type.Object({
       artifactType: Type.String({
-        description: "Artifact type: goal, design, arch, data, api, test, glossary, plan, issue",
+        description: "Artifact type: goal, design, arch, data, api, test, glossary, plan, issues",
       }),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
@@ -321,13 +321,13 @@ function registerDualOutput(pi: ExtensionAPI, extDir: string) {
       const fullPath = path.resolve(ctx.cwd, filePath);
       const jsonPath = fullPath.replace(/\.md$/, '.json');
       const schemaName = artifactType === 'arch' ? 'archspec'
-        : artifactType === 'data' ? 'dataspec'
-        : artifactType === 'api' ? 'apispec'
-        : artifactType === 'test' ? 'testspec'
+        : artifactType === 'data' ? 'data'
+        : artifactType === 'api' ? 'api'
+        : artifactType === 'test' ? 'test'
         : artifactType === 'design' ? 'designspec'
         : artifactType === 'glossary' ? 'glossary'
         : artifactType === 'goal' ? 'goalspec'
-        : artifactType === 'issue' ? 'issue'
+        : artifactType === 'issues' ? 'issue'
         : null;
 
       if (!schemaName) {
@@ -439,11 +439,11 @@ function registerHandoff(pi: ExtensionAPI) {
       const artifactOrder = [
         { command: "goal", name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md" },
         { command: "glossary", name: "Glossary", jsonPath: "artifacts/Glossary.json", mdPath: "artifacts/Glossary.md" },
-        { command: "design", name: "DesignSpec", jsonPath: "artifacts/DesignSpec.json", mdPath: "artifacts/DesignSpec.md" },
-        { command: "arch", name: "ArchitectureSpec", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md" },
-        { command: "data", name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md" },
-        { command: "api", name: "ApiSpec", jsonPath: "artifacts/ApiSpec.json", mdPath: "artifacts/ApiSpec.md" },
-        { command: "test", name: "TestSpec", jsonPath: "artifacts/TestSpec.json", mdPath: "artifacts/TestSpec.md" },
+        { command: "design", name: "Design", jsonPath: "artifacts/DesignSpec.json", mdPath: "artifacts/DesignSpec.md" },
+        { command: "arch", name: "Architecture", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md" },
+        { command: "data", name: "Data", jsonPath: "artifacts/Data.json", mdPath: "artifacts/Data.md" },
+        { command: "api", name: "Api", jsonPath: "artifacts/Api.json", mdPath: "artifacts/Api.md" },
+        { command: "test", name: "Test", jsonPath: "artifacts/Test.json", mdPath: "artifacts/Test.md" },
         { command: "plan", name: "TaskPlan", jsonPath: "", mdPath: "tasks/PLAN.md" }, // plan produces tasks/PLAN.md, not artifacts/
       ];
 
@@ -521,6 +521,9 @@ function resolveCommand(name: string): string {
     DataSpec: "data",
     ApiSpec: "api",
     TestSpec: "test",
+    Data: "data",
+    Api: "api",
+    Test: "test",
   };
   return map[name] || name;
 }
@@ -788,7 +791,7 @@ function registerLint(pi: ExtensionAPI, extDir: string) {
           for (const art of params.artifacts) {
             const flag = flagMap[art];
             if (flag) {
-              const jsonPath = path.resolve(ctx.cwd, `artifacts/${art === "arch" ? "ArchitectureSpec" : art === "data" ? "DataSpec" : art === "api" ? "ApiSpec" : art === "design" ? "DesignSpec" : art === "glossary" ? "Glossary" : art === "test" ? "TestSpec" : "GoalSpec"}.json`);
+              const jsonPath = path.resolve(ctx.cwd, `artifacts/${art === "arch" ? "ArchitectureSpec" : art === "data" ? "Data" : art === "api" ? "Api" : art === "design" ? "DesignSpec" : art === "glossary" ? "Glossary" : art === "test" ? "Test" : "GoalSpec"}.json`);
               if (fs.existsSync(jsonPath)) {
                 args.push(flag, jsonPath);
               }

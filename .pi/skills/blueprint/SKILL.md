@@ -56,7 +56,7 @@ beyond what is listed.
 
 ### Breakdown command
 
-If the command is `breakdown <epic-id>` (e.g., `breakdown EP-001`):
+If the command is `issues <epic-id>` (e.g., `issues EP-001`):
 
 1. Extract the epic ID from the argument.
 2. Verify the epic exists at `tasks/epics/EP-NNN/EP-NNN-slug.md`.
@@ -73,14 +73,14 @@ If the command is `breakdown <epic-id>` (e.g., `breakdown EP-001`):
 | 1 | `glossary`     | Glossary         | `.pi/skills/blueprint/schemas/markdown/Glossary.md`         | `artifacts/GoalSpec.json`                                                                                 | `artifacts/Glossary.md` + `artifacts/Glossary.json`              |
 | 2 | `design`       | DesignSpec       | `.pi/skills/blueprint/schemas/markdown/DesignSpec.md`       | `artifacts/GoalSpec.json`, `artifacts/Glossary.json`                                                      | `artifacts/DesignSpec.md` + `artifacts/DesignSpec.json`          |
 | 3 | `architecture` | ArchitectureSpec | `.pi/skills/blueprint/schemas/markdown/ArchitectureSpec.md` | `artifacts/GoalSpec.json`, `artifacts/Glossary.json`                                                      | `artifacts/ArchitectureSpec.md` + `artifacts/ArchitectureSpec.json` |
-| 4 | `dataspec`     | DataSpec         | `.pi/skills/blueprint/schemas/markdown/DataSpec.md`         | `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`                                              | `artifacts/DataSpec.md` + `artifacts/DataSpec.json`              |
-| 5 | `apispec`      | ApiSpec          | `.pi/skills/blueprint/schemas/markdown/ApiSpec.md`          | `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json`                   | `artifacts/ApiSpec.md` + `artifacts/ApiSpec.json`   |
-| 6 | `testspec`     | TestSpec         | `.pi/skills/blueprint/schemas/markdown/TestSpec.md`         | `artifacts/GoalSpec.json`, `artifacts/ApiSpec.json`, `artifacts/DataSpec.json`                            | `artifacts/TestSpec.md` + `artifacts/TestSpec.json` |
-| 7 | `plan`         | TaskPlan         | `.pi/skills/blueprint/schemas/markdown/TaskPlan.md`         | `artifacts/GoalSpec.json`, `artifacts/DesignSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json`, `artifacts/ApiSpec.json`, `artifacts/TestSpec.json` | `tasks/PLAN.md` + `tasks/epics/` |
-| 8 | `breakdown <epic-id>` | Issue | `.pi/skills/blueprint/schemas/markdown/Issue.md` | `tasks/PLAN.md`, `tasks/epics/EP-NNN/` | `epics/EP-NNN/IS-NNN/` (md + json) |
+| 4 | `data`         | Data             | `.pi/skills/blueprint/schemas/markdown/Data.md`         | `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`                                              | `artifacts/Data.md` + `artifacts/Data.json`              |
+| 5 | `api`          | Api              | `.pi/skills/blueprint/schemas/markdown/Api.md`          | `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/Data.json`                   | `artifacts/Api.md` + `artifacts/Api.json`   |
+| 6 | `test`         | Test             | `.pi/skills/blueprint/schemas/markdown/Test.md`         | `artifacts/GoalSpec.json`, `artifacts/Api.json`, `artifacts/Data.json`                            | `artifacts/Test.md` + `artifacts/Test.json` |
+| 7 | `plan`         | TaskPlan         | `.pi/skills/blueprint/schemas/markdown/TaskPlan.md`         | `artifacts/GoalSpec.json`, `artifacts/DesignSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/Data.json`, `artifacts/Api.json`, `artifacts/Test.json` | `tasks/PLAN.md` + `tasks/epics/` |
+| 8 | `issues <epic-id>` | Issue | `.pi/skills/blueprint/schemas/markdown/Issue.md` | `tasks/PLAN.md`, `tasks/epics/EP-NNN/` | `epics/EP-NNN/IS-NNN/` (md + json) |
 
 `plan` produces multiple files. All behaviour is defined in `.pi/skills/blueprint/schemas/markdown/TaskPlan.md`.
-`breakdown` decomposes an epic into independently-grabbable issues.
+`issues` decomposes an epic into independently-grabbable issues.
 
 **Dependency note:** JSON artifacts are preferred over Markdown as dependencies
 because they are machine-readable and can be validated. When loading dependencies,
@@ -99,7 +99,7 @@ Call the `load_artifact` tool:
 ```
 tool: load_artifact
 args:
-  artifactType: <goal|glossary|design|arch|data|api|test|plan|issue>
+  artifactType: <goal|glossary|design|arch|data|api|test|plan|issues>
 ```
 
 The tool resolves the schema and all dependencies (preferring JSON over Markdown),

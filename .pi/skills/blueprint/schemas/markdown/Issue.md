@@ -152,7 +152,7 @@ This artifact uses a custom flow instead of the standard blueprint flow.
 ### Step 1 — Load epic
 
 Determine the epic ID from the command argument (e.g., `EP-001` from
-`/skill:blueprint breakdown EP-001`).
+`/skill:blueprint issues EP-001`).
 
 Load the following:
 
@@ -285,7 +285,7 @@ Issues created:
   ...
 Total: X issues (Y AFK, Z HITL)
 Next steps:
-  - Run /skill:blueprint breakdown EP-NNN for other epics that are ready
+  - Run /skill:blueprint issues EP-NNN for other epics that are ready
   - Pick up any AFK issue and begin implementation
 ```
 
