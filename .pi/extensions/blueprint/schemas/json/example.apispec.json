@@ -1,0 +1,102 @@
+{
+  "version": "1.0.0",
+  "schemaVersion": "1.0.0",
+  "module": "OrderService",
+  "description": "Functions for managing users, products, and orders.",
+  "dataSpecVersion": "1.0.0",
+
+  "functions": [
+    {
+      "id": "FN-createUser",
+      "name": "createUser",
+      "description": "Creates a new user account.",
+      "entity": "User",
+      "inputs": [
+        { "name": "email",    "type": "string",   "required": true,  "example": "leon@example.com" },
+        { "name": "role",     "type": "UserRole",  "required": false, "example": "CUSTOMER" }
+      ],
+      "output": {
+        "type": "User",
+        "description": "The newly created user."
+      },
+      "errors": [
+        { "code": "EMAIL_TAKEN",   "condition": "A user with this email already exists.", "returnType": "ConflictError" },
+        { "code": "INVALID_EMAIL", "condition": "Email does not match valid format.",      "returnType": "ValidationError" }
+      ],
+      "pure": false,
+      "visibility": "public"
+    },
+    {
+      "id": "FN-getUser",
+      "name": "getUser",
+      "description": "Fetches a user by ID.",
+      "entity": "User",
+      "inputs": [
+        { "name": "userId", "type": "string", "required": true, "example": "usr_48291" }
+      ],
+      "output": {
+        "type": "User"
+      },
+      "errors": [
+        { "code": "NOT_FOUND", "condition": "No user exists with this ID.", "returnType": "NotFoundError" }
+      ],
+      "pure": true,
+      "visibility": "public"
+    },
+    {
+      "id": "FN-placeOrder",
+      "name": "placeOrder",
+      "description": "Creates a new order for a user.",
+      "entity": "Order",
+      "inputs": [
+        { "name": "userId",    "type": "string",      "required": true },
+        { "name": "items",     "type": "OrderItem[]", "required": true }
+      ],
+      "output": {
+        "type": "Order",
+        "description": "The created order with PENDING status."
+      },
+      "errors": [
+        { "code": "USER_NOT_FOUND",      "condition": "userId does not match any user.",              "returnType": "NotFoundError" },
+        { "code": "EMPTY_ORDER",         "condition": "items array is empty.",                        "returnType": "ValidationError" },
+        { "code": "INSUFFICIENT_STOCK",  "condition": "One or more products have insufficient stock.", "returnType": "ConflictError" }
+      ],
+      "pure": false,
+      "visibility": "public"
+    },
+    {
+      "id": "FN-cancelOrder",
+      "name": "cancelOrder",
+      "description": "Cancels an order if it has not yet been shipped.",
+      "entity": "Order",
+      "inputs": [
+        { "name": "orderId", "type": "string", "required": true }
+      ],
+      "output": {
+        "type": "Order",
+        "description": "The updated order with CANCELLED status."
+      },
+      "errors": [
+        { "code": "NOT_FOUND",      "condition": "No order exists with this ID.",         "returnType": "NotFoundError" },
+        { "code": "ALREADY_SHIPPED","condition": "Order status is SHIPPED or DELIVERED.",  "returnType": "ConflictError" }
+      ],
+      "pure": false,
+      "visibility": "public"
+    },
+    {
+      "id": "FN-getProduct",
+      "name": "getProduct",
+      "description": "Fetches a product by ID.",
+      "entity": "Product",
+      "inputs": [
+        { "name": "productId", "type": "string", "required": true }
+      ],
+      "output": { "type": "Product" },
+      "errors": [
+        { "code": "NOT_FOUND", "condition": "No product exists with this ID.", "returnType": "NotFoundError" }
+      ],
+      "pure": true,
+      "visibility": "public"
+    }
+  ]
+}

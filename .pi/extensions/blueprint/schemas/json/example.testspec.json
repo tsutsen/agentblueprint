@@ -1,0 +1,269 @@
+{
+  "version": "1.0.0",
+  "schemaVersion": "1.0.0",
+  "project": "LLMGateway",
+  "apiSpecVersion": "1.0.0",
+  "dataSpecVersion": "1.0.0",
+  "status": "draft",
+  "verificationStatus": "pending",
+
+  "functionCoverage": [
+    {
+      "fnRef": "FN-createUser",
+      "happyPathCount": 1,
+      "edgeCaseCount": 1,
+      "errorPathCount": 2,
+      "outOfScope": [
+        "Email normalisation or case folding — not promised by the contract.",
+        "Welcome email sending — handled by a separate service.",
+        "Password hashing — implementation detail."
+      ]
+    },
+    {
+      "fnRef": "FN-getUser",
+      "happyPathCount": 1,
+      "edgeCaseCount": 0,
+      "errorPathCount": 1,
+      "outOfScope": [
+        "Caching behaviour — not part of the contract.",
+        "Soft-deleted user visibility — not documented in ApiSpec."
+      ]
+    },
+    {
+      "fnRef": "FN-placeOrder",
+      "happyPathCount": 1,
+      "edgeCaseCount": 2,
+      "errorPathCount": 3,
+      "outOfScope": [
+        "Payment processing — handled by a separate service.",
+        "Order confirmation email — not part of this function's contract.",
+        "Stock reservation timing — implementation detail."
+      ]
+    },
+    {
+      "fnRef": "FN-cancelOrder",
+      "happyPathCount": 1,
+      "edgeCaseCount": 1,
+      "errorPathCount": 2,
+      "outOfScope": [
+        "Refund processing — handled by a separate service.",
+        "Notification to seller — not part of this function's contract."
+      ]
+    },
+    {
+      "fnRef": "FN-getProduct",
+      "happyPathCount": 1,
+      "edgeCaseCount": 0,
+      "errorPathCount": 1,
+      "outOfScope": [
+        "Caching behaviour — not part of the contract.",
+        "Related product suggestions — not documented in ApiSpec."
+      ]
+    }
+  ],
+
+  "tests": [
+    {
+      "id": "TST-createUser-001",
+      "fnRef": "FN-createUser",
+      "category": "happy-path",
+      "description": "Creates a new user with a valid email and default role.",
+      "input": { "email": "leon@example.com" },
+      "expectedOutput": { "id": "usr_001", "email": "leon@example.com", "role": "CUSTOMER" },
+      "expectedOutputType": "User",
+      "contractClause": "Creates a new user account and returns the newly created User.",
+      "reqRefs": ["REQ-001"]
+    },
+    {
+      "id": "TST-createUser-002",
+      "fnRef": "FN-createUser",
+      "category": "edge-case",
+      "description": "Creates a user with an explicitly provided ADMIN role.",
+      "input": { "email": "admin@example.com", "role": "ADMIN" },
+      "expectedOutput": { "role": "ADMIN" },
+      "expectedOutputType": "User",
+      "contractClause": "Role parameter is optional; when provided it is applied to the created user."
+    },
+    {
+      "id": "TST-createUser-003",
+      "fnRef": "FN-createUser",
+      "category": "error-path",
+      "description": "Rejects creation when a user with the same email already exists.",
+      "input": { "email": "existing@example.com" },
+      "errorCode": "EMAIL_TAKEN",
+      "expectedError": { "code": "EMAIL_TAKEN", "returnType": "ConflictError" },
+      "contractClause": "Throws EMAIL_TAKEN when a user with this email already exists."
+    },
+    {
+      "id": "TST-createUser-004",
+      "fnRef": "FN-createUser",
+      "category": "error-path",
+      "description": "Rejects creation when email format is invalid.",
+      "input": { "email": "not-an-email" },
+      "errorCode": "INVALID_EMAIL",
+      "expectedError": { "code": "INVALID_EMAIL", "returnType": "ValidationError" },
+      "contractClause": "Throws INVALID_EMAIL when email does not match valid format."
+    },
+    {
+      "id": "TST-getUser-001",
+      "fnRef": "FN-getUser",
+      "category": "happy-path",
+      "description": "Returns the user matching the given ID.",
+      "input": { "userId": "usr_48291" },
+      "expectedOutput": { "id": "usr_48291", "email": "leon@example.com" },
+      "expectedOutputType": "User",
+      "contractClause": "Fetches a user by ID and returns the matching User.",
+      "reqRefs": ["REQ-002"]
+    },
+    {
+      "id": "TST-getUser-002",
+      "fnRef": "FN-getUser",
+      "category": "error-path",
+      "description": "Throws NOT_FOUND when no user exists with the given ID.",
+      "input": { "userId": "usr_99999" },
+      "errorCode": "NOT_FOUND",
+      "expectedError": { "code": "NOT_FOUND", "returnType": "NotFoundError" },
+      "contractClause": "Throws NOT_FOUND when no user exists with this ID."
+    },
+    {
+      "id": "TST-placeOrder-001",
+      "fnRef": "FN-placeOrder",
+      "category": "happy-path",
+      "description": "Creates an order with valid user and in-stock items.",
+      "input": {
+        "userId": "usr_48291",
+        "items": [{ "productId": "prod_001", "quantity": 2, "unitPrice": 1000 }]
+      },
+      "expectedOutput": { "status": "PENDING", "userId": "usr_48291" },
+      "expectedOutputType": "Order",
+      "contractClause": "Creates a new order for a user and returns it with PENDING status.",
+      "reqRefs": ["REQ-003"]
+    },
+    {
+      "id": "TST-placeOrder-002",
+      "fnRef": "FN-placeOrder",
+      "category": "edge-case",
+      "description": "Creates an order with the maximum allowed quantity per item.",
+      "input": {
+        "userId": "usr_48291",
+        "items": [{ "productId": "prod_001", "quantity": 999, "unitPrice": 1000 }]
+      },
+      "expectedOutput": { "status": "PENDING" },
+      "expectedOutputType": "Order",
+      "contractClause": "Items array may contain any quantity provided stock is sufficient."
+    },
+    {
+      "id": "TST-placeOrder-003",
+      "fnRef": "FN-placeOrder",
+      "category": "edge-case",
+      "description": "Creates an order with multiple distinct items.",
+      "input": {
+        "userId": "usr_48291",
+        "items": [
+          { "productId": "prod_001", "quantity": 1, "unitPrice": 1000 },
+          { "productId": "prod_002", "quantity": 3, "unitPrice": 500 }
+        ]
+      },
+      "expectedOutput": { "status": "PENDING", "totalCents": 2500 },
+      "expectedOutputType": "Order",
+      "contractClause": "Items array may contain multiple products."
+    },
+    {
+      "id": "TST-placeOrder-004",
+      "fnRef": "FN-placeOrder",
+      "category": "error-path",
+      "description": "Throws USER_NOT_FOUND when userId does not match any user.",
+      "input": {
+        "userId": "usr_99999",
+        "items": [{ "productId": "prod_001", "quantity": 1, "unitPrice": 1000 }]
+      },
+      "errorCode": "USER_NOT_FOUND",
+      "expectedError": { "code": "USER_NOT_FOUND", "returnType": "NotFoundError" },
+      "contractClause": "Throws USER_NOT_FOUND when userId does not match any user."
+    },
+    {
+      "id": "TST-placeOrder-005",
+      "fnRef": "FN-placeOrder",
+      "category": "error-path",
+      "description": "Throws EMPTY_ORDER when items array is empty.",
+      "input": { "userId": "usr_48291", "items": [] },
+      "errorCode": "EMPTY_ORDER",
+      "expectedError": { "code": "EMPTY_ORDER", "returnType": "ValidationError" },
+      "contractClause": "Throws EMPTY_ORDER when items array is empty."
+    },
+    {
+      "id": "TST-placeOrder-006",
+      "fnRef": "FN-placeOrder",
+      "category": "error-path",
+      "description": "Throws INSUFFICIENT_STOCK when a product has less stock than requested.",
+      "input": {
+        "userId": "usr_48291",
+        "items": [{ "productId": "prod_low-stock", "quantity": 1000, "unitPrice": 1000 }]
+      },
+      "errorCode": "INSUFFICIENT_STOCK",
+      "expectedError": { "code": "INSUFFICIENT_STOCK", "returnType": "ConflictError" },
+      "contractClause": "Throws INSUFFICIENT_STOCK when one or more products have insufficient stock."
+    },
+    {
+      "id": "TST-cancelOrder-001",
+      "fnRef": "FN-cancelOrder",
+      "category": "happy-path",
+      "description": "Cancels a PENDING order and returns it with CANCELLED status.",
+      "input": { "orderId": "ord_9921" },
+      "expectedOutput": { "id": "ord_9921", "status": "CANCELLED" },
+      "expectedOutputType": "Order",
+      "contractClause": "Cancels an order if not yet shipped and returns it with CANCELLED status.",
+      "reqRefs": ["REQ-004"]
+    },
+    {
+      "id": "TST-cancelOrder-002",
+      "fnRef": "FN-cancelOrder",
+      "category": "edge-case",
+      "description": "Cancels a PAID order that has not yet been shipped.",
+      "input": { "orderId": "ord_paid_001" },
+      "expectedOutput": { "status": "CANCELLED" },
+      "expectedOutputType": "Order",
+      "contractClause": "Cancellation is permitted when status is not SHIPPED or DELIVERED."
+    },
+    {
+      "id": "TST-cancelOrder-003",
+      "fnRef": "FN-cancelOrder",
+      "category": "error-path",
+      "description": "Throws NOT_FOUND when orderId does not match any order.",
+      "input": { "orderId": "ord_99999" },
+      "errorCode": "NOT_FOUND",
+      "expectedError": { "code": "NOT_FOUND", "returnType": "NotFoundError" },
+      "contractClause": "Throws NOT_FOUND when no order exists with this ID."
+    },
+    {
+      "id": "TST-cancelOrder-004",
+      "fnRef": "FN-cancelOrder",
+      "category": "error-path",
+      "description": "Throws ALREADY_SHIPPED when order status is SHIPPED.",
+      "input": { "orderId": "ord_shipped_001" },
+      "errorCode": "ALREADY_SHIPPED",
+      "expectedError": { "code": "ALREADY_SHIPPED", "returnType": "ConflictError" },
+      "contractClause": "Throws ALREADY_SHIPPED when order status is SHIPPED or DELIVERED."
+    },
+    {
+      "id": "TST-getProduct-001",
+      "fnRef": "FN-getProduct",
+      "category": "happy-path",
+      "description": "Returns the product matching the given ID.",
+      "input": { "productId": "prod_001" },
+      "expectedOutput": { "id": "prod_001", "name": "Widget", "priceCents": 1000 },
+      "expectedOutputType": "Product",
+      "contractClause": "Fetches a product by ID and returns the matching Product."
+    },
+    {
+      "id": "TST-getProduct-002",
+      "fnRef": "FN-getProduct",
+      "category": "error-path",
+      "description": "Throws NOT_FOUND when no product exists with the given ID.",
+      "input": { "productId": "prod_99999" },
+      "errorCode": "NOT_FOUND",
+      "expectedError": { "code": "NOT_FOUND", "returnType": "NotFoundError" },
+      "contractClause": "Throws NOT_FOUND when no product exists with this ID."
+    }
+  ]
+}

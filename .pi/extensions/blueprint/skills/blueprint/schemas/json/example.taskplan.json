@@ -1,0 +1,178 @@
+{
+  "version": "1.0.0",
+  "schemaVersion": "1.0.0",
+  "project": "DocumentIngestion",
+  "status": "confirmed",
+  "milestones": [
+    {
+      "id": "M1",
+      "name": "Working ingestion pipeline",
+      "outcome": "Users can upload a PDF and receive extracted text output.",
+      "epics": ["EP-001", "EP-002"]
+    },
+    {
+      "id": "M2",
+      "name": "User management and access control",
+      "outcome": "Users can register, log in, and manage document permissions.",
+      "epics": ["EP-003", "EP-004"]
+    },
+    {
+      "id": "M3",
+      "name": "Search and retrieval",
+      "outcome": "Users can search uploaded documents and view relevant excerpts.",
+      "epics": ["EP-005"]
+    }
+  ],
+  "epics": [
+    {
+      "id": "EP-001",
+      "title": "Implement PDF document ingestion pipeline",
+      "status": "complete",
+      "milestone": "M1",
+      "requirements": ["REQ-001", "REQ-002"],
+      "summary": "Enables users to upload PDF documents and receive structured text output.",
+      "objective": "Enables users to upload PDF documents and receive structured text output.",
+      "scope": {
+        "inScope": [
+          "PDF upload via web interface",
+          "Text extraction using PyMuPDF",
+          "Storage of extracted text in Postgres"
+        ],
+        "outOfScope": [
+          "Batch upload of multiple PDFs — deferred to EP-004",
+          "Image-based PDFs (OCR) — deferred to EP-006"
+        ]
+      },
+      "acceptanceCriteria": [
+        "User can upload a PDF up to 100MB and receive extracted text within 10s",
+        "Extracted text is stored in Postgres with document metadata",
+        "Invalid file types are rejected with a clear error message"
+      ],
+      "dependencies": {
+        "blockedBy": [],
+        "blocks": ["EP-002", "EP-005"]
+      },
+      "notes": "Requires Postgres schema to be created first (EP-002)."
+    },
+    {
+      "id": "EP-002",
+      "title": "Set up database schema and migrations",
+      "status": "complete",
+      "milestone": "M1",
+      "requirements": ["REQ-001"],
+      "summary": "Creates the database schema for documents, users, and permissions.",
+      "objective": "Provides the data storage layer for all document and user data.",
+      "scope": {
+        "inScope": [
+          "Postgres schema for documents, users, permissions",
+          "Alembic migration framework setup",
+          "Initial migration for document metadata"
+        ],
+        "outOfScope": [
+          "Database replication or clustering",
+          "Backup and restore procedures"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Database schema is versioned and can be applied via Alembic",
+        "Document metadata table supports PDF upload workflow",
+        "Schema migration can be rolled back safely"
+      ],
+      "dependencies": {
+        "blockedBy": [],
+        "blocks": ["EP-001", "EP-003"]
+      },
+      "notes": ""
+    },
+    {
+      "id": "EP-003",
+      "title": "Implement user registration and authentication",
+      "status": "not_started",
+      "milestone": "M2",
+      "requirements": ["REQ-003", "REQ-004"],
+      "summary": "Users can register accounts and authenticate via email/password.",
+      "objective": "Provides user registration and authentication for the platform.",
+      "scope": {
+        "inScope": [
+          "User registration with email and password",
+          "JWT-based authentication",
+          "Password hashing with bcrypt"
+        ],
+        "outOfScope": [
+          "OAuth/SAML social login — deferred",
+          "Two-factor authentication — deferred"
+        ]
+      },
+      "acceptanceCriteria": [
+        "User can register with email and password",
+        "User can log in and receive a valid JWT token",
+        "Password is hashed with bcrypt before storage"
+      ],
+      "dependencies": {
+        "blockedBy": ["EP-002"],
+        "blocks": ["EP-004", "EP-005"]
+      },
+      "notes": ""
+    },
+    {
+      "id": "EP-004",
+      "title": "Implement document permission management",
+      "status": "not_started",
+      "milestone": "M2",
+      "requirements": ["REQ-004"],
+      "summary": "Users can set read/write permissions on their uploaded documents.",
+      "objective": "Enables document owners to control who can access their documents.",
+      "scope": {
+        "inScope": [
+          "Owner can set document to private or shared",
+          "Shared users can view but not modify documents",
+          "Permission checks enforced at API level"
+        ],
+        "outOfScope": [
+          "Role-based access control (RBAC) — out of scope",
+          "Audit logging for permission changes — deferred"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Document owner can set a document to private or shared",
+        "Shared users can view documents but cannot modify them",
+        "Permission checks are enforced at the API level"
+      ],
+      "dependencies": {
+        "blockedBy": ["EP-003"],
+        "blocks": []
+      },
+      "notes": ""
+    },
+    {
+      "id": "EP-005",
+      "title": "Implement full-text search on extracted documents",
+      "status": "not_started",
+      "milestone": "M3",
+      "requirements": ["REQ-005", "REQ-006"],
+      "summary": "Users can search uploaded documents and view relevant excerpts.",
+      "objective": "Enables users to search through their uploaded documents using full-text search.",
+      "scope": {
+        "inScope": [
+          "Full-text search on extracted document text",
+          "Search results show document title and relevant excerpts",
+          "Search is limited to user's own documents"
+        ],
+        "outOfScope": [
+          "Faceted search or filters — deferred",
+          "Search relevance tuning — deferred"
+        ]
+      },
+      "acceptanceCriteria": [
+        "User can search across all their uploaded documents",
+        "Search results include document title and relevant excerpts",
+        "Search is limited to documents owned by the authenticated user"
+      ],
+      "dependencies": {
+        "blockedBy": ["EP-001", "EP-003"],
+        "blocks": []
+      },
+      "notes": ""
+    }
+  ]
+}

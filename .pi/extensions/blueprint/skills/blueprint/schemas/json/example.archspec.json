@@ -1,0 +1,280 @@
+{
+  "version": "1.0.0",
+  "schemaVersion": "1.0.0",
+  "project": "LLMGateway",
+  "status": "draft",
+  "goalSpecVersion": "1.0.0",
+  "dataSpecVersion": "1.0.0",
+  "apiSpecVersion": "1.0.0",
+
+  "overview": {
+    "summary": "LLMGateway is a single-process local service that intercepts developer queries, classifies their complexity, routes them to the most appropriate backend, and returns the response. It exposes an OpenAI-compatible HTTP interface so existing tooling requires no changes. All state is local; no cloud dependency is required for operation.",
+    "subsystems": [
+      {
+        "name": "Ingress",
+        "purpose": "Accepts incoming queries and normalises them to an internal format.",
+        "componentRefs": ["api-server"]
+      },
+      {
+        "name": "Routing",
+        "purpose": "Classifies queries and selects the appropriate backend.",
+        "componentRefs": ["classifier", "router"]
+      },
+      {
+        "name": "Backend Execution",
+        "purpose": "Dispatches queries to configured backends and collects responses.",
+        "componentRefs": ["backend-pool", "local-adapter", "cloud-adapter"]
+      },
+      {
+        "name": "Observability",
+        "purpose": "Records query history and routing decisions for developer inspection.",
+        "componentRefs": ["query-log"]
+      },
+      {
+        "name": "Configuration",
+        "purpose": "Loads and validates user-supplied backend configuration at startup.",
+        "componentRefs": ["config-loader"]
+      }
+    ]
+  },
+
+  "components": [
+    {
+      "id": "api-server",
+      "name": "API Server",
+      "purpose": "Exposes an OpenAI-compatible HTTP interface and translates requests into internal query objects.",
+      "responsibilities": [
+        "Accept HTTP requests on the configured port.",
+        "Validate and parse incoming request payloads.",
+        "Translate OpenAI-format requests to internal Query objects.",
+        "Return responses in OpenAI-compatible format.",
+        "Enforce request size limits."
+      ],
+      "dependencies": ["router"],
+      "reqRefs": ["REQ-001"],
+      "visibility": "external"
+    },
+    {
+      "id": "classifier",
+      "name": "Query Classifier",
+      "purpose": "Assigns a complexity tier to each query to inform routing decisions.",
+      "responsibilities": [
+        "Analyse query content and estimate complexity.",
+        "Assign a tier label (e.g. simple, moderate, complex) to each query.",
+        "Operate within a bounded latency budget to avoid adding routing overhead."
+      ],
+      "dependencies": [],
+      "reqRefs": ["REQ-001"],
+      "nfrRefs": ["NFR-001"],
+      "visibility": "internal"
+    },
+    {
+      "id": "router",
+      "name": "Router",
+      "purpose": "Selects the appropriate backend for a query based on classification, availability, and configured priority.",
+      "responsibilities": [
+        "Receive classified queries and select a backend.",
+        "Respect user-configured backend priority order.",
+        "Detect unavailable backends and trigger fallback.",
+        "Pass explicit backend overrides through without reclassification."
+      ],
+      "dependencies": ["classifier", "backend-pool", "config-loader"],
+      "reqRefs": ["REQ-001", "REQ-004", "REQ-005"],
+      "nfrRefs": ["NFR-001", "NFR-002"],
+      "visibility": "internal"
+    },
+    {
+      "id": "backend-pool",
+      "name": "Backend Pool",
+      "purpose": "Maintains the registry of configured backends and their current availability status.",
+      "responsibilities": [
+        "Store the list of configured backends and their metadata.",
+        "Track availability state of each backend.",
+        "Expose backend selection interface to the Router.",
+        "Perform periodic health checks on configured backends."
+      ],
+      "dependencies": ["config-loader"],
+      "reqRefs": ["REQ-002", "REQ-005"],
+      "visibility": "internal"
+    },
+    {
+      "id": "local-adapter",
+      "name": "Local Backend Adapter",
+      "purpose": "Dispatches queries to locally-running LLM backends such as llama.cpp or LM Studio.",
+      "responsibilities": [
+        "Translate internal Query objects to the local backend's native format.",
+        "Send requests and receive responses from local backends.",
+        "Report backend errors to the Router for fallback handling."
+      ],
+      "dependencies": ["backend-pool"],
+      "reqRefs": ["REQ-001"],
+      "nfrRefs": ["NFR-003"],
+      "visibility": "internal"
+    },
+    {
+      "id": "cloud-adapter",
+      "name": "Cloud Backend Adapter",
+      "purpose": "Dispatches queries to remote cloud LLM APIs such as OpenRouter or Anthropic.",
+      "responsibilities": [
+        "Translate internal Query objects to the target cloud API format.",
+        "Manage API key injection for cloud requests.",
+        "Handle cloud-specific rate limiting and retry logic.",
+        "Report backend errors to the Router for fallback handling."
+      ],
+      "dependencies": ["backend-pool"],
+      "reqRefs": ["REQ-001"],
+      "visibility": "internal"
+    },
+    {
+      "id": "query-log",
+      "name": "Query Log",
+      "purpose": "Persists a record of each query, routing decision, backend used, and response latency.",
+      "responsibilities": [
+        "Write a structured log entry for every completed query.",
+        "Expose a query history read interface for developer inspection.",
+        "Enforce log retention limits to prevent unbounded disk growth."
+      ],
+      "dependencies": [],
+      "reqRefs": ["REQ-003"],
+      "visibility": "internal"
+    },
+    {
+      "id": "config-loader",
+      "name": "Config Loader",
+      "purpose": "Loads, validates, and hot-reloads user-supplied backend configuration from disk.",
+      "responsibilities": [
+        "Parse configuration file from disk at startup.",
+        "Validate configuration structure and required fields.",
+        "Expose validated configuration to other components.",
+        "Watch for configuration file changes and reload without restart."
+      ],
+      "dependencies": [],
+      "reqRefs": ["REQ-002"],
+      "visibility": "internal"
+    }
+  ],
+
+  "dataModel": {
+    "dataSpecRef": "example.dataspec.json",
+    "notes": "All entities (Query, Backend, RouteDecision, LogEntry) are defined in the DataSpec. The architecture treats them as immutable value objects passed between components — no component mutates another component's entity."
+  },
+
+  "apiContract": {
+    "apiSpecRef": "example.apispec.json",
+    "authStrategy": "Local Unix socket or localhost-only HTTP — no authentication required for single-user local deployment. API key injection for cloud backends is handled internally by the Cloud Adapter and is never exposed to the caller.",
+    "notes": "The external interface is intentionally OpenAI-compatible so that existing tools (Continue, Aider, OpenCode) require no reconfiguration."
+  },
+
+  "dataFlow": [
+    {
+      "id": "query-routing-flow",
+      "name": "Query Routing Flow",
+      "description": "The primary path a developer query takes from ingress to response.",
+      "reqRefs": ["REQ-001", "REQ-005"],
+      "steps": [
+        {
+          "componentRef": "api-server",
+          "action": "Receives HTTP request and parses it into a Query object.",
+          "dataRef": "Query"
+        },
+        {
+          "componentRef": "classifier",
+          "action": "Assigns a complexity tier to the Query.",
+          "dataRef": "Query"
+        },
+        {
+          "componentRef": "router",
+          "action": "Selects the appropriate backend based on tier and availability.",
+          "dataRef": "RouteDecision"
+        },
+        {
+          "componentRef": "local-adapter",
+          "action": "Dispatches Query to the selected local backend and awaits response.",
+          "dataRef": "Query",
+          "notes": "If selected backend is cloud, cloud-adapter handles this step instead."
+        },
+        {
+          "componentRef": "query-log",
+          "action": "Writes a log entry with backend used, latency, and outcome.",
+          "dataRef": "LogEntry"
+        },
+        {
+          "componentRef": "api-server",
+          "action": "Returns response to the caller in OpenAI-compatible format.",
+          "dataRef": "Query"
+        }
+      ]
+    },
+    {
+      "id": "fallback-flow",
+      "name": "Backend Fallback Flow",
+      "description": "How the system recovers when the preferred backend is unavailable.",
+      "reqRefs": ["REQ-005"],
+      "steps": [
+        {
+          "componentRef": "router",
+          "action": "Detects backend failure response from adapter.",
+          "dataRef": "RouteDecision"
+        },
+        {
+          "componentRef": "backend-pool",
+          "action": "Marks failing backend as unavailable and returns next candidate.",
+          "dataRef": "Backend"
+        },
+        {
+          "componentRef": "router",
+          "action": "Retries routing with next available backend.",
+          "dataRef": "RouteDecision"
+        }
+      ]
+    },
+    {
+      "id": "config-load-flow",
+      "name": "Configuration Load Flow",
+      "description": "How backend configuration reaches the components that need it.",
+      "reqRefs": ["REQ-002"],
+      "steps": [
+        {
+          "componentRef": "config-loader",
+          "action": "Reads and validates configuration file from disk at startup.",
+          "dataRef": "Backend"
+        },
+        {
+          "componentRef": "backend-pool",
+          "action": "Receives validated backend list and initialises availability state.",
+          "dataRef": "Backend"
+        },
+        {
+          "componentRef": "router",
+          "action": "Reads backend priority order from backend-pool.",
+          "dataRef": "Backend"
+        }
+      ]
+    }
+  ],
+
+  "constraints": [
+    {
+      "id": "CON-001",
+      "description": "The gateway must run as a single process on a single machine with no external service dependencies required for local-only operation.",
+      "rationale": "Developer tooling must work offline and in air-gapped environments.",
+      "nfrRefs": ["NFR-003"]
+    },
+    {
+      "id": "CON-002",
+      "description": "The external API interface must be OpenAI-compatible so that existing developer tools require no reconfiguration.",
+      "rationale": "Adoption requires zero friction for developers already using OpenAI-compatible clients."
+    },
+    {
+      "id": "CON-003",
+      "description": "All routing logic must complete within the NFR-001 overhead budget and must not block the response path with I/O.",
+      "rationale": "Routing overhead must be imperceptible to the developer.",
+      "nfrRefs": ["NFR-001"]
+    },
+    {
+      "id": "CON-004",
+      "description": "No component may directly access another component's internal state — all interaction is through defined interfaces.",
+      "rationale": "Enforces component boundaries and makes the system testable in isolation."
+    }
+  ]
+}

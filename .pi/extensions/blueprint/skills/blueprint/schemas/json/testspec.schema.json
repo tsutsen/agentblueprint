@@ -1,0 +1,193 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "testspec.schema.json",
+  "title": "TestSpec",
+  "description": "Test specification for all API functions. Produced before implementation. Source of truth for test authorship and independent verification. Version 1.0.0.",
+  "type": "object",
+  "required": ["version", "schemaVersion", "project", "apiSpecVersion", "tests"],
+  "additionalProperties": false,
+
+  "definitions": {
+
+    "testId": {
+      "type": "string",
+      "description": "Format: TST-<functionName>-<NNN>, e.g. TST-createUser-001",
+      "pattern": "^TST-[a-zA-Z][a-zA-Z0-9]*-\\d{3}$"
+    },
+
+    "fnRef": {
+      "type": "string",
+      "description": "Function ID from ApiSpec. Format: FN-camelCase, e.g. FN-createUser",
+      "pattern": "^FN-[a-z][A-Za-z0-9]*$"
+    },
+
+    "testCategory": {
+      "type": "string",
+      "description": "Which category of test this is.",
+      "enum": ["happy-path", "edge-case", "error-path"]
+    },
+
+    "concreteValue": {
+      "description": "A concrete example value — string, number, boolean, object, or array. Must NOT be a placeholder like 'a valid userId' or 'some string'."
+    }
+  },
+
+  "properties": {
+
+    "version": {
+      "type": "string",
+      "description": "Semver version of this testspec document instance.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the TestSpec schema this document conforms to. Must be '1.0.0'.",
+      "const": "1.0.0"
+    },
+
+    "project": {
+      "type": "string",
+      "description": "Must match project name across all other specs.",
+      "minLength": 1
+    },
+
+    "apiSpecVersion": {
+      "type": "string",
+      "description": "Version of the ApiSpec this test spec was authored against.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+
+    "dataSpecVersion": {
+      "type": "string",
+      "description": "Version of the DataSpec used for type resolution.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+
+    "status": {
+      "type": "string",
+      "enum": ["draft", "review", "confirmed", "superseded"],
+      "default": "draft"
+    },
+
+    "verificationStatus": {
+      "type": "string",
+      "description": "Whether the independent clean-context verification step has been performed.",
+      "enum": ["pending", "passed", "failed"],
+      "default": "pending"
+    },
+
+    "functionCoverage": {
+      "type": "array",
+      "description": "Per-function coverage summary. One entry per function in ApiSpec. Used for completeness assessment.",
+      "items": {
+        "type": "object",
+        "required": ["fnRef", "happyPathCount", "edgeCaseCount", "errorPathCount", "outOfScope"],
+        "additionalProperties": false,
+        "properties": {
+          "fnRef": { "$ref": "#/definitions/fnRef" },
+          "happyPathCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "edgeCaseCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "errorPathCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "outOfScope": {
+            "type": "array",
+            "description": "Explicit list of behaviours this function's tests do NOT verify. Required — prevents false failures during verification.",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 5 }
+          }
+        }
+      }
+    },
+
+    "tests": {
+      "type": "array",
+      "description": "All test cases across all functions.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "fnRef", "category", "description", "input", "contractClause"],
+        "additionalProperties": false,
+        "properties": {
+
+          "id": { "$ref": "#/definitions/testId" },
+
+          "fnRef": {
+            "$ref": "#/definitions/fnRef",
+            "description": "The function this test exercises. Must match a function ID in ApiSpec."
+          },
+
+          "category": { "$ref": "#/definitions/testCategory" },
+
+          "description": {
+            "type": "string",
+            "description": "The scenario being tested in plain language.",
+            "minLength": 5
+          },
+
+          "input": {
+            "type": "object",
+            "description": "Concrete input values keyed by parameter name. Every required parameter from ApiSpec must be present. Values must be concrete — no placeholders.",
+            "minProperties": 0,
+            "additionalProperties": { "$ref": "#/definitions/concreteValue" }
+          },
+
+          "expectedOutput": {
+            "description": "The exact expected return value or shape. Required for happy-path and edge-case tests.",
+            "$ref": "#/definitions/concreteValue"
+          },
+
+          "expectedOutputType": {
+            "type": "string",
+            "description": "The type name of the expected output, for cross-spec validation against DataSpec."
+          },
+
+          "contractClause": {
+            "type": "string",
+            "description": "Which part of the ApiSpec contract this test verifies. Quote or paraphrase the relevant clause.",
+            "minLength": 5
+          },
+
+          "reqRefs": {
+            "type": "array",
+            "description": "REQ-IDs this test verifies. Include when the test directly validates a requirement. Omit for technical tests (error paths, edge cases, infrastructure).",
+            "items": { "$ref": "#/definitions/reqId" }
+          },
+
+          "errorCode": {
+            "type": "string",
+            "description": "Required for error-path tests. Must match an error code documented on this function in ApiSpec.",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+
+          "expectedError": {
+            "type": "object",
+            "description": "For error-path tests: what the caller receives.",
+            "additionalProperties": false,
+            "properties": {
+              "code":       { "type": "string" },
+              "returnType": { "type": "string" },
+              "messageContains": {
+                "type": "string",
+                "description": "Optional substring the error message must contain."
+              }
+            }
+          },
+
+          "notes": {
+            "type": "string",
+            "description": "Optional clarifying context for this test case."
+          }
+        }
+      }
+    }
+  }
+}

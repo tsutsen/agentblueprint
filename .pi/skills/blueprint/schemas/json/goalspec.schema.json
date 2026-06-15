@@ -1,0 +1,287 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "goalspec.schema.json",
+  "title": "GoalSpec",
+  "description": "Root artifact capturing the why and what of a project. Source of truth for all downstream specs. Version 3.0.0.",
+  "type": "object",
+  "required": [
+    "version",
+    "schemaVersion",
+    "project",
+    "objective",
+    "functionalRequirements",
+    "nonFunctionalRequirements",
+    "userStories",
+    "successCriteria",
+    "nonGoals"
+  ],
+  "additionalProperties": false,
+
+  "definitions": {
+
+    "reqId": {
+      "type": "string",
+      "description": "Functional requirement identifier.",
+      "pattern": "^REQ-\\d{3}$"
+    },
+
+    "nfrId": {
+      "type": "string",
+      "description": "Non-functional requirement identifier.",
+      "pattern": "^NFR-\\d{3}$"
+    },
+
+    "scId": {
+      "type": "string",
+      "description": "Success criterion identifier.",
+      "pattern": "^SC-\\d{3}$"
+    },
+
+    "tbd": {
+      "type": "string",
+      "description": "Marker for fields that are intentionally incomplete pending more information.",
+      "pattern": "^TBD.*"
+    },
+
+    "planguageLevel": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A Planguage threshold value or TBD marker. Use 'TBD' prefix when value is not yet known."
+    }
+  },
+
+  "properties": {
+
+    "version": {
+      "type": "string",
+      "description": "Semver version of this goalspec document instance.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec schema this document conforms to. Must be '3.0.0'.",
+      "const": "3.0.0"
+    },
+
+    "project": {
+      "type": "string",
+      "description": "Short human-readable project name. Used as a key across all downstream specs.",
+      "minLength": 1
+    },
+
+    "status": {
+      "type": "string",
+      "description": "Lifecycle status of this spec.",
+      "enum": ["draft", "review", "confirmed", "superseded"],
+      "default": "draft"
+    },
+
+    "objective": {
+      "type": "object",
+      "description": "Concise description of what is being built, for whom, and why.",
+      "required": ["statement", "for", "problem"],
+      "additionalProperties": false,
+      "properties": {
+        "statement": {
+          "type": "string",
+          "description": "One or two sentences describing the system. Must NOT mention implementation, technology, or architecture.",
+          "minLength": 20
+        },
+        "for": {
+          "type": "string",
+          "description": "Primary intended user or user group.",
+          "minLength": 1
+        },
+        "problem": {
+          "type": "string",
+          "description": "The specific problem this solves that is not solved today.",
+          "minLength": 10
+        },
+        "confirmedAfterCompletion": {
+          "type": "boolean",
+          "description": "True when the objective has been re-read and confirmed after all other sections were completed.",
+          "default": false
+        }
+      }
+    },
+
+    "functionalRequirements": {
+      "type": "array",
+      "description": "Observable capabilities the system must provide. Each must be independently testable and owned by one actor.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "actor"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/definitions/reqId" },
+          "description": {
+            "type": "string",
+            "description": "Observable behaviour in plain language. Must not describe implementation or contain measurable thresholds.",
+            "minLength": 10
+          },
+          "actor": {
+            "type": "string",
+            "description": "The specific role that owns this requirement. Avoid generic 'user' if a more specific actor exists.",
+            "minLength": 1
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional clarifying context. Must not contain implementation decisions."
+          }
+        }
+      }
+    },
+
+    "nonFunctionalRequirements": {
+      "type": "array",
+      "description": "Quality attributes in Planguage format. Every NFR must have Scale and Meter defined or explicitly marked TBD.",
+      "items": {
+        "type": "object",
+        "required": ["id", "category", "scale", "meter", "must"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/definitions/nfrId" },
+          "category": {
+            "type": "string",
+            "description": "Quality attribute category.",
+            "enum": [
+              "Performance",
+              "Reliability",
+              "Security",
+              "Scalability",
+              "Maintainability",
+              "Portability"
+            ]
+          },
+          "scale": {
+            "type": "string",
+            "description": "What is measured and in what unit. If unknown, prefix with 'TBD'.",
+            "minLength": 5
+          },
+          "meter": {
+            "type": "string",
+            "description": "How it will be measured — tool, condition, methodology. If unknown, prefix with 'TBD'.",
+            "minLength": 5
+          },
+          "must": {
+            "$ref": "#/definitions/planguageLevel",
+            "description": "Minimum acceptable threshold. Below this the system fails."
+          },
+          "plan": {
+            "$ref": "#/definitions/planguageLevel",
+            "description": "Realistic target the team is aiming for. Use 'TBD' if unknown."
+          },
+          "wish": {
+            "$ref": "#/definitions/planguageLevel",
+            "description": "Ideal outcome if conditions allow. Use 'TBD' if unknown."
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+
+    "userStories": {
+      "type": "array",
+      "description": "Desired outcomes from user perspectives. Every story must link to at least one functional requirement.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "actor", "capability", "outcome", "reqRefs"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique story identifier.",
+            "pattern": "^US-\\d{3}$"
+          },
+          "actor": {
+            "type": "string",
+            "description": "Specific role. Must match or be consistent with actors named in functional requirements.",
+            "minLength": 1
+          },
+          "capability": {
+            "type": "string",
+            "description": "What the actor wants to do. Must express a goal, not a feature or implementation detail.",
+            "minLength": 5
+          },
+          "outcome": {
+            "type": "string",
+            "description": "Why the actor wants this — the benefit they receive.",
+            "minLength": 5
+          },
+          "reqRefs": {
+            "type": "array",
+            "description": "REQ-IDs this story motivates. Must not be empty.",
+            "minItems": 1,
+            "items": { "$ref": "#/definitions/reqId" }
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+
+    "successCriteria": {
+      "type": "array",
+      "description": "Binary, independently verifiable conditions that determine the project is complete.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "refs"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/definitions/scId" },
+          "description": {
+            "type": "string",
+            "description": "A concrete, binary pass/fail condition. Must not be subjective.",
+            "minLength": 10
+          },
+          "refs": {
+            "type": "object",
+            "description": "References to the FR(s) or NFR(s) this criterion gates. At least one must be present.",
+            "additionalProperties": false,
+            "properties": {
+              "reqRefs": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/reqId" }
+              },
+              "nfrRefs": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/nfrId" }
+              }
+            }
+          },
+          "verificationMethod": {
+            "type": "string",
+            "description": "How this criterion will be verified — automated test, manual check, load test, etc."
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+
+    "nonGoals": {
+      "type": "array",
+      "description": "Explicit capabilities this project will NOT attempt to solve.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["capability", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "capability": {
+            "type": "string",
+            "description": "Specific named capability being excluded. Must not be vague.",
+            "minLength": 5
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why it is excluded: deferred, out of scope, handled elsewhere, etc.",
+            "minLength": 5
+          }
+        }
+      }
+    }
+  }
+}
