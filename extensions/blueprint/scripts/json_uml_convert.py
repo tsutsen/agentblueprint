@@ -281,20 +281,32 @@ def _drawio_entity(entity: dict, x: int, y: int, cell_ids: dict) -> list[str]:
     fill   = _DRAWIO_VIS_FILL.get(entity.get("visibility", "public"), "#dae8fc")
     fields = entity.get("fields", [])
     row_h, hdr_h, width = 26, 34, 220
+    total_h = hdr_h + row_h * len(fields)
     cells  = [
         f'<mxCell id="{eid}" value="{_esc(name)}" style="'
         f'shape=table;startSize={hdr_h};container=1;collapsible=1;childLayout=tableLayout;'
         f'fillColor={fill};strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" '
         f'vertex="1" parent="1">'
         f'<mxGeometry x="{x}" y="{y}" width="{width}" '
-        f'height="{hdr_h + row_h * len(fields)}" as="geometry"/></mxCell>'
+        f'height="{total_h}" as="geometry"/></mxCell>'
     ]
+    # Header row (separate cell for proper table layout)
+    cells.append(
+        f'<mxCell id="{_uid()}" value="{_esc(name)}" parent="{eid}" style="'
+        f'textAlign=center;verticalAlign=middle;resizable=0;rotatable=0;'
+        f'collapsible=0;shape=plaintext;pointerEvents=0;fontStyle=1;" '
+        f'vertex="1">'
+        f'<mxGeometry y="0" width="{width}" height="{hdr_h}" as="geometry"/>'
+        f'</mxCell>'
+    )
+    # Field rows
     for i, f in enumerate(fields):
-        label = f"{f['name']} : {f['type']}{'  ✱' if f.get('required') else ''}"
+        req = '  ✱' if f.get('required') else ''
+        label = f"{f['name']} : {f['type']}{req}"
         fill2 = "#ffffff" if i % 2 == 0 else "#f5f5f5"
         cells.append(
             f'<mxCell id="{_uid()}" value="{_esc(label)}" style="'
-            f'shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;'
+            f'shape=tableRow;horizontal=1;startSize=0;swimlaneHead=0;swimlaneBody=0;'
             f'fillColor={fill2};collapsible=0;dropTarget=0;'
             f'points=[[0,0.5],[1,0.5]];portConstraint=eastwest;'
             f'fontSize=11;fontColor=#333333;strokeColor=#d0d0d0;" '
@@ -305,25 +317,38 @@ def _drawio_entity(entity: dict, x: int, y: int, cell_ids: dict) -> list[str]:
     return cells
 
 
+
+
 def _drawio_enum(enum: dict, x: int, y: int, cell_ids: dict) -> list[str]:
     name   = enum["name"]
     eid    = _uid()
     cell_ids[name] = eid
     values = enum.get("values", [])
     row_h, hdr_h, width = 22, 30, 180
+    total_h = hdr_h + row_h * len(values)
     cells  = [
         f'<mxCell id="{eid}" value="«enumeration»&#xa;{_esc(name)}" style="'
         f'shape=table;startSize={hdr_h};container=1;collapsible=1;childLayout=tableLayout;'
         f'fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=3;fontSize=11;" '
         f'vertex="1" parent="1">'
         f'<mxGeometry x="{x}" y="{y}" width="{width}" '
-        f'height="{hdr_h + row_h * len(values)}" as="geometry"/></mxCell>'
+        f'height="{total_h}" as="geometry"/></mxCell>'
     ]
+    # Header row (separate cell for proper table layout)
+    cells.append(
+        f'<mxCell id="{_uid()}" value="«enumeration»&#xa;{_esc(name)}" parent="{eid}" style="'
+        f'textAlign=center;verticalAlign=middle;resizable=0;rotatable=0;'
+        f'collapsible=0;shape=plaintext;pointerEvents=0;fontStyle=3;" '
+        f'vertex="1">'
+        f'<mxGeometry y="0" width="{width}" height="{hdr_h}" as="geometry"/>'
+        f'</mxCell>'
+    )
+    # Value rows
     for i, v in enumerate(values):
         fill2 = "#fffde7" if i % 2 == 0 else "#fff8e1"
         cells.append(
             f'<mxCell id="{_uid()}" value="{_esc(v["name"])}" style="'
-            f'shape=tableRow;horizontal=0;startSize=0;'
+            f'shape=tableRow;horizontal=1;startSize=0;'
             f'fillColor={fill2};collapsible=0;dropTarget=0;'
             f'points=[[0,0.5],[1,0.5]];portConstraint=eastwest;'
             f'fontSize=11;strokeColor=#e0d0a0;" '
@@ -332,6 +357,8 @@ def _drawio_enum(enum: dict, x: int, y: int, cell_ids: dict) -> list[str]:
             f'</mxCell>'
         )
     return cells
+
+
 
 
 def _drawio_rel(rel: dict, cell_ids: dict) -> str | None:
