@@ -25,7 +25,7 @@ The ApiSpec does NOT define:
 This artifact produces two files:
 
 - `artifacts/ApiSpec.md` — human-readable document
-- `artifacts/Api.json` — machine-readable, conforming to `schemas/api.schema.json`
+- `artifacts/ApiSpec.json` — machine-readable, conforming to `schemas/apispec.schema.json`
 
 ---
 

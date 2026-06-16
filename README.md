@@ -62,9 +62,9 @@ AgentBlueprint/
     │           ├── glossary.schema.json
     │           ├── designspec.schema.json
     │           ├── archspec.schema.json
-    │           ├── data.schema.json
-    │           ├── api.schema.json
-    │           ├── test.schema.json
+    │           ├── dataspec.schema.json
+    │           ├── apispec.schema.json
+    │           ├── testspec.schema.json
     │           ├── taskplan.schema.json
     │           ├── issue.schema.json
     │           ├── example.goalspec.json

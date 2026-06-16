@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "test.schema.json",
+  "$id": "testspec.schema.json",
   "title": "TestSpec",
   "description": "Test specification for all API functions. Produced before implementation. Source of truth for test authorship and independent verification. Version 1.0.0.",
   "type": "object",

@@ -26,7 +26,7 @@ The TestSpec does NOT define:
 This artifact produces two files:
 
 - `artifacts/TestSpec.md` — human-readable document
-- `artifacts/Test.json` — machine-readable, conforming to `schemas/test.schema.json`
+- `artifacts/TestSpec.json` — machine-readable, conforming to `schemas/testspec.schema.json`
 
 ---
 
@@ -215,7 +215,7 @@ After producing `artifacts/TestSpec.json`, run linting in this order:
 
 ### Step 1 — Schema validation via `dual_output`
 
-Call the `dual_output` tool to validate the JSON against `test.schema.json`:
+Call the `dual_output` tool to validate the JSON against `testspec.schema.json`:
 
 ```
 tool: dual_output
@@ -232,7 +232,7 @@ fix the JSON artifact and retry. Do NOT proceed to handoff with invalid JSON.
 ```
 python extensions/blueprint/linters/lint_testspec.py \
   artifacts/TestSpec.json \
-  --schema schemas/json/test.schema.json \
+  --schema schemas/json/testspec.schema.json \
   --api artifacts/ApiSpec.json \
   --json
 ```
