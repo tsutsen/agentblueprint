@@ -7,22 +7,6 @@ import util from "node:util";
 
 const execFilePromise = util.promisify(execFile);
 
-// --- Helpers ---
-
-function copy_dir(
-  src: string,
-  dst: string,
-  opts: { overwrite: boolean; copied: string[]; skipped: string[] },
-) {
-  if (!fs.existsSync(dst) || opts.overwrite) {
-    fs.rmSync(dst, { recursive: true, force: true });
-    fs.cpSync(src, dst, { recursive: true });
-    opts.copied.push(path.basename(dst));
-  } else {
-    opts.skipped.push(path.basename(dst));
-  }
-}
-
 // --- JSON Schema validation (via Python jsonschema) ---
 
 async function validateAgainstSchema(
@@ -550,26 +534,24 @@ function resolvePackagePaths(cwd: string) {
   const paths = {
     // Development mode: .pi/extensions/blueprint/
     devExtDir: path.resolve(cwd, ".pi/extensions/blueprint"),
-    devSkillsSrc: path.resolve(cwd, ".pi/extensions/blueprint/skills"),
     devSchemasSrc: path.resolve(cwd, ".pi/skills/blueprint/schemas/markdown"),
     // Installed package mode: node_modules/@agentblueprint/blueprint/
     pkgExtDir: path.resolve(cwd, "node_modules/@agentblueprint/blueprint/extensions/blueprint"),
-    pkgSkillsSrc: path.resolve(cwd, "node_modules/@agentblueprint/blueprint/skills"),
     pkgSchemasSrc: path.resolve(cwd, "node_modules/@agentblueprint/blueprint/skills/blueprint/schemas/markdown"),
   };
 
   // Prefer development mode if .pi/ exists
   if (fs.existsSync(paths.devExtDir) || fs.existsSync(paths.devSchemasSrc)) {
-    return { ...paths, mode: "dev", extDir: paths.devExtDir, skillsSrc: paths.devSkillsSrc, schemasSrc: paths.devSchemasSrc };
+    return { ...paths, mode: "dev", extDir: paths.devExtDir, schemasSrc: paths.devSchemasSrc };
   }
 
   // Fall back to installed package mode
   if (fs.existsSync(paths.pkgExtDir) || fs.existsSync(paths.pkgSchemasSrc)) {
-    return { ...paths, mode: "pkg", extDir: paths.pkgExtDir, skillsSrc: paths.pkgSkillsSrc, schemasSrc: paths.pkgSchemasSrc };
+    return { ...paths, mode: "pkg", extDir: paths.pkgExtDir, schemasSrc: paths.pkgSchemasSrc };
   }
 
   // Neither found
-  return { ...paths, mode: "none", extDir: null, skillsSrc: null, schemasSrc: null };
+  return { ...paths, mode: "none", extDir: null, schemasSrc: null };
 }
 
 // ── Tool: init_workspace (with jsonschema install) ──────────────────────────
@@ -580,7 +562,7 @@ function registerInitWorkspace(pi: ExtensionAPI) {
     label: "Init Workspace",
     description:
       "Create the artifacts and tasks directory structure, copy " +
-      "blueprint skills into the project, pre-create all artifact " +
+      "pre-create all artifact "
       "Markdown files with frontmatter, and install python dependencies. " +
       "Safe to run multiple times — skips existing files.",
     parameters: Type.Object({
@@ -592,8 +574,6 @@ function registerInitWorkspace(pi: ExtensionAPI) {
     async execute(_toolCallId, _params, _signal, _onUpdate, ctx) {
       const cwd = ctx.cwd;
       const pkgPaths = resolvePackagePaths(cwd);
-      const skillsDst = path.resolve(cwd, ".pi/skills");
-      const skillsSrc = pkgPaths.skillsSrc;
       const schemasSrc = pkgPaths.schemasSrc;
 
       // 1. Create directories
@@ -607,27 +587,7 @@ function registerInitWorkspace(pi: ExtensionAPI) {
         fs.mkdirSync(d, { recursive: true });
       }
 
-      // 2. Copy skills
-      const copied: string[] = [];
-      const skipped: string[] = [];
-
-      if (fs.existsSync(skillsSrc)) {
-        fs.mkdirSync(skillsDst, { recursive: true });
-        const entries = fs.readdirSync(skillsSrc, { withFileTypes: true });
-        for (const entry of entries) {
-          if (entry.isDirectory()) {
-            const src = path.join(skillsSrc, entry.name);
-            const dst = path.join(skillsDst, entry.name);
-            copy_dir(src, dst, {
-              overwrite: !!_params.force,
-              copied,
-              skipped,
-            });
-          }
-        }
-      }
-
-      // 3. Pre-create artifact files with frontmatter
+      // 2. Pre-create artifact files with frontmatter
       const artifactDefs: Array<{ name: string; file: string }> = [
         { name: "GoalSpec", file: "GoalSpec.md" },
         { name: "Glossary", file: "Glossary.md" },
@@ -771,16 +731,6 @@ function registerInitWorkspace(pi: ExtensionAPI) {
         ...dirs.map((d) => `  ✓ ${path.relative(cwd, d)}/`),
       ];
 
-      if (copied.length > 0) {
-        lines.push(`  ✓ skills copied: ${copied.join(", ")}`);
-      }
-      if (skipped.length > 0) {
-        lines.push(`  • skills skipped (already exist): ${skipped.join(", ")}`);
-      }
-      if (copied.length === 0 && skipped.length === 0) {
-        lines.push(`  • skills already present — use force:true to overwrite`);
-      }
-
       if (created.length > 0) {
         lines.push(`  ✓ artifact files created: ${created.join(", ")}`);
       }
@@ -812,8 +762,7 @@ function registerInitWorkspace(pi: ExtensionAPI) {
         content: [{ type: "text", text: lines.join('\n') }],
         details: {
           dirs_created: dirs.filter((d) => fs.existsSync(d)),
-          skills_copied: copied,
-          skills_skipped: skipped,
+
           artifacts_created: created,
           artifacts_skipped: skippedArtifacts,
           pipSuccess,
