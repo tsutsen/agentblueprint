@@ -117,6 +117,10 @@ Each entity must have:
   * **Required** — boolean, default true
   * **Description** (optional)
   * **Example** (optional) — a concrete example value
+  * **primaryKey** (optional) — true if this field is the primary key.
+    Only one field per entity should be marked. If not set, the first field
+    or a field ending with `Id`/`id` is assumed to be the primary key.
+    **Required:** must contain `id` in its name (e.g. `id`, `userId`, `orderId`).
 * **Methods** (optional) — functions this entity exposes. Each method must
   reference a function ID in ApiSpec via `apiRef`.
 * **Abstract** (optional) — true if this entity cannot be instantiated directly

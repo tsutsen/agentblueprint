@@ -481,26 +481,31 @@ def _dbml_safe_name(name: str) -> str:
 def _find_pk(entity: dict) -> str:
     """Find a primary key field for a DBML table.
 
-    Priority: 'id' (exact) > field ending with 'Id'/'id' (Pascal/camelCase)
-    > first field.
+    Priority: explicit primaryKey field > 'id' (exact) > field ending with
+    'Id'/'id' (Pascal/camelCase) > first field.
     Returns the field name to use as the primary key reference.
     """
     fields = entity.get("fields", [])
     if not fields:
         return "id"
 
-    # Check for exact 'id' field (case-insensitive)
+    # Priority 1: explicit primaryKey field
+    for f in fields:
+        if f.get("primaryKey", False):
+            return f["name"]
+
+    # Priority 2: Check for exact 'id' field (case-insensitive)
     for f in fields:
         if f["name"].lower() == "id":
             return f["name"]
 
-    # Check for field ending with 'Id' or 'id' (e.g. sessionId, queryId)
+    # Priority 3: Check for field ending with 'Id' or 'id' (e.g. sessionId, queryId)
     for f in fields:
         name = f["name"]
         if name.endswith("Id") or name.endswith("id"):
             return name
 
-    # Fall back to first field
+    # Priority 4: Fall back to first field
     return fields[0]["name"]
 
 

@@ -672,29 +672,35 @@ def check_pk_naming(spec: dict, result: LintResult):
     """Warn if any entity's primary key field doesn't contain 'id' in its name.
 
     Primary keys should be easily identifiable. Fields named 'id', 'entityId',
-    'userId', etc. are preferred. This check mirrors the _find_pk heuristic
-    used by the diagram generator.
+    'userId', etc. are preferred. This check uses the explicit primaryKey field
+    if set, otherwise falls back to the _find_pk heuristic.
     """
     for entity in spec.get("entities", []):
         fields = entity.get("fields", [])
         if not fields:
             continue
 
-        # Determine which field is likely the PK (mirrors _find_pk logic)
+        # Determine which field is the PK
         pk_field = None
-        # Priority 1: field named 'id' (case-insensitive)
+        # Priority 1: explicit primaryKey field
         for f in fields:
-            if f["name"].lower() == "id":
+            if f.get("primaryKey", False):
                 pk_field = f
                 break
-        # Priority 2: field ending with 'Id' or 'id'
+        # Priority 2: field named 'id' (case-insensitive)
+        if not pk_field:
+            for f in fields:
+                if f["name"].lower() == "id":
+                    pk_field = f
+                    break
+        # Priority 3: field ending with 'Id' or 'id'
         if not pk_field:
             for f in fields:
                 name = f["name"]
                 if name.endswith("Id") or name.endswith("id"):
                     pk_field = f
                     break
-        # Priority 3: first field
+        # Priority 4: first field
         if not pk_field:
             pk_field = fields[0]
 
