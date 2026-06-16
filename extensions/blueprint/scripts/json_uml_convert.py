@@ -647,8 +647,7 @@ def to_d2(data: dict) -> str:
             for f in entity.get("fields", []):
                 suffix = "" if f.get("required", False) else "?"
                 lines.append(f"    {f['name']}{suffix}: {f['type']}")
-            for method in entity.get("methods", []):
-                lines.append(f"    + {method['name']}()")
+
             lines += ["  }", ""]
         lines += ["}", ""]
 
