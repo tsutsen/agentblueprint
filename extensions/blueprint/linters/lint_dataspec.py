@@ -483,6 +483,34 @@ def check_similar_entities_connected(spec: dict, result: LintResult):
                      f"Consider adding a relationship or clarifying their distinct roles.")
 
 
+def check_bidirectional_relationships(spec: dict, result: LintResult):
+    """Warn when two entities have relationships in both directions.
+
+    DBML only supports unidirectional relationships. If A → B and B → A
+    both exist, the user should consolidate into a single relationship.
+    """
+    relationships = spec.get("relationships", [])
+
+    # Build set of directed pairs
+    directed_pairs = set()
+    for rel in relationships:
+        from_e = rel.get("from", "")
+        to_e = rel.get("to", "")
+        if from_e and to_e:
+            directed_pairs.add((from_e, to_e))
+
+    # Check for bidirectional pairs
+    for from_e, to_e in directed_pairs:
+        if (to_e, from_e) in directed_pairs:
+            # Found a bidirectional pair — report the first direction
+            result.add("warning", "bidirectional_relationship",
+                f"Bidirectional relationship between '{from_e}' and '{to_e}'.",
+                hint="DBML only supports unidirectional relationships. "
+                     f"Consolidate '{from_e}' → '{to_e}' and '{to_e}' → '{from_e}' "
+                     f"into a single relationship in the direction that makes sense "
+                     f"for your domain model.")
+
+
 def check_entity_list_fields(spec: dict, result: LintResult):
     """Warn when an entity has a field that is a list of another entity.
 
@@ -557,6 +585,7 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool, api_spec: Op
     check_methods_coverage(spec, api_spec, result)
     check_entity_similarity(spec, result)
     check_similar_entities_connected(spec, result)
+    check_bidirectional_relationships(spec, result)
     check_entity_list_fields(spec, result)
 
     if strict:
