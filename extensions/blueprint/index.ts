@@ -740,12 +740,14 @@ function registerInitWorkspace(pi: ExtensionAPI) {
         }
       }
 
-      // 5. Install python dependencies
+      // 5. Install python dependencies (prefer venv, fall back to system pip)
       let pipOutput = '';
       let pipSuccess = false;
+      const venvPython = path.resolve(cwd, '.venv/bin/pip');
+      const pipCmd = fs.existsSync(venvPython) ? venvPython : 'pip';
       try {
         const { stdout, stderr } = await execFilePromise(
-          'pip', ['install', 'jsonschema'],
+          pipCmd, ['install', 'jsonschema'],
           { timeout: 30000, cwd },
         );
         pipOutput = stdout || stderr || '';
