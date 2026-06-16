@@ -376,8 +376,8 @@ function registerDualOutput(pi: ExtensionAPI, extDir: string) {
         };
       }
 
-      // 4. Validate against schema
-      const schemaPath = path.join(extDir, 'schemas/json', `${schemaName}.schema.json`);
+      // 4. Validate against schema — resolve relative to package root, not extDir
+      const schemaPath = resolveSchemaPath(extDir, schemaName);
       const validation = await validateAgainstSchema(json, schemaPath);
 
       if (!validation.valid) {
@@ -790,7 +790,7 @@ function registerLint(pi: ExtensionAPI, extDir: string) {
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
       const linter = path.join(extDir, "linters/lint_all.py");
-      const suiteFile = path.join(extDir, "schemas/json/suite.json");
+      const suiteFile = resolvePkgResource(extDir, 'skills/blueprint/schemas/json/suite.json');
       const mode = params.mode || "assess";
 
       if (!fs.existsSync(linter)) {
@@ -1306,6 +1306,22 @@ function registerGenerateDiagrams(pi: ExtensionAPI, extDir: string) {
       }
     },
   });
+}
+
+// ── Schema path resolution ──────────────────────────────────────────────────
+// Schemas live at skills/blueprint/schemas/json/ relative to the package root.
+// extDir points to extensions/blueprint/ relative to the package root.
+// We need a helper that resolves from extDir to the schemas directory.
+
+function resolveSchemaPath(extDir: string, schemaName: string): string {
+  const packageRoot = path.join(extDir, '..', '..');
+  return path.join(packageRoot, 'skills', 'blueprint', 'schemas', 'json', `${schemaName}.schema.json`);
+}
+
+// Resolve any resource path relative to the package root (sibling of extensions/)
+function resolvePkgResource(extDir: string, relPath: string): string {
+  const packageRoot = path.join(extDir, '..', '..');
+  return path.join(packageRoot, relPath);
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────────
