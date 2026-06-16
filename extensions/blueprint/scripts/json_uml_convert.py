@@ -282,7 +282,6 @@ def _drawio_entity(entity: dict, x: int, y: int, cell_ids: dict) -> list[str]:
     fields = entity.get("fields", [])
     methods = entity.get("methods", [])
     row_h, hdr_h, width = 26, 34, 220
-    # Header + fields + methods
     total_h = hdr_h + row_h * (len(fields) + len(methods))
     cells  = [
         f'<mxCell id="{eid}" value="{_esc(name)}" style="'
@@ -292,9 +291,8 @@ def _drawio_entity(entity: dict, x: int, y: int, cell_ids: dict) -> list[str]:
         f'<mxGeometry x="{x}" y="{y}" width="{width}" '
         f'height="{total_h}" as="geometry"/></mxCell>'
     ]
-    # Field rows
     for i, f in enumerate(fields):
-        req = '  ✱' if f.get('required') else ''
+        req = "  \u2731" if f.get("required") else ""
         label = f"{f['name']} : {f['type']}{req}"
         fill2 = "#ffffff" if i % 2 == 0 else "#f5f5f5"
         cells.append(
@@ -307,9 +305,8 @@ def _drawio_entity(entity: dict, x: int, y: int, cell_ids: dict) -> list[str]:
             f'<mxGeometry y="{hdr_h + i * row_h}" width="{width}" height="{row_h}" as="geometry"/>'
             f'</mxCell>'
         )
-    # Method rows (separator + methods)
     if methods:
-        # Separator row
+        sep_y = hdr_h + len(fields) * row_h
         cells.append(
             f'<mxCell id="{_uid()}" value="" style="'
             f'shape=tableRow;horizontal=1;startSize=0;swimlaneHead=0;swimlaneBody=0;'
@@ -317,12 +314,13 @@ def _drawio_entity(entity: dict, x: int, y: int, cell_ids: dict) -> list[str]:
             f'points=[[0,0.5],[1,0.5]];portConstraint=eastwest;'
             f'fontSize=10;fontColor=#999999;strokeColor=#d0d0d0;fontStyle=1;" '
             f'vertex="1" parent="{eid}">'
-            f'<mxGeometry y="{hdr_h + len(fields) * row_h}" width="{width}" height="16" as="geometry"/>'
+            f'<mxGeometry y="{sep_y}" width="{width}" height="16" as="geometry"/>'
             f'</mxCell>'
         )
         for i, m in enumerate(methods):
             label = f"+ {m['name']}() : {m.get('returnType', 'void')}"
             fill2 = "#f0f8ff" if i % 2 == 0 else "#f5f5f5"
+            m_y = sep_y + 16 + i * row_h
             cells.append(
                 f'<mxCell id="{_uid()}" value="{_esc(label)}" style="'
                 f'shape=tableRow;horizontal=1;startSize=0;swimlaneHead=0;swimlaneBody=0;'
@@ -330,13 +328,10 @@ def _drawio_entity(entity: dict, x: int, y: int, cell_ids: dict) -> list[str]:
                 f'points=[[0,0.5],[1,0.5]];portConstraint=eastwest;'
                 f'fontSize=11;fontColor=#333333;strokeColor=#d0d0d0;" '
                 f'vertex="1" parent="{eid}">'
-                f'<mxGeometry y="{hdr_h + (len(fields) + 1 + i) * row_h}" width="{width}" height="{row_h}" as="geometry"/>'
+                f'<mxGeometry y="{m_y}" width="{width}" height="{row_h}" as="geometry"/>'
                 f'</mxCell>'
             )
     return cells
-
-
-
 
 
 def _drawio_enum(enum: dict, x: int, y: int, cell_ids: dict) -> list[str]:
@@ -347,23 +342,13 @@ def _drawio_enum(enum: dict, x: int, y: int, cell_ids: dict) -> list[str]:
     row_h, hdr_h, width = 22, 30, 180
     total_h = hdr_h + row_h * len(values)
     cells  = [
-        f'<mxCell id="{eid}" value="«enumeration»&#xa;{_esc(name)}" style="'
+        f'<mxCell id="{eid}" value="\u00abenumeration\u00bb&#xa;{_esc(name)}" style="'
         f'shape=table;startSize={hdr_h};container=1;collapsible=1;childLayout=tableLayout;'
         f'fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=3;fontSize=11;" '
         f'vertex="1" parent="1">'
         f'<mxGeometry x="{x}" y="{y}" width="{width}" '
         f'height="{total_h}" as="geometry"/></mxCell>'
     ]
-    # Header row (separate cell for proper table layout)
-    cells.append(
-        f'<mxCell id="{_uid()}" value="«enumeration»&#xa;{_esc(name)}" parent="{eid}" style="'
-        f'textAlign=center;verticalAlign=middle;resizable=0;rotatable=0;'
-        f'collapsible=0;shape=plaintext;pointerEvents=0;fontStyle=3;" '
-        f'vertex="1">'
-        f'<mxGeometry y="0" width="{width}" height="{hdr_h}" as="geometry"/>'
-        f'</mxCell>'
-    )
-    # Value rows
     for i, v in enumerate(values):
         fill2 = "#fffde7" if i % 2 == 0 else "#fff8e1"
         cells.append(
@@ -377,8 +362,6 @@ def _drawio_enum(enum: dict, x: int, y: int, cell_ids: dict) -> list[str]:
             f'</mxCell>'
         )
     return cells
-
-
 
 
 def _drawio_rel(rel: dict, cell_ids: dict) -> str | None:
@@ -399,22 +382,40 @@ def to_drawio(data: dict) -> str:
     entities, enums = data.get("entities", []), data.get("enums", [])
     cell_ids: dict[str, str] = {}
     cells: list[str] = []
-    cols, gap_x, gap_y = 4, 30, 40
+    row_h, hdr_h = 26, 34
+
+    def _entity_height(e):
+        return hdr_h + row_h * (len(e.get("fields", [])) + len(e.get("methods", [])))
+
+    # Column-aware layout tracking actual heights
+    cols = 4
+    gap_x, gap_y = 30, 40
+    col_y = [40] * cols
+
     for i, entity in enumerate(entities):
-        x = 40 + (i % cols) * (250 + gap_x)
-        y = 40 + (i // cols) * (200 + gap_y)
+        col = i % cols
+        x = 40 + col * (250 + gap_x)
+        y = col_y[col]
         cells += _drawio_entity(entity, x, y, cell_ids)
-    base_y = 40 + math.ceil(len(entities) / cols) * (200 + gap_y) + 60
+        col_y[col] = y + _entity_height(entity) + gap_y
+
+    # Enums below all entities
+    base_y = max(col_y) + 60
+    enum_col_y = [40] * 5
     for j, enum in enumerate(enums):
-        x = 40 + (j % 5) * (200 + gap_x)
-        y = base_y + (j // 5) * (160 + gap_y)
+        col = j % 5
+        x = 40 + col * (200 + gap_x)
+        y = base_y + enum_col_y[col]
         cells += _drawio_enum(enum, x, y, cell_ids)
+        enum_col_y[col] = y + 160 + gap_y
+
     for rel in data.get("relationships", []):
         cell = _drawio_rel(rel, cell_ids)
         if cell:
             cells.append(cell)
+
     cells_xml = "\n        ".join(cells)
-    title     = _esc(data.get("module", "Data Model"))
+    title = _esc(data.get("module", "Data Model"))
     return textwrap.dedent(f"""\
         <?xml version="1.0" encoding="UTF-8"?>
         <mxfile host="app.diagrams.net" version="21.0.0">
@@ -432,7 +433,6 @@ def to_drawio(data: dict) -> str:
           </diagram>
         </mxfile>
         """)
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DBML
