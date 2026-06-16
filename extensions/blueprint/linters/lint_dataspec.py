@@ -229,7 +229,7 @@ def check_relationship_label_keywords(rel: dict, result: LintResult):
 
     The label (natural-language description) should match the declared type.
     This catches mismatches like:
-      - type=aggregation but label contains 'owns' or 'manages the lifecycle of'
+      - type=aggregation but label contains 'owns' or 'is the lifecycle owner of'
       - type=dependency but label contains 'maintains a reference to' or 'holds a reference to'
 
     Keywords are weighted:
@@ -255,7 +255,7 @@ def check_relationship_label_keywords(rel: dict, result: LintResult):
             "is an element of",
         ],
         "composition": [
-            "manages the lifecycle of", "is the lifecycle owner of",
+            "is the lifecycle owner of",
             "is responsible for creation and destruction", "is the aggregate root of",
             "is the container of", "is a part of", "creates and owns",
         ],
