@@ -215,6 +215,8 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 - Similar entities disconnected (similar names but no relationship)
 - Entity list fields (warns when entity has `Entity[]` field — should be a relationship)
 - Bidirectional relationships (warns when A → B and B → A both exist — DBML limitation)
+- Label keyword mismatch (warns when relationship label contains keywords suggesting a different type)
+- Label no keyword match (warns when relationship label doesn't match any known keyword patterns)
 
 **Completeness gates (7):
 - `draft` — ≥1 entity, ≥1 relationship
