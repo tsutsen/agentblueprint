@@ -310,17 +310,17 @@ def _drawio_entity(entity: dict, x: int, y: int, cell_ids: dict) -> list[str]:
         cells.append(
             f'<mxCell id="{_uid()}" value="" style="'
             f'shape=tableRow;horizontal=1;startSize=0;swimlaneHead=0;swimlaneBody=0;'
-            f'fillColor=#f5f5f5;collapsible=0;dropTarget=0;'
+            f'fillColor=#cccccc;collapsible=0;dropTarget=0;'
             f'points=[[0,0.5],[1,0.5]];portConstraint=eastwest;'
             f'fontSize=10;fontColor=#999999;strokeColor=#d0d0d0;fontStyle=1;" '
             f'vertex="1" parent="{eid}">'
-            f'<mxGeometry y="{sep_y}" width="{width}" height="16" as="geometry"/>'
+            f'<mxGeometry y="{sep_y}" width="{width}" height="4" as="geometry"/>'
             f'</mxCell>'
         )
         for i, m in enumerate(methods):
             label = f"+ {m['name']}() : {m.get('returnType', 'void')}"
             fill2 = "#e3f2fd" if i % 2 == 0 else "#e8eaf6"
-            m_y = sep_y + 16 + i * row_h
+            m_y = sep_y + 4 + i * row_h
             cells.append(
                 f'<mxCell id="{_uid()}" value="{_esc(label)}" style="'
                 f'shape=tableRow;horizontal=1;startSize=0;swimlaneHead=0;swimlaneBody=0;'
