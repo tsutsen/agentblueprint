@@ -343,6 +343,11 @@ Each spec depends on:
 | `/skill:blueprint test` | TestSpec | Define test cases |
 | `/skill:blueprint plan` | TaskPlan | Generate task breakdown |
 | `/skill:blueprint issues EP-NNN` | Issue | Decompose epic into issues |
+| `/skill:lint` | — | Quick check all artifacts in `artifacts/` |
+| `/skill:lint data` | DataSpec | Lint only DataSpec |
+| `/skill:lint data api` | DataSpec, ApiSpec | Lint DataSpec + ApiSpec |
+| `/skill:lint --strict` | — | All artifacts, warnings as errors |
+| `/skill:lint data --strict` | DataSpec | Lint DataSpec, warnings as errors |
 
 ## Output Layout
 
