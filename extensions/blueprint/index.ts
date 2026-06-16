@@ -1280,7 +1280,9 @@ function registerGenerateDiagrams(pi: ExtensionAPI, extDir: string) {
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 export default function (pi: ExtensionAPI) {
-  const extDir = path.resolve(pi.cwd || process.cwd(), ".pi/extensions/blueprint");
+  // Resolve extDir relative to this file's location
+  // Works both in development (.pi/extensions/blueprint/) and when installed as package (extensions/blueprint/)
+  const extDir = path.resolve(__dirname);
 
   registerInitWorkspace(pi);
   registerLoadArtifact(pi);

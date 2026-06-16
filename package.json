@@ -1,0 +1,18 @@
+{
+  "name": "@agentblueprint/blueprint",
+  "version": "1.0.0",
+  "description": "Structured software lifecycle artifacts through guided interviews",
+  "keywords": ["pi-package", "blueprint", "sdlc", "documentation"],
+  "license": "MIT",
+  "pi": {
+    "extensions": ["./extensions"],
+    "skills": ["./skills"]
+  },
+  "dependencies": {
+    "jsonschema": "*"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  }
+}
