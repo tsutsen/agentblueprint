@@ -112,6 +112,160 @@ Each spec has two files:
 | `lint_issues.py` | Issue — ID sequencing, dependency consistency, epic coverage |
 | `lint_cross.py` | Cross-spec — all inter-spec reference validation (REQ/NFR/US/FN/entity/api refs) |
 
+<details>
+<summary>Linter details</summary>
+
+#### `lint_all.py`
+Unified orchestrator. Runs all individual linters in dependency order, then cross-spec validation, then completeness gates. Outputs a combined report with per-layer pass/fail and an overall suite score.
+
+#### `lint_goalspec.py`
+**Checks:**
+- Duplicate IDs, sequential numbering gaps
+- Reference resolution (reqRefs in stories/criteria → FRs/NFRs)
+- Planguage enforcement (no implementation details or thresholds in FRs)
+- Actor consistency between stories and requirements
+- Coverage (every FR referenced by a story and gated by a criterion)
+- NFR completeness (TBD Scale/Meter flagged by status level)
+- Non-goal quality (vague exclusions, weak reasoning)
+
+**Completeness gates (10):**
+`draft` — objective present, ≥1 FR, ≥1 story, ≥1 criterion, ≥1 non-goal
+`review` — all FRs covered by stories, all FRs gated by criteria, no TBD NFRs
+`confirmed` — objective re-confirmed, status is confirmed
+</details>
+
+<details>
+<summary>lint_glossary.py</summary>
+
+**Checks:**
+- Circular definitions
+- Cross-spec coverage (terms referenced in other specs)
+- Definition quality (≥10 chars, examples/related terms)
+- Category coverage (domain-tagged terms)
+
+**Completeness gates (5):**
+`draft` — ≥3 terms, all definitions ≥10 chars
+`review` — ≥5 terms, has domain-category terms
+`confirmed` — all terms have examples or related terms
+</details>
+
+<details>
+<summary>lint_designspec.py</summary>
+
+**Checks:**
+- IA/screen consistency (all inventory screens have specs)
+- Journey coverage (all journeys reference user stories)
+- Forbidden content (implementation leaks in design goals)
+- UXAC completeness (all screens have acceptance criteria)
+- Pattern coverage (interaction patterns present)
+
+**Completeness gates (12):**
+`draft` — design goals, ≥1 persona, ≥1 journey, ≥1 screen
+`review` — all screens specced, patterns present, UXAC present, visual design requirements, accessibility requirements
+`confirmed` — design system components present, all journeys reference stories
+</details>
+
+<details>
+<summary>lint_archspec.py</summary>
+
+**Checks:**
+- Dependency cycles between components
+- REQ/NFR resolution (every requirement assigned to a component)
+- Overlapping responsibilities (components sharing REQ refs)
+- Isolated components (no dependency participation)
+- Version tracking (dataSpecVersion, apiSpecVersion)
+
+**Completeness gates (10):**
+`draft` — overview summary, ≥1 subsystem, ≥2 components, ≥1 data flow, ≥1 constraint
+`review` — all components have REQ refs, all components in dependencies, goalSpecVersion set
+`confirmed` — dataSpecVersion set, apiSpecVersion set
+</details>
+
+<details>
+<summary>lint_dataspec.py</summary>
+
+**Checks:**
+- Entity naming (PascalCase), field naming (camelCase), method naming (camelCase)
+- Type resolution (primitives, entities, enums)
+- Relationship endpoints (valid entities, valid types, warns on self-references)
+- Enum formats (SCREAMING_SNAKE_CASE)
+- Method apiRef format (FN-<camelCase>)
+- Primitives quality (warns on "any")
+
+**Completeness gates (6):**
+`draft` — ≥1 entity, ≥1 relationship
+`review` — all entities have descriptions, no orphan entities
+`confirmed` — all entities have field examples
+</details>
+
+<details>
+<summary>lint_apispec.py</summary>
+
+**Checks:**
+- Function ID format (FN-<camelCase>), parameter naming (camelCase)
+- Entity/type references (cross-checked against data spec)
+- Module/version match (against data spec)
+- Error code format (SCREAMING_SNAKE_CASE)
+- Side-effect detection (create/update/delete without error conditions)
+- Visibility validation
+
+**Completeness gates (6):**
+`draft` — ≥1 function
+`review` — all functions have descriptions, all have error conditions, all declare entity affinity, dataSpecVersion set
+`confirmed` — all functions declare pure/impure
+</details>
+
+<details>
+<summary>lint_testspec.py</summary>
+
+**Checks:**
+- fnRef resolution (against API spec)
+- Error coverage (every documented error has a test)
+- Placeholder detection (TODO/empty descriptions)
+- ID consistency (TST-<name>-NNN format, no duplicates)
+- Category balance (error-path and edge-case tests present)
+
+**Completeness gates (9):**
+`draft` — ≥1 test, functionCoverage summary present
+`review` — error-path tests exist, all API functions tested, all coverage entries have outOfScope, coverage includes all tested functions, apiSpecVersion set
+`confirmed` — independent verification passed
+</details>
+
+<details>
+<summary>lint_taskplan.py</summary>
+
+**Checks:**
+- Requirement coverage (every REQ/NFR/US covered by tasks)
+- Dependency ordering (no circular or forward references)
+- Milestone outcomes (measurable, not just task lists)
+
+**Completeness gates:** *None defined* — taskplan coverage is derived from spec completeness.
+</details>
+
+<details>
+<summary>lint_issues.py</summary>
+
+**Checks:**
+- ID sequencing (IS-NNN gaps)
+- Dependency consistency (epic/issue parent references)
+- Epic coverage (all epics have issues)
+
+**Completeness gates:** *None defined* — issue lint is optional and epic-specific.
+</details>
+
+<details>
+<summary>lint_cross.py</summary>
+
+**Checks:**
+- REQ/NFR refs across all specs resolve correctly
+- US/FN refs consistent between specs
+- Entity/api refs match data spec definitions
+- API function coverage (every function tested)
+- Data-API alignment (API parameter/output types match data spec types)
+
+**Completeness gates:** *None* — cross-spec layer is purely structural.
+</details>
+
 ## Artifact Dependency Graph
 
 ```
