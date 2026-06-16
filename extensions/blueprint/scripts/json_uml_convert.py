@@ -389,7 +389,7 @@ def to_drawio(data: dict) -> str:
 
     # Column-aware layout tracking actual heights
     cols = 4
-    gap_x, gap_y = 30, 40
+    gap_x, gap_y = 80, 100
     col_y = [40] * cols
 
     for i, entity in enumerate(entities):
