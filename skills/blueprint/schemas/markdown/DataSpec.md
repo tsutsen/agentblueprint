@@ -163,6 +163,34 @@ Each relationship must have:
   (except in single-entity specs).
 * No duplicate relationships of the same type between the same pair.
 
+#### Choosing the relationship type — the deletion test
+
+When deciding which relationship type to assign, ask:
+
+> **"If entity X (the source) is deleted, what happens to the target entity?"**
+
+| Answer | Relationship Type |
+|---|---|
+| The target is destroyed along with X | `composition` |
+| The target survives independently (shared ownership) | `aggregation` |
+| The target is unaffected (independent existence) | `association` |
+| X only used the target temporarily (no stored reference) | `dependency` |
+
+**This question is more reliable than keyword matching.** Keywords are
+surface-level signals that LLMs can pattern-match incorrectly. The deletion
+test forces reasoning about actual ownership semantics.
+
+**Examples:**
+
+* `Order` → `OrderItem` as `composition`: when an order is deleted, its items
+  cease to exist (they belong to that specific order).
+* `Department` → `Employee` as `aggregation`: when a department is deleted,
+  employees still exist (they may be reassigned to another department).
+* `Report` → `Author` as `association`: when a report is deleted, the author
+  still exists independently.
+* `UserService` → `Database` as `dependency`: the service uses the database
+  during method execution but doesn't own it.
+
 #### Relationship Notation
 
 When defining relationships between entities, use the following conventions:
