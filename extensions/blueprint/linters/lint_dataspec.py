@@ -668,6 +668,44 @@ def check_primitives(spec: dict, result: LintResult):
             hint="Consider removing 'any' to enforce stricter type discipline.")
 
 
+def check_pk_naming(spec: dict, result: LintResult):
+    """Warn if any entity's primary key field doesn't contain 'id' in its name.
+
+    Primary keys should be easily identifiable. Fields named 'id', 'entityId',
+    'userId', etc. are preferred. This check mirrors the _find_pk heuristic
+    used by the diagram generator.
+    """
+    for entity in spec.get("entities", []):
+        fields = entity.get("fields", [])
+        if not fields:
+            continue
+
+        # Determine which field is likely the PK (mirrors _find_pk logic)
+        pk_field = None
+        # Priority 1: field named 'id' (case-insensitive)
+        for f in fields:
+            if f["name"].lower() == "id":
+                pk_field = f
+                break
+        # Priority 2: field ending with 'Id' or 'id'
+        if not pk_field:
+            for f in fields:
+                name = f["name"]
+                if name.endswith("Id") or name.endswith("id"):
+                    pk_field = f
+                    break
+        # Priority 3: first field
+        if not pk_field:
+            pk_field = fields[0]
+
+        if pk_field and "id" not in pk_field["name"].lower():
+            result.add("warning", "pk_naming",
+                f"Entity '{entity['name']}': primary key field '{pk_field['name']}' "
+                f"doesn't contain 'id' in its name.",
+                hint=f"Consider renaming to '{pk_field['name']}Id' or 'entityId' "
+                     "for consistency with diagram generators and DBML output.")
+
+
 # ── Runner ────────────────────────────────────────────────────────────────────
 
 def run_lint(spec: dict, schema_path: Optional[Path], strict: bool, api_spec: Optional[dict] = None) -> LintResult:
@@ -687,6 +725,7 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool, api_spec: Op
 
     # Semantic checks
     check_primitives(spec, result)
+    check_pk_naming(spec, result)
     entity_names = check_entities(spec, spec.get("enums", []), result)
     enum_names = check_enums(spec, result)
     check_relationships(spec, entity_names, result)
