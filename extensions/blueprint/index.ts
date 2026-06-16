@@ -714,23 +714,25 @@ function registerInitWorkspace(pi: ExtensionAPI) {
           // Check if this is a standard name
           if (expectedJsonNames.includes(jsonFile)) continue;
 
-          // Check if the corresponding .md file exists with a standard name
+          // Check if a corresponding .md file exists with the standard name
+          // e.g., Data.json → check if DataSpec.md exists in artifacts/
           const baseName = jsonFile.replace(/\.json$/, '');
-          const expectedMd = baseName + '.md';
-          const hasCorrespondingMd = expectedMdNames.includes(expectedMd);
+          const mdWithSpec = baseName + 'Spec.md';
+          const mdWithoutSpec = baseName + '.md';
 
-          if (hasCorrespondingMd) {
-            // The .md file exists with a standard name — JSON is non-standard
-            // Try to guess: does the JSON name match the md name with Spec stripped?
-            const mdBase = expectedMd.replace('.md', '');
-            const withSpec = mdBase + 'Spec';
-            const expectedJson = withSpec + '.json';
+          // Determine the actual .md file that exists
+          const actualMd = expectedMdNames.includes(mdWithSpec) ? mdWithSpec
+            : expectedMdNames.includes(mdWithoutSpec) ? mdWithoutSpec
+            : null;
 
-            if (expectedJsonNames.includes(expectedJson)) {
+          if (actualMd) {
+            // A corresponding .md file exists. The JSON should match the .md's name.
+            const expectedJson = actualMd.replace('.md', '.json');
+            if (expectedJsonNames.includes(expectedJson) && jsonFile !== expectedJson) {
               mismatches.push({
                 current: jsonFile,
                 expected: expectedJson,
-                reason: `JSON uses "${baseName}" but corresponding "${expectedMd}" expects "${expectedJson}"`,
+                reason: `JSON uses "${baseName}" but corresponding "${actualMd}" expects "${expectedJson}"`,
               });
             }
           }
