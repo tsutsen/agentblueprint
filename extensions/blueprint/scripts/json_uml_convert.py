@@ -413,6 +413,27 @@ def _dbml_safe_name(name: str) -> str:
     return name.replace(" ", "_").replace("-", "_").replace(".", "_")
 
 
+def _find_pk(entity: dict) -> str:
+    """Find a primary key field for a DBML table.
+
+    Priority: 'id' > first field with 'Id'/'id' in name > first field.
+    Returns the field name to use as the primary key reference.
+    """
+    fields = entity.get("fields", [])
+    # Check for 'id' field
+    for f in fields:
+        if f["name"].lower() == "id":
+            return f["name"]
+    # Check for field with 'Id' in the name
+    for f in fields:
+        if "Id" in f["name"] or "id" in f["name"]:
+            return f["name"]
+    # Fall back to first field
+    if fields:
+        return fields[0]["name"]
+    return "id"  # last resort
+
+
 def to_dbml(data: dict) -> str:
     enums      = data.get("enums", [])
     enum_names = {e["name"] for e in enums}
@@ -434,10 +455,18 @@ def to_dbml(data: dict) -> str:
             lines.append(f"  {v['name']}" + (f' [note: "{note}"]' if note else ""))
         lines += ["}", ""]
 
+    # Build entity lookup for PK resolution
+    entity_map = {e["name"]: e for e in data.get("entities", [])}
+
     for entity in data.get("entities", []):
         note = entity.get("description", "").replace("'", "\\'")
+        pk = _find_pk(entity)
         lines.append(f"Table {entity['name']} [note: '{note}'] {{")
+        lines.append(f"  {pk} [pk, note: 'Primary key']")
         for f in entity.get("fields", []):
+            # Skip if this is the pk field we already added
+            if f["name"] == pk:
+                continue
             ftype = _dbml_type(f["type"], enum_names)
             parts = []
             if not f.get("required", False):
@@ -458,7 +487,11 @@ def to_dbml(data: dict) -> str:
         sym   = _DBML_REF.get(rel.get("type", "association"), "<>")
         label = rel.get("label", "")
         comment = f"  // {label}" if label else ""
-        lines.append(f"Ref: {rel['from']}.id {sym} {rel['to']}.id{comment}")
+        from_entity = entity_map.get(rel["from"], {})
+        to_entity = entity_map.get(rel["to"], {})
+        from_pk = _find_pk(from_entity)
+        to_pk = _find_pk(to_entity)
+        lines.append(f"Ref: {rel['from']}.{from_pk} {sym} {rel['to']}.{to_pk}{comment}")
     return "\n".join(lines)
 
 
