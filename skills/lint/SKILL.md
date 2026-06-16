@@ -19,11 +19,12 @@ Markdown/JSON drift.
 ## Invocation
 
 ```
-/skill:lint
-/skill:lint --data artifacts/DataSpec.json
-/skill:lint --specs data,api
-/skill:lint --strict
-/skill:lint --json
+/skill:lint                            # Quick check all artifacts in artifacts/
+/skill:lint data                       # Lint only DataSpec
+/skill:lint data api                   # Lint DataSpec + ApiSpec
+/skill:lint --strict                   # Warnings as errors (all artifacts)
+/skill:lint --json                     # Machine-readable output
+/skill:lint data --strict              # Lint DataSpec, warnings as errors
 ```
 
 ---
@@ -121,7 +122,7 @@ Markdown/JSON drift.
 Run the linter to check existing artifacts:
 
 ```
-/skill:lint --data artifacts/DataSpec.json --api artifacts/ApiSpec.json
+/skill:lint data api
 ```
 
 If errors are found, fix them before proceeding. If only warnings, note them
@@ -131,14 +132,14 @@ but proceed.
 Run targeted lint to verify changes:
 
 ```
-/skill:lint --data artifacts/DataSpec.json
+/skill:lint data
 ```
 
 ### Before advancing lifecycle status
 Run the full suite to check completeness gates:
 
 ```
-/skill:lint --data artifacts/DataSpec.json --api artifacts/ApiSpec.json --strict
+/skill:lint data api --strict
 ```
 
 The `--strict` flag treats warnings as errors, ensuring no warnings remain
