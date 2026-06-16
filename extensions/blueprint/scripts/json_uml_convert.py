@@ -647,8 +647,14 @@ def to_d2(data: dict) -> str:
             for f in entity.get("fields", []):
                 suffix = "" if f.get("required", False) else "?"
                 ftype = f["type"]
-                # D2 doesn't understand enum types - use string
-                if ftype in enum_set or ftype.endswith("[]") and ftype[:-2] in enum_set:
+                # D2 doesn't support arrays or enum types - use string
+                if ftype.endswith("[]"):
+                    base = ftype[:-2]
+                    if base in enum_set:
+                        ftype = "string"
+                    else:
+                        ftype = "string"
+                elif ftype in enum_set:
                     ftype = "string"
                 lines.append(f"    {f['name']}{suffix}: {ftype}")
 
@@ -656,7 +662,7 @@ def to_d2(data: dict) -> str:
         lines += ["}", ""]
 
     lines.append("# Relationships")
-    for i, rel in enumerate(data.get("relationships", [])):
+    for rel in data.get("relationships", []):
         frm, to  = rel["from"], rel["to"]
         arrow    = _D2_ARROW.get(rel.get("type", "association"), "->")
         card     = rel.get("cardinality", {})
@@ -668,7 +674,7 @@ def to_d2(data: dict) -> str:
         to_path  = f"enums.{to}"  if to  in enum_set else f"{entity_group.get(to,  'public_entities')}.{to}"
         style_block = _D2_STYLE.get(rel.get("type", "association"), "")
         if style_block:
-            lines.append(f"rel_{i}: {frm_path} {arrow} {to_path} {lbl_str} {{")
+            lines.append(f"{frm_path} {arrow} {to_path} {lbl_str} {{")
             for sl in style_block.splitlines():
                 lines.append(f"  {sl}")
             lines.append("}")
