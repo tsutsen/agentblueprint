@@ -191,18 +191,26 @@ project/
 
 ## ID Naming Conventions
 
-| Spec | Pattern | Examples |
-|------|---------|----------|
-| GoalSpec | `REQ-NNN`, `NFR-NNN`, `SC-NNN`, `US-NNN` | `REQ-001`, `NFR-001`, `SC-001`, `US-001` |
-| DesignSpec | `DG-NNN`, `UXAC-NNN`, `VDR-NNN`, `AR-NNN`, `UJ-NNN` | `DG-001`, `UXAC-001`, `AR-001` |
-| ArchitectureSpec | `CON-NNN` | `CON-001` |
-| TaskPlan | `EP-NNN`, `M\d+` | `EP-001`, `M1` |
-| Issues | `IS-NNN` (project-global, sequential) | `IS-001`, `IS-002` |
-| ApiSpec | `FN-<camelCase>` | `FN-createUser`, `FN-placeOrder` |
-| TestSpec | `TST-<name>-NNN` | `TST-createUser-001`, `TST-placeOrder-002` |
-| DataSpec | PascalCase entities, camelCase fields | `User`, `orderItem` |
-| DataSpec enums | SCREAMING_SNAKE_CASE | `PENDING`, `SHIPPED` |
-| Screens/flows/components | kebab-case | `library-screen`, `query-flow` |
+| Spec | Pattern | Abbreviation | Examples |
+|------|---------|--------------|----------|
+| GoalSpec | `REQ-NNN` | **REQ** — Requirement | `REQ-001` |
+| | `NFR-NNN` | **NFR** — Non-Functional Requirement | `NFR-001` |
+| | `SC-NNN` | **SC** — Scenario | `SC-001` |
+| | `US-NNN` | **US** — User Story | `US-001` |
+| DesignSpec | `DG-NNN` | **DG** — Design Guideline | `DG-001` |
+| | `UXAC-NNN` | **UXAC** — UX Acceptance Criterion | `UXAC-001` |
+| | `VDR-NNN` | **VDR** — Visual Design Requirement | `VDR-001` |
+| | `AR-NNN` | **AR** — Accessibility Requirement | `AR-001` |
+| | `UJ-NNN` | **UJ** — User Journey | `UJ-001` |
+| ArchitectureSpec | `CON-NNN` | **CON** — Component / Concern | `CON-001` |
+| TaskPlan | `EP-NNN` | **EP** — Epic | `EP-001` |
+| | `M\d+` | **M** — Milestone | `M1` |
+| Issues | `IS-NNN` | **IS** — Implementation Story | `IS-001` |
+| ApiSpec | `FN-<camelCase>` | **FN** — Function / API Endpoint | `FN-createUser` |
+| TestSpec | `TST-<name>-NNN` | **TST** — Test Case | `TST-createUser-001` |
+| DataSpec | PascalCase entities, camelCase fields | — | `User`, `orderItem` |
+| DataSpec enums | SCREAMING_SNAKE_CASE | — | `PENDING`, `SHIPPED` |
+| Screens/flows/components | kebab-case | — | `library-screen`, `query-flow` |
 
 ## Design Principles
 
