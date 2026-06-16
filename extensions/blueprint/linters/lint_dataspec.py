@@ -403,6 +403,86 @@ def check_methods_coverage(spec: dict, api_spec: Optional[dict], result: LintRes
                 hint=f"Define entity methods to document how the API functions interact with this entity.")
 
 
+def _name_similarity(a: str, b: str) -> float:
+    """Compute name similarity ratio between 0 and 1 using difflib."""
+    if not a or not b:
+        return 0.0
+    return __import__('difflib').SequenceMatcher(None, a.lower(), b.lower()).ratio()
+
+
+def check_entity_similarity(spec: dict, result: LintResult):
+    """Warn if two entities have similar names and high field overlap."""
+    entities = spec.get("entities", [])
+    for i, a in enumerate(entities):
+        for b in entities[i + 1:]:
+            a_name = a["name"]
+            b_name = b["name"]
+
+            # Skip if both are valid PascalCase
+            if not (re.match(r"^[A-Z][A-Za-z0-9]*$", a_name) and
+                    re.match(r"^[A-Z][A-Za-z0-9]*$", b_name)):
+                continue
+
+            # 1. Name similarity (Levenshtein ratio ≥ 0.6)
+            name_sim = _name_similarity(a_name, b_name)
+            if name_sim < 0.6:
+                continue
+
+            # 2. Field overlap (Jaccard similarity ≥ 0.6)
+            fields_a = {f["name"] for f in a.get("fields", [])}
+            fields_b = {f["name"] for f in b.get("fields", [])}
+            if not fields_a and not fields_b:
+                continue
+            overlap = fields_a & fields_b
+            union = fields_a | fields_b
+            jaccard = len(overlap) / len(union) if union else 0
+
+            if jaccard >= 0.6:
+                result.add("warning", "entity_similarity",
+                    f"Entities '{a_name}' and '{b_name}' appear to be similar.",
+                    hint=f"Name similarity: {name_sim:.0%}, Field overlap: {jaccard:.0%} "
+                         f"({len(overlap)}/{len(union)} fields). Shared: {sorted(overlap)}. "
+                         f"Consider merging or renaming.")
+
+
+def check_similar_entities_connected(spec: dict, result: LintResult):
+    """Warn if similar-named entities exist but have no relationship between them."""
+    entities = spec.get("entities", [])
+    relationships = spec.get("relationships", [])
+
+    # Build set of connected entity pairs
+    connected = set()
+    for rel in relationships:
+        pair = tuple(sorted([rel.get("from", ""), rel.get("to", "")]))
+        connected.add(pair)
+
+    for i, a in enumerate(entities):
+        for b in entities[i + 1:]:
+            a_name = a["name"]
+            b_name = b["name"]
+
+            # Skip if both are valid PascalCase
+            if not (re.match(r"^[A-Z][A-Za-z0-9]*$", a_name) and
+                    re.match(r"^[A-Z][A-Za-z0-9]*$", b_name)):
+                continue
+
+            # Name similarity threshold
+            name_sim = _name_similarity(a_name, b_name)
+            if name_sim < 0.55:
+                continue
+
+            # Check if they are already connected
+            pair = tuple(sorted([a_name, b_name]))
+            if pair in connected:
+                continue
+
+            # Warn — similar names but no relationship
+            result.add("warning", "similar_entities_disconnected",
+                f"Similar entities '{a_name}' and '{b_name}' have no relationship.",
+                hint=f"Name similarity: {name_sim:.0%}. "
+                     f"Consider adding a relationship or clarifying their distinct roles.")
+
+
 def check_primitives(spec: dict, result: LintResult):
     """Validate that primitives list is non-empty and contains valid names."""
     primitives = spec.get("primitives", [])
@@ -448,6 +528,8 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool, api_spec: Op
     check_entity_should_be_field(spec, api_spec, result)
     check_field_should_be_entity(spec, api_spec, result)
     check_methods_coverage(spec, api_spec, result)
+    check_entity_similarity(spec, result)
+    check_similar_entities_connected(spec, result)
 
     if strict:
         for w in result.warnings:
