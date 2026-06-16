@@ -195,9 +195,16 @@ function registerLoadArtifact(pi: ExtensionAPI) {
         warnings: [],
       };
 
-      // 1. Load schema
-      const schemaPath = path.resolve(cwd, `.pi/skills/blueprint/schemas/markdown/${def.schema}`);
-      result.schemaPath = `.pi/skills/blueprint/schemas/markdown/${def.schema}`;
+      // 1. Load schema (support both dev and installed package modes)
+      const pkgPaths = resolvePackagePaths(cwd);
+      let schemaPath = "";
+      let schemaPathStr = "";
+
+      if (pkgPaths.schemasSrc) {
+        schemaPath = path.join(pkgPaths.schemasSrc, def.schema);
+        schemaPathStr = path.posix.join(pkgPaths.mode === "dev" ? ".pi" : "node_modules/@agentblueprint/blueprint", "skills", "blueprint", "schemas", "markdown", def.schema);
+      }
+      result.schemaPath = schemaPathStr;
       if (fs.existsSync(schemaPath)) {
         result.schemaContent = fs.readFileSync(schemaPath, "utf-8");
       } else {
@@ -540,6 +547,34 @@ function readFrontmatter(content: string): Record<string, string> {
   return fm;
 }
 
+// ── Helper: Resolve package paths (works in dev and installed modes) ───────
+
+function resolvePackagePaths(cwd: string) {
+  const paths = {
+    // Development mode: .pi/extensions/blueprint/
+    devExtDir: path.resolve(cwd, ".pi/extensions/blueprint"),
+    devSkillsSrc: path.resolve(cwd, ".pi/extensions/blueprint/skills"),
+    devSchemasSrc: path.resolve(cwd, ".pi/skills/blueprint/schemas/markdown"),
+    // Installed package mode: node_modules/@agentblueprint/blueprint/
+    pkgExtDir: path.resolve(cwd, "node_modules/@agentblueprint/blueprint/extensions/blueprint"),
+    pkgSkillsSrc: path.resolve(cwd, "node_modules/@agentblueprint/blueprint/skills"),
+    pkgSchemasSrc: path.resolve(cwd, "node_modules/@agentblueprint/blueprint/skills/blueprint/schemas/markdown"),
+  };
+
+  // Prefer development mode if .pi/ exists
+  if (fs.existsSync(paths.devExtDir) || fs.existsSync(paths.devSchemasSrc)) {
+    return { ...paths, mode: "dev", extDir: paths.devExtDir, skillsSrc: paths.devSkillsSrc, schemasSrc: paths.devSchemasSrc };
+  }
+
+  // Fall back to installed package mode
+  if (fs.existsSync(paths.pkgExtDir) || fs.existsSync(paths.pkgSchemasSrc)) {
+    return { ...paths, mode: "pkg", extDir: paths.pkgExtDir, skillsSrc: paths.pkgSkillsSrc, schemasSrc: paths.pkgSchemasSrc };
+  }
+
+  // Neither found
+  return { ...paths, mode: "none", extDir: null, skillsSrc: null, schemasSrc: null };
+}
+
 // ── Tool: init_workspace (with jsonschema install) ──────────────────────────
 
 function registerInitWorkspace(pi: ExtensionAPI) {
@@ -559,10 +594,9 @@ function registerInitWorkspace(pi: ExtensionAPI) {
     }),
     async execute(_toolCallId, _params, _signal, _onUpdate, ctx) {
       const cwd = ctx.cwd;
-      const extDir = path.resolve(cwd, ".pi/extensions/blueprint");
-      const skillsSrc = path.join(extDir, "skills");
+      const pkgPaths = resolvePackagePaths(cwd);
       const skillsDst = path.resolve(cwd, ".pi/skills");
-      const schemasSrc = path.join(extDir, "skills/blueprint/schemas/markdown");
+      const schemasSrc = pkgPaths.schemasSrc;
 
       // 1. Create directories
       const dirs = [
