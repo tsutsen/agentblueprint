@@ -740,6 +740,20 @@ function registerInitWorkspace(pi: ExtensionAPI) {
         }
       }
 
+      // 5. Install python dependencies
+      let pipOutput = '';
+      let pipSuccess = false;
+      try {
+        const { stdout, stderr } = await execFilePromise(
+          'pip', ['install', 'jsonschema'],
+          { timeout: 30000, cwd },
+        );
+        pipOutput = stdout || stderr || '';
+        pipSuccess = true;
+      } catch {
+        pipOutput = 'jsonschema installation failed — linting may not work without it.';
+      }
+
       // 6. Rename mismatched files (non-standard → standard names)
       const renamed: Array<{ from: string; to: string }> = [];
       for (const m of mismatches) {
