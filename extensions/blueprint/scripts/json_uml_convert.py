@@ -285,22 +285,13 @@ def _drawio_entity(entity: dict, x: int, y: int, cell_ids: dict) -> list[str]:
     # Header + fields + methods
     total_h = hdr_h + row_h * (len(fields) + len(methods))
     cells  = [
-        f'<mxCell id="{eid}" value="" style="'
+        f'<mxCell id="{eid}" value="{_esc(name)}" style="'
         f'shape=table;startSize={hdr_h};container=1;collapsible=1;childLayout=tableLayout;'
         f'fillColor={fill};strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" '
         f'vertex="1" parent="1">'
         f'<mxGeometry x="{x}" y="{y}" width="{width}" '
         f'height="{total_h}" as="geometry"/></mxCell>'
     ]
-    # Header row (separate cell for proper table layout)
-    cells.append(
-        f'<mxCell id="{_uid()}" value="{_esc(name)}" parent="{eid}" style="'
-        f'textAlign=center;verticalAlign=middle;resizable=0;rotatable=0;'
-        f'collapsible=0;shape=plaintext;pointerEvents=0;fontStyle=1;" '
-        f'vertex="1">'
-        f'<mxGeometry y="0" width="{width}" height="{hdr_h}" as="geometry"/>'
-        f'</mxCell>'
-    )
     # Field rows
     for i, f in enumerate(fields):
         req = '  ✱' if f.get('required') else ''
