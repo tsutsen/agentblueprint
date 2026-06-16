@@ -646,7 +646,11 @@ def to_d2(data: dict) -> str:
             lines += [f"  {entity['name']}: {{", "    shape: class", f'    tooltip: "{desc}"']
             for f in entity.get("fields", []):
                 suffix = "" if f.get("required", False) else "?"
-                lines.append(f"    {f['name']}{suffix}: {f['type']}")
+                ftype = f["type"]
+                # D2 doesn't understand enum types - use string
+                if ftype in enum_set or ftype.endswith("[]") and ftype[:-2] in enum_set:
+                    ftype = "string"
+                lines.append(f"    {f['name']}{suffix}: {ftype}")
 
             lines += ["  }", ""]
         lines += ["}", ""]
