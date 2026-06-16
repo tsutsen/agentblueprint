@@ -44,7 +44,8 @@ AgentBlueprint/
 │           ├── lint_testspec.py
 │           ├── lint_issues.py
 │           ├── lint_taskplan.py
-│           └── lint_cross.py
+│           ├── lint_cross.py
+│           └── lint_consistency.py
 └── skills/
     ├── blueprint/
     │   ├── SKILL.md          ← orchestrator skill
@@ -111,6 +112,7 @@ Each spec has two files:
 | `lint_taskplan.py` | TaskPlan — requirement coverage, dependency ordering, milestone outcomes |
 | `lint_issues.py` | Issue — ID sequencing, dependency consistency, epic coverage |
 | `lint_cross.py` | Cross-spec — all inter-spec reference validation (REQ/NFR/US/FN/entity/api refs) |
+| `lint_consistency.py` | Markdown/JSON drift — entity/enum/relationship/function name mismatches |
 
 <details>
 <summary>Linter details</summary>
@@ -195,13 +197,23 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 - Entity naming (PascalCase), field naming (camelCase), method naming (camelCase)
 - Type resolution (primitives, entities, enums)
 - Relationship endpoints (valid entities, valid types, warns on self-references)
-- Enum formats (SCREAMING_SNAKE_CASE)
+- Enum formats (PascalCase), enum values (SCREAMING_SNAKE_CASE)
 - Method apiRef format (FN-<camelCase>)
+- Visibility validation (public/internal)
+- Primitives completeness (checks for missing primitives like `void`)
 - Primitives quality (warns on "any")
+- Enum-entity collision (same name as entity and enum)
+- Relationship targets enums (error — enums are types, not relationship targets)
+- Duplicate field names within entities
+- Entity→field heuristic (≤3 fields, all primitives, ≤1 relationship, ≤1 referrer)
+- Field→entity heuristic (>5 fields, has identity, ≥2 referrers, ≥1 relationship, ≥2 API functions)
+- Methods coverage (entity with ≥2 API functions but 0 methods defined)
+- Entity similarity (similar names + high field overlap)
+- Similar entities disconnected (similar names but no relationship)
 
-**Completeness gates (6):**
+**Completeness gates (7):**
 - `draft` — ≥1 entity, ≥1 relationship
-- `review` — all entities have descriptions, no orphan entities
+- `review` — all entities have descriptions, no orphan entities, orphan percentage <20%
 - `confirmed` — all entities have field examples
 </details>
 
@@ -276,6 +288,19 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 - Data-API alignment (API parameter/output types match data spec types)
 
 **Completeness gates:** None — cross-spec layer is purely structural.
+</details>
+
+<details>
+<summary>lint_consistency.py</summary>
+
+
+**Checks:**
+- Entity name drift (present in Markdown but not JSON, or vice versa)
+- Enum name drift (present in Markdown but not JSON, or vice versa)
+- Relationship drift (present in Markdown but not JSON, or vice versa)
+- Function ID drift (present in Markdown but not JSON, or vice versa)
+
+**Completeness gates:** None — consistency check is advisory.
 </details>
 </details>
 
