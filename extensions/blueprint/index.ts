@@ -593,6 +593,7 @@ function registerInitWorkspace(pi: ExtensionAPI) {
       const cwd = ctx.cwd;
       const pkgPaths = resolvePackagePaths(cwd);
       const skillsDst = path.resolve(cwd, ".pi/skills");
+      const skillsSrc = pkgPaths.skillsSrc;
       const schemasSrc = pkgPaths.schemasSrc;
 
       // 1. Create directories
