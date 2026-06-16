@@ -1,15 +1,14 @@
 # AgentBlueprint
 
-Drop this `.pi/` folder into any project to get enforceable, structured
-documentation. It produces structured artifacts (GoalSpec, Glossary, DesignSpec,
-ArchitectureSpec, DataSpec, ApiSpec, TestSpec) through guided interviews,
-validates them with a cross-spec linter, and manages their state transitions.
+Structured software lifecycle artifacts through guided interviews. Produces
+enforceable, structured documentation (GoalSpec, Glossary, DesignSpec,
+ArchitectureSpec, DataSpec, ApiSpec, TestSpec) with cross-spec validation.
 
 ## Quick Start
 
 ```bash
-# Drop .pi/ into your project
-cp -r .pi /path/to/project/.pi
+# Install in your project
+npm install @agentblueprint/blueprint
 
 # Initialize workspace (creates artifacts/, tasks/, copies skills, installs deps)
 /skill:blueprint init
@@ -24,62 +23,61 @@ Markdown document and a machine-readable JSON file.
 ## Structure
 
 ```
-.pi/
-├── README.md
-├── skills/
-│   ├── interview/SKILL.md          ← structured questioning
+AgentBlueprint/
+├── package.json              ← Pi package manifest
+├── README.md                 ← this file
+├── .gitignore
+├── extensions/
 │   └── blueprint/
-│       ├── SKILL.md                ← orchestrator
-│       └── schemas/
-│           ├── markdown/           ← interview schemas (human-readable)
-│           │   ├── GoalSpec.md
-│           │   ├── Glossary.md
-│           │   ├── DesignSpec.md
-│           │   ├── ArchitectureSpec.md
-│           │   ├── Data.md
-│           │   ├── Api.md
-│           │   ├── Test.md
-│           │   ├── TaskPlan.md
-│           │   └── Issue.md
-│           └── json/               ← JSON validation schemas
-│               ├── goalspec.schema.json
-│               ├── glossary.schema.json
-│               ├── designspec.schema.json
-│               ├── archspec.schema.json
-│               ├── data.schema.json
-│               ├── api.schema.json
-│               ├── test.schema.json
-│               ├── taskplan.schema.json
-│               ├── issue.schema.json
-│               ├── example.goalspec.json
-│               ├── example.glossary.json
-│               ├── example.designspec.json
-│               ├── example.archspec.json
-│               ├── example.dataspec.json
-│               ├── example.apispec.json
-│               ├── example.testspec.json
-│               ├── example.taskplan.json
-│               └── suite.json
-└── extensions/
-    └── blueprint/
-        ├── index.ts                ← registers all tools
-        ├── scripts/                ← automation scripts
-        │   ├── generate_tests.py   ← auto-generate TestSpec from ApiSpec
-        │   └── json_uml_convert.py ← generate diagrams from DataSpec
-        ├── linters/
-        │   ├── lint_all.py         ← unified cross-spec linter
-        │   ├── lint_goalspec.py
-        │   ├── lint_glossary.py
-        │   ├── lint_designspec.py
-        │   ├── lint_archspec.py
-        │   ├── lint_testspec.py
-        │   ├── lint_issues.py
-        │   ├── lint_taskplan.py
-        │   └── lint_cross.py
-        └── skills/                 ← bundled for distribution via init_workspace
-            ├── blueprint/
-            │   └── schemas/        ← (same as .pi/skills/blueprint/schemas/)
-            └── interview/
+│       ├── index.ts          ← registers all tools
+│       ├── scripts/          ← automation scripts
+│       │   ├── generate_tests.py
+│       │   └── json_uml_convert.py
+│       └── linters/          ← spec validation linters
+│           ├── lint_all.py
+│           ├── lint_goalspec.py
+│           ├── lint_glossary.py
+│           ├── lint_designspec.py
+│           ├── lint_archspec.py
+│           ├── lint_testspec.py
+│           ├── lint_issues.py
+│           ├── lint_taskplan.py
+│           └── lint_cross.py
+└── skills/
+    ├── blueprint/
+    │   ├── SKILL.md          ← orchestrator skill
+    │   └── schemas/
+    │       ├── markdown/     ← interview schemas (human-readable)
+    │       │   ├── GoalSpec.md
+    │       │   ├── Glossary.md
+    │       │   ├── DesignSpec.md
+    │       │   ├── ArchitectureSpec.md
+    │       │   ├── Data.md
+    │       │   ├── Api.md
+    │       │   ├── Test.md
+    │       │   ├── TaskPlan.md
+    │       │   └── Issue.md
+    │       └── json/         ← JSON validation schemas
+    │           ├── goalspec.schema.json
+    │           ├── glossary.schema.json
+    │           ├── designspec.schema.json
+    │           ├── archspec.schema.json
+    │           ├── data.schema.json
+    │           ├── api.schema.json
+    │           ├── test.schema.json
+    │           ├── taskplan.schema.json
+    │           ├── issue.schema.json
+    │           ├── example.goalspec.json
+    │           ├── example.glossary.json
+    │           ├── example.designspec.json
+    │           ├── example.archspec.json
+    │           ├── example.dataspec.json
+    │           ├── example.apispec.json
+    │           ├── example.testspec.json
+    │           ├── example.taskplan.json
+    │           └── suite.json
+    └── interview/
+        └── SKILL.md          ← interview skill
 ```
 
 ### Skills
@@ -93,8 +91,8 @@ Markdown document and a machine-readable JSON file.
 
 Each spec has two files:
 
-- **Interview schema** (`.pi/skills/blueprint/schemas/markdown/`) — human-readable instructions for the blueprint orchestrator
-- **JSON schema** (`.pi/skills/blueprint/schemas/json/`) — machine-validation schema
+- **Interview schema** (`skills/blueprint/schemas/markdown/`) — human-readable instructions for the blueprint orchestrator
+- **JSON schema** (`skills/blueprint/schemas/json/`) — machine-validation schema
 
 ### Linters
 
@@ -152,7 +150,6 @@ After running a command, artifacts appear in the target project:
 
 ```
 project/
-├── .pi/                    ← this folder (read-only)
 ├── artifacts/              ← generated artifacts
 │   ├── GoalSpec.md + .json
 │   ├── Glossary.md + .json
