@@ -255,7 +255,6 @@ def check_relationship_label_keywords(rel: dict, result: LintResult):
             "is an element of",
         ],
         "composition": [
-            "is the lifecycle owner of",
             "is responsible for creation and destruction", "is the aggregate root of",
             "is the container of", "is a part of", "creates and owns",
         ],
