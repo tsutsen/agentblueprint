@@ -1098,6 +1098,164 @@ function registerWriteSection(pi: ExtensionAPI) {
   });
 }
 
+// ── Tool: generate_tests ─────────────────────────────────────────────────────
+
+function registerGenerateTests(pi: ExtensionAPI, extDir: string) {
+  pi.registerTool({
+    name: "generate_tests",
+    label: "Generate Tests",
+    description:
+      "Generate TestSpec test cases for all ApiSpec functions that don't have tests yet. " +
+      "Reads GoalSpec for REQ/NFR traceability. Produces structured test entries with " +
+      "happy-path, edge-case, and error-path categories. Writes directly to Test.json.",
+    parameters: Type.Object({
+      apiSpecPath: Type.Optional(Type.String({
+        description: "Path to ApiSpec JSON. Default: artifacts/Api.json",
+      })),
+      goalSpecPath: Type.Optional(Type.String({
+        description: "Path to GoalSpec JSON for REQ/NFR traceability. Default: artifacts/GoalSpec.json",
+      })),
+      testSpecPath: Type.Optional(Type.String({
+        description: "Path to existing TestSpec JSON. Default: artifacts/Test.json",
+      })),
+      reqMappingPath: Type.Optional(Type.String({
+        description: "Path to REQ→Fn mapping JSON. Default: artifacts/req_fn_mapping.json",
+      })),
+    }),
+    async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+      const extDir = path.resolve(ctx.cwd, ".pi/extensions/blueprint");
+      const script = path.join(extDir, "scripts/generate_tests.py");
+
+      if (!fs.existsSync(script)) {
+        return {
+          content: [{ type: "text", text: `ERROR: generate_tests.py not found at ${script}` }],
+          details: { success: false },
+          isError: true,
+        };
+      }
+
+      const args: string[] = [];
+      const defaults = {
+        api: "artifacts/Api.json",
+        goal: "artifacts/GoalSpec.json",
+        test: "artifacts/Test.json",
+        mapping: "artifacts/req_fn_mapping.json",
+      };
+
+      const apiPath = params.apiSpecPath || path.resolve(ctx.cwd, defaults.api);
+      const goalPath = params.goalSpecPath ? path.resolve(ctx.cwd, params.goalSpecPath) : undefined;
+      const testPath = params.testSpecPath ? path.resolve(ctx.cwd, params.testSpecPath) : undefined;
+      const mappingPath = params.reqMappingPath ? path.resolve(ctx.cwd, params.reqMappingPath) : undefined;
+
+      if (!fs.existsSync(apiPath)) {
+        return {
+          content: [{ type: "text", text: `ERROR: ApiSpec not found at ${apiPath}` }],
+          details: { success: false },
+          isError: true,
+        };
+      }
+      args.push(apiPath);
+      if (goalPath && fs.existsSync(goalPath)) args.push(goalPath);
+      if (testPath) args.push(testPath);
+      if (mappingPath && fs.existsSync(mappingPath)) args.push(mappingPath);
+
+      try {
+        const { stdout, stderr } = await execFilePromise("python", [script, ...args], {
+          cwd: ctx.cwd,
+          timeout: 30000,
+        });
+        return {
+          content: [{ type: "text", text: stdout.trim() }],
+          details: { success: true, output: stdout.trim(), stderr: stderr.trim() },
+        };
+      } catch (err: any) {
+        return {
+          content: [{ type: "text", text: `generate_tests failed:\n${err.stderr || err.message}` }],
+          details: { success: false, error: err.stderr || err.message },
+          isError: true,
+        };
+      }
+    },
+  });
+}
+
+// ── Tool: generate_diagrams ──────────────────────────────────────────────────
+
+function registerGenerateDiagrams(pi: ExtensionAPI, extDir: string) {
+  pi.registerTool({
+    name: "generate_diagrams",
+    label: "Generate Diagrams",
+    description:
+      "Generate data model diagrams in multiple formats from DataSpec JSON. " +
+      "Supports PlantUML, Mermaid, draw.io, DBML, and D2. " +
+      "Outputs to a configurable directory (default: diagrams/).",
+    parameters: Type.Object({
+      dataSpecPath: Type.Optional(Type.String({
+        description: "Path to DataSpec JSON. Default: artifacts/Data.json",
+      })),
+      formats: Type.Optional(Type.String({
+        description: "Comma-separated formats: puml,mermaid,drawio,dbml,d2 (default: all)",
+      })),
+      outputDir: Type.Optional(Type.String({
+        description: "Output directory relative to project root. Default: diagrams",
+      })),
+    }),
+    async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+      const extDir = path.resolve(ctx.cwd, ".pi/extensions/blueprint");
+      const script = path.join(extDir, "scripts/json_uml_convert.py");
+
+      if (!fs.existsSync(script)) {
+        return {
+          content: [{ type: "text", text: `ERROR: json_uml_convert.py not found at ${script}` }],
+          details: { success: false },
+          isError: true,
+        };
+      }
+
+      const dataPath = params.dataSpecPath || path.resolve(ctx.cwd, "artifacts/Data.json");
+      const formats = params.formats || "all";
+      const outputDir = params.outputDir || "diagrams";
+
+      if (!fs.existsSync(dataPath)) {
+        return {
+          content: [{ type: "text", text: `ERROR: DataSpec not found at ${dataPath}` }],
+          details: { success: false },
+          isError: true,
+        };
+      }
+
+      // Create output directory
+      const outPath = path.resolve(ctx.cwd, outputDir);
+      fs.mkdirSync(outPath, { recursive: true });
+
+      try {
+        const { stdout, stderr } = await execFilePromise("python", [script, dataPath, formats, outPath], {
+          cwd: ctx.cwd,
+          timeout: 30000,
+        });
+        const lines = stdout.trim().split("\n");
+        const generatedFiles = lines.filter(l => l.includes("✓")).map(l => l.match(/✓\s+(.+?)\s+\(/)?.[1] || l);
+        return {
+          content: [{ type: "text", text: stdout.trim() }],
+          details: {
+            success: true,
+            output: stdout.trim(),
+            stderr: stderr.trim(),
+            outputDir: outputDir,
+            generatedFiles,
+          },
+        };
+      } catch (err: any) {
+        return {
+          content: [{ type: "text", text: `generate_diagrams failed:\n${err.stderr || err.message}` }],
+          details: { success: false, error: err.stderr || err.message },
+          isError: true,
+        };
+      }
+    },
+  });
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 export default function (pi: ExtensionAPI) {
@@ -1110,4 +1268,6 @@ export default function (pi: ExtensionAPI) {
   registerWriteSection(pi);
   registerDualOutput(pi, extDir);
   registerHandoff(pi);
+  registerGenerateTests(pi, extDir);
+  registerGenerateDiagrams(pi, extDir);
 }

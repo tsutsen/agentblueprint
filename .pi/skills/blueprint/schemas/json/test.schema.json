@@ -27,6 +27,18 @@
       "enum": ["happy-path", "edge-case", "error-path"]
     },
 
+    "reqId": {
+      "type": "string",
+      "description": "Functional requirement identifier, format REQ-NNN. Must match an ID in GoalSpec.",
+      "pattern": "^REQ-\\d{3}$"
+    },
+
+    "nfrId": {
+      "type": "string",
+      "description": "Non-functional requirement identifier, format NFR-NNN. Must match an ID in GoalSpec.",
+      "pattern": "^NFR-\\d{3}$"
+    },
+
     "concreteValue": {
       "description": "A concrete example value — string, number, boolean, object, or array. Must NOT be a placeholder like 'a valid userId' or 'some string'."
     }

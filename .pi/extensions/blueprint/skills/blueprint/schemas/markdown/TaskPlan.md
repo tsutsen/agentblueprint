@@ -12,8 +12,13 @@ DesignSpec, ArchitectureSpec, DataSpec, ApiSpec, and TestSpec — not by
 open-ended interview. The agent must derive a proposed structure from those
 artifacts first, present it for review, refine it, then write.
 
-Individual epic files live in `tasks/epics/`. This file (`tasks/PLAN.md`)
-is the index — it references epics by ID but does not duplicate their content.
+Individual epic files live in `tasks/epics/EP-<NNN>/`. Each epic is a folder
+containing `EP-<NNN>-<slug>.md` (human-readable) and `EP-<NNN>-<slug>.json`
+(machine-readable). This file (`tasks/PLAN.md`) is the index — it references
+epics by ID but does not duplicate their content.
+
+After all epics are written and approved, run `/skill:blueprint breakdown
+EP-NNN` to decompose each epic into independently-grabbable issues.
 
 ---
 
@@ -150,8 +155,8 @@ A milestone with no demonstrable outcome should be merged with an adjacent one.
 
 ### Epic Index
 
-Reference table only — content lives in `tasks/epics/`. Do not duplicate
-epic content here.
+Reference table only — content lives in `tasks/epics/EP-<NNN>/`. Do not
+duplicate epic content here.
 
 Each entry contains:
 * EP-NNN — sequential, zero-padded to three digits, project-global
@@ -173,7 +178,7 @@ Validation (enforce before writing):
 
 ### Epic file sections
 
-Each `tasks/epics/EP-<NNN>-<slug>.md` contains the following sections.
+Each `tasks/epics/EP-<NNN>/EP-<NNN>-<slug>.md` contains the following sections.
 Guidance for each is below.
 
 #### Objective

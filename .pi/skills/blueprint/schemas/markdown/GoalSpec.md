@@ -207,7 +207,7 @@ Format:
 After producing `artifacts/GoalSpec.json`, run:
 
 ```
-python linters/lint_goalspec.py artifacts/GoalSpec.json \
+python .pi/extensions/blueprint/linters/lint_goalspec.py artifacts/GoalSpec.json \
   --schema schemas/goalspec.schema.json --json
 ```
 

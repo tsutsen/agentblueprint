@@ -49,7 +49,7 @@ Cover the primary successful execution path.
 
 Each test must have:
 
-* **ID** — format `T-<functionName>-<NNN>`, e.g. `T-createUser-001`
+* **ID** — format `TST-<functionName>-<NNN>`, e.g. `TST-createUser-001`
 * **Description** — the scenario being tested
 * **Input** — concrete example values (not placeholders)
 * **Expected Output** — exact value or shape
@@ -116,6 +116,38 @@ For each confirmed function contract, produce test cases in three categories
 (happy path, edge case, error path). See the **Test Cases** section above
 for the full structure and rules.
 
+#### REQ/NFR Traceability
+
+Every test must be traceable back to at least one requirement:
+
+1. **Happy-path tests** → must reference the REQ-IDs they validate via `reqRefs`.
+   Cross-reference the GoalSpec's `functionalRequirements` to find which
+   requirement each test exercises.
+
+2. **Error-path tests** → typically do NOT need `reqRefs` (they verify
+   error handling, not business requirements). Leave `reqRefs` as `null`.
+
+3. **Edge-case tests** → may reference REQ-IDs if the edge case is
+   explicitly called out in a requirement. Otherwise leave `reqRefs` as `null`.
+
+4. **NFR linkage**: If a test validates a non-functional requirement
+   (e.g., performance, security), note the NFR-ID in the test's `notes`
+   field. NFRs are not directly testable via unit tests — they require
+   separate load/security tests. The TestSpec should still document the
+   NFR reference for traceability.
+
+> "For each test, identify which REQ-IDs it validates. Add them to the
+> `reqRefs` array. If a test doesn't validate a specific requirement,
+> set `reqRefs` to null. Do not guess — refer to the GoalSpec."
+
+After all tests are written, verify traceability:
+
+* Every REQ-ID in GoalSpec should be covered by at least one test in at
+  least one function's test block.
+* Every test with `reqRefs` set must have those REQ-IDs exist in GoalSpec
+  (the linter will check this).
+* If a REQ has no covering test, flag it as a gap.
+
 ---
 
 ## Rules
@@ -179,21 +211,89 @@ Do not proceed to implementation or handoff until confirmed.
 
 ## Linting
 
-After producing `artifacts/TestSpec.json`, run:
+After producing `artifacts/TestSpec.json`, run linting in this order:
+
+### Step 1 — Schema validation via `dual_output`
+
+Call the `dual_output` tool to validate the JSON against `test.schema.json`:
 
 ```
-python linters/lint_cross.py \
-  --data artifacts/DataSpec.json \
-  --api  artifacts/ApiSpec.json \
-  --test artifacts/TestSpec.json \
+tool: dual_output
+args:
+  artifactType: test
+  filePath: artifacts/TestSpec.md
+```
+
+This is the **mandatory schema validation gate**. If validation fails,
+fix the JSON artifact and retry. Do NOT proceed to handoff with invalid JSON.
+
+### Step 2 — Semantic lint via `lint_testspec.py`
+
+```
+python .pi/extensions/blueprint/linters/lint_testspec.py \
+  artifacts/TestSpec.json \
+  --schema schemas/json/test.schema.json \
+  --api artifacts/ApiSpec.json \
   --json
 ```
 
 Checks enforced:
 
-* Every function in ApiSpec has at least one test (`test_coverage`)
-* Every test `fnRef` resolves to a real function in ApiSpec (`test_fnref_resolve`)
-* Every documented error condition has a test (`error_coverage`)
-* Every test `expectedOutputType` resolves in DataSpec (`test_type_resolve`)
+* Every function in ApiSpec has at least one test (`function_untested`)
+* Every test `fnRef` resolves to a real function in ApiSpec (`fnref_missing`)
+* Every documented error condition has an error-path test (`error_code_untested`)
+* Test IDs match fnRef prefixes (`id_fn_mismatch`)
+* No duplicate test IDs (`duplicate_id`)
+* No placeholder values in inputs (`placeholder_input`)
+* Error-path tests have `errorCode` (`error_path_missing_code`)
+* Happy-path/edge-case tests have `expectedOutput` (`missing_expected_output`)
+* functionCoverage counts match actual tests (`coverage_count_mismatch`)
 
-All errors must be resolved before handoff.
+### Step 3 — Cross-spec reference lint via `lint_cross.py`
+
+```
+python .pi/extensions/blueprint/linters/lint_cross.py \
+  --data artifacts/DataSpec.json \
+  --api  artifacts/ApiSpec.json \
+  --test artifacts/TestSpec.json \
+  --goal artifacts/GoalSpec.json \
+  --json
+```
+
+Checks enforced:
+
+* Every test `fnRef` exists in ApiSpec (`cross-ref`)
+* Every test `reqRefs` value exists in GoalSpec (`cross-ref`)
+* Every test `expectedOutputType` exists in DataSpec (`cross-ref`)
+* All entity names in ApiSpec exist in DataSpec (`cross-ref`)
+
+### Automation: `generate_tests` Tool
+
+Instead of writing tests manually through the interview workflow, you can
+auto-generate a baseline test suite from the ApiSpec:
+
+```
+tool: generate_tests
+args:
+  apiSpecPath: artifacts/Api.json
+  goalSpecPath: artifacts/GoalSpec.json
+  testSpecPath: artifacts/Test.json
+```
+
+This generates:
+- **Happy-path tests** for every function with concrete input values
+- **Error-path tests** for every documented error condition
+- **Edge-case tests** with empty/zero/null inputs
+- **REQ/NFR traceability** via `reqRefs` (from GoalSpec or mapping file)
+- **functionCoverage** entries with counts and out-of-scope declarations
+
+**After auto-generation, you MUST:**
+1. Review each test's `expectedOutput` — the script uses the ApiSpec output
+type as a placeholder; verify it matches the actual expected value.
+2. Refine `reqRefs` — the script may set all REQ-IDs as placeholders; each
+test should reference only the specific requirements it validates.
+3. Run the full linting pipeline (Step 1–3 above) to validate.
+4. Run `dual_output` to finalize.
+
+The auto-generated tests are a **starting point**, not a replacement for
+the interview workflow. Always verify each test against the contract.

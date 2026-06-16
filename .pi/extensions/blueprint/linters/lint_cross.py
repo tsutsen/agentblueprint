@@ -28,6 +28,7 @@ Usage:
 
 import sys
 import json
+import argparse
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
@@ -351,9 +352,19 @@ def _check_nfr_success_criteria_refs(goal_spec: Optional[dict], layer: LayerResu
                            f"not in GoalSpec: {nfr_id}")
 
 
-if __name__ == "__main__":
-    import argparse
+def print_json(result):
+    """Output lint results as JSON (for programmatic consumption)."""
+    out = {
+        "clean": result.clean,
+        "errors": [{"category": e.category, "message": e.message, "hint": e.hint}
+                    for e in result.errors],
+        "warnings": [{"category": w.category, "message": w.message, "hint": w.hint}
+                      for w in result.warnings],
+    }
+    print(json.dumps(out, indent=2))
 
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Cross-spec reference validation.")
     parser.add_argument("--data", help="Path to DataSpec JSON")
     parser.add_argument("--api", help="Path to ApiSpec JSON")
@@ -363,6 +374,8 @@ if __name__ == "__main__":
     parser.add_argument("--arch", help="Path to ArchitectureSpec JSON")
     parser.add_argument("--plan", help="Path to TaskPlan JSON")
     parser.add_argument("--strict", action="store_true")
+    parser.add_argument("--json", action="store_true",
+                        help="Output results as JSON")
     args = parser.parse_args()
 
     data_spec = json.loads(Path(args.data).read_text()) if args.data else None
@@ -376,17 +389,20 @@ if __name__ == "__main__":
     result = run_lint(data_spec, api_spec, test_spec, goal_spec,
                       design_spec, arch_spec, taskplan, args.strict)
 
-    if result.errors:
-        print(f"✗ {len(result.errors)} error(s)")
-        for e in result.errors:
-            print(f"  ✗ [{e.category}] {e.message}")
-            if e.hint:
-                print(f"    → {e.hint}")
-    if result.warnings:
-        print(f"⚠ {len(result.warnings)} warning(s)")
-        for w in result.warnings:
-            print(f"  ⚠ [{w.category}] {w.message}")
-            if w.hint:
-                print(f"    → {w.hint}")
+    if args.json:
+        print_json(result)
+    else:
+        if result.errors:
+            print(f"✗ {len(result.errors)} error(s)")
+            for e in result.errors:
+                print(f"  ✗ [{e.category}] {e.message}")
+                if e.hint:
+                    print(f"    → {e.hint}")
+        if result.warnings:
+            print(f"⚠ {len(result.warnings)} warning(s)")
+            for w in result.warnings:
+                print(f"  ⚠ [{w.category}] {w.message}")
+                if w.hint:
+                    print(f"    → {w.hint}")
 
     sys.exit(0 if result.clean else 1)

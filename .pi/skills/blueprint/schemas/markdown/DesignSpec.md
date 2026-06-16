@@ -238,7 +238,7 @@ A developer unfamiliar with the project can:
 After producing `artifacts/DesignSpec.json`, run:
 
 ```
-python linters/lint_designspec.py artifacts/DesignSpec.json \
+python .pi/extensions/blueprint/linters/lint_designspec.py artifacts/DesignSpec.json \
   --schema schemas/designspec.schema.json \
   --goal   artifacts/GoalSpec.json \
   --json

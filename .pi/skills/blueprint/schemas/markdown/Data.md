@@ -28,6 +28,29 @@ This artifact produces two files:
 - `artifacts/DataSpec.md` — human-readable document
 - `artifacts/Data.json` — machine-readable, conforming to `schemas/data.schema.json`
 
+### Diagram Generation
+
+After finalizing the DataSpec JSON, regenerate all diagrams by calling the
+`generate_diagrams` tool:
+
+```
+tool: generate_diagrams
+args:
+  dataSpecPath: artifacts/Data.json
+  formats: all
+  outputDir: diagrams
+```
+
+This produces:
+- `diagrams/Data.puml` — PlantUML class diagram (render with `plantuml Data.puml`)
+- `diagrams/Data.md` — Mermaid class diagram (embeds in Markdown)
+- `diagrams/Data.drawio` — draw.io XML (import at app.diagrams.net)
+- `diagrams/Data.dbml` — DBML (import at dbdiagram.io)
+- `diagrams/Data.d2` — D2 diagram (render with `d2 Data.d2`)
+
+**Regenerate after every DataSpec change.** Diagrams are derived artifacts
+and must always match the JSON source of truth.
+
 ---
 
 ## Inputs
@@ -106,6 +129,13 @@ Each entity must have:
 * Every field type must resolve to a defined primitive, entity, or enum.
 * If a field has an entity type, a relationship must exist between them.
 * Every `extends` reference must name a real entity in this spec.
+* `abstract` entities should not have composition/aggregation relationships as targets (they are base classes, not leaf types).
+
+**Inheritance (`extends`):**
+
+When an entity extends another, the diagram generator will render a
+UML inheritance arrow (`--|>` in PlantUML, `<|--` in Mermaid, `--|>` in D2).
+The parent entity will also be rendered in the same visibility group.
 
 ---
 
