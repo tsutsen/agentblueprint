@@ -39,6 +39,8 @@ AgentBlueprint/
 │           ├── lint_glossary.py
 │           ├── lint_designspec.py
 │           ├── lint_archspec.py
+│           ├── lint_dataspec.py
+│           ├── lint_apispec.py
 │           ├── lint_testspec.py
 │           ├── lint_issues.py
 │           ├── lint_taskplan.py
@@ -103,6 +105,8 @@ Each spec has two files:
 | `lint_glossary.py` | Glossary — circular definitions, cross-spec coverage, definition quality |
 | `lint_designspec.py` | DesignSpec — IA/screen consistency, journey coverage, forbidden content |
 | `lint_archspec.py` | ArchitectureSpec — dependency cycles, REQ/NFR resolution, overlapping responsibilities |
+| `lint_dataspec.py` | DataSpec — entity/field naming, type resolution, relationship endpoints, enum formats |
+| `lint_apispec.py`  | ApiSpec — function ID format, parameter naming, entity/type refs, cross-spec module/version match |
 | `lint_testspec.py` | TestSpec — fnRef resolution, error coverage, placeholder detection, ID consistency |
 | `lint_taskplan.py` | TaskPlan — requirement coverage, dependency ordering, milestone outcomes |
 | `lint_issues.py` | Issue — ID sequencing, dependency consistency, epic coverage |
