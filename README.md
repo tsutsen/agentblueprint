@@ -179,7 +179,7 @@ project/
 
 | Tool | Parameters | Purpose |
 |------|-----------|---------|
-| `init_workspace` | `force?` | Creates directories, copies skills, pre-creates artifact files, installs deps |
+| `init_workspace` | `force?` | Creates directories, pre-creates artifact files, installs deps |
 | `load_artifact` | `artifactType` | Loads schema + dependencies, prefers JSON, validates required deps |
 | `write_section` | `filePath, section, content, sections_complete, sections_pending, jsonContent?` | Writes a confirmed section; optionally writes JSON artifact |
 | `update_frontmatter` | `filePath, status, sections_complete, sections_pending` | Updates artifact frontmatter (status, sections, date) |
