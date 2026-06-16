@@ -280,10 +280,12 @@ def _drawio_entity(entity: dict, x: int, y: int, cell_ids: dict) -> list[str]:
     cell_ids[name] = eid
     fill   = _DRAWIO_VIS_FILL.get(entity.get("visibility", "public"), "#dae8fc")
     fields = entity.get("fields", [])
+    methods = entity.get("methods", [])
     row_h, hdr_h, width = 26, 34, 220
-    total_h = hdr_h + row_h * len(fields)
+    # Header + fields + methods
+    total_h = hdr_h + row_h * (len(fields) + len(methods))
     cells  = [
-        f'<mxCell id="{eid}" value="{_esc(name)}" style="'
+        f'<mxCell id="{eid}" value="" style="'
         f'shape=table;startSize={hdr_h};container=1;collapsible=1;childLayout=tableLayout;'
         f'fillColor={fill};strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" '
         f'vertex="1" parent="1">'
@@ -314,7 +316,34 @@ def _drawio_entity(entity: dict, x: int, y: int, cell_ids: dict) -> list[str]:
             f'<mxGeometry y="{hdr_h + i * row_h}" width="{width}" height="{row_h}" as="geometry"/>'
             f'</mxCell>'
         )
+    # Method rows (separator + methods)
+    if methods:
+        # Separator row
+        cells.append(
+            f'<mxCell id="{_uid()}" value="" style="'
+            f'shape=tableRow;horizontal=1;startSize=0;swimlaneHead=0;swimlaneBody=0;'
+            f'fillColor=#e8e8e8;collapsible=0;dropTarget=0;'
+            f'points=[[0,0.5],[1,0.5]];portConstraint=eastwest;'
+            f'fontSize=10;fontColor=#999999;strokeColor=#d0d0d0;fontStyle=1;" '
+            f'vertex="1" parent="{eid}">'
+            f'<mxGeometry y="{hdr_h + len(fields) * row_h}" width="{width}" height="16" as="geometry"/>'
+            f'</mxCell>'
+        )
+        for i, m in enumerate(methods):
+            label = f"+ {m['name']}() : {m.get('returnType', 'void')}"
+            fill2 = "#f0f8ff" if i % 2 == 0 else "#f5f5f5"
+            cells.append(
+                f'<mxCell id="{_uid()}" value="{_esc(label)}" style="'
+                f'shape=tableRow;horizontal=1;startSize=0;swimlaneHead=0;swimlaneBody=0;'
+                f'fillColor={fill2};collapsible=0;dropTarget=0;'
+                f'points=[[0,0.5],[1,0.5]];portConstraint=eastwest;'
+                f'fontSize=11;fontColor=#333333;strokeColor=#d0d0d0;" '
+                f'vertex="1" parent="{eid}">'
+                f'<mxGeometry y="{hdr_h + (len(fields) + 1 + i) * row_h}" width="{width}" height="{row_h}" as="geometry"/>'
+                f'</mxCell>'
+            )
     return cells
+
 
 
 
