@@ -500,9 +500,15 @@ def check_bidirectional_relationships(spec: dict, result: LintResult):
             directed_pairs.add((from_e, to_e))
 
     # Check for bidirectional pairs
+    seen = set()
     for from_e, to_e in directed_pairs:
         if (to_e, from_e) in directed_pairs:
-            # Found a bidirectional pair — report the first direction
+            pair = tuple(sorted([from_e, to_e]))
+            if pair in seen:
+                continue
+            seen.add(pair)
+            # Warn — bidirectional relationships are valid in domain modeling
+            # but not supported by DBML export
             result.add("warning", "bidirectional_relationship",
                 f"Bidirectional relationship between '{from_e}' and '{to_e}'.",
                 hint="DBML only supports unidirectional relationships. "
