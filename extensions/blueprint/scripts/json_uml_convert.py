@@ -403,9 +403,17 @@ _DBML_REF = {
 
 
 def _dbml_type(t: str, enum_names: set) -> str:
+    """Map a DataSpec type to a valid DBML column type.
+
+    Enum names are mapped to 'text' since DBML doesn't support enum column types
+    — enums are defined separately and referenced via relationships.
+    """
     if t.endswith("[]"):
         return "text"
-    return t if t in enum_names else _DBML_TYPE.get(t, "text")
+    # Enum names are not valid DBML column types — use text
+    if t in enum_names:
+        return "text"
+    return _DBML_TYPE.get(t, "text")
 
 
 def _dbml_safe_name(name: str) -> str:
