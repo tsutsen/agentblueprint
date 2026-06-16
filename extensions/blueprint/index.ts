@@ -819,7 +819,7 @@ function registerLint(pi: ExtensionAPI, extDir: string) {
       }
 
       try {
-        const args = ["--json", "--suite", suiteFile];
+        const args = [linter, "--json", "--suite", suiteFile];
         if (params.epic) {
           args.push("--epic", params.epic);
         }
