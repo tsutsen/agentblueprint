@@ -121,6 +121,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 <details>
 <summary>lint_goalspec.py</summary>
 
+
 **Checks:**
 - Duplicate IDs, sequential numbering gaps
 - Reference resolution (reqRefs in stories/criteria → FRs/NFRs)
@@ -139,6 +140,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 <details>
 <summary>lint_glossary.py</summary>
 
+
 **Checks:**
 - Circular definitions
 - Cross-spec coverage (terms referenced in other specs)
@@ -153,6 +155,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 
 <details>
 <summary>lint_designspec.py</summary>
+
 
 **Checks:**
 - IA/screen consistency (all inventory screens have specs)
@@ -170,6 +173,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 <details>
 <summary>lint_archspec.py</summary>
 
+
 **Checks:**
 - Dependency cycles between components
 - REQ/NFR resolution (every requirement assigned to a component)
@@ -185,6 +189,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 
 <details>
 <summary>lint_dataspec.py</summary>
+
 
 **Checks:**
 - Entity naming (PascalCase), field naming (camelCase), method naming (camelCase)
@@ -203,6 +208,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 <details>
 <summary>lint_apispec.py</summary>
 
+
 **Checks:**
 - Function ID format (FN-<camelCase>), parameter naming (camelCase)
 - Entity/type references (cross-checked against data spec)
@@ -220,6 +226,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 <details>
 <summary>lint_testspec.py</summary>
 
+
 **Checks:**
 - fnRef resolution (against API spec)
 - Error coverage (every documented error has a test)
@@ -236,6 +243,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 <details>
 <summary>lint_taskplan.py</summary>
 
+
 **Checks:**
 - Requirement coverage (every REQ/NFR/US covered by tasks)
 - Dependency ordering (no circular or forward references)
@@ -247,6 +255,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 <details>
 <summary>lint_issues.py</summary>
 
+
 **Checks:**
 - ID sequencing (IS-NNN gaps)
 - Dependency consistency (epic/issue parent references)
@@ -257,6 +266,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 
 <details>
 <summary>lint_cross.py</summary>
+
 
 **Checks:**
 - REQ/NFR refs across all specs resolve correctly
