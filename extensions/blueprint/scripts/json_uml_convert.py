@@ -278,7 +278,7 @@ def _drawio_entity(entity: dict, x: int, y: int, cell_ids: dict) -> list[str]:
     name   = entity["name"]
     eid    = _uid()
     cell_ids[name] = eid
-    fill   = _DRAWIO_VIS_FILL.get(entity.get("visibility", "public"), "#dae8fc")
+    fill   = "#dae8fc"
     fields = entity.get("fields", [])
     methods = entity.get("methods", [])
     row_h, hdr_h, width = 26, 34, 220
