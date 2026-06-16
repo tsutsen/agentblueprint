@@ -448,6 +448,16 @@ _DBML_REF = {
     "association": "<>", "dependency": ">",
 }
 
+# Referential actions based on the deletion test:
+#   composition  → child is destroyed when parent is deleted
+#   aggregation  → child survives (FK set to null) when parent is deleted
+_DBML_DELETE_ACTION = {
+    "composition": "cascade",
+    "aggregation": "set null",
+    "association": "no action",
+    "dependency":  "no action",
+}
+
 
 def _dbml_type(t: str, enum_names: set) -> str:
     """Map a DataSpec type to a valid DBML column type.
@@ -494,10 +504,74 @@ def _find_pk(entity: dict) -> str:
     return fields[0]["name"]
 
 
+def _find_fk_column(entity: dict, target_entity_name: str) -> str | None:
+    """Find the FK column in entity that references target_entity_name.
+
+    Heuristic: look for fields named '{TargetEntity}Id' or '{targetEntity}Id'
+    (PascalCase or camelCase). Falls back to first field ending in 'Id'.
+    """
+    # Build expected names from the target entity name
+    # e.g., "Order" → "orderId", "order_id"
+    target_lower = target_entity_name.lower()
+    target_pascal = target_entity_name[0].upper() + target_entity_name[1:]  # Order
+
+    # Priority 1: exact camelCase match (orderId)
+    for f in entity.get("fields", []):
+        if f["name"].lower() == f"{target_lower}id":
+            return f["name"]
+
+    # Priority 2: PascalCase match (OrderId)
+    for f in entity.get("fields", []):
+        if f["name"] == f"{target_pascal}Id":
+            return f["name"]
+
+    # Priority 3: any field ending with 'Id' or 'id'
+    for f in entity.get("fields", []):
+        name = f["name"]
+        if name.endswith("Id") or name.endswith("id"):
+            return name
+
+    return None
+
+
+def _build_fk_map(data: dict) -> dict:
+    """Build a map of (entity, column) → relationship type.
+
+    Foreign key columns are identified by relationships:
+    - For composition/aggregation (from → to): the 'from' entity holds the FK
+      pointing to the 'to' entity's PK.
+    - For association/dependency: both directions may hold FKs.
+    """
+    fk_map: dict[tuple[str, str], str] = {}
+    entity_map = {e["name"]: e for e in data.get("entities", [])}
+
+    for rel in data.get("relationships", []):
+        frm, to = rel["from"], rel["to"]
+        rel_type = rel.get("type", "association")
+
+        # FK lives on the target side (from → to means to holds FK to from)
+        # e.g., Order → OrderItem means OrderItem.orderId references Order.id
+        fk_col = _find_fk_column(entity_map.get(to, {}), frm)
+        if fk_col:
+            fk_map[(to, fk_col)] = rel_type
+
+        # For association, also add the reverse FK
+        if rel_type == "association":
+            fk_col = _find_fk_column(entity_map.get(frm, {}), to)
+            if fk_col:
+                fk_map[(frm, fk_col)] = rel_type
+
+    return fk_map
+
+
 def to_dbml(data: dict) -> str:
     enums      = data.get("enums", [])
     enum_names = {e["name"] for e in enums}
     module     = data.get("module", "Data Model")
+
+    # Pre-compute FK map to add proper constraints
+    fk_map = _build_fk_map(data)
+
     lines      = [
         f"// {module}  v{data.get('version', '')}",
         f"// {data.get('description', '')}",
@@ -539,8 +613,24 @@ def to_dbml(data: dict) -> str:
                 continue
             ftype = _dbml_type(f["type"], enum_names)
             parts = []
-            if not f.get("required", False):
-                parts.append("null")
+
+            # Check if this field is a foreign key and add relationship-specific constraints
+            fk_key = (entity["name"], f["name"])
+            if fk_key in fk_map:
+                rel_type = fk_map[fk_key]
+                if rel_type == "composition":
+                    parts.append("not null")
+                    parts.append("delete: cascade")
+                elif rel_type == "aggregation":
+                    parts.append("null")
+                    parts.append("delete: set null")
+                else:
+                    if not f.get("required", False):
+                        parts.append("null")
+            else:
+                if not f.get("required", False):
+                    parts.append("null")
+
             note_parts = []
             if f.get("description"):
                 note_parts.append(f["description"])
@@ -559,9 +649,13 @@ def to_dbml(data: dict) -> str:
         comment = f"  // {label}" if label else ""
         from_entity = entity_map.get(rel["from"], {})
         to_entity = entity_map.get(rel["to"], {})
-        from_pk = _find_pk(from_entity)
-        to_pk = _find_pk(to_entity)
-        lines.append(f"Ref: {rel['from']}.{from_pk} {sym} {rel['to']}.{to_pk}{comment}")
+        # FK column lives on the target side (from → to means to holds FK to from)
+        from_pk   = _find_pk(from_entity)
+        to_fk = _find_fk_column(to_entity, rel["from"])
+        to_col = to_fk if to_fk else _find_pk(to_entity)
+        rel_type = rel.get("type", "association")
+        delete_action = _DBML_DELETE_ACTION.get(rel_type, "no action")
+        lines.append(f"Ref: {rel['from']}.{from_pk} {sym} {rel['to']}.{to_col} [delete: {delete_action}]{comment}")
     return "\n".join(lines)
 
 
