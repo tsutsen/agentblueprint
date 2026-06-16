@@ -287,6 +287,9 @@ def assess_dataspec(spec: dict) -> CompletenessScore:
                 type_referenced.add(base)
     standalone = type_referenced - rel_participants
 
+    # Orphan percentage
+    orphan_pct = (len(orphans) / len(entities) * 100) if entities else 0
+
     gates = [
         gate("Has at least one entity", len(entities) >= 1, "draft"),
         gate("Has at least one relationship", len(relationships) >= 1, "draft"),
@@ -296,6 +299,9 @@ def assess_dataspec(spec: dict) -> CompletenessScore:
         gate("No orphan entities",
              len(orphans) == 0 or len(entities) <= 1, "review",
              detail=f"Orphans: {orphans}" if orphans and len(entities) > 1 else ""),
+        gate("Orphan entities < 20%",
+             orphan_pct < 20, "review",
+             detail=f"{orphan_pct:.0f}% of entities are orphans ({len(orphans)}/{len(entities)})"),
         gate("All entities have at least one field with an example",
              len(entities_with_examples) == len(entities), "confirmed",
              detail=f"{len(entities)-len(entities_with_examples)} entity/entities missing field examples"),
@@ -481,14 +487,15 @@ def run_archspec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
     return layer
 
 
-def run_dataspec(linter_dir, schema_dir, paths, strict) -> LayerResult:
+def run_dataspec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
     if not paths.get("data"):
         return LayerResult(name="dataspec", skipped=True, skip_reason="No dataspec provided.")
     linter_path = linter_dir / "lint_dataspec.py"
     spec = json.loads(Path(paths["data"]).read_text())
     schema_path = (schema_dir / "dataspec.schema.json") if schema_dir else None
+    api_spec = loaded.get("api")
     mod = load_linter(linter_path)
-    layer = _run("dataspec", linter_path, lambda s: mod.run_lint(spec, schema_path, s), strict)
+    layer = _run("dataspec", linter_path, lambda s: mod.run_lint(spec, schema_path, s, api_spec), strict)
     layer.completeness = assess_dataspec(spec)
     return layer
 
@@ -542,6 +549,35 @@ def run_issues(linter_dir, paths, loaded, args, strict) -> LayerResult:
     mod = load_linter(linter_path)
     layer = _run("issues", linter_path,
                  lambda s: mod.run_lint(epic_id, epics_dir, s), strict)
+    return layer
+
+
+def run_consistency(linter_dir, paths, strict, args=None) -> LayerResult:
+    """Run Markdown/JSON consistency checks."""
+    linter_path = linter_dir / "lint_consistency.py"
+    if not linter_path.exists():
+        return LayerResult(name="consistency", skipped=True,
+                           skip_reason="Consistency linter not found.")
+
+    # Determine which specs to check
+    if args and hasattr(args, 'specs'):
+        specs_to_check = [s.strip() for s in args.specs.split(",")]
+    else:
+        specs_to_check = [key for key in ["goal", "design", "data", "api", "test"] if paths.get(key)]
+
+    # Filter to only specs that have paths
+    specs_to_check = [s for s in specs_to_check if paths.get(s)]
+
+    if not specs_to_check:
+        return LayerResult(name="consistency", skipped=True,
+                           skip_reason="No spec paths provided.")
+
+    # Find the spec directory (parent of the first spec path)
+    spec_dir = Path(paths[specs_to_check[0]]).parent
+
+    mod = load_linter(linter_path)
+    layer = _run("consistency", linter_path,
+                 lambda s: mod.run_lint(spec_dir, specs_to_check), strict)
     return layer
 
 
@@ -619,12 +655,13 @@ def run_suite(paths, linter_dir, schema_dir, strict, stop_on_error, args=None) -
     if not add(run_glossary(linter_dir, schema_dir, paths, loaded, strict)):  return suite
     if not add(run_designspec(linter_dir, schema_dir, paths, loaded, strict)):return suite
     if not add(run_archspec(linter_dir, schema_dir, paths, loaded, strict)):  return suite
-    if not add(run_dataspec(linter_dir, schema_dir, paths, strict)):          return suite
+    if not add(run_dataspec(linter_dir, schema_dir, paths, loaded, strict)):  return suite
     if not add(run_apispec(linter_dir, schema_dir, paths, loaded, strict)):   return suite
     if not add(run_testspec(linter_dir, schema_dir, paths, loaded, strict)):  return suite
     if not add(run_taskplan(linter_dir, schema_dir, paths, loaded, strict)):   return suite
     if not add(run_cross(linter_dir, paths, loaded, strict)):                 return suite
     if not add(run_issues(linter_dir, paths, loaded, args, strict)):           return suite
+    if not add(run_consistency(linter_dir, paths, strict, args)):             return suite
 
     # Completeness gates layer — runs after all linters
     suite.layers.append(run_completeness_gates(suite))
@@ -771,6 +808,8 @@ def main():
     parser.add_argument("--strict",   action="store_true", help="Treat warnings as errors")
     parser.add_argument("--stop-on-error", action="store_true",
                         help="Stop after first layer with errors")
+    parser.add_argument("--specs",      default="goal,design,data,api,test",
+                        help="Comma-separated list of specs for consistency check")
     parser.add_argument("--json",     action="store_true", help="Output as JSON")
     args = parser.parse_args()
 

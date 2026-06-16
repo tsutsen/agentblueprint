@@ -165,11 +165,11 @@ def check_enums(spec: dict, result: LintResult) -> Set[str]:
         ename = enum["name"]
         enum_names.add(ename)
 
-        # Enum name must be SCREAMING_SNAKE_CASE
-        if not re.match(r"^[A-Z][A-Z0-9_]*$", ename):
+        # Enum name must be PascalCase (per DataSpec schema)
+        if not re.match(r"^[A-Z][A-Za-z0-9]*$", ename):
             result.add("error", "enum_name_format",
-                f"Enum '{ename}' does not follow SCREAMING_SNAKE_CASE.",
-                hint="Enum names must be uppercase with underscores, e.g. 'ORDER_STATUS'.")
+                f"Enum '{ename}' does not follow PascalCase.",
+                hint="Enum names must start with an uppercase letter followed by alphanumeric characters, e.g. 'OrderStatus'.")
 
         for val in enum.get("values", []):
             vname = val["name"]
@@ -249,13 +249,169 @@ def check_field_type_kinds(spec: dict, entity_names: Set[str], enum_names: Set[s
                     hint=f"Clarify whether '{base}' should be used as a type reference (enum) or a relationship target (entity).")
 
 
+def check_duplicate_fields(spec: dict, result: LintResult):
+    """Check for duplicate field names within entities."""
+    for entity in spec.get("entities", []):
+        field_names = [f["name"] for f in entity.get("fields", [])]
+        duplicates = [name for name in field_names if field_names.count(name) > 1]
+        if duplicates:
+            result.add("error", "duplicate_field",
+                f"Entity '{entity['name']}' has duplicate fields: {duplicates}",
+                hint="Remove duplicate field definitions.")
+
+
+def check_entity_should_be_field(spec: dict, api_spec: Optional[dict], result: LintResult):
+    """Heuristic: entity with ≤3 fields, all primitives, ≤1 relationship, ≤1 referrer → should be a field."""
+    entities = spec.get("entities", [])
+    relationships = spec.get("relationships", [])
+    primitives = {"string", "number", "boolean", "null", "any"}
+
+    # Build referrer map: entity_name → set of entities that reference it as a field type
+    referrers: dict[str, set[str]] = {e["name"]: set() for e in entities}
+    for entity in entities:
+        for field_def in entity.get("fields", []):
+            base = field_def.get("type", "").replace("[]", "")
+            if base in referrers:
+                referrers[base].add(entity["name"])
+
+    # Count relationships per entity
+    rel_counts: dict[str, int] = {e["name"]: 0 for e in entities}
+    for rel in relationships:
+        from_e = rel.get("from", "")
+        to_e = rel.get("to", "")
+        if from_e in rel_counts:
+            rel_counts[from_e] += 1
+        if to_e in rel_counts:
+            rel_counts[to_e] += 1
+
+    # Count API functions referencing each entity
+    api_counts: dict[str, int] = {e["name"]: 0 for e in entities}
+    if api_spec:
+        for fn in api_spec.get("functions", []):
+            for p in fn.get("inputs", []):
+                ptype = p.get("type", "").replace("[]", "")
+                if ptype in api_counts:
+                    api_counts[ptype] += 1
+            out = fn.get("output", {})
+            if isinstance(out, dict):
+                out_type = out.get("type", "").replace("[]", "")
+                if out_type in api_counts:
+                    api_counts[out_type] += 1
+
+    for entity in entities:
+        name = entity["name"]
+        fields = entity.get("fields", [])
+
+        if len(fields) <= 3 and all(
+            f.get("type", "").replace("[]", "") in primitives or f.get("type", "").endswith("[]")
+            for f in fields
+        ) and rel_counts.get(name, 0) <= 1 and len(referrers.get(name, set())) <= 1:
+            parent = next(iter(referrers.get(name, set()))) if referrers.get(name) else "unknown"
+            result.add("warning", "entity_should_be_field",
+                f"Entity '{name}' looks like it should be a field of '{parent}'.",
+                hint=f"Only {len(fields)} fields, {rel_counts.get(name, 0)} relationship(s), "
+                     f"{len(referrers.get(name, set()))} referrer(s), {api_counts.get(name, 0)} API function(s). "
+                     f"Consider moving fields to '{parent}'.")
+
+
+def check_field_should_be_entity(spec: dict, api_spec: Optional[dict], result: LintResult):
+    """Heuristic: field of complex type with >5 fields, has identity, ≥2 referrers, ≥1 relationship, ≥2 API functions → should be an entity."""
+    entities = spec.get("entities", [])
+    relationships = spec.get("relationships", [])
+    entity_map = {e["name"]: e for e in entities}
+
+    # Build referrer map: entity_name → set of entities that reference it as a field type
+    referrers: dict[str, set[str]] = {e["name"]: set() for e in entities}
+    for entity in entities:
+        for field_def in entity.get("fields", []):
+            base = field_def.get("type", "").replace("[]", "")
+            if base in referrers:
+                referrers[base].add(entity["name"])
+
+    # Count relationships per entity
+    rel_counts: dict[str, int] = {e["name"]: 0 for e in entities}
+    for rel in relationships:
+        from_e = rel.get("from", "")
+        to_e = rel.get("to", "")
+        if from_e in rel_counts:
+            rel_counts[from_e] += 1
+        if to_e in rel_counts:
+            rel_counts[to_e] += 1
+
+    # Count API functions referencing each entity
+    api_counts: dict[str, int] = {e["name"]: 0 for e in entities}
+    if api_spec:
+        for fn in api_spec.get("functions", []):
+            for p in fn.get("inputs", []):
+                ptype = p.get("type", "").replace("[]", "")
+                if ptype in api_counts:
+                    api_counts[ptype] += 1
+            out = fn.get("output", {})
+            if isinstance(out, dict):
+                out_type = out.get("type", "").replace("[]", "")
+                if out_type in api_counts:
+                    api_counts[out_type] += 1
+
+    for entity in entities:
+        for field_def in entity.get("fields", []):
+            ftype = field_def.get("type", "").replace("[]", "")
+            if ftype in ("string", "number", "boolean", "null", "any"):
+                continue
+            target = entity_map.get(ftype)
+            if not target:
+                continue
+
+            score = 0
+            if len(target.get("fields", [])) > 5:
+                score += 1
+            if any("id" in f.get("name", "").lower() for f in target.get("fields", [])):
+                score += 1
+            if len(referrers.get(ftype, set())) >= 2:
+                score += 1
+            if rel_counts.get(ftype, 0) >= 1:
+                score += 1
+            if api_counts.get(ftype, 0) >= 2:
+                score += 1
+
+            if score >= 3:
+                result.add("warning", "field_should_be_entity",
+                    f"Field '{entity['name']}.{field_def['name']}' of type '{ftype}' "
+                    f"looks like it should be a separate entity.",
+                    hint=f"{len(target.get('fields', []))} fields, {len(referrers.get(ftype, set()))} referrer(s), "
+                         f"{rel_counts.get(ftype, 0)} relationship(s), {api_counts.get(ftype, 0)} API function(s).")
+
+
+def check_methods_coverage(spec: dict, api_spec: Optional[dict], result: LintResult):
+    """Warn if entity has ≥2 ApiSpec functions but 0 methods defined."""
+    if not api_spec:
+        return
+
+    # Count API functions per entity
+    api_counts: dict[str, int] = {}
+    for fn in api_spec.get("functions", []):
+        entity = fn.get("entity", "")
+        if entity:
+            api_counts[entity] = api_counts.get(entity, 0) + 1
+
+    for entity in spec.get("entities", []):
+        name = entity["name"]
+        api_count = api_counts.get(name, 0)
+        methods = entity.get("methods", [])
+        if api_count >= 2 and len(methods) == 0:
+            result.add("warning", "methods_missing",
+                f"Entity '{name}' has {api_count} ApiSpec function(s) but 0 methods defined.",
+                hint=f"Define entity methods to document how the API functions interact with this entity.")
+
+
 def check_primitives(spec: dict, result: LintResult):
     """Validate that primitives list is non-empty and contains valid names."""
     primitives = spec.get("primitives", [])
-    if not primitives:
-        result.add("error", "primitives_empty",
-            "primitives list is empty.",
-            hint="Define at least one primitive type (e.g. 'string', 'number', 'boolean').")
+    expected_primitives = {'string', 'number', 'boolean', 'null', 'any', 'void'}
+    missing = expected_primitives - set(primitives)
+    if missing:
+        result.add("error", "primitives_missing",
+            f"DataSpec missing expected primitives: {sorted(missing)}",
+            hint="Add missing primitives to the primitives list.")
 
     # Warn about 'any' in primitives — it's too permissive
     if "any" in primitives:
@@ -266,7 +422,7 @@ def check_primitives(spec: dict, result: LintResult):
 
 # ── Runner ────────────────────────────────────────────────────────────────────
 
-def run_lint(spec: dict, schema_path: Optional[Path], strict: bool) -> LintResult:
+def run_lint(spec: dict, schema_path: Optional[Path], strict: bool, api_spec: Optional[dict] = None) -> LintResult:
     result = LintResult()
 
     # JSON Schema validation
@@ -288,6 +444,10 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool) -> LintResul
     check_relationships(spec, entity_names, result)
     check_enum_entity_conflict(spec, result)
     check_field_type_kinds(spec, entity_names, enum_names, result)
+    check_duplicate_fields(spec, result)
+    check_entity_should_be_field(spec, api_spec, result)
+    check_field_should_be_entity(spec, api_spec, result)
+    check_methods_coverage(spec, api_spec, result)
 
     if strict:
         for w in result.warnings:
@@ -341,6 +501,7 @@ def main():
     parser = argparse.ArgumentParser(description="Lint a DataSpec JSON.")
     parser.add_argument("input", help="Path to dataspec JSON")
     parser.add_argument("--schema", help="Path to dataspec.schema.json")
+    parser.add_argument("--api", help="Path to apispec JSON (for cross-spec checks)")
     parser.add_argument("--strict", action="store_true", help="Treat warnings as errors")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     args = parser.parse_args()
@@ -348,8 +509,9 @@ def main():
     path = Path(args.input)
     spec = json.loads(path.read_text())
     schema_path = Path(args.schema) if args.schema else None
+    api_spec = json.loads(Path(args.api).read_text()) if args.api else None
 
-    result = run_lint(spec, schema_path, args.strict)
+    result = run_lint(spec, schema_path, args.strict, api_spec)
 
     if args.json:
         print_json_output(result)
