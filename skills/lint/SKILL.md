@@ -59,6 +59,7 @@ Markdown/JSON drift.
 | `entity_similarity` | WARNING | Similar names + high field overlap |
 | `similar_entities_disconnected` | WARNING | Similar names but no relationship |
 | `entity_list_field` | WARNING | Entity has `Entity[]` field — should be a relationship |
+| `bidirectional_relationship` | WARNING | A → B and B → A both exist — DBML limitation |
 
 ### lint_apispec.py
 | Check | Severity | Description |
