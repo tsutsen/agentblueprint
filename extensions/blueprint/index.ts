@@ -1280,7 +1280,12 @@ function registerGenerateDiagrams(pi: ExtensionAPI, extDir: string) {
           timeout: 30000,
         });
         const lines = stdout.trim().split("\n");
-        const generatedFiles = lines.filter(l => l.includes("✓")).map(l => l.match(/✓\s+(.+?)\s+\(/)?.[1] || l);
+        const generatedFiles = lines.filter(l => l.includes("✓")).map(l => {
+          const match = l.match(/✓\s+(.+?)\s+\(/);
+          const fullPath = match?.[1] || l;
+          // Extract just the filename since outPath already contains the directory
+          return path.basename(fullPath);
+        });
 
         // Verify output files actually exist
         const missing = generatedFiles.filter(f => !fs.existsSync(path.join(outPath, f)));
