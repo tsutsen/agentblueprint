@@ -163,4 +163,16 @@ Each relationship must have:
   (except in single-entity specs).
 * No duplicate relationships of the same type between the same pair.
 
+#### Relationship Notation
+
+When defining relationships between entities, use the following conventions:
+
+| Relationship | Smell | Notation | Key Rule | Keywords |
+|---|---|---|---|---|
+| Association | "uses / knows" | Solid line + open arrow (→) | Both exist independently. A holds a reference to B. Weakest structural link. | uses, knows about, communicates with, linked to, talks to, references, points to, maintains a reference to, holds a reference to, interacts with, delegates to, notifies, subscribes to, observes, publishes to, queries, retrieves from, is associated with |
+| Inheritance | "is a" | Solid line + open triangle (▷) | Child IS-A Parent. Child extends or specializes the parent class. | is a, extends, inherits from, specializes, is a type / kind of, is a subtype of, is a subclass of, is a variant of, is a form of, is a specific type of, is a derived class of, is a specialization of |
+| Aggregation | "has a (weak)" | Open diamond on whole side (◇—) | Part can exist without the Whole. Whole "has" the Part. Shared ownership. | has, contains, consists of, is part of, belongs to, includes, comprises, groups, collects, maintains a list of, maintains a set of, maintains a collection of, is an element of |
+| Composition | "owns (strong)" | Filled diamond on whole side (◆—) | Part CANNOT exist without the Whole. Whole creates and destroys the Part. | owns, is composed of, manages, controls, is responsible for, creates and owns, destroys, manages the lifecycle of, is the lifecycle owner of, instantiates, is the aggregate root of, is the parent of, is the container of, is responsible for creation and destruction, is a part of |
+| Dependency | "needs temporarily" | Dashed line + open arrow (- - →) | A uses B only momentarily (e.g. method param, local var). No stored reference. | depends on, calls, uses temporarily, creates locally, imports, receives as parameter, receives as argument, uses as local variable, references as parameter, references as argument, uses as a local variable, references as a local variable, instantiates locally, invokes, throws, catches |
+
 

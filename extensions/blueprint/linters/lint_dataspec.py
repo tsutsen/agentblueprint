@@ -220,6 +220,114 @@ def check_relationships(spec: dict, entity_names: Set[str], result: LintResult):
                 f"Self-referencing relationship: '{from_entity}' → '{to_entity}'.",
                 hint="Self-referencing relationships are valid (e.g., tree structures) but often indicate a design choice that should be reviewed.")
 
+        # Check label keywords against declared type
+        check_relationship_label_keywords(rel, result)
+
+
+def check_relationship_label_keywords(rel: dict, result: LintResult):
+    """Warn if the relationship label contains keywords suggesting a different type.
+
+    The label (natural-language description) should match the declared type.
+    This catches mismatches like:
+      - type=aggregation but label contains 'owns' or 'manages the lifecycle of'
+      - type=dependency but label contains 'maintains a reference to' or 'holds a reference to'
+
+    Keywords are weighted:
+      - strong: unique to one type → direct suggestion to change type
+      - medium: shared by two types → softer hint about reviewing
+    """
+    label = (rel.get("label", "") or "").lower()
+    rel_type = rel.get("type", "")
+    from_entity = rel.get("from", "")
+    to_entity = rel.get("to", "")
+
+    if not label:
+        return
+
+    # Strong keywords: unique to one relationship type
+    strong_keywords = {
+        "association": [
+            "is associated with", "maintains a reference to",
+            "holds a reference to", "references",
+        ],
+        "aggregation": [
+            "maintains a list of", "maintains a set of", "maintains a collection of",
+            "is an element of",
+        ],
+        "composition": [
+            "manages the lifecycle of", "is the lifecycle owner of",
+            "is responsible for creation and destruction", "is the aggregate root of",
+            "is the container of", "is a part of", "creates and owns",
+        ],
+        "dependency": [
+            "receives as parameter", "receives as argument",
+            "uses as local variable", "references as parameter",
+            "references as argument", "references as a local variable",
+            "instantiates locally", "throws", "catches",
+        ],
+    }
+
+    # Medium keywords: shared by two types (weaker signal)
+    medium_keywords = {
+        "association": ["delegates to", "notifies", "subscribes to", "publishes to", "queries", "retrieves from"],
+        "aggregation": ["has", "contains", "consists of", "belongs to", "includes", "comprises", "groups", "collects"],
+        "composition": ["owns", "is composed of", "manages", "controls", "is responsible for", "instantiates", "destroys", "is the parent of", "creates"],
+        "dependency": ["calls", "invokes", "uses", "imports", "depends on", "uses temporarily", "uses as a local variable"],
+    }
+
+    # Separate strong and medium matches per type
+    strong_matched: dict[str, list[str]] = {}
+    medium_matched: dict[str, list[str]] = {}
+
+    for rel_type_str, keywords in strong_keywords.items():
+        matched = [kw for kw in keywords if kw in label]
+        if matched:
+            strong_matched[rel_type_str] = matched
+
+    for rel_type_str, keywords in medium_keywords.items():
+        matched = [kw for kw in keywords if kw in label]
+        if matched:
+            medium_matched[rel_type_str] = matched
+
+    if not strong_matched and not medium_matched:
+        # Label doesn't match any known keyword patterns — warn that
+        # the label may be unclear or non-standard
+        result.add("warning", "rel_label_no_keyword_match",
+            f"Relationship '{from_entity}' → '{to_entity}': label '{rel.get('label', '')}' "
+            f"does not match any known keyword patterns.",
+            hint="Consider using a more standard label that clearly indicates the relationship type. "
+                 f"Current type: '{rel_type}'.")
+        return
+
+    # Check if strong keywords from a different type are present
+    strong_non_declared = {
+        t: kws for t, kws in strong_matched.items()
+        if t != rel_type
+    }
+
+    if strong_non_declared:
+        suggested = ", ".join(sorted(strong_non_declared.keys()))
+        matched_kw = []
+        for t, kws in strong_non_declared.items():
+            matched_kw.extend([f"'{kw}'" for kw in kws])
+        result.add("warning", "rel_label_keyword_mismatch",
+            f"Relationship '{from_entity}' → '{to_entity}': label '{rel.get('label', '')}' "
+            f"contains strong keywords for {suggested} (matched: {', '.join(matched_kw)}).",
+            hint=f"Consider changing the relationship type to '{suggested}' "
+                 f"or revising the label to better match '{rel_type}'.")
+        return
+
+    # No strong mismatch — check for medium mismatches from a single other type
+    non_declared = {t for t in medium_matched if t != rel_type}
+    if len(non_declared) == 1:
+        other_type = non_declared.pop()
+        matched_kw = [f"'{kw}'" for kw in medium_matched[other_type]]
+        result.add("warning", "rel_label_keyword_mismatch",
+            f"Relationship '{from_entity}' → '{to_entity}': label '{rel.get('label', '')}' "
+            f"contains keywords ({', '.join(matched_kw)}) that suggest '{other_type}' "
+            f"rather than '{rel_type}'.",
+            hint="Review whether the relationship type or label should be adjusted.")
+
 
 def check_enum_entity_conflict(spec: dict, result: LintResult):
     """Check that no entity name collides with an enum name."""
