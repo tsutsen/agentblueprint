@@ -26,6 +26,7 @@ Usage:
       --plan taskplan.json
 """
 
+import re
 import sys
 import json
 import argparse
@@ -214,48 +215,47 @@ def _check_us_refs_exist(goal_spec: Optional[dict], design_spec: Optional[dict],
                            f"references US-ID not in GoalSpec: {us_ref}")
 
 
-def _check_ar_refs_exist(goal_spec: Optional[dict], design_spec: Optional[dict],
+def _check_ar_refs_exist(_goal_spec: Optional[dict], design_spec: Optional[dict],
                           layer: LayerResult):
-    """Check that all AR-IDs in DesignSpec accessibility requirements exist in GoalSpec."""
-    if not goal_spec or not design_spec:
+    """Check that all AR-IDs in DesignSpec accessibility requirements follow the AR-NNN format."""
+    if not design_spec:
         return
 
-    goal_nfr_ids = {nfr["id"] for nfr in goal_spec.get("nonFunctionalRequirements", [])}
     ar_refs = design_spec.get("accessibilityRequirements", [])
 
     for ar in ar_refs:
         ar_id = ar.get("id", "")
-        if ar_id and not ar_id.startswith("AR-"):
+        if ar_id and not re.match(r"^AR-\d{3}$", ar_id):
             layer.add("warning", "cross-ref",
                        f"DesignSpec accessibility requirement ID doesn't follow AR-NNN format: {ar_id}")
 
 
-def _check_vdr_refs_exist(goal_spec: Optional[dict], design_spec: Optional[dict],
+def _check_vdr_refs_exist(_goal_spec: Optional[dict], design_spec: Optional[dict],
                            layer: LayerResult):
-    """Check that all VDR-IDs in DesignSpec visual design requirements exist in GoalSpec."""
-    if not goal_spec or not design_spec:
+    """Check that all VDR-IDs in DesignSpec visual design requirements follow the VDR-NNN format."""
+    if not design_spec:
         return
 
     vdr_refs = design_spec.get("visualDesignRequirements", [])
 
     for vdr in vdr_refs:
         vdr_id = vdr.get("id", "")
-        if vdr_id and not vdr_id.startswith("VDR-"):
+        if vdr_id and not re.match(r"^VDR-\d{3}$", vdr_id):
             layer.add("warning", "cross-ref",
                        f"DesignSpec visual design requirement ID doesn't follow VDR-NNN format: {vdr_id}")
 
 
-def _check_dg_refs_exist(goal_spec: Optional[dict], design_spec: Optional[dict],
+def _check_dg_refs_exist(_goal_spec: Optional[dict], design_spec: Optional[dict],
                           layer: LayerResult):
-    """Check that all DG-IDs in DesignSpec design guidelines exist in GoalSpec."""
-    if not goal_spec or not design_spec:
+    """Check that all DG-IDs in DesignSpec design guidelines follow the DG-NNN format."""
+    if not design_spec:
         return
 
     dg_refs = design_spec.get("designGuidelines", [])
 
     for dg in dg_refs:
         dg_id = dg.get("id", "")
-        if dg_id and not dg_id.startswith("DG-"):
+        if dg_id and not re.match(r"^DG-\d{3}$", dg_id):
             layer.add("warning", "cross-ref",
                        f"DesignSpec design guideline ID doesn't follow DG-NNN format: {dg_id}")
 

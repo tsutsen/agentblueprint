@@ -584,6 +584,7 @@ def to_d2(data: dict) -> str:
 # CLI
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Format names → (output extension, converter)
 FORMATS = {
     "puml":    (".puml",   to_plantuml),
     "mermaid": (".md",     to_mermaid),
@@ -592,26 +593,27 @@ FORMATS = {
     "d2":      (".d2",     to_d2),
 }
 
+# Output file name templates — {format}_data_diagram.{ext}
+OUTPUT_TEMPLATE = "{format}_data_diagram{ext}"
+
 
 def main() -> None:
     args = sys.argv[1:]
 
-    # Positional: input [formats] [stem]
+    # Positional: input [formats] [output_dir]
     input_path = Path(args[0]) if args else Path("Data.json")
 
-    # Second arg: format list or "all" (only if it contains letters from format names)
+    # Second arg: format list or "all"
     fmt_arg  = "all"
-    stem_arg = None
+    output_dir = None
     if len(args) >= 2:
         candidate = args[1]
         known_keys = set(FORMATS.keys()) | {"all"}
         if any(k in candidate.split(",") for k in known_keys):
             fmt_arg = candidate
-            stem_arg = args[2] if len(args) >= 3 else None
+            output_dir = args[2] if len(args) >= 3 else None
         else:
-            stem_arg = candidate
-
-    stem = Path(stem_arg) if stem_arg else input_path.with_suffix("")
+            output_dir = candidate
 
     selected = list(FORMATS.keys()) if fmt_arg == "all" else [
         f.strip() for f in fmt_arg.split(",") if f.strip() in FORMATS
@@ -626,7 +628,9 @@ def main() -> None:
     print(f"Converting {input_path}  →  {', '.join(selected)}")
     for fmt in selected:
         ext, converter = FORMATS[fmt]
-        write(Path(str(stem) + ext), converter(data))
+        out_name = OUTPUT_TEMPLATE.format(format=fmt, ext=ext)
+        out_path = Path(output_dir) / out_name if output_dir else Path(out_name)
+        write(out_path, converter(data))
 
 
 if __name__ == "__main__":

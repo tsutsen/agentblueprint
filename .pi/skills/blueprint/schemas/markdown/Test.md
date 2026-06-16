@@ -237,6 +237,9 @@ python .pi/extensions/blueprint/linters/lint_testspec.py \
   --json
 ```
 
+All errors must be resolved before handoff. Warnings should be reviewed
+but do not block handoff.
+
 Checks enforced:
 
 * Every function in ApiSpec has at least one test (`function_untested`)

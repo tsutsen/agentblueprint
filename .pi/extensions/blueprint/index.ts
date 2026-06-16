@@ -1123,7 +1123,6 @@ function registerGenerateTests(pi: ExtensionAPI, extDir: string) {
       })),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-      const extDir = path.resolve(ctx.cwd, ".pi/extensions/blueprint");
       const script = path.join(extDir, "scripts/generate_tests.py");
 
       if (!fs.existsSync(script)) {
@@ -1201,7 +1200,6 @@ function registerGenerateDiagrams(pi: ExtensionAPI, extDir: string) {
       })),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-      const extDir = path.resolve(ctx.cwd, ".pi/extensions/blueprint");
       const script = path.join(extDir, "scripts/json_uml_convert.py");
 
       if (!fs.existsSync(script)) {
@@ -1235,6 +1233,29 @@ function registerGenerateDiagrams(pi: ExtensionAPI, extDir: string) {
         });
         const lines = stdout.trim().split("\n");
         const generatedFiles = lines.filter(l => l.includes("✓")).map(l => l.match(/✓\s+(.+?)\s+\(/)?.[1] || l);
+
+        // Verify output files actually exist
+        const missing = generatedFiles.filter(f => !fs.existsSync(path.join(outPath, f)));
+        if (missing.length > 0) {
+          return {
+            content: [{
+              type: "text",
+              text: `generate_diagrams reported success but ${missing.length} file(s) not found:\n` +
+                missing.map(f => `  ✗ ${f}`).join("\n") +
+                `\n\nCheck the script output below for errors.`,
+            }],
+            details: {
+              success: false,
+              output: stdout.trim(),
+              stderr: stderr.trim(),
+              outputDir: outputDir,
+              generatedFiles,
+              missingFiles: missing,
+            },
+            isError: true,
+          };
+        }
+
         return {
           content: [{ type: "text", text: stdout.trim() }],
           details: {

@@ -42,11 +42,11 @@ args:
 ```
 
 This produces:
-- `diagrams/Data.puml` — PlantUML class diagram (render with `plantuml Data.puml`)
-- `diagrams/Data.md` — Mermaid class diagram (embeds in Markdown)
-- `diagrams/Data.drawio` — draw.io XML (import at app.diagrams.net)
-- `diagrams/Data.dbml` — DBML (import at dbdiagram.io)
-- `diagrams/Data.d2` — D2 diagram (render with `d2 Data.d2`)
+- `diagrams/plantuml_data_diagram.puml` — PlantUML class diagram
+- `diagrams/mermaid_data_diagram.md` — Mermaid class diagram (embeds in Markdown)
+- `diagrams/drawio_data_diagram.drawio` — draw.io XML (import at app.diagrams.net)
+- `diagrams/dbml_data_diagram.dbml` — DBML (import at dbdiagram.io)
+- `diagrams/d2_data_diagram.d2` — D2 diagram (render with `d2 Data.d2`)
 
 **Regenerate after every DataSpec change.** Diagrams are derived artifacts
 and must always match the JSON source of truth.

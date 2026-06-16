@@ -88,13 +88,17 @@ def has_placeholder(value) -> bool:
 
 
 def fn_name_from_id(fn_id: str) -> str:
-    """fn_createUser → createUser"""
-    return fn_id[3:] if fn_id.startswith("fn_") else fn_id
+    """FN-createUser → createUser"""
+    if fn_id.startswith("FN-"):
+        return fn_id[3:]
+    if fn_id.startswith("fn_"):
+        return fn_id[3:]
+    return fn_id
 
 
 def expected_test_prefix(fn_id: str) -> str:
-    """fn_createUser → T-createUser"""
-    return f"T-{fn_name_from_id(fn_id)}"
+    """FN-createUser → TST-createUser"""
+    return f"TST-{fn_name_from_id(fn_id)}"
 
 
 # ── Checks ────────────────────────────────────────────────────────────────────
@@ -117,7 +121,7 @@ def check_id_fn_consistency(spec: dict, result: LintResult):
         fn_ref = t.get("fnRef", "")
         expected = expected_test_prefix(fn_ref)
         if tid and fn_ref and not tid.startswith(expected + "-"):
-            result.add("warning", "id_fn_mismatch",
+            result.add("error", "id_fn_mismatch",
                 f"Test '{tid}': ID prefix does not match fnRef '{fn_ref}' (expected '{expected}-NNN').",
                 hint=f"Rename to '{expected}-NNN' to keep IDs traceable to their function.")
 

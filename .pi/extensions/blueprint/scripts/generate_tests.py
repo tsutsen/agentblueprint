@@ -54,12 +54,23 @@ def get_input_value(param_name, param_type="string"):
     """Generate a concrete example value for a parameter."""
     name_lower = param_name.lower()
     # Type-aware defaults
-    if param_type == "integer" or param_type == "int":
+    if param_type in ("integer", "int"):
         return 0
-    if param_type == "boolean" or param_type == "bool":
+    if param_type in ("boolean", "bool"):
         return False
-    if param_type == "number" or param_type == "float":
+    if param_type in ("number", "float"):
         return 0.0
+    # Array types (e.g. 'string[]', 'User[]') — check before entity types
+    if param_type and param_type.endswith("[]"):
+        inner = param_type[:-2]
+        if inner in ("integer", "int", "number", "float"):
+            return [0]
+        if inner in ("boolean", "bool"):
+            return [False]
+        return [f"{inner.lower()}-001"]
+    # Entity types (PascalCase) — generate a reference ID
+    if param_type and param_type[0].isupper():
+        return f"{param_type.lower()}-001"
     # Name-based defaults
     if "session" in name_lower:
         return "session-123"
@@ -175,124 +186,32 @@ def generate_test_for_function(fn, test_num, base_id, goal_spec=None, req_mappin
 
     return tests, test_num
 
-    # Generate happy-path test
-    happy_test = {
-        "id": f"T-{base_id}-{test_num:03d}",
-        "fnRef": fn_id,
-        "category": "happy-path",
-        "description": f"Call {fn_name} with valid input",
-        "input": input_data if input_data else {},
-        "expectedOutput": fn.get("output", {}).get("type", "void") if fn.get("output") else "void",
-        "contractClause": fn.get("description", f"Call {fn_name}"),
-    }
-    tests.append(happy_test)
-    test_num += 1
-
-    # Generate error-path tests for functions with error codes
-    if "errors" in fn and fn["errors"]:
-        for error in fn["errors"]:
-            error_test = {
-                "id": f"T-{base_id}-{test_num:03d}",
-                "fnRef": fn_id,
-                "category": "error-path",
-                "description": f"Call {fn_name} when {error['condition'].lower()}",
-                "input": input_data if input_data else {},
-                "errorCode": error["code"],
-                "expectedError": {
-                    "code": error["code"],
-                    "returnType": error.get("returnType", "Error"),
-                    "messageContains": error["condition"].lower()[:30],
-                },
-                "contractClause": f"Returns {error['code']} when {error['condition'].lower()}",
-            }
-            tests.append(error_test)
-            test_num += 1
-
-    # Generate edge-case test for functions with inputs
-    if input_data and len(input_data) > 0:
-        edge_test = {
-            "id": f"T-{base_id}-{test_num:03d}",
-            "fnRef": fn_id,
-            "category": "edge-case",
-            "description": f"Call {fn_name} with empty or minimal input",
-            "input": {k: "" if isinstance(v, str) else (0 if isinstance(v, int) else []) for k, v in input_data.items()},
-            "expectedOutput": "void",
-            "contractClause": f"Handles empty input gracefully",
-        }
-        tests.append(edge_test)
-        test_num += 1
-
-    return tests, test_num
-
 
 def generate_out_of_scope(fn):
-    """Generate outOfScope declaration for a function."""
+    """Generate outOfScope declaration for a function.
+
+    Returns a generic template — the user must refine per-project.
+    """
     fn_name = fn["name"]
-    out_of_scope_map = {
-        "createSession": ["Creating sessions with invalid session IDs"],
-        "getSessionSummary": ["Retrieving summaries for deleted sessions"],
-        "updateSessionTitle": ["Updating titles with special characters"],
-        "deleteSession": ["Deleting sessions with active queries"],
-        "sendMessage": ["Sending messages with extremely long text"],
-        "getResearchBrief": ["Retrieving briefs for deleted sessions"],
-        "updateResearchBriefField": ["Updating multiple fields in a single call"],
-        "submitQuery": ["Submitting queries with no text"],
-        "getQueryResults": ["Retrieving results for non-existent queries"],
-        "cancelQuery": ["Cancelling already completed queries"],
-        "getQueryStatus": ["Checking status of non-existent queries"],
-        "loadMoreResults": ["Loading more results when no more are available"],
-        "rankSources": ["Ranking empty source lists"],
-        "selectSourceForRanking": ["Selecting non-existent sources"],
-        "selectSourceForQuery": ["Selecting sources with no metadata"],
-        "downloadPaper": ["Downloading papers with invalid DOIs"],
-        "getDownloadStatus": ["Checking status of non-existent downloads"],
-        "cancelDownload": ["Cancelling already completed downloads"],
-        "getDownloadedPapers": ["Listing papers for non-existent sessions"],
-        "processSource": ["Processing sources with no PDF content"],
-        "getSourceMetadata": ["Retrieving metadata for non-existent sources"],
-        "getSourceData": ["Retrieving data for unprocessed sources"],
-        "getSourceFile": ["Retrieving file paths for non-existent sources"],
-        "editSource": ["Editing non-existent sources"],
-        "getProcessingStatus": ["Checking status of non-existent processing jobs"],
-        "cancelProcessing": ["Cancelling already completed processing jobs"],
-        "rankFullSources": ["Ranking sources in non-existent sessions"],
-        "getRankedSources": ["Retrieving ranked sources for non-existent sessions"],
-        "generateFindingClusters": ["Generating clusters for sessions with no sources"],
-        "getFindingClusters": ["Retrieving clusters for non-existent sessions"],
-        "generateReport": ["Generating reports for sessions with no sources"],
-        "getReport": ["Retrieving non-existent reports"],
-        "getReportSummary": ["Retrieving summaries for non-existent reports"],
-        "getHypothesisVerdicts": ["Retrieving verdicts for non-existent reports"],
-        "getReportStatus": ["Checking status of non-existent reports"],
-        "cancelReportGeneration": ["Cancelling already completed reports"],
-        "exportReportAsPDF": ["Exporting reports in formats other than PDF"],
-        "exportSessionArchive": ["Exporting sessions in formats other than zip"],
-        "saveSession": ["Saving sessions with invalid data"],
-        "loadSession": ["Loading non-existent sessions"],
-        "deleteSession": ["Deleting sessions with active dependencies"],
-        "saveQuery": ["Saving queries with invalid data"],
-        "loadQuery": ["Loading non-existent queries"],
-        "deleteQuery": ["Deleting queries with active results"],
-        "saveSource": ["Saving sources with invalid data"],
-        "loadSource": ["Loading non-existent sources"],
-        "deleteSource": ["Deleting sources with active references"],
-        "saveReport": ["Saving reports with invalid data"],
-        "loadReport": ["Loading non-existent reports"],
-        "deleteReport": ["Deleting reports with active references"],
-        "listSessions": ["Listing sessions with invalid filters"],
-        "getSessionErrors": ["Retrieving errors for non-existent sessions"],
-        "logError": ["Logging errors with invalid data"],
-        "getError": ["Retrieving non-existent errors"],
-        "getErrorRecovery": ["Retrieving recovery for non-existent errors"],
-        "exportBibliography": ["Exporting bibliographies in unsupported formats"],
-        "exportCitations": ["Exporting citations for non-existent sources"],
-        "getExport": ["Retrieving non-existent exports"],
-        "getExportFormats": ["Getting formats for non-existent sessions"],
-        "buildPaperNetwork": ["Building networks for sessions with no sources"],
-        "getAuthorNetwork": ["Retrieving author networks for non-existent sessions"],
-        "getPaperNetwork": ["Retrieving paper networks for non-existent sessions"],
-    }
-    return out_of_scope_map.get(fn_name, ["No specific out-of-scope cases"])
+    fn_input = fn.get("inputs", [])
+    has_inputs = len(fn_input) > 0
+    has_errors = bool(fn.get("errors"))
+
+    out_of_scope = []
+
+    if has_inputs:
+        out_of_scope.append(
+            f"Input validation edge cases not covered by specific tests "
+            f"(e.g., types, lengths, formats for {', '.join(p['name'] for p in fn_input[:3])})"
+        )
+    if has_errors:
+        out_of_scope.append(
+            "Error handling when errors interact with each other or with concurrent operations"
+        )
+    out_of_scope.append(
+        "Performance, security, and concurrency aspects — these require separate non-functional tests"
+    )
+    return out_of_scope
 
 
 def main():
