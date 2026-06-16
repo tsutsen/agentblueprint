@@ -696,21 +696,57 @@ function registerInitWorkspace(pi: ExtensionAPI) {
         }
       }
 
-      // 4. Install python dependencies
-      let pipOutput = '';
-      let pipSuccess = false;
-      try {
-        const { stdout, stderr } = await execFilePromise(
-          'pip', ['install', 'jsonschema'],
-          { timeout: 30000, cwd },
-        );
-        pipOutput = stdout || stderr || '';
-        pipSuccess = true;
-      } catch {
-        pipOutput = 'jsonschema installation failed — linting may not work without it.';
+      // 4. Validate artifact filenames against expected naming convention
+      const artifactsDir = path.resolve(cwd, 'artifacts');
+      const expectedJsonNames = artifactDefs.map(d => `${d.file.replace('.md', '.json')}`);
+      const expectedMdNames = artifactDefs.map(d => d.file);
+      const mismatches: Array<{
+        current: string;
+        expected: string;
+        reason: string;
+      }> = [];
+
+      if (fs.existsSync(artifactsDir)) {
+        const existingJsonFiles = fs.readdirSync(artifactsDir)
+          .filter(f => f.endsWith('.json') && !f.endsWith('.schema.json'));
+
+        for (const jsonFile of existingJsonFiles) {
+          // Check if this is a standard name
+          if (expectedJsonNames.includes(jsonFile)) continue;
+
+          // Check if the corresponding .md file exists with a standard name
+          const baseName = jsonFile.replace(/\.json$/, '');
+          const expectedMd = baseName + '.md';
+          const hasCorrespondingMd = expectedMdNames.includes(expectedMd);
+
+          if (hasCorrespondingMd) {
+            // The .md file exists with a standard name — JSON is non-standard
+            // Try to guess: does the JSON name match the md name with Spec stripped?
+            const mdBase = expectedMd.replace('.md', '');
+            const withSpec = mdBase + 'Spec';
+            const expectedJson = withSpec + '.json';
+
+            if (expectedJsonNames.includes(expectedJson)) {
+              mismatches.push({
+                current: jsonFile,
+                expected: expectedJson,
+                reason: `JSON uses "${baseName}" but corresponding "${expectedMd}" expects "${expectedJson}"`,
+              });
+            }
+          }
+        }
       }
 
-      // 5. Report
+      // 6. Rename mismatched files (non-standard → standard names)
+      const renamed: Array<{ from: string; to: string }> = [];
+      for (const m of mismatches) {
+        const fromPath = path.join(artifactsDir, m.current);
+        const toPath = path.join(artifactsDir, m.expected);
+        fs.renameSync(fromPath, toPath);
+        renamed.push({ from: m.current, to: m.expected });
+      }
+
+      // 7. Report
       const lines: string[] = [
         `Workspace initialized:`,
         ...dirs.map((d) => `  ✓ ${path.relative(cwd, d)}/`),
@@ -742,6 +778,17 @@ function registerInitWorkspace(pi: ExtensionAPI) {
         if (firstLine) lines.push(`    ${firstLine}`);
       }
 
+      // Report filename mismatches
+      if (renamed.length > 0) {
+        lines.push(`  ✓ renamed ${renamed.length} file(s) to standard naming:`);
+        for (const r of renamed) {
+          lines.push(`    ${r.from} → ${r.expected}`);
+        }
+      } else if (mismatches.length > 0) {
+        // Should not happen since we rename immediately, but keep for safety
+        lines.push(`  ⚠ ${mismatches.length} filename mismatch(es) detected and auto-renamed`);
+      }
+
       return {
         content: [{ type: "text", text: lines.join('\n') }],
         details: {
@@ -751,6 +798,8 @@ function registerInitWorkspace(pi: ExtensionAPI) {
           artifacts_created: created,
           artifacts_skipped: skippedArtifacts,
           pipSuccess,
+          mismatches: mismatches.length > 0 ? mismatches : undefined,
+          renamed,
         },
       };
     },
