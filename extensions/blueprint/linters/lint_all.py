@@ -472,20 +472,11 @@ def run_archspec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
 def run_dataspec(linter_dir, schema_dir, paths, strict) -> LayerResult:
     if not paths.get("data"):
         return LayerResult(name="dataspec", skipped=True, skip_reason="No dataspec provided.")
+    linter_path = linter_dir / "lint_dataspec.py"
     spec = json.loads(Path(paths["data"]).read_text())
     schema_path = (schema_dir / "dataspec.schema.json") if schema_dir else None
-    layer = LayerResult(name="dataspec")
-    try:
-        if schema_path and schema_path.exists():
-            try:
-                import jsonschema
-                schema = json.loads(schema_path.read_text())
-                for err in jsonschema.Draft7Validator(schema).iter_errors(spec):
-                    layer.add("error", "schema", f"{err.json_path}: {err.message}")
-            except ImportError:
-                layer.add("warning", "schema_skipped", "jsonschema not installed.")
-    except Exception as e:
-        layer.add("error", "runner_error", str(e))
+    mod = load_linter(linter_path)
+    layer = _run("dataspec", linter_path, lambda s: mod.run_lint(spec, schema_path, s), strict)
     layer.completeness = assess_dataspec(spec)
     return layer
 
@@ -493,20 +484,12 @@ def run_dataspec(linter_dir, schema_dir, paths, strict) -> LayerResult:
 def run_apispec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
     if not paths.get("api"):
         return LayerResult(name="apispec", skipped=True, skip_reason="No apispec provided.")
+    linter_path = linter_dir / "lint_apispec.py"
     spec = json.loads(Path(paths["api"]).read_text())
     schema_path = (schema_dir / "apispec.schema.json") if schema_dir else None
-    layer = LayerResult(name="apispec")
-    try:
-        if schema_path and schema_path.exists():
-            try:
-                import jsonschema
-                schema = json.loads(schema_path.read_text())
-                for err in jsonschema.Draft7Validator(schema).iter_errors(spec):
-                    layer.add("error", "schema", f"{err.json_path}: {err.message}")
-            except ImportError:
-                layer.add("warning", "schema_skipped", "jsonschema not installed.")
-    except Exception as e:
-        layer.add("error", "runner_error", str(e))
+    mod = load_linter(linter_path)
+    layer = _run("apispec", linter_path,
+                 lambda s: mod.run_lint(spec, schema_path, loaded.get("data"), s), strict)
     layer.completeness = assess_apispec(spec, loaded.get("data"))
     return layer
 
