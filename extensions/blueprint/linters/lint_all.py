@@ -278,6 +278,15 @@ def assess_dataspec(spec: dict) -> CompletenessScore:
     entity_names = {e["name"] for e in entities}
     orphans = entity_names - rel_participants
 
+    # Find entities only referenced as field types, never in relationships
+    type_referenced = set()
+    for entity in entities:
+        for field_def in entity.get("fields", []):
+            base = field_def.get("type", "").replace("[]", "")
+            if base in entity_names and base != entity["name"]:
+                type_referenced.add(base)
+    standalone = type_referenced - rel_participants
+
     gates = [
         gate("Has at least one entity", len(entities) >= 1, "draft"),
         gate("Has at least one relationship", len(relationships) >= 1, "draft"),
@@ -290,6 +299,9 @@ def assess_dataspec(spec: dict) -> CompletenessScore:
         gate("All entities have at least one field with an example",
              len(entities_with_examples) == len(entities), "confirmed",
              detail=f"{len(entities)-len(entities_with_examples)} entity/entities missing field examples"),
+        gate("No standalone type-only entities",
+             len(standalone) == 0 or len(standalone) <= 2, "review",
+             detail=f"Standalone type-only entities: {standalone}" if standalone else ""),
         gate("Has enums if domain uses categorical values",
              True, "draft",   # advisory — can't auto-detect need for enums
              detail="Review whether domain categorical values should be enums"),

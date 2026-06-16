@@ -172,6 +172,7 @@ def check_entity_refs(spec: dict, data_spec: Optional[Dict[str, Any]], result: L
     enum_names = {e["name"] for e in data_spec.get("enums", [])}
     primitives = set(data_spec.get("primitives", ["string", "number", "boolean", "null", "any"]))
     valid_types = entity_names | enum_names | primitives
+    api_primitives = {"string", "number", "boolean", "null", "any", "void"}
 
     for fn in spec.get("functions", []):
         fid = fn["id"]
@@ -194,12 +195,17 @@ def check_entity_refs(spec: dict, data_spec: Optional[Dict[str, Any]], result: L
 
         # Validate output type resolves
         output_type = fn.get("output", {}).get("type", "")
-        if output_type and output_type != "void":
+        if output_type:
             base = resolve_base_type(output_type)
             if base and base not in valid_types:
-                result.add("error", "output_type_ref_missing",
-                    f"Function '{fid}': output type '{output_type}' is not defined in the data spec.",
-                    hint=f"Define '{base}' in the data spec or use an existing type.")
+                if base not in api_primitives:
+                    result.add("error", "output_type_ref_missing",
+                        f"Function '{fid}': output type '{output_type}' is not defined in the data spec.",
+                        hint=f"Define '{base}' in the data spec or use an existing type.")
+                else:
+                    result.add("error", "output_type_not_in_data_spec",
+                        f"Function '{fid}': output type '{output_type}' is a valid API primitive but not defined in the data spec.",
+                        hint=f"Add '{base}' to the data spec's primitives list or use an existing type.")
 
 
 def check_module_match(spec: dict, data_spec: Optional[Dict[str, Any]], result: LintResult):

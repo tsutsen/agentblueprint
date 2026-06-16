@@ -184,6 +184,7 @@ def check_enums(spec: dict, result: LintResult) -> Set[str]:
 def check_relationships(spec: dict, entity_names: Set[str], result: LintResult):
     """Validate relationship endpoints and types."""
     relationships = spec.get("relationships", [])
+    enum_names = {e["name"] for e in spec.get("enums", [])}
 
     for rel in relationships:
         from_entity = rel.get("from", "")
@@ -196,9 +197,14 @@ def check_relationships(spec: dict, entity_names: Set[str], result: LintResult):
                 hint=f"Add '{from_entity}' as an entity.")
 
         if to_entity not in entity_names:
-            result.add("error", "rel_to_missing",
-                f"Relationship to '{to_entity}' does not exist.",
-                hint=f"Add '{to_entity}' as an entity.")
+            if to_entity in enum_names:
+                result.add("error", "rel_to_enum",
+                    f"Relationship targets enum '{to_entity}' which cannot be a relationship target.",
+                    hint="Enums are type references, not entities. Remove this relationship — the type is already referenced via a field definition.")
+            else:
+                result.add("error", "rel_to_missing",
+                    f"Relationship to '{to_entity}' does not exist.",
+                    hint=f"Add '{to_entity}' as an entity.")
 
         # Relationship type must be valid
         rel_type = rel.get("type", "")
@@ -213,6 +219,34 @@ def check_relationships(spec: dict, entity_names: Set[str], result: LintResult):
             result.add("warning", "rel_self_reference",
                 f"Self-referencing relationship: '{from_entity}' → '{to_entity}'.",
                 hint="Self-referencing relationships are valid (e.g., tree structures) but often indicate a design choice that should be reviewed.")
+
+
+def check_enum_entity_conflict(spec: dict, result: LintResult):
+    """Check that no entity name collides with an enum name."""
+    entity_names = {e["name"] for e in spec.get("entities", [])}
+    enum_names = {e["name"] for e in spec.get("enums", [])}
+    collision = entity_names & enum_names
+    for name in sorted(collision):
+        result.add("error", "enum_entity_conflict",
+            f"Name '{name}' is defined as both an enum and an entity.",
+            hint=f"Remove the entity '{name}' and use the enum instead, or rename the entity.")
+
+
+def check_field_type_kinds(spec: dict, entity_names: Set[str], enum_names: Set[str], result: LintResult):
+    """Warn when a field type could be ambiguous (exists as entity but should be enum or vice versa)."""
+    for entity in spec.get("entities", []):
+        for field_def in entity.get("fields", []):
+            ftype = field_def.get("type", "")
+            base = ftype.replace("[]", "")
+            if not base:
+                continue
+            is_entity = base in entity_names
+            is_enum = base in enum_names
+            if is_entity and is_enum:
+                result.add("warning", "type_ambiguous_kind",
+                    f"Entity '{entity['name']}': field '{field_def['name']}' has type '{ftype}' "
+                    f"which exists as both an entity and an enum.",
+                    hint=f"Clarify whether '{base}' should be used as a type reference (enum) or a relationship target (entity).")
 
 
 def check_primitives(spec: dict, result: LintResult):
@@ -250,7 +284,10 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool) -> LintResul
     # Semantic checks
     check_primitives(spec, result)
     entity_names = check_entities(spec, spec.get("enums", []), result)
+    enum_names = check_enums(spec, result)
     check_relationships(spec, entity_names, result)
+    check_enum_entity_conflict(spec, result)
+    check_field_type_kinds(spec, entity_names, enum_names, result)
 
     if strict:
         for w in result.warnings:
