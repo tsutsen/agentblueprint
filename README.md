@@ -8,7 +8,7 @@ ArchitectureSpec, DataSpec, ApiSpec, TestSpec) with cross-spec validation.
 
 ```bash
 # Install in your project
-npm install github:tsutsen/agentblueprint
+pi install git:github.com/tsutsen/agentblueprint
 
 # Initialize workspace (creates artifacts/, tasks/, pre-creates artifact files, installs deps)
 /skill:blueprint init
