@@ -213,8 +213,9 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 - Methods coverage (entity with ≥2 API functions but 0 methods defined)
 - Entity similarity (similar names + high field overlap)
 - Similar entities disconnected (similar names but no relationship)
+- Entity list fields (warns when entity has `Entity[]` field — should be a relationship)
 
-**Completeness gates (7):**
+**Completeness gates (7):
 - `draft` — ≥1 entity, ≥1 relationship
 - `review` — all entities have descriptions, no orphan entities, orphan percentage <20%
 - `confirmed` — all entities have field examples

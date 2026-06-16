@@ -58,6 +58,7 @@ Markdown/JSON drift.
 | `methods_missing` | WARNING | Entity with ≥2 API functions but 0 methods |
 | `entity_similarity` | WARNING | Similar names + high field overlap |
 | `similar_entities_disconnected` | WARNING | Similar names but no relationship |
+| `entity_list_field` | WARNING | Entity has `Entity[]` field — should be a relationship |
 
 ### lint_apispec.py
 | Check | Severity | Description |
