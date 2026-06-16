@@ -134,6 +134,7 @@ Each spec depends on:
 
 | Command | Artifact | Description |
 |---------|----------|-------------|
+| `/skill:blueprint init` | — | Create workspace structure, pre-create artifact files, install deps. Add `force:true` to overwrite existing files. |
 | `/skill:blueprint goal` | GoalSpec | Define project objectives and scope |
 | `/skill:blueprint glossary` | Glossary | Define domain terminology |
 | `/skill:blueprint design` | DesignSpec | Define user-facing design |
