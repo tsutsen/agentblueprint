@@ -106,7 +106,7 @@ This gate is mandatory. Do not skip it.
 After producing `artifacts/ApiSpec.json`, run the cross-spec linter:
 
 ```
-python .pi/extensions/blueprint/linters/lint_cross.py \
+python extensions/blueprint/linters/lint_cross.py \
   --data artifacts/DataSpec.json \
   --api  artifacts/ApiSpec.json \
   --json

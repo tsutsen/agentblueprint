@@ -230,7 +230,7 @@ fix the JSON artifact and retry. Do NOT proceed to handoff with invalid JSON.
 ### Step 2 — Semantic lint via `lint_testspec.py`
 
 ```
-python .pi/extensions/blueprint/linters/lint_testspec.py \
+python extensions/blueprint/linters/lint_testspec.py \
   artifacts/TestSpec.json \
   --schema schemas/json/test.schema.json \
   --api artifacts/ApiSpec.json \
@@ -255,7 +255,7 @@ Checks enforced:
 ### Step 3 — Cross-spec reference lint via `lint_cross.py`
 
 ```
-python .pi/extensions/blueprint/linters/lint_cross.py \
+python extensions/blueprint/linters/lint_cross.py \
   --data artifacts/DataSpec.json \
   --api  artifacts/ApiSpec.json \
   --test artifacts/TestSpec.json \

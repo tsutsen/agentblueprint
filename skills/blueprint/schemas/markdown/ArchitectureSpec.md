@@ -115,7 +115,7 @@ Examples:
 After producing `artifacts/ArchitectureSpec.json`, run:
 
 ```
-python .pi/extensions/blueprint/linters/lint_archspec.py artifacts/ArchitectureSpec.json \
+python extensions/blueprint/linters/lint_archspec.py artifacts/ArchitectureSpec.json \
   --schema schemas/archspec.schema.json \
   --goal   artifacts/GoalSpec.json \
   --json

@@ -65,7 +65,7 @@ Each term must include:
 After producing `artifacts/Glossary.json`, run:
 
 ```
-python .pi/extensions/blueprint/linters/lint_glossary.py artifacts/Glossary.json \
+python extensions/blueprint/linters/lint_glossary.py artifacts/Glossary.json \
   --schema schemas/glossary.schema.json \
   --goal   artifacts/GoalSpec.json \
   --arch   artifacts/ArchitectureSpec.json \
