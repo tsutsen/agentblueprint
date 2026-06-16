@@ -822,7 +822,7 @@ function registerLint(pi: ExtensionAPI, extDir: string) {
           for (const art of params.artifacts) {
             const flag = flagMap[art];
             if (flag) {
-              const jsonPath = path.resolve(ctx.cwd, `artifacts/${art === "arch" ? "ArchitectureSpec" : art === "data" ? "Data" : art === "api" ? "Api" : art === "design" ? "DesignSpec" : art === "glossary" ? "Glossary" : art === "test" ? "Test" : "GoalSpec"}.json`);
+              const jsonPath = path.resolve(ctx.cwd, `artifacts/${art === "arch" ? "ArchitectureSpec" : art === "data" ? "DataSpec" : art === "api" ? "ApiSpec" : art === "design" ? "DesignSpec" : art === "glossary" ? "Glossary" : art === "test" ? "TestSpec" : "GoalSpec"}.json`);
               if (fs.existsSync(jsonPath)) {
                 args.push(flag, jsonPath);
               }
