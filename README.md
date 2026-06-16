@@ -10,7 +10,7 @@ ArchitectureSpec, DataSpec, ApiSpec, TestSpec) with cross-spec validation.
 # Install in your project
 npm install @agentblueprint/blueprint
 
-# Initialize workspace (creates artifacts/, tasks/, copies skills, installs deps)
+# Initialize workspace (creates artifacts/, tasks/, pre-creates artifact files, installs deps)
 /skill:blueprint init
 
 # Start with the first artifact
