@@ -424,22 +424,27 @@ def _dbml_safe_name(name: str) -> str:
 def _find_pk(entity: dict) -> str:
     """Find a primary key field for a DBML table.
 
-    Priority: 'id' > first field with 'Id'/'id' in name > first field.
+    Priority: 'id' (exact) > field ending with 'Id'/'id' (Pascal/camelCase)
+    > first field.
     Returns the field name to use as the primary key reference.
     """
     fields = entity.get("fields", [])
-    # Check for 'id' field
+    if not fields:
+        return "id"
+
+    # Check for exact 'id' field (case-insensitive)
     for f in fields:
         if f["name"].lower() == "id":
             return f["name"]
-    # Check for field with 'Id' in the name
+
+    # Check for field ending with 'Id' or 'id' (e.g. sessionId, queryId)
     for f in fields:
-        if "Id" in f["name"] or "id" in f["name"]:
-            return f["name"]
+        name = f["name"]
+        if name.endswith("Id") or name.endswith("id"):
+            return name
+
     # Fall back to first field
-    if fields:
-        return fields[0]["name"]
-    return "id"  # last resort
+    return fields[0]["name"]
 
 
 def to_dbml(data: dict) -> str:
@@ -470,7 +475,17 @@ def to_dbml(data: dict) -> str:
         note = entity.get("description", "").replace("'", "\\'")
         pk = _find_pk(entity)
         lines.append(f"Table {entity['name']} [note: '{note}'] {{")
-        lines.append(f"  {pk} [pk, note: 'Primary key']")
+        # Find the pk field definition to get its type
+        pk_field = None
+        for f in entity.get("fields", []):
+            if f["name"] == pk:
+                pk_field = f
+                break
+        if pk_field:
+            pk_type = _dbml_type(pk_field["type"], enum_names)
+            lines.append(f"  {pk} {pk_type} [pk]")
+        else:
+            lines.append(f"  {pk} varchar [pk]")
         for f in entity.get("fields", []):
             # Skip if this is the pk field we already added
             if f["name"] == pk:
