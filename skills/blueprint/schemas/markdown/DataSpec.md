@@ -130,6 +130,7 @@ Each entity must have:
 * If a field has an entity type, a relationship must exist between them.
 * Every `extends` reference must name a real entity in this spec.
 * `abstract` entities should not have composition/aggregation relationships as targets (they are base classes, not leaf types).
+* **Every entity must have a primary key field** — the first field, or a field ending with `Id`/`id`, must contain `id` in its name (e.g. `id`, `userId`, `orderId`). This is required for diagram generators and DBML output.
 
 **Inheritance (`extends`):**
 
