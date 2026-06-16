@@ -561,7 +561,7 @@ function registerInitWorkspace(pi: ExtensionAPI) {
     name: "init_workspace",
     label: "Init Workspace",
     description:
-      "Create the artifacts and tasks directory structure, copy " +
+      "Create the artifacts and tasks directory structure and " +
       "pre-create all artifact "
       "Markdown files with frontmatter, and install python dependencies. " +
       "Safe to run multiple times — skips existing files.",
