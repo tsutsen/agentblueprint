@@ -122,7 +122,7 @@ def check_entities(spec: dict, enums: list, result: LintResult) -> Set[str]:
             # Field type must resolve
             ftype = field_def.get("type", "")
             base_type = ftype.replace("[]", "") if ftype.endswith("[]") else ftype
-            primitives = set(spec.get("primitives", ["string", "number", "boolean", "null", "any"]))
+            primitives = set(spec.get("primitives", ["string", "number", "boolean", "null"]))
             enum_names = {e["name"] for e in enums}
 
             if base_type not in entity_names and base_type not in primitives and base_type not in enum_names:
@@ -264,7 +264,7 @@ def check_entity_should_be_field(spec: dict, api_spec: Optional[dict], result: L
     """Heuristic: entity with ≤3 fields, all primitives, ≤1 relationship, ≤1 referrer → should be a field."""
     entities = spec.get("entities", [])
     relationships = spec.get("relationships", [])
-    primitives = {"string", "number", "boolean", "null", "any"}
+    primitives = {"string", "number", "boolean", "null"}
 
     # Build referrer map: entity_name → set of entities that reference it as a field type
     referrers: dict[str, set[str]] = {e["name"]: set() for e in entities}
@@ -355,7 +355,7 @@ def check_field_should_be_entity(spec: dict, api_spec: Optional[dict], result: L
     for entity in entities:
         for field_def in entity.get("fields", []):
             ftype = field_def.get("type", "").replace("[]", "")
-            if ftype in ("string", "number", "boolean", "null", "any"):
+            if ftype in ("string", "number", "boolean", "null"):
                 continue
             target = entity_map.get(ftype)
             if not target:
@@ -483,10 +483,37 @@ def check_similar_entities_connected(spec: dict, result: LintResult):
                      f"Consider adding a relationship or clarifying their distinct roles.")
 
 
+def check_entity_list_fields(spec: dict, result: LintResult):
+    """Warn when an entity has a field that is a list of another entity.
+
+    Entity[] fields suggest embedding a collection of related entities
+    rather than declaring a proper relationship. Relationships should be
+    used instead.
+    """
+    entities = spec.get("entities", [])
+    entity_names = {e["name"] for e in entities}
+
+    for entity in entities:
+        for field_def in entity.get("fields", []):
+            ftype = field_def.get("type", "")
+            if not ftype.endswith("[]"):
+                continue
+            base = ftype[:-2]  # Remove '[]'
+            if base in entity_names:
+                result.add("warning", "entity_list_field",
+                    f"Entity '{entity['name']}' has field '{field_def['name']}' "
+                    f"of type '{ftype}' (list of entity '{base}').",
+                    hint=f"Consider replacing this field with a relationship "
+                         f"from '{entity['name']}' to '{base}'. "
+                         f"Entity lists in fields suggest embedding rather than "
+                         f"relating — use relationships for entity-to-entity "
+                         f"associations.")
+
+
 def check_primitives(spec: dict, result: LintResult):
     """Validate that primitives list is non-empty and contains valid names."""
     primitives = spec.get("primitives", [])
-    expected_primitives = {'string', 'number', 'boolean', 'null', 'any', 'void'}
+    expected_primitives = {'string', 'number', 'boolean', 'null', 'void'}
     missing = expected_primitives - set(primitives)
     if missing:
         result.add("error", "primitives_missing",
@@ -530,6 +557,7 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool, api_spec: Op
     check_methods_coverage(spec, api_spec, result)
     check_entity_similarity(spec, result)
     check_similar_entities_connected(spec, result)
+    check_entity_list_fields(spec, result)
 
     if strict:
         for w in result.warnings:
