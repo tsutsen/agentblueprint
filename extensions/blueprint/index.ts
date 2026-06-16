@@ -106,26 +106,26 @@ const DEPS: Record<string, { schema: string; dependencies: DepDef[] }> = {
     ],
   },
   data: {
-    schema: "Data.md",
+    schema: "DataSpec.md",
     dependencies: [
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
       { name: "Architecture", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
     ],
   },
   api: {
-    schema: "Api.md",
+    schema: "ApiSpec.md",
     dependencies: [
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
       { name: "Architecture", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
-      { name: "Data", jsonPath: "artifacts/Data.json", mdPath: "artifacts/Data.md", required: true },
+      { name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md", required: true },
     ],
   },
   test: {
-    schema: "Test.md",
+    schema: "TestSpec.md",
     dependencies: [
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
-      { name: "Api", jsonPath: "artifacts/Api.json", mdPath: "artifacts/Api.md", required: true },
-      { name: "Data", jsonPath: "artifacts/Data.json", mdPath: "artifacts/Data.md", required: true },
+      { name: "ApiSpec", jsonPath: "artifacts/ApiSpec.json", mdPath: "artifacts/ApiSpec.md", required: true },
+      { name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md", required: true },
     ],
   },
   plan: {
@@ -134,9 +134,9 @@ const DEPS: Record<string, { schema: string; dependencies: DepDef[] }> = {
       { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
       { name: "Design", jsonPath: "artifacts/DesignSpec.json", mdPath: "artifacts/DesignSpec.md", required: true },
       { name: "Architecture", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
-      { name: "Data", jsonPath: "artifacts/Data.json", mdPath: "artifacts/Data.md", required: true },
-      { name: "Api", jsonPath: "artifacts/Api.json", mdPath: "artifacts/Api.md", required: true },
-      { name: "Test", jsonPath: "artifacts/Test.json", mdPath: "artifacts/Test.md", required: true },
+      { name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md", required: true },
+      { name: "ApiSpec", jsonPath: "artifacts/ApiSpec.json", mdPath: "artifacts/ApiSpec.md", required: true },
+      { name: "TestSpec", jsonPath: "artifacts/TestSpec.json", mdPath: "artifacts/TestSpec.md", required: true },
     ],
   },
   issues: {
@@ -448,9 +448,9 @@ function registerHandoff(pi: ExtensionAPI) {
         { command: "glossary", name: "Glossary", jsonPath: "artifacts/Glossary.json", mdPath: "artifacts/Glossary.md" },
         { command: "design", name: "Design", jsonPath: "artifacts/DesignSpec.json", mdPath: "artifacts/DesignSpec.md" },
         { command: "arch", name: "Architecture", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md" },
-        { command: "data", name: "Data", jsonPath: "artifacts/Data.json", mdPath: "artifacts/Data.md" },
-        { command: "api", name: "Api", jsonPath: "artifacts/Api.json", mdPath: "artifacts/Api.md" },
-        { command: "test", name: "Test", jsonPath: "artifacts/Test.json", mdPath: "artifacts/Test.md" },
+        { command: "data", name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md" },
+        { command: "api", name: "ApiSpec", jsonPath: "artifacts/ApiSpec.json", mdPath: "artifacts/ApiSpec.md" },
+        { command: "test", name: "TestSpec", jsonPath: "artifacts/TestSpec.json", mdPath: "artifacts/TestSpec.md" },
         { command: "plan", name: "TaskPlan", jsonPath: "", mdPath: "tasks/PLAN.md" }, // plan produces tasks/PLAN.md, not artifacts/
       ];
 
@@ -528,9 +528,6 @@ function resolveCommand(name: string): string {
     DataSpec: "data",
     ApiSpec: "api",
     TestSpec: "test",
-    Data: "data",
-    Api: "api",
-    Test: "test",
   };
   return map[name] || name;
 }
@@ -1141,7 +1138,7 @@ function registerGenerateTests(pi: ExtensionAPI, extDir: string) {
     description:
       "Generate TestSpec test cases for all ApiSpec functions that don't have tests yet. " +
       "Reads GoalSpec for REQ/NFR traceability. Produces structured test entries with " +
-      "happy-path, edge-case, and error-path categories. Writes directly to Test.json.",
+      "happy-path, edge-case, and error-path categories. Writes directly to TestSpec.json.",
     parameters: Type.Object({
       apiSpecPath: Type.Optional(Type.String({
         description: "Path to ApiSpec JSON. Default: artifacts/Api.json",
@@ -1169,9 +1166,9 @@ function registerGenerateTests(pi: ExtensionAPI, extDir: string) {
 
       const args: string[] = [];
       const defaults = {
-        api: "artifacts/Api.json",
+        api: "artifacts/ApiSpec.json",
         goal: "artifacts/GoalSpec.json",
-        test: "artifacts/Test.json",
+        test: "artifacts/TestSpec.json",
         mapping: "artifacts/req_fn_mapping.json",
       };
 
@@ -1244,7 +1241,7 @@ function registerGenerateDiagrams(pi: ExtensionAPI, extDir: string) {
         };
       }
 
-      const dataPath = params.dataSpecPath || path.resolve(ctx.cwd, "artifacts/Data.json");
+      const dataPath = params.dataSpecPath || path.resolve(ctx.cwd, "artifacts/DataSpec.json");
       const formats = params.formats || "all";
       const outputDir = params.outputDir || "diagrams";
 

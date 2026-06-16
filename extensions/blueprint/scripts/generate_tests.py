@@ -3,14 +3,14 @@
 Generate tests for all ApiSpec functions that don't have tests yet.
 
 Usage:
-    python3 scripts/generate_tests.py [--goal GoalSpec.json] [--api Api.json] [--test Test.json]
+    python3 scripts/generate_tests.py [--goal GoalSpec.json] [--api ApiSpec.json] [--test TestSpec.json]
 
 This script:
-1. Reads artifacts/Api.json for function definitions
+1. Reads artifacts/ApiSpec.json for function definitions
 2. Reads artifacts/GoalSpec.json (optional) for REQ/NFR mapping
-3. Reads artifacts/Test.json for existing tests
+3. Reads artifacts/TestSpec.json for existing tests
 4. Generates tests for functions without tests
-5. Saves updated tests to artifacts/Test.json
+5. Saves updated tests to artifacts/TestSpec.json
 
 Test ID format: TST-{functionName}-{NNN} (e.g. TST-createSession-001)
 fnRef format: FN-{camelCase} (e.g. FN-createSession)
@@ -28,9 +28,9 @@ from pathlib import Path
 
 # Project root
 PROJECT_ROOT = Path(__file__).parent.parent
-API_SPEC_PATH = PROJECT_ROOT / "artifacts" / "Api.json"
+API_SPEC_PATH = PROJECT_ROOT / "artifacts" / "ApiSpec.json"
 GOAL_SPEC_PATH = PROJECT_ROOT / "artifacts" / "GoalSpec.json"
-TEST_SPEC_PATH = PROJECT_ROOT / "artifacts" / "Test.json"
+TEST_SPEC_PATH = PROJECT_ROOT / "artifacts" / "TestSpec.json"
 REQ_MAPPING_PATH = PROJECT_ROOT / "artifacts" / "req_fn_mapping.json"
 
 

@@ -15,10 +15,10 @@ Usage:
                choices: puml, mermaid, drawio, dbml, d2, all
 
 Examples:
-    python json_to_all.py Data.json                        # all formats → Data.*
-    python json_to_all.py Data.json all                    # same
-    python json_to_all.py Data.json puml,mermaid           # only those two
-    python json_to_all.py Data.json all output/MyModel     # custom output stem
+    python json_to_all.py DataSpec.json                  # all formats → DataSpec.*
+    python json_to_all.py DataSpec.json all              # same
+    python json_to_all.py DataSpec.json puml,mermaid     # only those two
+    python json_to_all.py DataSpec.json all output/MyModel # custom output stem
 """
 
 import json
@@ -601,7 +601,7 @@ def main() -> None:
     args = sys.argv[1:]
 
     # Positional: input [formats] [output_dir]
-    input_path = Path(args[0]) if args else Path("Data.json")
+    input_path = Path(args[0]) if args else Path("DataSpec.json")
 
     # Second arg: format list or "all"
     fmt_arg  = "all"

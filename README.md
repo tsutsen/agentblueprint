@@ -52,9 +52,9 @@ AgentBlueprint/
     │       │   ├── Glossary.md
     │       │   ├── DesignSpec.md
     │       │   ├── ArchitectureSpec.md
-    │       │   ├── Data.md
-    │       │   ├── Api.md
-    │       │   ├── Test.md
+    │       │   ├── DataSpec.md
+    │       │   ├── ApiSpec.md
+    │       │   ├── TestSpec.md
     │       │   ├── TaskPlan.md
     │       │   └── Issue.md
     │       └── json/         ← JSON validation schemas
@@ -156,9 +156,9 @@ project/
 │   ├── Glossary.md + .json
 │   ├── DesignSpec.md + .json
 │   ├── ArchitectureSpec.md + .json
-│   ├── Data.md + .json
-│   ├── Api.md + .json
-│   ├── Test.md + .json
+│   ├── DataSpec.md + .json
+│   ├── ApiSpec.md + .json
+│   ├── TestSpec.md + .json
 ├── tasks/                  ← generated tasks
 │   ├── PLAN.md
 │   ├── epics/
