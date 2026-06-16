@@ -118,7 +118,9 @@ Each spec has two files:
 #### `lint_all.py`
 Unified orchestrator. Runs all individual linters in dependency order, then cross-spec validation, then completeness gates. Outputs a combined report with per-layer pass/fail and an overall suite score.
 
-#### `lint_goalspec.py`
+<details>
+<summary>lint_goalspec.py</summary>
+
 **Checks:**
 - Duplicate IDs, sequential numbering gaps
 - Reference resolution (reqRefs in stories/criteria → FRs/NFRs)
@@ -129,9 +131,9 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 - Non-goal quality (vague exclusions, weak reasoning)
 
 **Completeness gates (10):**
-`draft` — objective present, ≥1 FR, ≥1 story, ≥1 criterion, ≥1 non-goal
-`review` — all FRs covered by stories, all FRs gated by criteria, no TBD NFRs
-`confirmed` — objective re-confirmed, status is confirmed
+- `draft` — objective present, ≥1 FR, ≥1 story, ≥1 criterion, ≥1 non-goal
+- `review` — all FRs covered by stories, all FRs gated by criteria, no TBD NFRs
+- `confirmed` — objective re-confirmed, status is confirmed
 </details>
 
 <details>
@@ -144,9 +146,9 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 - Category coverage (domain-tagged terms)
 
 **Completeness gates (5):**
-`draft` — ≥3 terms, all definitions ≥10 chars
-`review` — ≥5 terms, has domain-category terms
-`confirmed` — all terms have examples or related terms
+- `draft` — ≥3 terms, all definitions ≥10 chars
+- `review` — ≥5 terms, has domain-category terms
+- `confirmed` — all terms have examples or related terms
 </details>
 
 <details>
@@ -160,9 +162,9 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 - Pattern coverage (interaction patterns present)
 
 **Completeness gates (12):**
-`draft` — design goals, ≥1 persona, ≥1 journey, ≥1 screen
-`review` — all screens specced, patterns present, UXAC present, visual design requirements, accessibility requirements
-`confirmed` — design system components present, all journeys reference stories
+- `draft` — design goals, ≥1 persona, ≥1 journey, ≥1 screen
+- `review` — all screens specced, patterns present, UXAC present, visual design requirements, accessibility requirements
+- `confirmed` — design system components present, all journeys reference stories
 </details>
 
 <details>
@@ -176,9 +178,9 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 - Version tracking (dataSpecVersion, apiSpecVersion)
 
 **Completeness gates (10):**
-`draft` — overview summary, ≥1 subsystem, ≥2 components, ≥1 data flow, ≥1 constraint
-`review` — all components have REQ refs, all components in dependencies, goalSpecVersion set
-`confirmed` — dataSpecVersion set, apiSpecVersion set
+- `draft` — overview summary, ≥1 subsystem, ≥2 components, ≥1 data flow, ≥1 constraint
+- `review` — all components have REQ refs, all components in dependencies, goalSpecVersion set
+- `confirmed` — dataSpecVersion set, apiSpecVersion set
 </details>
 
 <details>
@@ -193,9 +195,9 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 - Primitives quality (warns on "any")
 
 **Completeness gates (6):**
-`draft` — ≥1 entity, ≥1 relationship
-`review` — all entities have descriptions, no orphan entities
-`confirmed` — all entities have field examples
+- `draft` — ≥1 entity, ≥1 relationship
+- `review` — all entities have descriptions, no orphan entities
+- `confirmed` — all entities have field examples
 </details>
 
 <details>
@@ -210,9 +212,9 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 - Visibility validation
 
 **Completeness gates (6):**
-`draft` — ≥1 function
-`review` — all functions have descriptions, all have error conditions, all declare entity affinity, dataSpecVersion set
-`confirmed` — all functions declare pure/impure
+- `draft` — ≥1 function
+- `review` — all functions have descriptions, all have error conditions, all declare entity affinity, dataSpecVersion set
+- `confirmed` — all functions declare pure/impure
 </details>
 
 <details>
@@ -226,9 +228,9 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 - Category balance (error-path and edge-case tests present)
 
 **Completeness gates (9):**
-`draft` — ≥1 test, functionCoverage summary present
-`review` — error-path tests exist, all API functions tested, all coverage entries have outOfScope, coverage includes all tested functions, apiSpecVersion set
-`confirmed` — independent verification passed
+- `draft` — ≥1 test, functionCoverage summary present
+- `review` — error-path tests exist, all API functions tested, all coverage entries have outOfScope, coverage includes all tested functions, apiSpecVersion set
+- `confirmed` — independent verification passed
 </details>
 
 <details>
@@ -239,7 +241,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 - Dependency ordering (no circular or forward references)
 - Milestone outcomes (measurable, not just task lists)
 
-**Completeness gates:** *None defined* — taskplan coverage is derived from spec completeness.
+**Completeness gates:** None defined — taskplan coverage is derived from spec completeness.
 </details>
 
 <details>
@@ -250,7 +252,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 - Dependency consistency (epic/issue parent references)
 - Epic coverage (all epics have issues)
 
-**Completeness gates:** *None defined* — issue lint is optional and epic-specific.
+**Completeness gates:** None defined — issue lint is optional and epic-specific.
 </details>
 
 <details>
@@ -263,7 +265,8 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 - API function coverage (every function tested)
 - Data-API alignment (API parameter/output types match data spec types)
 
-**Completeness gates:** *None* — cross-spec layer is purely structural.
+**Completeness gates:** None — cross-spec layer is purely structural.
+</details>
 </details>
 
 ## Artifact Dependency Graph
