@@ -596,7 +596,10 @@ def run_archspec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
     schema_path = (schema_dir / "archspec.schema.json") if schema_dir else None
     mod = load_linter(linter_path)
     layer = _run("archspec", linter_path,
-                 lambda s: mod.run_lint(spec, schema_path, loaded.get("goal"), s), strict)
+                 lambda s: mod.run_lint(spec, schema_path, loaded.get("goal"), s,
+                                        glossary=loaded.get("glossary"),
+                                        data_spec=loaded.get("data"),
+                                        api_spec=loaded.get("api")), strict)
     layer.completeness = assess_archspec(spec)
     return layer
 

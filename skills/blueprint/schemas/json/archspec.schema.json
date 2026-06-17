@@ -32,6 +32,12 @@
     "nfrId": {
       "type": "string",
       "pattern": "^NFR-\\d{3}$"
+    },
+
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier, format GL-NNN. Must match an ID in Glossary.json.",
+      "pattern": "^GL-\\d{3}$"
     }
   },
 
@@ -179,6 +185,12 @@
             "default": "internal"
           },
 
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) that this component's concepts map to. Use for cross-spec traceability.",
+            "items": { "$ref": "#/definitions/glId" }
+          },
+
           "notes": { "type": "string" }
         }
       }
@@ -244,7 +256,12 @@
           },
           "description": {
             "type": "string",
-            "description": "Optional prose summary of this flow."
+            "description": "Optional prose summary of this flow. Should not be empty — use to explain the flow's purpose in one sentence."
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) that this flow's concepts map to.",
+            "items": { "$ref": "#/definitions/glId" }
           },
           "reqRefs": {
             "type": "array",
@@ -303,6 +320,11 @@
           "rationale": {
             "type": "string",
             "description": "Why this constraint exists."
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) that this constraint's concepts map to.",
+            "items": { "$ref": "#/definitions/glId" }
           },
           "nfrRefs": {
             "type": "array",

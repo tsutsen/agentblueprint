@@ -418,10 +418,176 @@ def check_dependency_depth(spec: dict, result: LintResult):
                 f"Component '{comp_id}' has a dependency chain of {depth} levels.",
                 hint="Deep dependency chains can make the system hard to understand and maintain.")
 
+
+def check_isolated_components(spec: dict, result: LintResult):
+    """Warn if a component has no dependencies AND no dependents (isolated)."""
+    components = spec.get("components", [])
+    comp_ids = {c["id"] for c in components}
+    
+    # Build set of components that are depended upon
+    depended_upon = set()
+    for c in components:
+        for dep in c.get("dependencies", []):
+            depended_upon.add(dep)
+    
+    for c in components:
+        cid = c["id"]
+        has_deps = len(c.get("dependencies", [])) > 0
+        is_depended_on = cid in depended_upon
+        if not has_deps and not is_depended_on:
+            result.add("warning", "isolated_component",
+                f"Component '{cid}' is isolated: no dependencies and no dependents.",
+                hint="An isolated component may indicate a design issue — consider whether it truly belongs in the architecture or should be merged.")
+
+
+def check_flow_descriptions(spec: dict, result: LintResult):
+    """Warn if data flow descriptions are empty."""
+    for flow in spec.get("dataFlow", []):
+        desc = flow.get("description", "")
+        if not desc or not desc.strip():
+            result.add("warning", "flow_empty_description",
+                f"Flow '{flow['id']}' has an empty description.",
+                hint="Every data flow should have a one-sentence description explaining its purpose.")
+
+
+def check_flow_data_refs(spec: dict, result: LintResult):
+    """Warn if flow steps have empty dataRef fields."""
+    for flow in spec.get("dataFlow", []):
+        for i, step in enumerate(flow.get("steps", [])):
+            data_ref = step.get("dataRef", "")
+            if data_ref is not None and not data_ref.strip():
+                result.add("warning", "flow_step_empty_data_ref",
+                    f"Flow '{flow['id']}' step {i+1} ({step.get('componentRef', '?')}) has an empty dataRef.",
+                    hint="Name the data entity or payload moving through this step.")
+
+
+def check_vague_responsibilities(spec: dict, result: LintResult):
+    """Warn if a component has only one responsibility that is vague/generic."""
+    vague_patterns = [
+        r"\bconsist(?:ent|ently)\b", r"\bacross all\b", r"\bthe system\b",
+        r"\bprovide\s+(a |an )?\b", r"\bhandle\s+(all |the |any )?\b",
+        r"\bmanage\s+(the |all |any )?\b", r"\bensure\s+(that |the |all )?\b",
+    ]
+    import re
+    
+    for comp in spec.get("components", []):
+        resps = comp.get("responsibilities", [])
+        if len(resps) == 1:
+            resp_lower = resps[0].lower()
+            for pattern in vague_patterns:
+                if re.search(pattern, resp_lower):
+                    result.add("warning", "vague_responsibility",
+                        f"Component '{comp['id']}' has a single vague responsibility: '{resps[0][:80]}...'.",
+                        hint="Break into specific, actionable responsibilities. Avoid generic statements like 'consistent error handling across all components'.")
+                    break
+
+
+def check_inline_req_refs_in_responsibilities(spec: dict, result: LintResult):
+    """Warn if responsibilities contain text that looks like non-standard refs (e.g. 'key flow 9b')."""
+    import re
+    
+    # Patterns that look like refs but aren't REQ/NFR/GL
+    non_standard_patterns = [
+        (r"\bkey\s+flow\s+\w+\b", "key flow references"),
+        (r"\bflow\s+\d+[a-z]?\b", "flow number references"),
+        (r"\bsection\s+\d+\b", "section references"),
+    ]
+    
+    for comp in spec.get("components", []):
+        for resp in comp.get("responsibilities", []):
+            for pattern, label in non_standard_patterns:
+                matches = re.findall(pattern, resp.lower())
+                if matches:
+                    result.add("warning", "inline_ref_in_responsibility",
+                        f"Component '{comp['id']}' responsibility references '{matches[0]}' — use reqRefs/nfrRefs arrays instead.",
+                        hint="Move requirement references to the reqRefs/nfrRefs arrays. Use glossaryRefs for term references.")
+
+
+def check_components_in_data_flows(spec: dict, result: LintResult):
+    """Warn if a component is not referenced in any data flow step."""
+    components = spec.get("components", [])
+    comp_ids = {c["id"] for c in components}
+    
+    # Collect all componentRefs from data flow steps
+    flow_components = set()
+    for flow in spec.get("dataFlow", []):
+        for step in flow.get("steps", []):
+            ref = step.get("componentRef")
+            if ref:
+                flow_components.add(ref)
+    
+    for cid in comp_ids:
+        if cid not in flow_components:
+            result.add("warning", "component_not_in_flow",
+                f"Component '{cid}' is not referenced in any data flow step.",
+                hint="Either add this component to a relevant data flow or remove it from the architecture if it's not part of the data pipeline.")
+
+
+def check_cross_spec_versions(spec: dict, data_spec: Optional[dict], api_spec: Optional[dict], result: LintResult):
+    """Warn if dataSpecVersion/apiSpecVersion don't match loaded specs."""
+    pinned_data = spec.get("dataSpecVersion")
+    pinned_api = spec.get("apiSpecVersion")
+    
+    if pinned_data and data_spec:
+        if pinned_data != data_spec.get("version"):
+            result.add("warning", "dataspec_version_mismatch",
+                f"archspec.dataSpecVersion='{pinned_data}' does not match dataspec.version='{data_spec.get('version')}'.",
+                hint="Update dataSpecVersion to match the DataSpec's version.")
+    
+    if pinned_api and api_spec:
+        if pinned_api != api_spec.get("version"):
+            result.add("warning", "apispec_version_mismatch",
+                f"archspec.apiSpecVersion='{pinned_api}' does not match apispec.version='{api_spec.get('version')}'.",
+                hint="Update apiSpecVersion to match the ApiSpec's version.")
+
+
+def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LintResult):
+    """Validate that glossaryRefs point to valid GL-NNN IDs in the Glossary."""
+    if not glossary:
+        return
+    
+    gl_ids = {t["id"] for t in glossary.get("terms", [])}
+    
+    # Check component glossaryRefs
+    for comp in spec.get("components", []):
+        for ref in comp.get("glossaryRefs", []):
+            if ref not in gl_ids:
+                result.add("error", "glossary_ref_missing",
+                    f"Component '{comp['id']}': glossaryRef '{ref}' not found in Glossary.",
+                    hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
+    
+    # Check constraint glossaryRefs
+    for con in spec.get("constraints", []):
+        for ref in con.get("glossaryRefs", []):
+            if ref not in gl_ids:
+                result.add("error", "glossary_ref_missing",
+                    f"Constraint '{con['id']}': glossaryRef '{ref}' not found in Glossary.",
+                    hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
+    
+    # Check flow glossaryRefs
+    for flow in spec.get("dataFlow", []):
+        for ref in flow.get("glossaryRefs", []):
+            if ref not in gl_ids:
+                result.add("error", "glossary_ref_missing",
+                    f"Flow '{flow['id']}': glossaryRef '{ref}' not found in Glossary.",
+                    hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
+    
+    # Warn: components that reference key domain terms but have no glossaryRefs
+    # This is a heuristic check — not all components need glossary refs, but domain-heavy ones should
+    domain_heavy_components = ["search-engine", "ranking-engine", "document-processor", "report-synthesiser"]
+    for comp in spec.get("components", []):
+        if comp["id"] in domain_heavy_components and not comp.get("glossaryRefs"):
+            result.add("warning", "glossary_ref_missing_component",
+                f"Component '{comp['id']}' is a core domain component but has no glossaryRefs.",
+                hint="Link this component's key concepts to glossary entries using glossaryRefs for cross-spec traceability.")
+
 # ── Runner ────────────────────────────────────────────────────────────────────
 
 def run_lint(spec: dict, schema_path: Optional[Path],
-             goal: Optional[dict], strict: bool) -> LintResult:
+             goal: Optional[dict], strict: bool,
+             glossary: Optional[dict] = None,
+             data_spec: Optional[dict] = None,
+             api_spec: Optional[dict] = None) -> LintResult:
     result = LintResult()
 
     # JSON Schema validation
@@ -448,6 +614,16 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     # Cross-spec ref resolution
     check_req_nfr_refs(spec, goal, result)
     check_fr_coverage(spec, goal, result)
+
+    # Quality checks (new)
+    check_isolated_components(spec, result)
+    check_flow_descriptions(spec, result)
+    check_flow_data_refs(spec, result)
+    check_vague_responsibilities(spec, result)
+    check_inline_req_refs_in_responsibilities(spec, result)
+    check_components_in_data_flows(spec, result)
+    check_cross_spec_versions(spec, data_spec, api_spec, result)
+    check_glossary_refs(spec, glossary, result)
 
     if strict:
         for w in result.warnings:
