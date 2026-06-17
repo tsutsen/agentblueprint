@@ -265,6 +265,32 @@ When an entity extends another, the diagram generator will render a
 UML inheritance arrow (`--|>` in PlantUML, `<|--` in Mermaid, `--|>` in D2).
 The parent entity will also be rendered in the same visibility group.
 
+**Abstract entities:**
+
+An `abstract` entity cannot be instantiated directly — it exists only as
+a base class for other entities. Use abstract entities when:
+
+* Multiple entities share common fields (e.g., `AuditEntity` with `createdAt`, `updatedAt`)
+* You have a clear "is-a" hierarchy (e.g., `Payment` → `CreditCardPayment`, `BankTransferPayment`)
+* You want to enforce that only subclasses are used in relationships
+
+**Rules for abstract entities:**
+
+* Abstract entities should NOT have composition/aggregation relationships as targets
+  (they are base classes, not leaf types that can be "owned").
+* Abstract entities SHOULD have association/dependency relationships (they can reference other types).
+* All concrete (non-abstract) entities that extend an abstract entity must be listed explicitly.
+* When a field references an abstract entity type, it means the field can be any of the
+  concrete subclasses (e.g., `payment: Payment` where `Payment` is abstract and has
+  `CreditCardPayment` and `BankTransferPayment` as subclasses).
+
+**Ask the user:**
+
+```
+"[Entity] is marked as abstract. Is this correct? Are there concrete
+subclasses that should be listed?"
+```
+
 ---
 
 ### Relationships
@@ -318,6 +344,42 @@ test forces reasoning about actual ownership semantics.
   still exists independently.
 * `UserService` → `Database` as `dependency`: the service uses the database
   during method execution but doesn't own it.
+
+---
+
+### Cross-Spec Consistency
+
+The DataSpec is the **source of truth** for all types used across ApiSpec
+and TestSpec. Changes to DataSpec types must be reflected in all dependent
+specs.
+
+**Rules:**
+
+* **Entity names must match exactly** — case-sensitive, no variations
+  (e.g., if DataSpec has `User`, ApiSpec must use `User`, not `user` or `Users`).
+* **Enum names must match exactly** — same case-sensitivity rule.
+* **Primitive names must match exactly** — use the primitives defined in
+  DataSpec (e.g., `string` not `String`, `number` not `Number`).
+* **Array notation must be consistent** — use `Type[]` notation everywhere.
+* **When a type changes in DataSpec, check all dependent specs** —
+  ApiSpec, TestSpec, and any other spec that references the type.
+
+**Type change workflow:**
+
+1. Make the change in DataSpec.
+2. Run the linter to identify all affected references.
+3. Update ApiSpec function signatures and parameter types.
+4. Update TestSpec test cases that reference the changed types.
+5. Regenerate all diagrams.
+6. Run the full lint suite to verify consistency.
+
+**Ask the user:**
+
+```
+"This type change affects [N] references across [M] specs. Should I
+update all of them, or should some references be kept for backward
+compatibility?"
+```
 
 #### Relationship Notation
 
