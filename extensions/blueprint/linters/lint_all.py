@@ -663,7 +663,8 @@ def run_taskplan(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
     mod = load_linter(linter_path)
     layer = _run("taskplan", linter_path,
                  lambda s: mod.run_lint(spec, goal_spec, design_spec, arch_spec,
-                                        data_spec, api_spec, test_spec, s), strict)
+                                        data_spec, api_spec, test_spec,
+                                        loaded.get("glossary"), s), strict)
     layer.completeness = assess_taskplan(spec, goal_spec, design_spec, arch_spec)
     return layer
 

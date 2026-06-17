@@ -535,12 +535,78 @@ def _check_cross_spec_coverage(plan: dict, goal_spec: Optional[dict],
                            f"TestSpec scenario may not be covered by any epic: '{scenario.get('description', '')[:80]}...'")
 
 
+def _check_epic_glossary_refs(plan: dict, glossary: Optional[dict], layer: LayerResult):
+    """Check that epics link domain concepts to glossary terms.
+
+    Checks epic titles and objectives for glossary references.
+    Skips generic actor terms (User, System) to avoid noise.
+    """
+    if not glossary:
+        return
+
+    # Build glossary term map (lowercase -> id)
+    glossary_lower = {}
+    for t in glossary.get("terms", []):
+        glossary_lower[t["term"].lower()] = t["id"]
+
+    # Generic actors that appear everywhere — skip from "has domain concept" check
+    skip_terms = {"user", "system"}
+
+    def has_domain_concept(text: str) -> bool:
+        """Check if text contains glossary terms (excluding generic actors)."""
+        text_lower = text.lower()
+        for term in glossary_lower:
+            if term in skip_terms:
+                continue
+            if len(term) > 3 and term in text_lower:
+                return True
+        return False
+
+    def find_glossary_refs(text: str) -> list:
+        """Find glossary term IDs referenced in text (excluding generic actors)."""
+        text_lower = text.lower()
+        refs = []
+        for term, tid in glossary_lower.items():
+            if term in skip_terms:
+                continue
+            if len(term) > 3 and term in text_lower:
+                refs.append(tid)
+        return refs
+
+    for epic in plan.get("epics", []):
+        eid = epic.get("id", "?")
+
+        # Check title
+        title = epic.get("title", "")
+        if title and has_domain_concept(title):
+            refs = epic.get("glossaryRefs", [])
+            if not refs:
+                # Find what refs should be there
+                expected_refs = find_glossary_refs(title)
+                layer.add("warning", "title_no_glossary_refs",
+                           f"Epic {eid} title '{title}' references glossary terms "
+                           f"({', '.join(expected_refs)}) but has no glossaryRefs.",
+                           hint="Add glossaryRefs (GL-NNN) for domain concepts in this epic's title.")
+
+        # Check objective
+        objective = epic.get("objective", "")
+        if objective and has_domain_concept(objective):
+            refs = epic.get("glossaryRefs", [])
+            if not refs:
+                expected_refs = find_glossary_refs(objective)
+                layer.add("warning", "objective_no_glossary_refs",
+                           f"Epic {eid} objective references glossary terms "
+                           f"({', '.join(expected_refs)}) but has no glossaryRefs.",
+                           hint="Add glossaryRefs (GL-NNN) for domain concepts in this epic's objective.")
+
+
 def run_lint(plan: dict, goal_spec: Optional[dict] = None,
              design_spec: Optional[dict] = None,
              arch_spec: Optional[dict] = None,
              data_spec: Optional[dict] = None,
              api_spec: Optional[dict] = None,
              test_spec: Optional[dict] = None,
+             glossary: Optional[dict] = None,
              strict: bool = False) -> LayerResult:
     """Run all TaskPlan lint checks.
 
@@ -587,6 +653,9 @@ def run_lint(plan: dict, goal_spec: Optional[dict] = None,
     # Cross-spec coverage check
     _check_cross_spec_coverage(plan, goal_spec, design_spec, arch_spec,
                                data_spec, api_spec, test_spec, layer)
+
+    # Glossary reference checks
+    _check_epic_glossary_refs(plan, glossary, layer)
 
     return layer
 

@@ -31,6 +31,11 @@
         "in_progress",
         "complete"
       ]
+    },
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier (GL-NNN).",
+      "pattern": "^GL-\\d{3}$"
     }
   },
   "properties": {
@@ -121,6 +126,11 @@
             "description": "Action-oriented title describing a capability, not a technical layer. Example: 'Implement document ingestion pipeline' not 'Write database migrations'.",
             "minLength": 5
           },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) that this epic's title and objective reference. Links domain concepts from the glossary to implementation planning.",
+            "items": { "$ref": "#/definitions/glId" }
+          },
           "status": {
             "$ref": "#/definitions/epicStatus",
             "description": "Lifecycle status of this epic.",
@@ -162,6 +172,11 @@
                   "minLength": 5
                 }
               },
+              "inScopeGlossaryRefs": {
+                "type": "array",
+                "description": "Glossary term IDs (GL-NNN) referenced in inScope items.",
+                "items": { "$ref": "#/definitions/glId" }
+              },
               "outOfScope": {
                 "type": "array",
                 "description": "Related work intentionally deferred or excluded. Must be specific, not vague.",
@@ -170,6 +185,11 @@
                   "minLength": 5
                 },
                 "minItems": 1
+              },
+              "outOfScopeGlossaryRefs": {
+                "type": "array",
+                "description": "Glossary term IDs (GL-NNN) referenced in outOfScope items.",
+                "items": { "$ref": "#/definitions/glId" }
               }
             }
           },
