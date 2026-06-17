@@ -205,6 +205,29 @@ Markdown/JSON drift.
 | `No self-referencing dependencies` | review | TaskPlan |
 | `No unknown dependencies` | review | TaskPlan |
 
+### lint_testspec.py
+| Check | Severity | Description |
+|-------|----------|-------------|
+| `duplicate_id` | ERROR | Duplicate test ID |
+| `id_fn_mismatch` | ERROR | Test ID prefix does not match fnRef |
+| `fnref_missing` | ERROR | fnRef not found in ApiSpec |
+| `error_code_undocumented` | ERROR | errorCode not documented on function in ApiSpec |
+| `function_untested` | ERROR | Function has no tests |
+| `error_code_untested` | ERROR | Error code has no error-path test |
+| `error_path_missing_code` | ERROR | Error-path test missing errorCode |
+| `missing_expected_output` | ERROR | Happy-path/edge-case test missing expectedOutput |
+| `verification_pending` | ERROR | TestSpec confirmed but verificationStatus is pending |
+| `missing_api_version` | ERROR | TestSpec confirmed but apiSpecVersion not set |
+| `placeholder_input` | WARNING | Input may contain a placeholder value |
+| `placeholder_description` | WARNING | Description appears to be a placeholder |
+| `error_path_missing_expected` | WARNING | Error-path test missing expectedError |
+| `error_path_has_output` | WARNING | Error-path test has expectedOutput |
+| `non_error_has_error_code` | WARNING | Non-error test has errorCode |
+| `coverage_count_mismatch` | WARNING | functionCoverage count does not match actual tests |
+| `coverage_entry_missing` | WARNING | Function has tests but no functionCoverage entry |
+| `no_coverage_summary` | WARNING | No functionCoverage summary present |
+| `glossary` | WARNING | Test description/contractClause or outOfScope item references glossary terms but has no glossaryRefs |
+
 ### lint_issues.py
 | Check | Severity | Description |
 |-------|----------|-------------|
