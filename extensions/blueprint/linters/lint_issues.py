@@ -46,6 +46,7 @@ EPIC_ID_RE = re.compile(r"^EP-\d{3}$")
 ISSUE_ID_RE = re.compile(r"^IS-\d{3}$")
 MILESTONE_RE = re.compile(r"^M\d+$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+GL_ID_RE = re.compile(r"^GL-\d{3}$")
 
 
 # ── Core linter ───────────────────────────────────────────────────────────────
@@ -275,7 +276,12 @@ class IssueLinter:
         
         if hasattr(self, 'goal') and self.goal:
             for ng in self.goal.get("nonGoals", []):
-                ng_text = ng.strip()
+                if isinstance(ng, str):
+                    ng_text = ng.strip()
+                elif isinstance(ng, dict):
+                    ng_text = ng.get("capability", "").strip()
+                else:
+                    continue
                 if len(ng_text) > 5:
                     out_of_scope_items.append(ng_text)
 
@@ -352,6 +358,70 @@ class IssueLinter:
                 self.add_issue("warning", "milestone",
                     f"{issue_file.issue_id}: milestone '{milestone}' not found in TaskPlan. "
                     f"Valid: {', '.join(sorted(valid_milestones))}")
+
+    def check_glossary_refs(self):
+        """WARN: Check that issue text sections have glossaryRefs when they contain domain concepts.
+        
+        Checks title, what-to-build, and acceptance criteria for glossary term references.
+        """
+        if not self.glossary:
+            return
+
+        # Build glossary term map (lowercase -> id)
+        glossary_lower = {}
+        for t in self.glossary.get("terms", []):
+            glossary_lower[t["term"].lower()] = t["id"]
+
+        def has_domain_concept(text: str) -> bool:
+            text_lower = text.lower()
+            return any(len(term) > 3 and term in text_lower for term in glossary_lower)
+
+        def find_glossary_refs(text: str) -> list:
+            text_lower = text.lower()
+            return [tid for term, tid in glossary_lower.items()
+                    if len(term) > 3 and term in text_lower]
+
+        for issue_file in self.issue_files:
+            refs = issue_file.data.get("glossaryRefs", [])
+            if refs:
+                continue  # Already has glossaryRefs — skip
+
+            # Check title
+            title = issue_file.data.get("title", "")
+            if title and has_domain_concept(title):
+                expected = find_glossary_refs(title)
+                self.add_issue("warning", "glossary",
+                    f"{issue_file.issue_id} title '{title}' references glossary terms "
+                    f"({', '.join(expected)}) but has no glossaryRefs.",
+                    hint="Add glossaryRefs (GL-NNN) for domain concepts in this issue's title.")
+
+            # Check "What to build" section
+            what_match = re.search(
+                r"##\s+What to build\s*\n(.*?)(?=\n##|$)",
+                issue_file.md_content, re.DOTALL
+            )
+            if what_match:
+                what_text = what_match.group(1).strip()
+                if has_domain_concept(what_text):
+                    expected = find_glossary_refs(what_text)
+                    self.add_issue("warning", "glossary",
+                        f"{issue_file.issue_id} 'What to build' references glossary terms "
+                        f"({', '.join(expected)}) but has no glossaryRefs.",
+                        hint="Add glossaryRefs (GL-NNN) for domain concepts in this issue's description.")
+
+            # Check acceptance criteria
+            ac_match = re.search(
+                r"##\s+Acceptance\s*criteria\s*\n((?:-\s+\[\s*\]\s+.+\n?)*)",
+                issue_file.md_content, re.IGNORECASE
+            )
+            if ac_match:
+                ac_text = ac_match.group(1)
+                if has_domain_concept(ac_text):
+                    expected = find_glossary_refs(ac_text)
+                    self.add_issue("warning", "glossary",
+                        f"{issue_file.issue_id} acceptance criteria reference glossary terms "
+                        f"({', '.join(expected)}) but have no glossaryRefs.",
+                        hint="Add glossaryRefs (GL-NNN) for domain concepts in this issue's ACs.")
 
     def lint_coverage(self):
         """Check that every epic acceptance criterion maps to at least one issue.
@@ -535,6 +605,7 @@ class IssueLinter:
         self.lint_epic_consistency()
         self.lint_milestone_consistency(taskplan)
         self.lint_non_goal_violation()
+        self.check_glossary_refs()
         self.lint_body()
         self.lint_coverage()
         return self.issues

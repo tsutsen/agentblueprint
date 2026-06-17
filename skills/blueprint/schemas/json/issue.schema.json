@@ -15,6 +15,13 @@
     "created",
     "updated"
   ],
+  "definitions": {
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier. Format: GL-NNN (3-digit zero-padded).",
+      "pattern": "^GL-\\d{3}$"
+    }
+  },
   "properties": {
     "artifact": {
       "type": "string",
@@ -78,6 +85,14 @@
       "type": "string",
       "description": "Last update date. Format: YYYY-MM-DD.",
       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "glossaryRefs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/glId"
+      },
+      "description": "Glossary term identifiers (GL-NNN) referenced in this issue's title, what-to-build, and acceptance criteria.",
+      "uniqueItems": true
     }
   },
   "additionalProperties": false
