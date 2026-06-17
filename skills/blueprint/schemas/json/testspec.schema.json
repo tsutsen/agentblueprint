@@ -41,6 +41,31 @@
 
     "concreteValue": {
       "description": "A concrete example value — string, number, boolean, object, or array. Must NOT be a placeholder like 'a valid userId' or 'some string'."
+    },
+
+    "requirementsTestEntry": {
+      "type": "object",
+      "description": "Maps a requirement to the test cases that verify it. Useful for REQ→test traceability.",
+      "required": ["reqRef", "description", "testIds"],
+      "additionalProperties": false,
+      "properties": {
+        "reqRef": {
+          "type": "string",
+          "description": "The requirement ID this entry covers (REQ-NNN or NFR-NNN).",
+          "pattern": "^(REQ|NFR)-\\d{3}$"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of what this requirement tests.",
+          "minLength": 5
+        },
+        "testIds": {
+          "type": "array",
+          "description": "Test case IDs that verify this requirement.",
+          "items": { "$ref": "#/definitions/testId" },
+          "minItems": 1
+        }
+      }
     }
   },
 
@@ -118,6 +143,12 @@
           }
         }
       }
+    },
+
+    "requirementsTests": {
+      "type": "array",
+      "description": "Maps each requirement to the test cases that verify it. Optional — useful for REQ→test traceability. Use the generate_tests tool to populate automatically.",
+      "items": { "$ref": "#/definitions/requirementsTestEntry" }
     },
 
     "tests": {
