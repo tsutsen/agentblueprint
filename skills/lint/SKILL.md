@@ -116,6 +116,9 @@ Markdown/JSON drift.
 | `scope-specific` | WARNING | outOfScope item is vague |
 | `milestone-consistency` | ERROR | Milestone epic list mismatches epic milestone field |
 | `circular-dependency` | ERROR | Circular dependency detected among epics |
+| `duplicate-requirements` | WARNING | Requirement covered by multiple epics |
+| `milestone-size` | WARNING | Milestone has >10 epics — consider splitting |
+| `id-sequence` | WARNING | Missing epic/milestone IDs in sequence |
 | `nfr-coverage` | WARNING | Non-functional requirement not covered by any epic |
 | `cross-spec-coverage` | WARNING | Spec capability/component/entity may not be covered |
 

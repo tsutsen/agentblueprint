@@ -48,6 +48,83 @@ class LayerResult:
             self.warnings.append(issue)
 
 
+def _check_duplicate_epic_requirements(plan: dict, layer: LayerResult):
+    """Warn when multiple epics cover the same requirements.
+
+    While some overlap is acceptable (e.g., cross-cutting concerns),
+    significant overlap may indicate redundant epics.
+    """
+    epics = plan.get("epics", [])
+    req_to_epics = {}
+
+    for epic in epics:
+        for req_id in epic.get("requirements", []):
+            req_to_epics.setdefault(req_id, []).append(epic["id"])
+
+    for req_id, epic_ids in req_to_epics.items():
+        if len(epic_ids) > 1:
+            layer.add("warning", "duplicate-requirements",
+                       f"Requirement {req_id} is covered by multiple epics: {', '.join(epic_ids)}",
+                       hint="If this is intentional (cross-cutting concern), ignore. Otherwise, consolidate.")
+
+
+def _check_milestone_epic_count(plan: dict, layer: LayerResult):
+    """Warn if a milestone has too few or too many epics.
+
+    A milestone with < 1 epic is an error (already caught elsewhere).
+    A milestone with > 10 epics may be too large to deliver in one milestone.
+    """
+    milestones = plan.get("milestones", [])
+    for m in milestones:
+        epics = m.get("epics", [])
+        if len(epics) > 10:
+            layer.add("warning", "milestone-size",
+                       f"Milestone {m['id']} has {len(epics)} epics — consider splitting.",
+                       hint="Large milestones are hard to track and deliver value incrementally.")
+
+
+def _check_epic_id_sequential(plan: dict, layer: LayerResult):
+    """Warn if epic IDs are not sequential (e.g., EP-001, EP-003 missing EP-002)."""
+    import re
+    epics = plan.get("epics", [])
+    ids = []
+    for epic in epics:
+        eid = epic.get("id", "")
+        match = re.match(r"^EP-(\d+)$", eid)
+        if match:
+            ids.append(int(match.group(1)))
+
+    if ids:
+        expected = set(range(min(ids), max(ids) + 1))
+        actual = set(ids)
+        missing = expected - actual
+        if missing:
+            layer.add("warning", "id-sequence",
+                       f"Missing epic IDs: {', '.join(f'EP-{n:03d}' for n in sorted(missing))}",
+                       hint="Epic IDs should be sequential with no gaps.")
+
+
+def _check_milestone_id_sequential(plan: dict, layer: LayerResult):
+    """Warn if milestone IDs are not sequential (e.g., M1, M3 missing M2)."""
+    import re
+    milestones = plan.get("milestones", [])
+    ids = []
+    for m in milestones:
+        mid = m.get("id", "")
+        match = re.match(r"^M(\d+)$", mid)
+        if match:
+            ids.append(int(match.group(1)))
+
+    if ids:
+        expected = set(range(min(ids), max(ids) + 1))
+        actual = set(ids)
+        missing = expected - actual
+        if missing:
+            layer.add("warning", "id-sequence",
+                       f"Missing milestone IDs: {', '.join(f'M{n}' for n in sorted(missing))}",
+                       hint="Milestone IDs should be sequential with no gaps.")
+
+
 def _check_epic_file_exists(plan: dict, layer: LayerResult):
     """Check that epic files exist at the expected paths."""
     import os
@@ -389,6 +466,10 @@ def run_lint(plan: dict, goal_spec: Optional[dict] = None,
     _check_outofscope_specificity(plan, layer)
     _check_milestone_epic_consistency(plan, layer)
     _check_circular_dependencies(plan, layer)
+    _check_duplicate_epic_requirements(plan, layer)
+    _check_milestone_epic_count(plan, layer)
+    _check_epic_id_sequential(plan, layer)
+    _check_milestone_id_sequential(plan, layer)
 
     # Cross-reference with GoalSpec if available
     if goal_spec:
