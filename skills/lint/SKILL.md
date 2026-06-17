@@ -16,16 +16,22 @@ Markdown/JSON drift.
 
 ---
 
-## Invocation
+## When invoked
+
+**Run the lint tool immediately.** Do not show documentation or ask for clarification.
 
 ```
-/skill:lint                            # Quick check all artifacts in artifacts/
-/skill:lint data                       # Lint only DataSpec
-/skill:lint data api                   # Lint DataSpec + ApiSpec
-/skill:lint --strict                   # Warnings as errors (all artifacts)
-/skill:lint --json                     # Machine-readable output
-/skill:lint data --strict              # Lint DataSpec, warnings as errors
+tool: lint
+args:
+  artifacts: []  # lint all; or filter: ["goal", "data", "api"]
+  mode: "assess"
 ```
+
+If the user provides artifact names (e.g., `/skill:lint data api`), pass them as the `artifacts` array.
+
+If the user provides `--strict`, add `strict: true`.
+
+If the user provides `--json`, add `mode: "raw"`.
 
 ---
 
@@ -274,45 +280,6 @@ Markdown/JSON drift.
 | `lint_dataspec.py` | DataSpec validation + semantic checks |
 | `lint_apispec.py` | ApiSpec validation + cross-spec checks |
 | `lint_consistency.py` | Markdown/JSON drift detection |
-
----
-
-## Usage in Sessions
-
-### Before starting an artifact interview
-Run the linter to check existing artifacts:
-
-```
-/skill:lint data api
-```
-
-If errors are found, fix them before proceeding. If only warnings, note them
-but proceed.
-
-### After modifying an artifact
-Run targeted lint to verify changes:
-
-```
-/skill:lint data
-```
-
-### Before advancing lifecycle status
-Run the full suite to check completeness gates:
-
-```
-/skill:lint data api --strict
-```
-
-The `--strict` flag treats warnings as errors, ensuring no warnings remain
-before advancing.
-
-### Quick check
-For a fast status check, run without arguments — it scans `artifacts/` for
-any JSON files and lints them:
-
-```
-/skill:lint
-```
 
 ---
 
