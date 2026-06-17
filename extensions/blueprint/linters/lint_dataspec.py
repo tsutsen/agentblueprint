@@ -780,9 +780,91 @@ def check_method_apiRef(spec: dict, api_spec: Optional[dict], result: LintResult
                     hint="Ensure the apiRef matches a function ID in ApiSpec.")
 
 
+def match_glossary_term(name: str, glossary: dict) -> list[str]:
+    """Match an entity/enum name against glossary terms.
+
+    Strategy:
+      1. Case-insensitive exact match
+      2. Case-insensitive substring match (name in term or term in name)
+
+    Returns list of matching GL-NNN IDs.
+    """
+    name_lower = name.lower()
+    matches = []
+
+    for term in glossary.get("terms", []):
+        term_lower = term["term"].lower()
+        # Exact match
+        if name_lower == term_lower:
+            return [term["id"]]  # Exact match is definitive
+        # Substring match
+        if name_lower in term_lower or term_lower in name_lower:
+            matches.append(term["id"])
+
+    return matches
+
+
+def check_entity_glossary(spec: dict, glossary: Optional[dict], result: LintResult):
+    """ERROR: Every entity name must match a glossary term."""
+    if not glossary:
+        return
+
+    for entity in spec.get("entities", []):
+        ename = entity["name"]
+        matches = match_glossary_term(ename, glossary)
+        if not matches:
+            result.add("error", "entity_not_in_glossary",
+                f"Entity '{ename}' has no matching glossary term.",
+                hint="Add a glossary entry for this entity, or rename it to match an existing term.")
+
+
+def check_enum_glossary(spec: dict, glossary: Optional[dict], result: LintResult):
+    """ERROR: Every enum name must match a glossary term."""
+    if not glossary:
+        return
+
+    for enum in spec.get("enums", []):
+        ename = enum["name"]
+        matches = match_glossary_term(ename, glossary)
+        if not matches:
+            result.add("error", "enum_not_in_glossary",
+                f"Enum '{ename}' has no matching glossary term.",
+                hint="Add a glossary entry for this enum, or rename it to match an existing term.")
+
+
+def check_field_glossary_refs(spec: dict, glossary: Optional[dict], result: LintResult):
+    """INFO: Warn if field descriptions contain domain concepts but have no glossaryRefs."""
+    if not glossary:
+        return
+
+    # Build glossary term set for matching
+    glossary_lower = {t["term"].lower(): t["id"] for t in glossary.get("terms", [])}
+
+    for entity in spec.get("entities", []):
+        for field in entity.get("fields", []):
+            desc = field.get("description", "")
+            refs = field.get("glossaryRefs", [])
+
+            if not desc or refs:
+                continue  # No description or already has refs — skip
+
+            # Check if description contains any glossary term
+            desc_lower = desc.lower()
+            has_domain_concept = any(
+                len(term) > 3 and term in desc_lower
+                for term in glossary_lower.keys()
+            )
+
+            if has_domain_concept:
+                result.add("info", "field_no_glossary_refs",
+                    f"Entity '{entity['name']}': field '{field['name']}' describes domain concepts but has no glossaryRefs.",
+                    hint="Add glossaryRefs (GL-NNN) for domain concepts in this field's description.")
+
+
 # ── Runner ────────────────────────────────────────────────────────────────────
 
-def run_lint(spec: dict, schema_path: Optional[Path], strict: bool, api_spec: Optional[dict] = None) -> LintResult:
+def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
+             api_spec: Optional[dict] = None, glossary: Optional[dict] = None) -> LintResult:
     result = LintResult()
 
     # JSON Schema validation
@@ -820,6 +902,9 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool, api_spec: Op
     check_duplicate_relationships(spec, result)
     check_missing_descriptions(spec, result)
     check_method_apiRef(spec, api_spec, result)
+    check_entity_glossary(spec, glossary, result)
+    check_enum_glossary(spec, glossary, result)
+    check_field_glossary_refs(spec, glossary, result)
 
 
     if strict:

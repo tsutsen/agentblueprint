@@ -615,7 +615,9 @@ def run_dataspec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
     schema_path = (schema_dir / "dataspec.schema.json") if schema_dir else None
     api_spec = loaded.get("api")
     mod = load_linter(linter_path)
-    layer = _run("dataspec", linter_path, lambda s: mod.run_lint(spec, schema_path, s, api_spec), strict)
+    layer = _run("dataspec", linter_path,
+                 lambda s: mod.run_lint(spec, schema_path, s, api_spec,
+                                        glossary=loaded.get("glossary")), strict)
     layer.completeness = assess_dataspec(spec)
     return layer
 
