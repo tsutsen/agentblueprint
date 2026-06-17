@@ -204,67 +204,76 @@ asking questions that reference another artifact.
 
 ### Step 5 — Section persistence
 
-After each section is confirmed, write it to disk using the `write_section`
-tool:
+After each section is confirmed, write it to the JSON artifact using the
+`write_section` tool:
 
 ```
 tool: write_section
 args:
-  filePath: artifacts/<ArtifactType>.md
+  filePath: artifacts/<ArtifactType>.json
   section: <SectionName>
   content: <validated section content>
   sections_complete: ["<Section1>", "<Section2>", ...]
   sections_pending: ["<Section3>", ...]
+  jsonContent: { ... complete JSON object ... }
 ```
 
-`write_section` writes the section, updates frontmatter (status=in_progress,
-auto-generated date), and verifies by read-back — all in one call.
+`write_section` writes the JSON artifact with a `_sections` tracking field
+that records which sections are complete. The JSON is the single source of
+truth — Markdown is derived later via `generate_artifact_markdown`.
 
-On success, show the verified content and ask:
-"Does this capture it correctly, or would you like to revise?"
+On success, show the JSON path and section count:
+"Section written: <SectionName>. JSON: <path>. Sections complete: N, pending: M."
 
 On revision request: re-interview affected sections, rewrite, re-verify.
 
 After the last section:
-1. Call `update_frontmatter` with `status: needs_review`,
-   `sections_pending: []`.
-2. Tell the user: "All sections are written. Please review and reply
+1. Tell the user: "All sections are written to JSON. Please review and reply
    with 'approve' when you are satisfied, or tell me what to change."
-3. Wait for explicit approval.
-4. On approval: call `update_frontmatter` with `status: complete`,
-   `sections_pending: []`, then proceed to dual output.
+2. Wait for explicit approval.
+3. On approval: proceed to lint.
 
 ---
 
-### Step 6 — Dual output
+### Step 6 — Lint
 
-By this point, both files should already exist:
-
-- **Markdown** (`artifacts/<ArtifactType>.md`) — written incrementally during
-  the interview via `write_section` calls.
-- **JSON** (`artifacts/<ArtifactType>.json`) — written incrementally during
-  the interview via `write_section` with the `jsonContent` parameter.
-
-Now validate and finalize the JSON:
+Now validate the JSON artifact against its schema:
 
 ```
-tool: dual_output
+tool: lint
 args:
-  artifactType: <goal|design|arch|data|api|test|glossary>
-  filePath: artifacts/<ArtifactType>.md
+  artifacts: ["<type>"]  # e.g. ["goal"]
+  mode: "assess"
 ```
-
-The tool reads the existing JSON, validates against the schema, sets the
-`status` field from frontmatter, and writes the final JSON file.
 
 If validation fails, show the errors to the user and suggest fixes. Do
 not modify the JSON without explicit user approval. After user confirms,
-apply the fix and re-validate before invoking handoff. Do not write an
-invalid JSON artifact.
+apply the fix and re-validate.
 
 ---
 
-### Step 7 — Handoff
+### Step 7 — Generate Markdown from JSON
+
+After lint passes, regenerate the Markdown from the JSON to ensure zero
+drift between formats. The JSON is the single source of truth; Markdown
+is derived.
+
+```
+tool: generate_artifact_markdown
+args:
+  artifactType: <goal|glossary|design|arch|data|api|test|plan|issue>
+  jsonPath: artifacts/<ArtifactType>.json
+```
+
+This overwrites `artifacts/<ArtifactType>.md` with content derived from
+the JSON. The Markdown is now guaranteed to match the JSON exactly.
+
+If the schema file for this artifact type contains a `## Output` section
+with specific instructions, follow those instead.
+
+---
+
+### Step 8 — Handoff
 
 Call the `handoff` tool to produce a handoff table:
 
