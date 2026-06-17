@@ -1,6 +1,6 @@
 {
   "schemas": ".",
-  "linters": ".",
+  "linters": "../../../../extensions/blueprint/linters",
   "specs": {
     "goal":     "example.goalspec.json",
     "design":   "example.designspec.json",
