@@ -86,12 +86,28 @@
       "description": "Last update date. Format: YYYY-MM-DD.",
       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
     },
-    "glossaryRefs": {
+    "titleGlossaryRefs": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/glId"
       },
-      "description": "Glossary term identifiers (GL-NNN) referenced in this issue's title, what-to-build, and acceptance criteria.",
+      "description": "Glossary term identifiers (GL-NNN) referenced in this issue's title.",
+      "uniqueItems": true
+    },
+    "whatGlossaryRefs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/glId"
+      },
+      "description": "Glossary term identifiers (GL-NNN) referenced in the 'What to build' section.",
+      "uniqueItems": true
+    },
+    "acGlossaryRefs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/glId"
+      },
+      "description": "Glossary term identifiers (GL-NNN) referenced in the acceptance criteria.",
       "uniqueItems": true
     }
   },

@@ -363,6 +363,7 @@ class IssueLinter:
         """WARN: Check that issue text sections have glossaryRefs when they contain domain concepts.
         
         Checks title, what-to-build, and acceptance criteria for glossary term references.
+        Each section has its own glossaryRefs field in the JSON.
         """
         if not self.glossary:
             return
@@ -382,46 +383,48 @@ class IssueLinter:
                     if len(term) > 3 and term in text_lower]
 
         for issue_file in self.issue_files:
-            refs = issue_file.data.get("glossaryRefs", [])
-            if refs:
-                continue  # Already has glossaryRefs — skip
-
             # Check title
             title = issue_file.data.get("title", "")
+            title_refs = issue_file.data.get("titleGlossaryRefs", [])
             if title and has_domain_concept(title):
-                expected = find_glossary_refs(title)
-                self.add_issue("warning", "glossary",
-                    f"{issue_file.issue_id} title '{title}' references glossary terms "
-                    f"({', '.join(expected)}) but has no glossaryRefs.",
-                    hint="Add glossaryRefs (GL-NNN) for domain concepts in this issue's title.")
+                if not title_refs:
+                    expected = find_glossary_refs(title)
+                    self.add_issue("warning", "glossary",
+                        f"{issue_file.issue_id} title '{title}' references glossary terms "
+                        f"({', '.join(expected)}) but has no titleGlossaryRefs.",
+                        hint="Add titleGlossaryRefs (GL-NNN) for domain concepts in this issue's title.")
 
             # Check "What to build" section
             what_match = re.search(
                 r"##\s+What to build\s*\n(.*?)(?=\n##|$)",
                 issue_file.md_content, re.DOTALL
             )
+            what_refs = issue_file.data.get("whatGlossaryRefs", [])
             if what_match:
                 what_text = what_match.group(1).strip()
                 if has_domain_concept(what_text):
-                    expected = find_glossary_refs(what_text)
-                    self.add_issue("warning", "glossary",
-                        f"{issue_file.issue_id} 'What to build' references glossary terms "
-                        f"({', '.join(expected)}) but has no glossaryRefs.",
-                        hint="Add glossaryRefs (GL-NNN) for domain concepts in this issue's description.")
+                    if not what_refs:
+                        expected = find_glossary_refs(what_text)
+                        self.add_issue("warning", "glossary",
+                            f"{issue_file.issue_id} 'What to build' references glossary terms "
+                            f"({', '.join(expected)}) but has no whatGlossaryRefs.",
+                            hint="Add whatGlossaryRefs (GL-NNN) for domain concepts in this issue's description.")
 
             # Check acceptance criteria
             ac_match = re.search(
                 r"##\s+Acceptance\s*criteria\s*\n((?:-\s+\[\s*\]\s+.+\n?)*)",
                 issue_file.md_content, re.IGNORECASE
             )
+            ac_refs = issue_file.data.get("acGlossaryRefs", [])
             if ac_match:
                 ac_text = ac_match.group(1)
                 if has_domain_concept(ac_text):
-                    expected = find_glossary_refs(ac_text)
-                    self.add_issue("warning", "glossary",
-                        f"{issue_file.issue_id} acceptance criteria reference glossary terms "
-                        f"({', '.join(expected)}) but have no glossaryRefs.",
-                        hint="Add glossaryRefs (GL-NNN) for domain concepts in this issue's ACs.")
+                    if not ac_refs:
+                        expected = find_glossary_refs(ac_text)
+                        self.add_issue("warning", "glossary",
+                            f"{issue_file.issue_id} acceptance criteria reference glossary terms "
+                            f"({', '.join(expected)}) but have no acGlossaryRefs.",
+                            hint="Add acGlossaryRefs (GL-NNN) for domain concepts in this issue's ACs.")
 
     def lint_coverage(self):
         """Check that every epic acceptance criterion maps to at least one issue.
