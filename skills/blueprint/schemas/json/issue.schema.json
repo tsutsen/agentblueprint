@@ -20,6 +20,46 @@
       "type": "string",
       "description": "Glossary term identifier. Format: GL-NNN (3-digit zero-padded).",
       "pattern": "^GL-\\d{3}$"
+    },
+    "scopeItem": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Description of the scope item."
+        },
+        "glossaryRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/glId"
+          },
+          "description": "Glossary term identifiers (GL-NNN) referenced in this scope item.",
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "acceptanceCriterion": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The acceptance criterion description."
+        },
+        "glossaryRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/glId"
+          },
+          "description": "Glossary term identifiers (GL-NNN) referenced in this acceptance criterion.",
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
     }
   },
   "properties": {
@@ -96,37 +136,18 @@
     },
     "inScope": {
       "type": "array",
-      "items": {"type": "string"},
+      "items": {"$ref": "#/definitions/scopeItem"},
       "description": "Specific deliverables and behaviors this issue covers (subset of parent epic scope)."
     },
     "outOfScope": {
       "type": "array",
-      "items": {"type": "string"},
+      "items": {"$ref": "#/definitions/scopeItem"},
       "description": "Things explicitly excluded from this issue to prevent scope creep."
     },
-    "inScopeGlossaryRefs": {
+    "acceptanceCriteria": {
       "type": "array",
-      "items": {
-        "$ref": "#/definitions/glId"
-      },
-      "description": "Glossary term identifiers (GL-NNN) referenced in inScope items.",
-      "uniqueItems": true
-    },
-    "outOfScopeGlossaryRefs": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/glId"
-      },
-      "description": "Glossary term identifiers (GL-NNN) referenced in outOfScope items.",
-      "uniqueItems": true
-    },
-    "acGlossaryRefs": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/glId"
-      },
-      "description": "Glossary term identifiers (GL-NNN) referenced in the acceptance criteria.",
-      "uniqueItems": true
+      "items": {"$ref": "#/definitions/acceptanceCriterion"},
+      "description": "Verifiable acceptance criteria for this issue."
     }
   },
   "additionalProperties": false

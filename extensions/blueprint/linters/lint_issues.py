@@ -362,8 +362,8 @@ class IssueLinter:
     def check_glossary_refs(self):
         """WARN: Check that issue text sections have glossaryRefs when they contain domain concepts.
         
-        Checks title, inScope, outOfScope, and acceptance criteria for glossary term references.
-        Each section has its own glossaryRefs field in the JSON.
+        Checks title, inScope items, outOfScope items, and acceptance criteria for glossary term references.
+        Each scope item and AC has its own glossaryRefs field.
         """
         if not self.glossary:
             return
@@ -394,43 +394,38 @@ class IssueLinter:
                         f"({', '.join(expected)}) but has no titleGlossaryRefs.",
                         hint="Add titleGlossaryRefs (GL-NNN) for domain concepts in this issue's title.")
 
-            # Check inScope items
-            in_scope = issue_file.data.get("inScope", [])
-            in_scope_refs = issue_file.data.get("inScopeGlossaryRefs", [])
-            for i, item in enumerate(in_scope):
-                if has_domain_concept(item) and not in_scope_refs:
-                    expected = find_glossary_refs(item)
+            # Check inScope items (each item has its own glossaryRefs)
+            for i, item in enumerate(issue_file.data.get("inScope", [])):
+                desc = item.get("description", "") if isinstance(item, dict) else str(item)
+                refs = item.get("glossaryRefs", []) if isinstance(item, dict) else []
+                if desc and has_domain_concept(desc) and not refs:
+                    expected = find_glossary_refs(desc)
                     self.add_issue("warning", "glossary",
-                        f"{issue_file.issue_id} inScope #{i+1}: '{item[:60]}...' references glossary terms "
-                        f"({', '.join(expected)}) but has no inScopeGlossaryRefs.",
-                        hint="Add inScopeGlossaryRefs (GL-NNN) for domain concepts in scope items.")
+                        f"{issue_file.issue_id} inScope #{i+1}: '{desc[:60]}...' references glossary terms "
+                        f"({', '.join(expected)}) but has no glossaryRefs.",
+                        hint="Add glossaryRefs (GL-NNN) for domain concepts in this scope item.")
 
-            # Check outOfScope items
-            out_of_scope = issue_file.data.get("outOfScope", [])
-            out_of_scope_refs = issue_file.data.get("outOfScopeGlossaryRefs", [])
-            for i, item in enumerate(out_of_scope):
-                if has_domain_concept(item) and not out_of_scope_refs:
-                    expected = find_glossary_refs(item)
+            # Check outOfScope items (each item has its own glossaryRefs)
+            for i, item in enumerate(issue_file.data.get("outOfScope", [])):
+                desc = item.get("description", "") if isinstance(item, dict) else str(item)
+                refs = item.get("glossaryRefs", []) if isinstance(item, dict) else []
+                if desc and has_domain_concept(desc) and not refs:
+                    expected = find_glossary_refs(desc)
                     self.add_issue("warning", "glossary",
-                        f"{issue_file.issue_id} outOfScope #{i+1}: '{item[:60]}...' references glossary terms "
-                        f"({', '.join(expected)}) but has no outOfScopeGlossaryRefs.",
-                        hint="Add outOfScopeGlossaryRefs (GL-NNN) for domain concepts in scope items.")
+                        f"{issue_file.issue_id} outOfScope #{i+1}: '{desc[:60]}...' references glossary terms "
+                        f"({', '.join(expected)}) but has no glossaryRefs.",
+                        hint="Add glossaryRefs (GL-NNN) for domain concepts in this scope item.")
 
-            # Check acceptance criteria
-            ac_match = re.search(
-                r"##\s+Acceptance\s*criteria\s*\n((?:-\s+\[\s*\]\s+.+\n?)*)",
-                issue_file.md_content, re.IGNORECASE
-            )
-            ac_refs = issue_file.data.get("acGlossaryRefs", [])
-            if ac_match:
-                ac_text = ac_match.group(1)
-                if has_domain_concept(ac_text):
-                    if not ac_refs:
-                        expected = find_glossary_refs(ac_text)
-                        self.add_issue("warning", "glossary",
-                            f"{issue_file.issue_id} acceptance criteria reference glossary terms "
-                            f"({', '.join(expected)}) but have no acGlossaryRefs.",
-                            hint="Add acGlossaryRefs (GL-NNN) for domain concepts in this issue's ACs.")
+            # Check acceptance criteria (each item has its own glossaryRefs)
+            for i, item in enumerate(issue_file.data.get("acceptanceCriteria", [])):
+                desc = item.get("description", "") if isinstance(item, dict) else str(item)
+                refs = item.get("glossaryRefs", []) if isinstance(item, dict) else []
+                if desc and has_domain_concept(desc) and not refs:
+                    expected = find_glossary_refs(desc)
+                    self.add_issue("warning", "glossary",
+                        f"{issue_file.issue_id} AC #{i+1}: '{desc[:60]}...' references glossary terms "
+                        f"({', '.join(expected)}) but has no glossaryRefs.",
+                        hint="Add glossaryRefs (GL-NNN) for domain concepts in this acceptance criterion.")
 
     def lint_coverage(self):
         """Check that every epic acceptance criterion maps to at least one issue.
