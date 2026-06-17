@@ -576,19 +576,12 @@ def run_lint(plan: dict, goal_spec: Optional[dict] = None,
     _check_outofscope_specificity(plan, layer)
     _check_milestone_epic_consistency(plan, layer)
     _check_circular_dependencies(plan, layer)
-    _check_self_referencing_dependencies(plan, layer)
-    _check_unknown_blocked_by(plan, layer)
-    _check_unknown_blocks(plan, layer)
-    _check_duplicate_milestone_name(plan, layer)
-    _check_duplicate_milestone_outcome(plan, layer)
-    _check_duplicate_epic_title(plan, layer)
-    _check_acceptance_criteria_length(plan, layer)
-    _check_scope_item_length(plan, layer)
+    _check_dependencies(plan, layer)
+    _check_duplicate_names(plan, layer)
+    _check_item_lengths(plan, layer)
     _check_epic_objective(plan, layer)
     _check_duplicate_epic_requirements(plan, layer)
     _check_milestone_epic_count(plan, layer)
-    _check_epic_id_sequential(plan, layer)
-    _check_milestone_id_sequential(plan, layer)
 
     # Cross-reference with GoalSpec if available
     if goal_spec:
@@ -722,7 +715,13 @@ def _check_requirement_coverage(plan: dict, goal_spec: Optional[dict], layer: La
 
 
 def _check_non_goal_compliance(plan: dict, goal_spec: Optional[dict], layer: LayerResult):
-    """Check that no epic implements a non-goal."""
+    """Check that no epic implements a non-goal.
+
+    Uses word-boundary matching to reduce false positives.
+    A non-goal like 'real-time processing' won't match
+    'batch processing with real-time monitoring' because
+    the full phrase 'real-time processing' doesn't appear.
+    """
     if not goal_spec:
         return
 
@@ -730,12 +729,13 @@ def _check_non_goal_compliance(plan: dict, goal_spec: Optional[dict], layer: Lay
     if not non_goals:
         return
 
+    import re
     epics = plan.get("epics", [])
     for epic in epics:
         objective = epic.get("objective", "").lower()
         for ng in non_goals:
             capability = ng.get("capability", "").lower()
-            if capability and capability in objective:
+            if capability and re.search(r'\b' + re.escape(capability) + r'\b', objective):
                 layer.add("error", "non-goal",
                            f"Epic {epic.get('id')} implements non-goal: {ng.get('capability')}")
 

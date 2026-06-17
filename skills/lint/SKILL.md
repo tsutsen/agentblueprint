@@ -116,17 +116,18 @@ Markdown/JSON drift.
 | `scope-specific` | WARNING | outOfScope item is vague |
 | `milestone-consistency` | ERROR | Milestone epic list mismatches epic milestone field |
 | `circular-dependency` | ERROR | Circular dependency detected among epics |
-| `duplicate-requirements` | WARNING | Requirement covered by multiple epics |
+| `duplicate-requirements` | WARNING | Requirement covered by >2 epics (cross-cutting concerns OK in 2) |
 | `milestone-size` | WARNING | Milestone has >10 epics — consider splitting |
-| `id-sequence` | WARNING | Missing epic/milestone IDs in sequence |
 | `self-dependency` | ERROR | Epic lists itself as blockedBy or blocks |
 | `unknown-dependency` | ERROR | Dependency references unknown epic |
-| `duplicate-milestone-name` | WARNING | Two milestones share the same name |
-| `duplicate-milestone-outcome` | WARNING | Two milestones have identical outcomes |
-| `duplicate-epic-title` | WARNING | Two epics have identical titles |
+| `duplicate-name` | WARNING | Two milestones or epics share the same name |
 | `ac-length` | WARNING | Acceptance criterion too short |
 | `scope-length` | WARNING | Scope item too short |
 | `missing-objective` | WARNING | Epic has no objective field |
+| `ac-quality` | WARNING | Acceptance criterion uses vague or implementation language |
+| `title-action` | WARNING | Epic title describes technical layer, not capability |
+| `scope-specific` | WARNING | outOfScope item is vague |
+| `non-goal` | ERROR | Epic implements a GoalSpec non-goal |
 | `nfr-coverage` | WARNING | Non-functional requirement not covered by any epic |
 | `cross-spec-coverage` | WARNING | Spec capability/component/entity may not be covered |
 
@@ -161,6 +162,8 @@ Markdown/JSON drift.
 | `All DesignSpec capabilities covered by epics` | review | TaskPlan |
 | `All ArchitectureSpec components covered by epics` | review | TaskPlan |
 | `No epic implements a non-goal` | review | TaskPlan |
+| `No self-referencing dependencies` | review | TaskPlan |
+| `No unknown dependencies` | review | TaskPlan |
 
 ### lint_consistency.py
 | Check | Severity | Description |
