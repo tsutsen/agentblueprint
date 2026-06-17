@@ -181,6 +181,55 @@ def check_enums(spec: dict, result: LintResult) -> Set[str]:
     return enum_names
 
 
+def check_duplicate_entity_names(spec: dict, result: LintResult):
+    """Warn when multiple entities share the same name."""
+    names = []
+    for entity in spec.get("entities", []):
+        names.append(entity["name"])
+    seen = set()
+    for name in names:
+        if name in seen:
+            result.add("error", "duplicate_entity_name",
+                f"Duplicate entity name '{name}'.",
+                hint="Entity names must be unique.")
+        seen.add(name)
+
+
+def check_duplicate_enum_names(spec: dict, result: LintResult):
+    """Warn when multiple enums share the same name."""
+    names = []
+    for enum in spec.get("enums", []):
+        names.append(enum["name"])
+    seen = set()
+    for name in names:
+        if name in seen:
+            result.add("error", "duplicate_enum_name",
+                f"Duplicate enum name '{name}'.",
+                hint="Enum names must be unique.")
+        seen.add(name)
+
+
+def check_abstract_entity_relationships(spec: dict, result: LintResult):
+    """Warn when abstract entities have composition/aggregation relationships as targets.
+
+    Abstract entities are base classes and should not be 'owned' by other entities.
+    """
+    entity_map = {e["name"]: e for e in spec.get("entities", [])}
+    relationships = spec.get("relationships", [])
+
+    for rel in relationships:
+        to_entity = rel.get("to", "")
+        rel_type = rel.get("type", "")
+
+        # Check if target is abstract and relationship is composition/aggregation
+        if to_entity in entity_map:
+            entity = entity_map[to_entity]
+            if entity.get("abstract", False) and rel_type in ("composition", "aggregation"):
+                result.add("error", "abstract_entity_composition",
+                    f"Abstract entity '{to_entity}' cannot be the target of {rel_type} relationship from '{rel.get('from', '')}'.",
+                    hint="Abstract entities are base classes and should not be 'owned'. Use 'association' instead.")
+
+
 def check_relationships(spec: dict, entity_names: Set[str], result: LintResult):
     """Validate relationship endpoints and types."""
     relationships = spec.get("relationships", [])
@@ -879,6 +928,9 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool, api_spec: Op
     check_pk_naming(spec, result)
     entity_names = check_entities(spec, spec.get("enums", []), result)
     enum_names = check_enums(spec, result)
+    check_duplicate_entity_names(spec, result)
+    check_duplicate_enum_names(spec, result)
+    check_abstract_entity_relationships(spec, result)
     check_relationships(spec, entity_names, result)
     check_enum_entity_conflict(spec, result)
     check_field_type_kinds(spec, entity_names, enum_names, result)

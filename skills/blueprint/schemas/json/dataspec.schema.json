@@ -50,7 +50,7 @@
     },
     "enums": {
       "type": "array",
-      "description": "Enumerated types used across entities and API contracts.",
+      "description": "Enumerated types used across entities and API contracts.\nEnum names must be unique and follow PascalCase.\nEach enum must have at least one value following SCREAMING_SNAKE_CASE.",
       "items": {
         "type": "object",
         "required": [
@@ -94,7 +94,7 @@
     },
     "entities": {
       "type": "array",
-      "description": "All domain entities (classes) in the system.",
+      "description": "All domain entities (classes) in the system.\nEntity names must be unique and follow PascalCase.\nEach entity must have at least one field marked as primaryKey (or the first field is assumed).\nAbstract entities cannot be the target of composition/aggregation relationships.",
       "minItems": 1,
       "items": {
         "type": "object",
@@ -125,7 +125,7 @@
           },
           "fields": {
             "type": "array",
-            "description": "Data fields on this entity.",
+            "description": "Data fields on this entity.\nField names must be unique and follow camelCase.\nField types must resolve to a primitive, entity name, or enum name defined in this spec.\nAt least one field should be marked as primaryKey.",
             "items": {
               "type": "object",
               "required": [
@@ -164,7 +164,7 @@
           },
           "methods": {
             "type": "array",
-            "description": "Methods exposed by this entity. Each must reference a function defined in the API spec.",
+            "description": "Methods exposed by this entity. Each must reference a function defined in the API spec.\nMethod names must follow camelCase.\napiRef must reference a function ID in the API spec (e.g. 'FN-createUser').",
             "items": {
               "type": "object",
               "required": [
@@ -202,7 +202,7 @@
     },
     "relationships": {
       "type": "array",
-      "description": "All directional relationships between entities.",
+      "description": "All directional relationships between entities.\nRelationship types must be one of: association, composition, aggregation, dependency, realization.\nCardinality labels must be one of: 1, 0..1, 1..*, *, 0..*\nNo duplicate relationships of the same type between the same entity pair.\nAbstract entities cannot be the target of composition/aggregation relationships.",
       "items": {
         "type": "object",
         "required": [
@@ -240,11 +240,25 @@
             "properties": {
               "fromLabel": {
                 "type": "string",
-                "description": "Multiplicity label on the source side, e.g. '1', '0..1', '1..*', '*'."
+                "description": "Multiplicity label on the source side, e.g. '1', '0..1', '1..*', '*'.",
+                "enum": [
+                  "1",
+                  "0..1",
+                  "1..*",
+                  "*",
+                  "0..*"
+                ]
               },
               "toLabel": {
                 "type": "string",
-                "description": "Multiplicity label on the target side, e.g. '1', '0..1', '1..*', '*'."
+                "description": "Multiplicity label on the target side, e.g. '1', '0..1', '1..*', '*'.",
+                "enum": [
+                  "1",
+                  "0..1",
+                  "1..*",
+                  "*",
+                  "0..*"
+                ]
               }
             }
           },
