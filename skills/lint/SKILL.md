@@ -119,6 +119,14 @@ Markdown/JSON drift.
 | `duplicate-requirements` | WARNING | Requirement covered by multiple epics |
 | `milestone-size` | WARNING | Milestone has >10 epics — consider splitting |
 | `id-sequence` | WARNING | Missing epic/milestone IDs in sequence |
+| `self-dependency` | ERROR | Epic lists itself as blockedBy or blocks |
+| `unknown-dependency` | ERROR | Dependency references unknown epic |
+| `duplicate-milestone-name` | WARNING | Two milestones share the same name |
+| `duplicate-milestone-outcome` | WARNING | Two milestones have identical outcomes |
+| `duplicate-epic-title` | WARNING | Two epics have identical titles |
+| `ac-length` | WARNING | Acceptance criterion too short |
+| `scope-length` | WARNING | Scope item too short |
+| `missing-objective` | WARNING | Epic has no objective field |
 | `nfr-coverage` | WARNING | Non-functional requirement not covered by any epic |
 | `cross-spec-coverage` | WARNING | Spec capability/component/entity may not be covered |
 
@@ -146,6 +154,9 @@ Markdown/JSON drift.
 | `Epics are in dependency order` | review | TaskPlan |
 | `No circular dependencies` | review | TaskPlan |
 | `All milestones have demonstrable outcomes` | review | TaskPlan |
+| `All epics have an objective` | review | TaskPlan |
+| `All acceptance criteria are meaningful length` | review | TaskPlan |
+| `All scope items are meaningful length` | review | TaskPlan |
 | `All GoalSpec requirements covered by epics` | review | TaskPlan |
 | `All DesignSpec capabilities covered by epics` | review | TaskPlan |
 | `All ArchitectureSpec components covered by epics` | review | TaskPlan |

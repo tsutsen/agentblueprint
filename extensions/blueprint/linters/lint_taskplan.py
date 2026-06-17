@@ -48,6 +48,116 @@ class LayerResult:
             self.warnings.append(issue)
 
 
+def _check_self_referencing_dependencies(plan: dict, layer: LayerResult):
+    """Warn if an epic lists itself as a dependency."""
+    epics = plan.get("epics", [])
+    for epic in epics:
+        eid = epic["id"]
+        deps = epic.get("dependencies", {})
+        if eid in deps.get("blockedBy", []):
+            layer.add("error", "self-dependency",
+                       f"Epic {eid} lists itself as blockedBy.")
+        if eid in deps.get("blocks", []):
+            layer.add("error", "self-dependency",
+                       f"Epic {eid} lists itself as blocks.")
+
+
+def _check_unknown_blocked_by(plan: dict, layer: LayerResult):
+    """Warn if blockedBy references an epic not in the plan."""
+    epics = plan.get("epics", [])
+    epic_ids = {e["id"] for e in epics}
+    for epic in epics:
+        for dep_id in epic.get("dependencies", {}).get("blockedBy", []):
+            if dep_id not in epic_ids:
+                layer.add("error", "unknown-dependency",
+                           f"Epic {epic['id']} blocked by unknown epic: {dep_id}")
+
+
+def _check_unknown_blocks(plan: dict, layer: LayerResult):
+    """Warn if blocks references an epic not in the plan."""
+    epics = plan.get("epics", [])
+    epic_ids = {e["id"] for e in epics}
+    for epic in epics:
+        for dep_id in epic.get("dependencies", {}).get("blocks", []):
+            if dep_id not in epic_ids:
+                layer.add("error", "unknown-dependency",
+                           f"Epic {epic['id']} blocks unknown epic: {dep_id}")
+
+
+def _check_duplicate_milestone_name(plan: dict, layer: LayerResult):
+    """Warn if two milestones share the same name."""
+    milestones = plan.get("milestones", [])
+    names = {}
+    for m in milestones:
+        name = m.get("name", "")
+        if name in names:
+            layer.add("warning", "duplicate-milestone-name",
+                       f"Duplicate milestone name: '{name}' ({names[name]} and {m['id']})")
+        else:
+            names[name] = m["id"]
+
+
+def _check_duplicate_milestone_outcome(plan: dict, layer: LayerResult):
+    """Warn if two milestones have identical outcomes."""
+    milestones = plan.get("milestones", [])
+    outcomes = {}
+    for m in milestones:
+        outcome = m.get("outcome", "")
+        if outcome in outcomes:
+            layer.add("warning", "duplicate-milestone-outcome",
+                       f"Duplicate milestone outcome: '{outcome[:50]}...' ({outcomes[m['id']]} and {m['id']})")
+        else:
+            outcomes[outcome] = m["id"]
+
+
+def _check_duplicate_epic_title(plan: dict, layer: LayerResult):
+    """Warn if two epics have identical titles."""
+    epics = plan.get("epics", [])
+    titles = {}
+    for epic in epics:
+        title = epic.get("title", "")
+        if title in titles:
+            layer.add("warning", "duplicate-epic-title",
+                       f"Duplicate epic title: '{title}' ({titles[title]} and {epic['id']})")
+        else:
+            titles[title] = epic["id"]
+
+
+def _check_acceptance_criteria_length(plan: dict, layer: LayerResult):
+    """Warn if acceptance criteria are too short to be meaningful."""
+    epics = plan.get("epics", [])
+    for epic in epics:
+        for i, ac in enumerate(epic.get("acceptanceCriteria", [])):
+            if len(ac.strip()) < 15:
+                layer.add("warning", "ac-length",
+                           f"Epic {epic['id']} AC #{i+1}: too short ({len(ac.strip())} chars).",
+                           hint="Acceptance criteria should be specific and measurable.")
+
+
+def _check_scope_item_length(plan: dict, layer: LayerResult):
+    """Warn if scope items are too short to be meaningful."""
+    epics = plan.get("epics", [])
+    for epic in epics:
+        scope = epic.get("scope", {})
+        for i, item in enumerate(scope.get("inScope", [])):
+            if len(item.strip()) < 10:
+                layer.add("warning", "scope-length",
+                           f"Epic {epic['id']} inScope #{i+1}: too short ({len(item.strip())} chars).")
+        for i, item in enumerate(scope.get("outOfScope", [])):
+            if len(item.strip()) < 10:
+                layer.add("warning", "scope-length",
+                           f"Epic {epic['id']} outOfScope #{i+1}: too short ({len(item.strip())} chars).")
+
+
+def _check_epic_objective(plan: dict, layer: LayerResult):
+    """Warn if an epic has no objective field."""
+    epics = plan.get("epics", [])
+    for epic in epics:
+        if not epic.get("objective"):
+            layer.add("warning", "missing-objective",
+                       f"Epic {epic['id']} has no objective field.")
+
+
 def _check_duplicate_epic_requirements(plan: dict, layer: LayerResult):
     """Warn when multiple epics cover the same requirements.
 
@@ -466,6 +576,15 @@ def run_lint(plan: dict, goal_spec: Optional[dict] = None,
     _check_outofscope_specificity(plan, layer)
     _check_milestone_epic_consistency(plan, layer)
     _check_circular_dependencies(plan, layer)
+    _check_self_referencing_dependencies(plan, layer)
+    _check_unknown_blocked_by(plan, layer)
+    _check_unknown_blocks(plan, layer)
+    _check_duplicate_milestone_name(plan, layer)
+    _check_duplicate_milestone_outcome(plan, layer)
+    _check_duplicate_epic_title(plan, layer)
+    _check_acceptance_criteria_length(plan, layer)
+    _check_scope_item_length(plan, layer)
+    _check_epic_objective(plan, layer)
     _check_duplicate_epic_requirements(plan, layer)
     _check_milestone_epic_count(plan, layer)
     _check_epic_id_sequential(plan, layer)

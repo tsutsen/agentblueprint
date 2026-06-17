@@ -431,6 +431,18 @@ def assess_taskplan(plan: dict, goal_spec: Optional[dict] = None,
             m.get("outcome") and len(m.get("outcome", "")) >= 10
             for m in milestones
         ), "review"),
+        gate("All epics have an objective", all(
+            epic.get("objective") for epic in epics
+        ), "review"),
+        gate("All acceptance criteria are meaningful length", all(
+            all(len(ac.strip()) >= 15 for ac in epic.get("acceptanceCriteria", []))
+            for epic in epics
+        ), "review"),
+        gate("All scope items are meaningful length", all(
+            all(len(item.strip()) >= 10 for item in epic.get("scope", {}).get("inScope", []))
+            and all(len(item.strip()) >= 10 for item in epic.get("scope", {}).get("outOfScope", []))
+            for epic in epics
+        ), "review"),
 
         # Cross-spec: GoalSpec coverage
         gate("All GoalSpec requirements covered by epics", True, "review",
