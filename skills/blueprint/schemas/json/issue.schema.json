@@ -94,12 +94,30 @@
       "description": "Glossary term identifiers (GL-NNN) referenced in this issue's title.",
       "uniqueItems": true
     },
-    "whatGlossaryRefs": {
+    "inScope": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Specific deliverables and behaviors this issue covers (subset of parent epic scope)."
+    },
+    "outOfScope": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Things explicitly excluded from this issue to prevent scope creep."
+    },
+    "inScopeGlossaryRefs": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/glId"
       },
-      "description": "Glossary term identifiers (GL-NNN) referenced in the 'What to build' section.",
+      "description": "Glossary term identifiers (GL-NNN) referenced in inScope items.",
+      "uniqueItems": true
+    },
+    "outOfScopeGlossaryRefs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/glId"
+      },
+      "description": "Glossary term identifiers (GL-NNN) referenced in outOfScope items.",
       "uniqueItems": true
     },
     "acGlossaryRefs": {

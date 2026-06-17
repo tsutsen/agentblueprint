@@ -362,7 +362,7 @@ class IssueLinter:
     def check_glossary_refs(self):
         """WARN: Check that issue text sections have glossaryRefs when they contain domain concepts.
         
-        Checks title, what-to-build, and acceptance criteria for glossary term references.
+        Checks title, inScope, outOfScope, and acceptance criteria for glossary term references.
         Each section has its own glossaryRefs field in the JSON.
         """
         if not self.glossary:
@@ -394,21 +394,27 @@ class IssueLinter:
                         f"({', '.join(expected)}) but has no titleGlossaryRefs.",
                         hint="Add titleGlossaryRefs (GL-NNN) for domain concepts in this issue's title.")
 
-            # Check "What to build" section
-            what_match = re.search(
-                r"##\s+What to build\s*\n(.*?)(?=\n##|$)",
-                issue_file.md_content, re.DOTALL
-            )
-            what_refs = issue_file.data.get("whatGlossaryRefs", [])
-            if what_match:
-                what_text = what_match.group(1).strip()
-                if has_domain_concept(what_text):
-                    if not what_refs:
-                        expected = find_glossary_refs(what_text)
-                        self.add_issue("warning", "glossary",
-                            f"{issue_file.issue_id} 'What to build' references glossary terms "
-                            f"({', '.join(expected)}) but has no whatGlossaryRefs.",
-                            hint="Add whatGlossaryRefs (GL-NNN) for domain concepts in this issue's description.")
+            # Check inScope items
+            in_scope = issue_file.data.get("inScope", [])
+            in_scope_refs = issue_file.data.get("inScopeGlossaryRefs", [])
+            for i, item in enumerate(in_scope):
+                if has_domain_concept(item) and not in_scope_refs:
+                    expected = find_glossary_refs(item)
+                    self.add_issue("warning", "glossary",
+                        f"{issue_file.issue_id} inScope #{i+1}: '{item[:60]}...' references glossary terms "
+                        f"({', '.join(expected)}) but has no inScopeGlossaryRefs.",
+                        hint="Add inScopeGlossaryRefs (GL-NNN) for domain concepts in scope items.")
+
+            # Check outOfScope items
+            out_of_scope = issue_file.data.get("outOfScope", [])
+            out_of_scope_refs = issue_file.data.get("outOfScopeGlossaryRefs", [])
+            for i, item in enumerate(out_of_scope):
+                if has_domain_concept(item) and not out_of_scope_refs:
+                    expected = find_glossary_refs(item)
+                    self.add_issue("warning", "glossary",
+                        f"{issue_file.issue_id} outOfScope #{i+1}: '{item[:60]}...' references glossary terms "
+                        f"({', '.join(expected)}) but has no outOfScopeGlossaryRefs.",
+                        hint="Add outOfScopeGlossaryRefs (GL-NNN) for domain concepts in scope items.")
 
             # Check acceptance criteria
             ac_match = re.search(
