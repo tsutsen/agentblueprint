@@ -164,12 +164,7 @@
             "type": "array",
             "description": "Explicit list of behaviours this function's tests do NOT verify. Required — prevents false failures during verification.",
             "minItems": 1,
-            "items": {
-              "oneOf": [
-                { "type": "string", "minLength": 5 },
-                { "$ref": "#/definitions/glossaryRefItem" }
-              ]
-            }
+            "items": { "$ref": "#/definitions/glossaryRefItem" }
           }
         }
       }
