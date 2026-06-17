@@ -63,6 +63,7 @@ Each component must have:
 * **REQ refs** (optional) — `REQ-NNN` IDs from GoalSpec this component satisfies
 * **NFR refs** (optional) — `NFR-NNN` IDs from GoalSpec this component is responsible for
 * **Visibility** — `external` (exposed to callers) or `internal`
+* **glossaryRefs** (array of GL-NNN): Glossary terms the component's concepts map to
 
 **Rules:**
 
@@ -83,6 +84,7 @@ Each flow must have:
 * **Name** — human-readable
 * **Description** (optional) — prose summary
 * **REQ refs** (optional) — `REQ-NNN` IDs this flow implements
+* **glossaryRefs** (array of GL-NNN): Glossary terms the flow's concepts map to
 * **Steps** — ordered list of at least 2 steps, each naming:
   * The **component** performing the step (must reference a real component ID)
   * The **action** performed
@@ -101,6 +103,7 @@ Each constraint must:
 
 * Describe what is required, not which technology satisfies it
 * Optionally reference `NFR-NNN` IDs from GoalSpec
+* Have **glossaryRefs** (array of GL-NNN): Glossary terms the constraint's concepts map to
 
 Examples:
 

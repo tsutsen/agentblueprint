@@ -76,6 +76,7 @@ For each persona:
 * **Goals** — what this persona is trying to accomplish
 * **Pain Points** — current frustrations this system addresses
 * **Technical Skill Level** — one of: non-technical, basic, intermediate, advanced, expert
+* **glossaryRefs** (array of GL-NNN): Glossary terms the persona's role maps to
 
 ---
 
@@ -92,6 +93,7 @@ Each journey must:
 * Have a clearly defined starting state
 * Have alternating user and system steps
 * Have a defined desired outcome
+* Each journey step may have **glossaryRefs** (array of GL-NNN): Concepts in the step's action description
 
 Every `US-NNN` in GoalSpec must be covered by at least one journey.
 
@@ -125,6 +127,7 @@ For each screen:
 * **Inputs** (optional) — data the user provides
 * **Outputs** (optional) — data the screen displays
 * **US refs** (optional) — `US-NNN` IDs this screen helps fulfil
+* **glossaryRefs** (array of GL-NNN): Domain concepts in the screen's purpose description
 
 ---
 
@@ -140,6 +143,7 @@ For each screen spec:
 * **Wireframe** (optional) — ASCII sketch of the low-fidelity layout
 * **Components** — UI components present, each referencing the design system
   and any interaction pattern IDs that apply
+  * Each component may have **glossaryRefs** (array of GL-NNN): Concepts in the component's purpose description
 * **States** — all distinct states: at minimum empty, loaded, error
 * **Interactions** — trigger → system response pairs, referencing pattern IDs
 

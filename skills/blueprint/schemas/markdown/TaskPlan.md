@@ -190,6 +190,10 @@ Should NOT describe implementation details or task breakdown.
 Good: "Enables users to upload PDF documents and receive structured text output."
 Bad: "Implement the PDF parser using PyMuPDF and store results in Postgres."
 
+**titleGlossaryRefs** (array of GL-NNN): Glossary terms the epic's title and objective reference.
+**inScopeGlossaryRefs** (array of GL-NNN): Glossary terms referenced in inScope items.
+**outOfScopeGlossaryRefs** (array of GL-NNN): Glossary terms referenced in outOfScope items.
+
 #### Scope
 Explicit boundary of this epic.
 * In scope: capabilities and behaviours included
@@ -197,6 +201,8 @@ Explicit boundary of this epic.
 
 Out-of-scope items are instructions to breakdown — they tell it what NOT to
 generate issues for. Be specific. Vague scope produces scope creep.
+
+Scope items may have **glossaryRefs** (array of GL-NNN): Domain concepts in each scope item.
 
 Good out-of-scope: "Batch upload of multiple PDFs — deferred to EP-004."
 Bad out-of-scope: "Advanced features."

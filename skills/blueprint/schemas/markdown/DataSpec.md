@@ -233,6 +233,7 @@ Each entity must have:
 
 * **Name** — PascalCase, unique, e.g. `User`, `OrderItem`
 * **Description** — what this entity represents in the domain
+* **glossaryRefs** (array of GL-NNN): Glossary terms the entity maps to. The entity name itself should have a corresponding glossary entry.
 * **Fields** — each with:
   * **Name** — camelCase, e.g. `createdAt`, `userId`
   * **Type** — a primitive, entity name, enum name, or array thereof
@@ -244,6 +245,7 @@ Each entity must have:
     Only one field per entity should be marked. If not set, the first field
     or a field ending with `Id`/`id` is assumed to be the primary key.
     **Required:** must contain `id` in its name (e.g. `id`, `userId`, `orderId`).
+  * **glossaryRefs** (array of GL-NNN): Domain concepts in the field's description
 * **Methods** (optional) — functions this entity exposes. Each method must
   reference a function ID in ApiSpec via `apiRef`.
 * **Abstract** (optional) — true if this entity cannot be instantiated directly

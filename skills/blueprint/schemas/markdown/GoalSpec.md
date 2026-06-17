@@ -49,6 +49,8 @@ Must answer:
 
 Must NOT describe implementation, architecture, or technology choices.
 
+**glossaryRefs** (array of GL-NNN): Key domain concepts from the objective. Maps the objective to the project vocabulary.
+
 Good: "A local-first tool that routes developer queries to the most capable
 available LLM based on task complexity, minimising latency and cost."
 
@@ -71,6 +73,7 @@ Each requirement must:
 * Be independently testable
 * Describe observable behaviour, not implementation
 * Be owned by one actor
+* Have **glossaryRefs** (array of GL-NNN): Domain concepts referenced in the requirement description
 
 If a requirement contains a measurable target (latency, size, rate,
 percentage), it is an NFR or success criterion — not a functional requirement.
@@ -95,6 +98,8 @@ If the user states a vague or compound requirement, surface it immediately:
 
 Quality attributes and operational constraints. NFRs describe *how well*
 the system performs, not *what* it does.
+
+Each NFR may also have **glossaryRefs** (array of GL-NNN): Domain concepts in the scale/meter descriptions.
 
 **You MUST use Planguage format for every NFR. Do not accept free-form
 NFR descriptions. If the user provides a vague NFR (e.g. "should be fast"),
@@ -143,6 +148,8 @@ flag Plan and Wish as TBD.
 Desired outcomes from the user's perspective. Stories provide context for
 requirements but do not replace them — every story must link to at least
 one functional requirement.
+
+Each story must also have **glossaryRefs** (array of GL-NNN): Domain concepts in the capability or outcome descriptions.
 
 Each story must have a unique identifier in format `US-NNN`.
 
@@ -196,6 +203,7 @@ Non-goals prevent scope creep and tell downstream artifacts what to exclude.
 Each non-goal must:
 * Name a specific capability being excluded
 * Give a brief reason (deferred, out of scope, handled elsewhere)
+* Have **glossaryRefs** (array of GL-NNN): Glossary mapping for the excluded capability
 
 Format:
 * <Capability> — <reason>.

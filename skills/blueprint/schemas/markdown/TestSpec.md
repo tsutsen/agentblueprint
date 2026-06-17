@@ -54,6 +54,7 @@ Each test must have:
 * **Input** — concrete example values (not placeholders)
 * **Expected Output** — exact value or shape
 * **Contract Clause** — which part of the contract this verifies
+* **glossaryRefs** (array of GL-NNN): Domain concepts in the test's description and contractClause
 
 #### Edge Case Tests
 
@@ -136,6 +137,14 @@ Every test must be traceable back to at least one requirement:
    separate load/security tests. The TestSpec should still document the
    NFR reference for traceability.
 
+#### Glossary Reference Validation
+
+The linter checks that domain concepts in test descriptions and contract clauses
+are linked to glossary terms. If a test's description or contractClause contains
+a glossary term (e.g., "report", "query"), it must have the corresponding GL-NNN
+in its `glossaryRefs` array. This ensures every domain concept used in tests is
+explicitly defined in the glossary.
+
 > "For each test, identify which REQ-IDs it validates. Add them to the
 > `reqRefs` array. If a test doesn't validate a specific requirement,
 > set `reqRefs` to null. Do not guess — refer to the GoalSpec."
@@ -173,6 +182,9 @@ distinct error condition. Prefer 4–8 tests per function over 20+.
 **Rule 6: Out-of-scope declaration.**
 Each function's test block must include an explicit list of behaviours the
 tests do NOT verify. This prevents false failures during verification.
+
+Each out-of-scope item is a structured object: `{description: string, glossaryRefs: GL-NNN[]}`.
+If the description contains a glossary term, include it in `glossaryRefs`.
 
 ---
 
@@ -251,6 +263,8 @@ Checks enforced:
 * Error-path tests have `errorCode` (`error_path_missing_code`)
 * Happy-path/edge-case tests have `expectedOutput` (`missing_expected_output`)
 * functionCoverage counts match actual tests (`coverage_count_mismatch`)
+* Test descriptions/contractClauses with domain concepts have `glossaryRefs` (`test_desc_no_glossary_refs`)
+* Out-of-scope items with domain concepts have `glossaryRefs` (`out_of_scope_no_glossary_refs`)
 
 ### Step 3 — Cross-spec reference lint via `lint_cross.py`
 
