@@ -832,27 +832,8 @@ def check_enum_glossary(spec: dict, glossary: Optional[dict], result: LintResult
                 hint="Add a glossary entry for this enum, or rename it to match an existing term.")
 
 
-def _is_generic_field(field_name: str) -> bool:
-    """Check if a field name is self-explanatory and doesn't need glossaryRefs."""
-    name = field_name.lower()
-    # Identifier fields (PKs and FKs)
-    if name == "id" or name.endswith("id"):
-        return True
-    # Generic technical fields
-    generic = {
-        "name", "title", "description", "summary", "notes",
-        "isactive", "isenabled", "createdat", "updatedat",
-        "version", "type", "status",
-    }
-    return name in generic
-
-
 def check_field_glossary_refs(spec: dict, glossary: Optional[dict], result: LintResult):
-    """INFO: Warn if field descriptions contain domain concepts but have no glossaryRefs.
-
-    Skips generic/self-explanatory fields (id, name, status, createdAt, etc.)
-    and identifier fields (ending in 'Id').
-    """
+    """INFO: Warn if field descriptions contain domain concepts but have no glossaryRefs."""
     if not glossary:
         return
 
@@ -866,10 +847,6 @@ def check_field_glossary_refs(spec: dict, glossary: Optional[dict], result: Lint
 
             if not desc or refs:
                 continue  # No description or already has refs — skip
-
-            # Skip generic/self-explanatory fields
-            if _is_generic_field(field["name"]):
-                continue
 
             # Check if description contains any glossary term
             desc_lower = desc.lower()

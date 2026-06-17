@@ -539,7 +539,6 @@ def _check_epic_glossary_refs(plan: dict, glossary: Optional[dict], layer: Layer
     """Check that epics link domain concepts to glossary terms.
 
     Checks epic titles and objectives for glossary references.
-    Skips generic actor terms (User, System) to avoid noise.
     """
     if not glossary:
         return
@@ -549,26 +548,19 @@ def _check_epic_glossary_refs(plan: dict, glossary: Optional[dict], layer: Layer
     for t in glossary.get("terms", []):
         glossary_lower[t["term"].lower()] = t["id"]
 
-    # Generic actors that appear everywhere — skip from "has domain concept" check
-    skip_terms = {"user", "system"}
-
     def has_domain_concept(text: str) -> bool:
-        """Check if text contains glossary terms (excluding generic actors)."""
+        """Check if text contains any glossary term."""
         text_lower = text.lower()
         for term in glossary_lower:
-            if term in skip_terms:
-                continue
             if len(term) > 3 and term in text_lower:
                 return True
         return False
 
     def find_glossary_refs(text: str) -> list:
-        """Find glossary term IDs referenced in text (excluding generic actors)."""
+        """Find glossary term IDs referenced in text."""
         text_lower = text.lower()
         refs = []
         for term, tid in glossary_lower.items():
-            if term in skip_terms:
-                continue
             if len(term) > 3 and term in text_lower:
                 refs.append(tid)
         return refs
@@ -581,7 +573,6 @@ def _check_epic_glossary_refs(plan: dict, glossary: Optional[dict], layer: Layer
         if title and has_domain_concept(title):
             refs = epic.get("glossaryRefs", [])
             if not refs:
-                # Find what refs should be there
                 expected_refs = find_glossary_refs(title)
                 layer.add("warning", "title_no_glossary_refs",
                            f"Epic {eid} title '{title}' references glossary terms "
