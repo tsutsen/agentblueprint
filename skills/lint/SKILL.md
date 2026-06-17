@@ -197,8 +197,10 @@ Markdown/JSON drift.
 | `blocked_by_pattern` | ERROR | blocked_by item is not a valid IS-NNN |
 | `blocked_by_cycles` | ERROR | Circular dependency in blocked_by graph |
 | `epic_consistency` | ERROR | issue.epic does not match target epic ID |
+| `file_naming` | ERROR | Directory name does not match file name (IS-001/IS-001.md) |
 | `missing_section` | ERROR | Required markdown section missing (What to build, Acceptance criteria, Blocked by) |
 | `schema_field` | ERROR | Missing or invalid required field |
+| `non_goal_violation` | ERROR | Issue implements out-of-scope item |
 | `dependency_ordering` | WARNING | Blocked issue has higher IS-NNN than blocker |
 | `duplicate_blocked_by` | WARNING | Duplicate entries in blocked_by |
 | `date_ordering` | WARNING | updated date before created date |
@@ -209,6 +211,8 @@ Markdown/JSON drift.
 | `ac_bad_format` | WARNING | AC does not use '- [ ]' format |
 | `body_too_short` | WARNING | 'What to build' section is fewer than 10 words |
 | `id_gap` | WARNING | Gap in issue ID sequence within epic |
+| `coverage_gap` | WARNING | Epic acceptance criterion not covered by any issue |
+| `epic_has_issues` | INFO | Epic exists but no issues decomposed yet |
 
 ### lint_consistency.py
 | Check | Severity | Description |

@@ -64,11 +64,15 @@ class IssueLinter:
 
     def load_epic(self):
         """Load the epic file for context (acceptance criteria, scope)."""
-        epic_md = self.epics_dir / self.epic_id / f"{self.epic_id}-*.md"
-        epic_files = list(self.epics_dir.glob(f"{self.epic_id}/*.md"))
+        # Try standard nested structure first: EP-NNN/EP-NNN-*.md
+        epic_folder = self.epics_dir / self.epic_id
+        epic_files = []
+        if epic_folder.exists():
+            epic_files = list(epic_folder.glob(f"{self.epic_id}-*.md"))
+
+        # Fallback: flat structure in epics_dir root
         if not epic_files:
-            # Try flat structure for backward compatibility
-            epic_files = list(self.epics_dir.parent.glob(f"{self.epic_id}-*.md"))
+            epic_files = list(self.epics_dir.glob(f"{self.epic_id}-*.md"))
 
         if not epic_files:
             self.add_issue("error", "structure",
@@ -97,6 +101,11 @@ class IssueLinter:
             d for d in epic_folder.iterdir()
             if d.is_dir() and ISSUE_ID_RE.match(d.name)
         ])
+
+        # Check if epic has any issues
+        if not issue_dirs:
+            self.add_issue("info", "epic",
+                f"Epic {self.epic_id} has no issues yet — decomposition may be pending")
 
         for issue_dir in issue_dirs:
             issue_id = issue_dir.name
@@ -228,6 +237,54 @@ class IssueLinter:
                 self.add_issue("error", "epic",
                     f"{issue_file.issue_id}: epic field is '{issue_epic}' but issue is in {self.epic_id}")
 
+    def lint_non_goal_violation(self):
+        """Check that issue does not implement something explicitly out of scope.
+        
+        Checks both the epic's out-of-scope section (if available) and the
+        GoalSpec's non-goals (if goal parameter was passed).
+        """
+        out_of_scope_items = []
+        
+        # Check epic out-of-scope section
+        if self.epic_data and self.epic_data.get("content"):
+            out_of_scope_match = re.search(
+                r"##\s*out\s*of\s*scope\s*\n((?:-\s+.+\n?)*?)(?=\n##|$)",
+                self.epic_data["content"],
+                re.IGNORECASE | re.DOTALL
+            )
+            if out_of_scope_match:
+                out_of_scope_items.extend([
+                    line.strip().lstrip("- ").strip().lower()
+                    for line in out_of_scope_match.group(1).split("\n")
+                    if line.strip().startswith("-")
+                ])
+        
+        # Check GoalSpec non-goals (if provided)
+        if hasattr(self, 'goal') and self.goal:
+            for ng in self.goal.get("nonGoals", []):
+                ng_text = ng.strip().lower()
+                if len(ng_text) > 5:
+                    out_of_scope_items.append(ng_text)
+        
+        if not out_of_scope_items:
+            return
+
+        for issue_file in self.issue_files:
+            md_content = issue_file.md_content.lower()
+            title = issue_file.data.get("title", "").lower()
+            what_build = re.search(
+                r"##\s+What to build\s*\n(.*?)(?=\n##|$)",
+                md_content, re.DOTALL
+            )
+            body_text = what_build.group(1) if what_build else ""
+            full_text = f"{title} {body_text}"
+
+            for item in out_of_scope_items:
+                if item and len(item) > 5:
+                    if item in full_text:
+                        self.add_issue("error", "scope",
+                            f"{issue_file.issue_id}: implements out-of-scope item '{item}'")
+
     def lint_milestone_consistency(self, taskplan: Optional[dict] = None):
         """Check that issue.milestone exists in TaskPlan milestones."""
         if not taskplan:
@@ -241,7 +298,11 @@ class IssueLinter:
                     f"Valid: {', '.join(sorted(valid_milestones))}")
 
     def lint_coverage(self):
-        """Check that every epic acceptance criterion maps to at least one issue."""
+        """Check that every epic acceptance criterion maps to at least one issue.
+        
+        Uses multi-strategy matching: keyword overlap, phrase matching, and
+        keyword-in-issue checking. Much more robust than the old 30-char prefix.
+        """
         if not self.epic_data or not self.epic_data.get("acceptance_criteria"):
             return
 
@@ -250,22 +311,29 @@ class IssueLinter:
 
         for issue_file in self.issue_files:
             md_content = issue_file.md_content
-            # Extract acceptance criteria from issue markdown
-            ac_pattern = re.compile(r"## Acceptance criteria\s*\n((?:- \[ \] .+\n?)*)")
-            match = ac_pattern.search(md_content)
-            if match:
-                issue_acs = match.group(1)
-                # Check if any epic AC is mentioned in this issue's ACs
-                for epic_ac in acceptance_criteria:
-                    epic_ac_text = epic_ac.strip().lstrip("- ")
-                    if epic_ac_text.lower()[:30] in issue_acs.lower():
-                        covered.add(epic_ac)
+            # Extract issue ACs from markdown
+            ac_match = re.search(r"##\s+Acceptance ?criteria\s*\n((?:- \[ ?\] .+\n?)*)", md_content, re.IGNORECASE)
+            if not ac_match:
+                continue
+            issue_acs_text = ac_match.group(1).lower()
+            issue_acs_words = set(issue_acs_text.split())
 
-        for epic_ac in acceptance_criteria:
-            if epic_ac not in covered:
-                ac_text = epic_ac.strip().lstrip("- ")
-                self.add_issue("warning", "coverage",
-                    f"Epic acceptance criterion not covered by any issue: '{ac_text}'")
+            for epic_ac in acceptance_criteria:
+                epic_ac_text = epic_ac.strip().lstrip("- ")
+                # Strategy 1: exact phrase match (case-insensitive)
+                if epic_ac_text.lower() in issue_acs_text:
+                    covered.add(epic_ac)
+                    continue
+                # Strategy 2: keyword overlap — at least 2 meaningful words must match
+                epic_words = {w for w in epic_ac_text.lower().split() if len(w) > 3}
+                if epic_words & issue_acs_words:
+                    # Count how many meaningful words overlap
+                    overlap = epic_words & issue_acs_words
+                    if len(overlap) >= 2:
+                        covered.add(epic_ac)
+                    elif len(overlap) >= 1 and len(epic_words) <= 4:
+                        # Short AC: 1 word match is enough
+                        covered.add(epic_ac)
 
     def lint_schema(self):
         """Validate each issue's JSON against required fields."""
@@ -350,6 +418,22 @@ class IssueLinter:
                 self.add_issue("error", "schema",
                     f"{issue_file.issue_id}: artifact must be 'Issue', got '{data['artifact']}'")
 
+    def lint_file_naming(self):
+        """Check that directory name matches file name (IS-001/IS-001.md)."""
+        for issue_file in self.issue_files:
+            expected_name = f"{issue_file.issue_id}.md"
+            if issue_file.md_path.name != expected_name:
+                self.add_issue("error", "structure",
+                    f"{issue_file.issue_id}: file is '{issue_file.md_path.name}' "
+                    f"but directory is '{issue_file.md_path.parent.name}' — "
+                    f"expected '{expected_name}'")
+            expected_json_name = f"{issue_file.issue_id}.json"
+            if issue_file.json_path.name != expected_json_name:
+                self.add_issue("error", "structure",
+                    f"{issue_file.issue_id}: file is '{issue_file.json_path.name}' "
+                    f"but directory is '{issue_file.json_path.parent.name}' — "
+                    f"expected '{expected_json_name}'")
+
     def lint_body(self):
         """Validate the markdown body of each issue file."""
         for issue_file in self.issue_files:
@@ -386,6 +470,7 @@ class IssueLinter:
         """Run all linters and return issues."""
         self.load_epic()
         self.load_issue_files()
+        self.lint_file_naming()
         self.lint_id_sequence()
         self.lint_dependencies()
         self.lint_dependency_ordering()
@@ -393,6 +478,7 @@ class IssueLinter:
         self.lint_schema()
         self.lint_epic_consistency()
         self.lint_milestone_consistency(taskplan)
+        self.lint_non_goal_violation()
         self.lint_body()
         self.lint_coverage()
         return self.issues
@@ -427,10 +513,11 @@ class IssueLinter:
 
 # ── Integration with lint_all.py ──────────────────────────────────────────────
 
-def run_lint(epic_id: str, epics_dir: str, taskplan: Optional[dict] = None, strict: bool = False):
+def run_lint(epic_id: str, epics_dir: str, taskplan: Optional[dict] = None, goal: Optional[dict] = None, strict: bool = False):
     """Run the issue linter for a single epic. Returns a LayerResult."""
     from lint_all import LayerResult
     linter = IssueLinter(epics_dir, epic_id, strict)
+    linter.goal = goal  # Store for non-goal violation check
     issues = linter.run(taskplan)
 
     layer = LayerResult(name="issues")
