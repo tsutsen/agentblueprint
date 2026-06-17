@@ -1,99 +1,113 @@
 {
   "version": "1.0.0",
   "schemaVersion": "1.0.0",
-  "module": "OrderService",
-  "description": "Functions for managing users, products, and orders.",
+  "module": "LLMGateway",
+  "description": "API functions for the LLM Gateway — query routing, backend management, and log inspection.",
   "dataSpecVersion": "1.0.0",
 
   "functions": [
     {
-      "id": "FN-createUser",
-      "name": "createUser",
-      "description": "Creates a new user account.",
-      "entity": "User",
+      "id": "FN-routeQuery",
+      "name": "routeQuery",
+      "description": "Routes a query to the most appropriate backend based on classification and availability.",
+      "entity": "Query",
       "inputs": [
-        { "name": "email",    "type": "string",   "required": true,  "example": "leon@example.com" },
-        { "name": "role",     "type": "UserRole",  "required": false, "example": "CUSTOMER" }
+        { "name": "content", "type": "string", "required": true, "description": "The query text to route.", "example": "Translate this to French" },
+        { "name": "overrideBackendId", "type": "string", "required": false, "description": "Optional backend override. If provided, bypasses classification and routes directly.", "example": "bck_xyz789" }
       ],
       "output": {
-        "type": "User",
-        "description": "The newly created user."
+        "type": "Query",
+        "description": "The routed query with status updated to COMPLETED."
       },
       "errors": [
-        { "code": "EMAIL_TAKEN",   "condition": "A user with this email already exists.", "returnType": "ConflictError" },
-        { "code": "INVALID_EMAIL", "condition": "Email does not match valid format.",      "returnType": "ValidationError" }
+        { "code": "NO_BACKENDS_AVAILABLE", "condition": "No backends are currently available.", "returnType": "ServiceUnavailableError" },
+        { "code": "INVALID_OVERRIDE", "condition": "The overrideBackendId does not match any configured backend.", "returnType": "ValidationError" }
       ],
       "pure": false,
       "visibility": "public"
     },
     {
-      "id": "FN-getUser",
-      "name": "getUser",
-      "description": "Fetches a user by ID.",
-      "entity": "User",
+      "id": "FN-cancelQuery",
+      "name": "cancelQuery",
+      "description": "Cancels an in-flight query. Only queries in PENDING or ROUTED status can be cancelled.",
+      "entity": "Query",
       "inputs": [
-        { "name": "userId", "type": "string", "required": true, "example": "usr_48291" }
+        { "name": "queryId", "type": "string", "required": true, "description": "The ID of the query to cancel.", "example": "qry_def456" }
       ],
       "output": {
-        "type": "User"
+        "type": "Query",
+        "description": "The cancelled query with status updated to FAILED."
       },
       "errors": [
-        { "code": "NOT_FOUND", "condition": "No user exists with this ID.", "returnType": "NotFoundError" }
+        { "code": "NOT_FOUND", "condition": "No query exists with this ID.", "returnType": "NotFoundError" },
+        { "code": "ALREADY_COMPLETED", "condition": "The query has already completed or been cancelled.", "returnType": "ConflictError" }
+      ],
+      "pure": false,
+      "visibility": "public"
+    },
+    {
+      "id": "FN-getBackend",
+      "name": "getBackend",
+      "description": "Fetches a backend by ID.",
+      "entity": "Backend",
+      "inputs": [
+        { "name": "backendId", "type": "string", "required": true, "description": "The backend identifier.", "example": "bck_xyz789" }
+      ],
+      "output": {
+        "type": "Backend",
+        "description": "The backend with its current availability status."
+      },
+      "errors": [
+        { "code": "NOT_FOUND", "condition": "No backend exists with this ID.", "returnType": "NotFoundError" }
       ],
       "pure": true,
       "visibility": "public"
     },
     {
-      "id": "FN-placeOrder",
-      "name": "placeOrder",
-      "description": "Creates a new order for a user.",
-      "entity": "Order",
-      "inputs": [
-        { "name": "userId",    "type": "string",      "required": true },
-        { "name": "items",     "type": "OrderItem[]", "required": true }
-      ],
+      "id": "FN-listBackends",
+      "name": "listBackends",
+      "description": "Lists all configured backends with their availability status.",
+      "entity": "Backend",
+      "inputs": [],
       "output": {
-        "type": "Order",
-        "description": "The created order with PENDING status."
+        "type": "Backend[]",
+        "description": "All configured backends sorted by priority."
       },
-      "errors": [
-        { "code": "USER_NOT_FOUND",      "condition": "userId does not match any user.",              "returnType": "NotFoundError" },
-        { "code": "EMPTY_ORDER",         "condition": "items array is empty.",                        "returnType": "ValidationError" },
-        { "code": "INSUFFICIENT_STOCK",  "condition": "One or more products have insufficient stock.", "returnType": "ConflictError" }
-      ],
-      "pure": false,
+      "errors": [],
+      "pure": true,
       "visibility": "public"
     },
     {
-      "id": "FN-cancelOrder",
-      "name": "cancelOrder",
-      "description": "Cancels an order if it has not yet been shipped.",
-      "entity": "Order",
+      "id": "FN-getQueryHistory",
+      "name": "getQueryHistory",
+      "description": "Retrieves past query log entries, optionally filtered by backend or time range.",
+      "entity": "LogEntry",
       "inputs": [
-        { "name": "orderId", "type": "string", "required": true }
+        { "name": "limit", "type": "number", "required": false, "description": "Maximum number of entries to return.", "example": 20 },
+        { "name": "backendId", "type": "string", "required": false, "description": "Optional filter by backend ID.", "example": "bck_xyz789" }
       ],
       "output": {
-        "type": "Order",
-        "description": "The updated order with CANCELLED status."
+        "type": "LogEntry[]",
+        "description": "Past query log entries sorted by most recent first."
       },
-      "errors": [
-        { "code": "NOT_FOUND",      "condition": "No order exists with this ID.",         "returnType": "NotFoundError" },
-        { "code": "ALREADY_SHIPPED","condition": "Order status is SHIPPED or DELIVERED.",  "returnType": "ConflictError" }
-      ],
-      "pure": false,
+      "errors": [],
+      "pure": true,
       "visibility": "public"
     },
     {
-      "id": "FN-getProduct",
-      "name": "getProduct",
-      "description": "Fetches a product by ID.",
-      "entity": "Product",
+      "id": "FN-getQuery",
+      "name": "getQuery",
+      "description": "Fetches a query by ID.",
+      "entity": "Query",
       "inputs": [
-        { "name": "productId", "type": "string", "required": true }
+        { "name": "queryId", "type": "string", "required": true, "description": "The query identifier.", "example": "qry_def456" }
       ],
-      "output": { "type": "Product" },
+      "output": {
+        "type": "Query",
+        "description": "The query with its current status and routing metadata."
+      },
       "errors": [
-        { "code": "NOT_FOUND", "condition": "No product exists with this ID.", "returnType": "NotFoundError" }
+        { "code": "NOT_FOUND", "condition": "No query exists with this ID.", "returnType": "NotFoundError" }
       ],
       "pure": true,
       "visibility": "public"

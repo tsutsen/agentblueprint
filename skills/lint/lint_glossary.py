@@ -370,7 +370,7 @@ def run_lint(
     # Cross-spec coverage
     if any(other_specs.values()):
         domain_terms = extract_domain_terms(other_specs)
-        check_cross_spec_coverage(term_map, domain_terms, result)
+        check_cross_spec_coverage(gl_id_map, domain_terms, result)
 
     if strict:
         for w in result.warnings:

@@ -3,7 +3,7 @@
   "schemaVersion": "1.0.0",
   "module": "LLMGateway",
   "description": "Data model for the LLM Gateway system — routes queries to appropriate LLM backends.",
-  "primitives": ["string", "number", "boolean", "null", "any"],
+  "primitives": ["string", "number", "boolean", "null", "void"],
   "enums": [
     {
       "name": "BackendType",
@@ -22,22 +22,18 @@
         { "name": "COMPLETED" },
         { "name": "FAILED" }
       ]
+    },
+    {
+      "name": "ComplexityTier",
+      "description": "Complexity tier assigned by the classifier.",
+      "values": [
+        { "name": "SIMPLE", "description": "Simple query, can be handled by any backend." },
+        { "name": "MODERATE", "description": "Moderate complexity, needs a capable backend." },
+        { "name": "COMPLEX", "description": "Complex query, requires the most capable backend." }
+      ]
     }
   ],
   "entities": [
-    {
-      "name": "User",
-      "description": "A developer who submits queries to the gateway.",
-      "fields": [
-        { "name": "id", "type": "string", "required": true, "description": "Unique identifier.", "example": "usr_abc123" },
-        { "name": "email", "type": "string", "required": true, "description": "User's email address.", "example": "dev@example.com" },
-        { "name": "createdAt", "type": "string", "required": true, "description": "ISO 8601 timestamp of account creation.", "example": "2025-01-01T00:00:00Z" }
-      ],
-      "methods": [
-        { "name": "getHistory", "apiRef": "FN-getUserHistory", "description": "Retrieve past queries." }
-      ],
-      "visibility": "public"
-    },
     {
       "name": "Backend",
       "description": "An LLM backend (local or cloud) available for routing.",
@@ -52,14 +48,14 @@
     },
     {
       "name": "Query",
-      "description": "A single query submitted by a user.",
+      "description": "A single query submitted by a developer.",
       "fields": [
         { "name": "id", "type": "string", "required": true, "description": "Unique query identifier.", "example": "qry_def456" },
-        { "name": "userId", "type": "string", "required": true, "description": "Reference to the user who submitted it.", "example": "usr_abc123" },
         { "name": "content", "type": "string", "required": true, "description": "The query text.", "example": "Translate this to French" },
         { "name": "status", "type": "QueryStatus", "required": true, "description": "Current lifecycle status.", "example": "COMPLETED" },
         { "name": "latencyMs", "type": "number", "required": false, "description": "Response latency in milliseconds.", "example": 250 },
-        { "name": "createdAt", "type": "string", "required": true, "description": "ISO 8601 timestamp.", "example": "2025-06-15T10:30:00Z" }
+        { "name": "createdAt", "type": "string", "required": true, "description": "ISO 8601 timestamp.", "example": "2025-06-15T10:30:00Z" },
+        { "name": "overrideBackendId", "type": "string", "required": false, "description": "If set, the query was forced to a specific backend.", "example": "bck_xyz789" }
       ],
       "methods": [
         { "name": "route", "apiRef": "FN-routeQuery", "description": "Route this query to a backend." },
@@ -68,25 +64,35 @@
       "visibility": "public"
     },
     {
-      "name": "QueryLog",
-      "description": "A log entry recording a query and its routing outcome.",
-      "extends": "Query",
+      "name": "RouteDecision",
+      "description": "Records which backend was selected for a query and why.",
       "fields": [
+        { "name": "id", "type": "string", "required": true, "description": "Unique route decision identifier.", "example": "rd_001" },
+        { "name": "queryId", "type": "string", "required": true, "description": "The query this decision belongs to.", "example": "qry_def456" },
+        { "name": "backendId", "type": "string", "required": true, "description": "The selected backend.", "example": "bck_xyz789" },
+        { "name": "tier", "type": "ComplexityTier", "required": true, "description": "The complexity tier that influenced this decision.", "example": "SIMPLE" },
+        { "name": "reason", "type": "string", "required": false, "description": "Human-readable reason for the selection.", "example": "Highest priority available backend" }
+      ],
+      "visibility": "public"
+    },
+    {
+      "name": "LogEntry",
+      "description": "A persisted record of a processed query including routing outcome.",
+      "fields": [
+        { "name": "id", "type": "string", "required": true, "description": "Unique log entry identifier.", "example": "log_001" },
+        { "name": "queryId", "type": "string", "required": true, "description": "The query this log entry records.", "example": "qry_def456" },
         { "name": "backendId", "type": "string", "required": true, "description": "Which backend handled this query.", "example": "bck_xyz789" },
-        { "name": "response", "type": "string", "required": false, "description": "The LLM response text.", "example": "Voici la traduction..." }
+        { "name": "response", "type": "string", "required": false, "description": "The LLM response text (truncated).", "example": "Voici la traduction..." },
+        { "name": "latencyMs", "type": "number", "required": false, "description": "Total response latency in milliseconds.", "example": 1200 },
+        { "name": "createdAt", "type": "string", "required": true, "description": "ISO 8601 timestamp of completion.", "example": "2025-06-15T10:30:01Z" }
+      ],
+      "methods": [
+        { "name": "getHistory", "apiRef": "FN-getQueryHistory", "description": "Retrieve past log entries." }
       ],
       "visibility": "public"
     }
   ],
   "relationships": [
-    {
-      "from": "User",
-      "to": "Query",
-      "type": "composition",
-      "cardinality": { "fromLabel": "1", "toLabel": "1..*" },
-      "label": "submits",
-      "description": "A user composes queries; deleting the user removes their queries."
-    },
     {
       "from": "Query",
       "to": "Backend",
@@ -96,12 +102,36 @@
       "description": "Each query is routed to exactly one backend."
     },
     {
-      "from": "QueryLog",
+      "from": "RouteDecision",
+      "to": "Query",
+      "type": "composition",
+      "cardinality": { "fromLabel": "1", "toLabel": "1" },
+      "label": "decides for",
+      "description": "A route decision is created for exactly one query; deleting the query removes its decision."
+    },
+    {
+      "from": "RouteDecision",
+      "to": "Backend",
+      "type": "association",
+      "cardinality": { "fromLabel": "1", "toLabel": "1" },
+      "label": "selects",
+      "description": "A route decision selects exactly one backend."
+    },
+    {
+      "from": "LogEntry",
+      "to": "Query",
+      "type": "composition",
+      "cardinality": { "fromLabel": "1", "toLabel": "1" },
+      "label": "records",
+      "description": "A log entry records exactly one query; deleting the query removes its log entry."
+    },
+    {
+      "from": "LogEntry",
       "to": "Backend",
       "type": "association",
       "cardinality": { "fromLabel": "1", "toLabel": "1" },
       "label": "handled by",
-      "description": "A query log entry records which backend handled the query."
+      "description": "A log entry records which backend handled the query."
     }
   ]
 }
