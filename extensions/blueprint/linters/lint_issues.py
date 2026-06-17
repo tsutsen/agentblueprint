@@ -242,19 +242,20 @@ class IssueLinter:
     def lint_non_goal_violation(self):
         """Check that issue does not implement something explicitly out of scope.
         
-        Uses glossary terms + synonyms for accurate matching. Falls back to
-        word-level overlap for items not in the glossary.
+        Uses GL-NNN references from glossary when available (most accurate).
+        Falls back to glossary term/synonym matching, then word-level overlap.
         """
-        # Build glossary lookup: term_lower → {term, synonyms[], definition[]}
+        # Build glossary lookup: id → {term, synonyms[], definition[]}
         glossary_lookup: dict[str, dict] = {}
         if self.glossary:
             for entry in self.glossary.get("terms", []):
-                name = entry["term"]
-                glossary_lookup[name.lower()] = {
-                    "term": name,
-                    "synonyms": [s.lower() for s in entry.get("synonyms", [])],
-                    "definition": entry.get("definition", "").lower(),
-                }
+                term_id = entry.get("id", "")
+                if term_id and GL_ID_RE.match(term_id):
+                    glossary_lookup[term_id] = {
+                        "term": entry["term"],
+                        "synonyms": [s.lower() for s in entry.get("synonyms", [])],
+                        "definition": entry.get("definition", "").lower(),
+                    }
 
         # Collect out-of-scope items from epic + GoalSpec
         out_of_scope_items: list[str] = []
@@ -281,36 +282,38 @@ class IssueLinter:
         if not out_of_scope_items:
             return
 
-        # Expand each out-of-scope item with glossary synonyms
-        expanded_items: list[tuple[str, str]] = []  # (display_name, check_text)
-        unknown_items: list[str] = []
+        # Classify and expand each out-of-scope item
+        expanded_items: list[tuple[str, str, str]] = []  # (display_name, check_text, source)
         
         for item in out_of_scope_items:
             item_lower = item.lower()
-            check_terms: list[str] = [item_lower]
             
-            # Strategy 1: Direct glossary match (term or synonym)
-            if item_lower in glossary_lookup:
-                entry = glossary_lookup[item_lower]
-                check_terms = [item_lower] + entry["synonyms"]
-                # Also extract meaningful words from definition
-                defn_words = {w for w in entry["definition"].split() if len(w) > 3}
-                if defn_words:
-                    check_terms.extend(list(defn_words))
+            # Strategy 1: GL-NNN reference (most accurate)
+            gl_match = re.match(r"gl-(\d{3})", item_lower)
+            if gl_match and gl_match.group(0).upper() in glossary_lookup:
+                term_id = gl_match.group(0).upper()
+                entry = glossary_lookup[term_id]
+                check_text = f"{entry['term'].lower()} " + " ".join(entry["synonyms"])
+                expanded_items.append((entry["term"], check_text, term_id))
+                continue
             
-            # Strategy 2: Item is a synonym of a known term
-            elif not any(item_lower in syn for syn in glossary_lookup.values()):
-                for term_entry in glossary_lookup.values():
-                    if item_lower in term_entry["synonyms"]:
-                        check_terms = [term_entry["term"].lower()] + term_entry["synonyms"]
+            # Strategy 2: Direct glossary term match
+            if glossary_lookup:
+                for term_id, entry in glossary_lookup.items():
+                    if entry["term"].lower() == item_lower:
+                        check_text = entry["term"].lower() + " " + " ".join(entry["synonyms"])
+                        expanded_items.append((entry["term"], check_text, term_id))
                         break
-            
-            # Strategy 3: Unknown term — fall back to word-level overlap
-            if not any(t in glossary_lookup for t in check_terms if len(t) > 3):
-                if item_lower not in glossary_lookup:
-                    unknown_items.append(item)
-            
-            expanded_items.append((item, " ".join(check_terms)))
+                else:
+                    # Strategy 3: Synonym match
+                    for term_id, entry in glossary_lookup.items():
+                        if item_lower in [s.lower() for s in entry["synonyms"]]:
+                            check_text = entry["term"].lower() + " " + " ".join(entry["synonyms"])
+                            expanded_items.append((entry["term"], check_text, term_id))
+                            break
+                    else:
+                        # Strategy 4: Fallback — word-level overlap
+                        expanded_items.append((item, item_lower, "unknown"))
 
         for issue_file in self.issue_files:
             md_content = issue_file.md_content.lower()
@@ -322,14 +325,16 @@ class IssueLinter:
             body_text = what_build.group(1) if what_build else ""
             full_text = f"{title} {body_text}"
 
-            for display_name, check_text in expanded_items:
-                # Exact phrase match
-                if display_name.lower() in full_text:
-                    self.add_issue("error", "scope",
-                        f"{issue_file.issue_id}: implements out-of-scope item '{display_name}'")
-                    continue
+            for display_name, check_text, source_id in expanded_items:
+                # Check for GL-NNN reference in issue text
+                if source_id != "unknown":
+                    gl_ref = f"{source_id.lower()}"
+                    if gl_ref in full_text:
+                        self.add_issue("error", "scope",
+                            f"{issue_file.issue_id}: implements out-of-scope item {source_id} '{display_name}'")
+                        continue
                 
-                # Check expanded terms (glossary synonyms + definition keywords)
+                # Check expanded terms
                 for term in check_text.split():
                     if len(term) > 3 and term in full_text:
                         self.add_issue("error", "scope",

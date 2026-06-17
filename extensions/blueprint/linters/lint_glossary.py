@@ -109,6 +109,49 @@ def extract_domain_terms(specs: dict) -> dict[str, list[str]]:
 
 # ── Checks ────────────────────────────────────────────────────────────────────
 
+def check_gl_ids(glossary: dict, result: LintResult) -> dict[str, dict]:
+    """Check GL-NNN IDs are sequential and unique. Returns term_id → entry map."""
+    terms = glossary.get("terms", [])
+    seen_ids: dict[str, dict] = {}
+    ids_found: list[int] = []
+
+    for entry in terms:
+        term_id = entry.get("id", "")
+        
+        # Validate ID format
+        if not GL_ID_RE.match(term_id):
+            term_name = entry.get("term", "unknown")
+            result.add("error", "gl_id_format",
+                f"Term '{term_name}': ID '{term_id}' does not match GL-NNN format.",
+                hint="Use GL-NNN format (e.g., GL-001, GL-042).")
+            continue
+        
+        # Check for duplicate IDs
+        if term_id in seen_ids:
+            result.add("error", "duplicate_gl_id",
+                f"Duplicate GL-NNN ID '{term_id}' (used by '{seen_ids[term_id].get('term', '?')}').",
+                hint="Each term must have a unique GL-NNN identifier.")
+            continue
+        
+        seen_ids[term_id] = entry
+        ids_found.append(int(term_id.split("-")[1]))
+
+    # Check for sequential numbering gaps
+    if ids_found:
+        min_id = min(ids_found)
+        max_id = max(ids_found)
+        expected = set(range(min_id, max_id + 1))
+        actual = set(ids_found)
+        missing = expected - actual
+        
+        for gap in sorted(missing):
+            result.add("warning", "gl_id_gap",
+                f"Gap in GL-NNN sequence: GL-{gap:03d} is missing.",
+                hint="GL-NNN IDs should be sequential with no gaps.")
+
+    return seen_ids
+
+
 def check_duplicates(glossary: dict, result: LintResult) -> dict[str, dict]:
     """Check for duplicate term names. Returns term_name → entry map."""
     terms = glossary.get("terms", [])
@@ -188,27 +231,33 @@ def check_circular_definitions(term_map: dict[str, dict], result: LintResult):
                         hint="Rewrite one definition to break the cycle.")
 
 
-def check_related_terms(term_map: dict[str, dict], result: LintResult):
-    """All relatedTerms must exist in the glossary."""
-    for name, entry in term_map.items():
+def check_related_terms(gl_id_map: dict[str, dict], result: LintResult):
+    """All relatedTerms must be valid GL-NNN IDs that exist in the glossary."""
+    for term_id, entry in gl_id_map.items():
         for related in entry.get("relatedTerms", []):
-            if related not in term_map:
+            if not GL_ID_RE.match(related):
+                result.add("error", "related_term_format",
+                    f"Term '{entry['term']}': relatedTerm '{related}' is not a valid GL-NNN ID.",
+                    hint="Use GL-NNN format (e.g., GL-001, GL-042).")
+            elif related not in gl_id_map:
                 result.add("error", "related_term_missing",
-                    f"Term '{name}': relatedTerm '{related}' not found in glossary.",
-                    hint=f"Add '{related}' as a glossary entry or correct the spelling.")
+                    f"Term '{entry['term']}': relatedTerm '{related}' not found in glossary.",
+                    hint=f"Add GL-{related.split('-')[1]} as a glossary entry or correct the ID.")
 
 
-def check_synonym_conflicts(term_map: dict[str, dict], result: LintResult):
+def check_synonym_conflicts(gl_id_map: dict[str, dict], result: LintResult):
     """Synonyms must not also have their own glossary entry — that creates ambiguity."""
-    for name, entry in term_map.items():
+    for term_id, entry in gl_id_map.items():
         for syn in entry.get("synonyms", []):
-            if syn in term_map:
-                result.add("error", "synonym_conflict",
-                    f"Term '{name}': synonym '{syn}' also has its own glossary entry.",
-                    hint=f"Either remove the '{syn}' entry and keep it as a synonym, or remove it from '{name}' synonyms.")
+            # Check if synonym text matches another term's name
+            for other_id, other_entry in gl_id_map.items():
+                if other_id != term_id and syn == other_entry["term"]:
+                    result.add("error", "synonym_conflict",
+                        f"Term '{entry['term']}': synonym '{syn}' also has its own glossary entry (GL-{other_id.split('-')[1]}).",
+                        hint=f"Either remove the '{syn}' entry and keep it as a synonym, or remove it from '{entry['term']}' synonyms.")
 
 
-def check_definition_quality(term_map: dict[str, dict], result: LintResult):
+def check_definition_quality(gl_id_map: dict[str, dict], result: LintResult):
     """Flag definitions that are suspiciously short or placeholder-like."""
     placeholder_patterns = ["tbd", "todo", "see above", "see below", "n/a", "same as"]
     vague_starters = ["a thing", "something that", "refers to", "relates to"]
@@ -236,7 +285,7 @@ def check_definition_quality(term_map: dict[str, dict], result: LintResult):
 
 
 def check_cross_spec_coverage(
-    term_map: dict[str, dict],
+    gl_id_map: dict[str, dict],
     domain_terms: dict[str, list[str]],
     result: LintResult
 ):
@@ -246,10 +295,10 @@ def check_cross_spec_coverage(
     """
     # Build set of all known names: terms + their synonyms
     known_names: dict[str, str] = {}  # name_lower → canonical term
-    for name in term_map:
-        known_names[name.lower()] = name
-        for syn in term_map[name].get("synonyms", []):
-            known_names[syn.lower()] = name
+    for term_id, entry in gl_id_map.items():
+        known_names[entry["term"].lower()] = term_id
+        for syn in entry.get("synonyms", []):
+            known_names[syn.lower()] = term_id
 
     referenced_terms: set[str] = set()
 
@@ -267,10 +316,10 @@ def check_cross_spec_coverage(
                     hint=f"Add a glossary entry for '{term}'.")
 
     # Unused terms
-    for name in term_map:
-        if name not in referenced_terms:
+    for term_id in gl_id_map:
+        if term_id not in referenced_terms:
             result.add("warning", "term_unused",
-                f"Term '{name}' is not referenced by any loaded spec.",
+                f"Term '{gl_id_map[term_id]['term']}' (GL-{term_id.split('-')[1]}) is not referenced by any loaded spec.",
                 hint="If this term appears in specs, check spelling. If it's genuinely unused, consider removing it.")
 
 
@@ -305,12 +354,14 @@ def run_lint(
                 hint="All specs must have identical project/module values.")
 
     # Structural checks
-    term_map = check_duplicates(glossary, result)
-    check_self_reference(term_map, result)
-    check_circular_definitions(term_map, result)
-    check_related_terms(term_map, result)
-    check_synonym_conflicts(term_map, result)
-    check_definition_quality(term_map, result)
+    gl_id_map = check_gl_ids(glossary, result)
+    if gl_id_map:  # Only run name-based checks if GL-IDs are valid
+        term_map = {entry["term"]: entry for entry in gl_id_map.values()}
+        check_self_reference(term_map, result)
+        check_circular_definitions(term_map, result)
+    check_related_terms(gl_id_map, result)
+    check_synonym_conflicts(gl_id_map, result)
+    check_definition_quality(gl_id_map, result)
 
     # Cross-spec coverage
     if any(other_specs.values()):

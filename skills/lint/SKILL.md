@@ -91,6 +91,21 @@ Markdown/JSON drift.
 | `unused_function` | WARNING | Function not referenced by any entity's apiRef |
 | `type_case_mismatch` | ERROR | Type case doesn't match data spec |
 
+### lint_glossary.py
+| Check | Severity | Description |
+|-------|----------|-------------|
+| `gl_id_format` | ERROR | GL-NNN ID does not match pattern |
+| `gl_id_gap` | WARNING | Gap in GL-NNN sequence |
+| `duplicate_gl_id` | ERROR | Duplicate GL-NNN ID |
+| `related_term_format` | ERROR | relatedTerm is not a valid GL-NNN ID |
+| `related_term_missing` | ERROR | relatedTerm GL-NNN not found in glossary |
+| `synonym_conflict` | ERROR | Synonym also has its own glossary entry |
+| `term_undefined` | WARNING | Term from other specs missing from glossary |
+| `term_unused` | WARNING | Glossary term not referenced by any spec |
+| `definition_placeholder` | ERROR | Definition appears to be a placeholder |
+| `definition_vague` | WARNING | Definition starts with vague phrasing |
+| `definition_too_short` | WARNING | Definition is very short |
+
 ### lint_archspec.py
 | Check | Severity | Description |
 |-------|----------|-------------|
