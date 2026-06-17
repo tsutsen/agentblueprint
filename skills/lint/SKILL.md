@@ -190,6 +190,26 @@ Markdown/JSON drift.
 | `No self-referencing dependencies` | review | TaskPlan |
 | `No unknown dependencies` | review | TaskPlan |
 
+### lint_issues.py
+| Check | Severity | Description |
+|-------|----------|-------------|
+| `dependency_ref` | ERROR | blocked_by reference does not exist |
+| `blocked_by_pattern` | ERROR | blocked_by item is not a valid IS-NNN |
+| `blocked_by_cycles` | ERROR | Circular dependency in blocked_by graph |
+| `epic_consistency` | ERROR | issue.epic does not match target epic ID |
+| `missing_section` | ERROR | Required markdown section missing (What to build, Acceptance criteria, Blocked by) |
+| `schema_field` | ERROR | Missing or invalid required field |
+| `dependency_ordering` | WARNING | Blocked issue has higher IS-NNN than blocker |
+| `duplicate_blocked_by` | WARNING | Duplicate entries in blocked_by |
+| `date_ordering` | WARNING | updated date before created date |
+| `title_too_short` | WARNING | Title is fewer than 5 characters |
+| `milestone_consistency` | WARNING | Milestone not found in TaskPlan |
+| `ac_too_few` | WARNING | Fewer than 2 acceptance criteria |
+| `ac_all_checked` | WARNING | All acceptance criteria already checked |
+| `ac_bad_format` | WARNING | AC does not use '- [ ]' format |
+| `body_too_short` | WARNING | 'What to build' section is fewer than 10 words |
+| `id_gap` | WARNING | Gap in issue ID sequence within epic |
+
 ### lint_consistency.py
 | Check | Severity | Description |
 |-------|----------|-------------|

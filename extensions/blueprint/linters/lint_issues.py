@@ -132,39 +132,23 @@ class IssueLinter:
             self.issue_files.append(issue_file)
 
     def lint_id_sequence(self):
-        """Check that issue IDs are sequential and project-global."""
-        if not self.issue_files:
+        """Check that issue IDs within this epic are sequential from the epic start."""
+        if len(self.issue_files) < 2:
             return
 
-        # Find the highest existing IS-NNN across all epics
-        all_issue_ids = set()
-        for epic_folder in self.epics_dir.iterdir():
-            if epic_folder.is_dir() and epic_folder.name != self.epic_id:
-                for sub in epic_folder.iterdir():
-                    if sub.is_dir() and ISSUE_ID_RE.match(sub.name):
-                        all_issue_ids.add(sub.name)
-
-        # Also check the current epic folder
-        for issue_file in self.issue_files:
-            all_issue_ids.add(issue_file.issue_id)
-
-        if not all_issue_ids:
-            return
-
-        # Check for gaps in the sequence
-        sorted_ids = sorted(all_issue_ids, key=lambda x: int(x.split("-")[1]))
-        numeric_ids = [int(x.split("-")[1]) for x in sorted_ids]
-        min_id = min(numeric_ids)
-        max_id = max(numeric_ids)
+        # Get numeric IDs within this epic only
+        numeric_ids = sorted([int(f.issue_id.split("-")[1]) for f in self.issue_files])
+        min_id = numeric_ids[0]
+        max_id = numeric_ids[-1]
 
         expected = set(range(min_id, max_id + 1))
         actual = set(numeric_ids)
         missing = expected - actual
 
         for gap in missing:
-            self.add_issue("error", "id",
-                f"Gap in issue ID sequence: IS-{gap:03d} is missing",
-                f"Issue IDs should be sequential with no gaps. "
+            self.add_issue("warning", "id",
+                f"Gap in issue ID sequence within epic: IS-{gap:03d} is missing",
+                f"Within this epic, issue IDs should be sequential. "
                 f"Current range: IS-{min_id:03d} to IS-{max_id:03d}.")
 
     def lint_dependencies(self):
@@ -182,6 +166,79 @@ class IssueLinter:
                     self.add_issue("error", "dependency",
                         f"{issue_file.issue_id}: blocked_by '{ref}' does not exist",
                         f"Available issue IDs: {', '.join(sorted(existing_ids))}")
+
+    def lint_dependency_ordering(self):
+        """Check that blocked issues have higher IS-NNN than their blockers."""
+        existing_ids = {f.issue_id for f in self.issue_files}
+        id_to_num = {f.issue_id: int(f.issue_id.split("-")[1]) for f in self.issue_files}
+
+        for issue_file in self.issue_files:
+            blocked_by = issue_file.data.get("blocked_by", [])
+            issue_num = id_to_num[issue_file.issue_id]
+            for ref in blocked_by:
+                if ref in id_to_num and id_to_num[ref] >= issue_num:
+                    self.add_issue("warning", "dependency",
+                        f"{issue_file.issue_id}: blocked_by '{ref}' has equal or higher ID — "
+                        f"the blocker should have a lower IS-NNN number")
+
+    def lint_blocked_by_cycles(self):
+        """Detect cycles in the blocked_by dependency graph."""
+        if len(self.issue_files) < 2:
+            return
+
+        existing_ids = {f.issue_id for f in self.issue_files}
+        graph: dict[str, list[str]] = {}
+        for issue_file in self.issue_files:
+            blocked_by = issue_file.data.get("blocked_by", [])
+            graph[issue_file.issue_id] = [r for r in blocked_by if r in existing_ids]
+
+        # DFS cycle detection
+        visited = set()
+        path = []
+
+        def dfs(node):
+            if node in path:
+                cycle = path[path.index(node):]
+                cycle.append(node)
+                return cycle
+            if node in visited:
+                return None
+            visited.add(node)
+            path.append(node)
+            for dep in graph.get(node, []):
+                cycle = dfs(dep)
+                if cycle:
+                    return cycle
+            path.pop()
+            return None
+
+        for node in graph:
+            if node not in visited:
+                cycle = dfs(node)
+                if cycle:
+                    self.add_issue("error", "dependency",
+                        f"Circular dependency detected: {' → '.join(cycle)}")
+                    break
+
+    def lint_epic_consistency(self):
+        """Check that issue.epic matches the target epic ID."""
+        for issue_file in self.issue_files:
+            issue_epic = issue_file.data.get("epic", "")
+            if issue_epic and issue_epic != self.epic_id:
+                self.add_issue("error", "epic",
+                    f"{issue_file.issue_id}: epic field is '{issue_epic}' but issue is in {self.epic_id}")
+
+    def lint_milestone_consistency(self, taskplan: Optional[dict] = None):
+        """Check that issue.milestone exists in TaskPlan milestones."""
+        if not taskplan:
+            return
+        valid_milestones = {m["id"] for m in taskplan.get("milestones", [])}
+        for issue_file in self.issue_files:
+            milestone = issue_file.data.get("milestone", "")
+            if milestone and milestone not in valid_milestones:
+                self.add_issue("warning", "milestone",
+                    f"{issue_file.issue_id}: milestone '{milestone}' not found in TaskPlan. "
+                    f"Valid: {', '.join(sorted(valid_milestones))}")
 
     def lint_coverage(self):
         """Check that every epic acceptance criterion maps to at least one issue."""
@@ -264,6 +321,34 @@ class IssueLinter:
             if not isinstance(blocked_by, list):
                 self.add_issue("error", "schema",
                     f"{issue_file.issue_id}: blocked_by must be an array")
+            else:
+                # Check blocked_by items match pattern
+                for item in blocked_by:
+                    if not ISSUE_ID_RE.match(str(item)):
+                        self.add_issue("error", "schema",
+                            f"{issue_file.issue_id}: blocked_by item '{item}' is not a valid IS-NNN")
+                # Check for duplicates
+                if len(blocked_by) != len(set(blocked_by)):
+                    self.add_issue("warning", "schema",
+                        f"{issue_file.issue_id}: duplicate entries in blocked_by")
+
+            # Check updated >= created
+            created = data.get("created", "")
+            updated = data.get("updated", "")
+            if created and updated and updated < created:
+                self.add_issue("warning", "schema",
+                    f"{issue_file.issue_id}: updated ({updated}) is before created ({created})")
+
+            # Check title length
+            title = data.get("title", "")
+            if title and len(title) < 5:
+                self.add_issue("warning", "schema",
+                    f"{issue_file.issue_id}: title is too short ({len(title)} chars)")
+
+            # Check artifact value
+            if data.get("artifact") != "Issue":
+                self.add_issue("error", "schema",
+                    f"{issue_file.issue_id}: artifact must be 'Issue', got '{data['artifact']}'")
 
     def lint_body(self):
         """Validate the markdown body of each issue file."""
@@ -297,13 +382,17 @@ class IssueLinter:
                 # No AC section found (already caught above), skip
                 pass
 
-    def run(self) -> list[Issue]:
+    def run(self, taskplan: Optional[dict] = None) -> list[Issue]:
         """Run all linters and return issues."""
         self.load_epic()
         self.load_issue_files()
         self.lint_id_sequence()
         self.lint_dependencies()
+        self.lint_dependency_ordering()
+        self.lint_blocked_by_cycles()
         self.lint_schema()
+        self.lint_epic_consistency()
+        self.lint_milestone_consistency(taskplan)
         self.lint_body()
         self.lint_coverage()
         return self.issues
@@ -338,11 +427,11 @@ class IssueLinter:
 
 # ── Integration with lint_all.py ──────────────────────────────────────────────
 
-def run_lint(epic_id: str, epics_dir: str, strict: bool = False):
+def run_lint(epic_id: str, epics_dir: str, taskplan: Optional[dict] = None, strict: bool = False):
     """Run the issue linter for a single epic. Returns a LayerResult."""
     from lint_all import LayerResult
     linter = IssueLinter(epics_dir, epic_id, strict)
-    issues = linter.run()
+    issues = linter.run(taskplan)
 
     layer = LayerResult(name="issues")
     for issue in issues:
@@ -358,12 +447,21 @@ def main():
     parser.add_argument("--epic", required=True, help="Epic ID (e.g., EP-001)")
     parser.add_argument("--epics-dir", default="tasks/epics",
                         help="Path to epics directory (default: tasks/epics)")
+    parser.add_argument("--taskplan", default=None,
+                        help="Path to taskplan.json for milestone validation")
     parser.add_argument("--strict", action="store_true",
                         help="Treat warnings as errors")
     args = parser.parse_args()
 
+    taskplan = None
+    if args.taskplan:
+        try:
+            taskplan = json.loads(Path(args.taskplan).read_text())
+        except (FileNotFoundError, json.JSONDecodeError):
+            print(f"Warning: Could not load taskplan from {args.taskplan}")
+
     linter = IssueLinter(args.epics_dir, args.epic, args.strict)
-    issues = linter.run()
+    issues = linter.run(taskplan)
 
     print(linter.summary())
 
