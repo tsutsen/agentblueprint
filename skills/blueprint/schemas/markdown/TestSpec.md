@@ -227,7 +227,6 @@ After the interview is complete and the JSON artifact has been written via
 `write_section`, the Markdown file must be regenerated from the JSON to
 ensure zero drift between formats.
 
-Run the following tool after `dual_output` completes:
 
 ```
 tool: generate_artifact_markdown
@@ -245,12 +244,9 @@ The JSON is the single source of truth; the Markdown is derived.
 
 After producing `artifacts/TestSpec.json`, run linting in this order:
 
-### Step 1 — Schema validation via `dual_output`
 
-Call the `dual_output` tool to validate the JSON against `testspec.schema.json`:
 
 ```
-tool: dual_output
 args:
   artifactType: test
   filePath: artifacts/TestSpec.md
@@ -330,7 +326,6 @@ type as a placeholder; verify it matches the actual expected value.
 2. Refine `reqRefs` — the script may set all REQ-IDs as placeholders; each
 test should reference only the specific requirements it validates.
 3. Run the full linting pipeline (Step 1–3 above) to validate.
-4. Run `dual_output` to finalize.
 
 The auto-generated tests are a **starting point**, not a replacement for
 the interview workflow. Always verify each test against the contract.

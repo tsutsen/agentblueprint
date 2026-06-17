@@ -366,7 +366,6 @@ After the interview is complete and the JSON artifact has been written via
 `write_section`, the Markdown file must be regenerated from the JSON to
 ensure zero drift between formats.
 
-Run the following tool after `dual_output` completes:
 
  ```
 tool: generate_artifact_markdown

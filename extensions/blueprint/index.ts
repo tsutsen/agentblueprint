@@ -289,130 +289,6 @@ function registerLoadArtifact(pi: ExtensionAPI) {
   });
 }
 
-// ── Tool: dual_output ────────────────────────────────────────────────────────
-
-function registerDualOutput(pi: ExtensionAPI, extDir: string) {
-  pi.registerTool({
-    name: "dual_output",
-    label: "Dual Output",
-    description:
-      "Validate an existing JSON artifact against its schema, set the status " +
-      "field from the markdown frontmatter, and write the final JSON file. " +
-      "Does NOT parse markdown — the JSON must already exist (written by write_section).",
-    parameters: Type.Object({
-      artifactType: Type.String({
-        description: "Artifact type: goal, design, arch, data, api, test, glossary, issue",
-      }),
-      filePath: Type.String({
-        description: "Path to the markdown file (e.g. artifacts/GoalSpec.md or tasks/epics/EP-001/IS-001/IS-001.md)",
-      }),
-    }),
-    async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-      const { artifactType, filePath } = params;
-      const fullPath = path.resolve(ctx.cwd, filePath);
-      const jsonPath = fullPath.replace(/\.md$/, '.json');
-      const schemaName = artifactType === 'arch' ? 'archspec'
-        : artifactType === 'data' ? 'data'
-        : artifactType === 'api' ? 'api'
-        : artifactType === 'test' ? 'test'
-        : artifactType === 'design' ? 'designspec'
-        : artifactType === 'glossary' ? 'glossary'
-        : artifactType === 'goal' ? 'goalspec'
-        : artifactType === 'issues' ? 'issue'
-        : null;
-
-      if (!schemaName) {
-        return {
-          content: [{ type: "text", text: `Unknown artifact type: ${artifactType}` }],
-          details: { verified: false },
-          isError: true,
-        };
-      }
-
-      // 1. Check that JSON file already exists
-      if (!fs.existsSync(jsonPath)) {
-        return {
-          content: [{
-            type: "text",
-            text: `ERROR: JSON file not found at ${jsonPath}. ` +
-              `The JSON must be written during the interview via write_section. ` +
-              `Run the interview first, then call dual_output.`,
-          }],
-          details: { verified: false },
-          isError: true,
-        };
-      }
-
-      // 2. Read markdown for frontmatter status
-      const markdown = fs.readFileSync(fullPath, 'utf-8');
-      const fm = extractFrontmatter(markdown);
-      const status = fm.status || 'draft';
-
-      // 3. Read and parse JSON
-      let json: any;
-      try {
-        json = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-      } catch (err: any) {
-        return {
-          content: [{ type: "text", text: `ERROR: invalid JSON at ${jsonPath}: ${err.message}` }],
-          details: { verified: false },
-          isError: true,
-        };
-      }
-
-      // 4. Validate against schema — resolve relative to package root, not extDir
-      const schemaPath = resolveSchemaPath(extDir, schemaName);
-      const validation = await validateAgainstSchema(json, schemaPath);
-
-      if (!validation.valid) {
-        return {
-          content: [{
-            type: "text",
-            text: `JSON validation failed:\n${validation.errors.map(e => `  ✗ ${e}`).join('\n')}\n\n` +
-              `Fix the JSON artifact and run dual_output again.`,
-          }],
-          details: { verified: false, validationErrors: validation.errors },
-          isError: true,
-        };
-      }
-
-      // 5. Set status from frontmatter
-      json.status = status;
-
-      // 6. Write JSON
-      fs.writeFileSync(jsonPath, JSON.stringify(json, null, 2) + '\n');
-
-      // 7. Verify
-      const written = fs.readFileSync(jsonPath, 'utf-8');
-      const revalidated = JSON.parse(written);
-      const hasStatus = revalidated.status === status;
-
-      if (!hasStatus) {
-        return {
-          content: [{ type: "text", text: `ERROR: status not set correctly in JSON.` }],
-          details: { verified: false },
-          isError: true,
-        };
-      }
-
-      return {
-        content: [{
-          type: "text",
-          text: `Dual output complete: ${jsonPath}\n` +
-            `  status: ${json.status}\n` +
-            `  schema validation: passed`,
-        }],
-        details: {
-          verified: true,
-          path: jsonPath,
-          status: json.status,
-          validationErrors: [],
-        },
-      };
-    },
-  });
-}
-
 // ── Tool: handoff ────────────────────────────────────────────────────────────
 
 function registerHandoff(pi: ExtensionAPI) {
@@ -457,11 +333,12 @@ function registerHandoff(pi: ExtensionAPI) {
 
         if (missingDeps.length > 0) continue;
 
-        // Read frontmatter for status
+        // Read status from JSON (JSON is the single source of truth)
         let status = "in_progress";
-        if (art.mdPath && fs.existsSync(path.resolve(cwd, art.mdPath))) {
-          const fm = readFrontmatter(fs.readFileSync(path.resolve(cwd, art.mdPath), "utf-8"));
-          status = fm.status || "in_progress";
+        const jsonPath = path.resolve(cwd, art.jsonPath);
+        if (fs.existsSync(jsonPath)) {
+          const json = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
+          status = json.status || "in_progress";
         }
 
         available.push({ command: art.command, name: art.name, status });
@@ -1016,14 +893,13 @@ function registerWriteSection(pi: ExtensionAPI) {
     name: "write_section",
     label: "Write Section",
     description:
-      "Write a confirmed artifact section to disk and update frontmatter " +
-      "in one operation. First section creates the file; subsequent " +
-      "sections append. Frontmatter is updated with status=in_progress. " +
-      "If jsonContent is provided, also writes/updates the parallel JSON " +
-      "artifact file (the complete JSON for the entire artifact).",
+      "Write a confirmed artifact section to JSON during the interview. " +
+      "The JSON is the single source of truth — Markdown is derived later " +
+      "via generate_artifact_markdown. Tracks section progress in a _sections " +
+      "field on the JSON artifact.",
     parameters: Type.Object({
       filePath: Type.String({
-        description: "Output file path (e.g. artifacts/GoalSpec.md)",
+        description: "Output file path (e.g. artifacts/GoalSpec.json)",
       }),
       section: Type.String({
         description: "Section name (e.g. Project Objective, Non-Goals)",
@@ -1038,7 +914,7 @@ function registerWriteSection(pi: ExtensionAPI) {
         description: "List of section names still to be confirmed.",
       }),
       jsonContent: Type.Optional(Type.Object({}, {
-        description: "Complete JSON object for the entire artifact. Written to the parallel .json file. The blueprint skill accumulates this across sections.",
+        description: "Complete JSON object for the entire artifact. Written to the .json file. The blueprint skill accumulates this across sections.",
       })),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
@@ -1051,66 +927,56 @@ function registerWriteSection(pi: ExtensionAPI) {
         fs.mkdirSync(dir, { recursive: true });
       }
 
-      // ── Write markdown section ───────────────────────────────────────────
-      const separator = "---\n";
-
-      if (!fs.existsSync(fullPath)) {
-        const fmLines: string[] = [separator];
-        fmLines.push("status: in_progress");
-        fmLines.push("sections_complete:");
-        for (const s of sections_complete) {
-          fmLines.push(`  - ${s}`);
-        }
-        fmLines.push("sections_pending:");
-        for (const s of sections_pending) {
-          fmLines.push(`  - ${s}`);
-        }
-        fmLines.push(`updated: ${updated}`);
-        fmLines.push("---");
-
-        const body = [...fmLines, "\n", content].join("");
-        fs.writeFileSync(fullPath, body, "utf-8");
-      } else {
-        fs.appendFileSync(fullPath, "\n\n" + content, "utf-8");
-      }
-
-      // Update frontmatter
-      const fmLinesNew: string[] = ["---"];
-      const existingText = fs.readFileSync(fullPath, "utf-8");
-      const artifactMatch = existingText.match(/^---\nartifact:\s*(.+?)\n/m);
-      if (artifactMatch) {
-        fmLinesNew.push(`artifact: ${artifactMatch[1].trim()}`);
-      }
-      fmLinesNew.push("status: in_progress");
-      fmLinesNew.push("sections_complete:");
-      for (const s of sections_complete) {
-        fmLinesNew.push(`  - ${s}`);
-      }
-      fmLinesNew.push("sections_pending:");
-      for (const s of sections_pending) {
-        fmLinesNew.push(`  - ${s}`);
-      }
-      fmLinesNew.push(`updated: ${updated}`);
-      fmLinesNew.push("---");
-
-      const newFm = fmLinesNew.join("\n") + "\n";
-      const fmRegex = /^---\n[\s\S]*?\n---\n/;
-      const body = existingText.replace(fmRegex, newFm);
-
-      fs.writeFileSync(fullPath, body, "utf-8");
-
-      // ── Write JSON content (if provided) ─────────────────────────────────
+      // ── Write JSON content ───────────────────────────────────────────────
       let jsonPath: string | null = null;
       let jsonWritten = false;
       if (jsonContent) {
         jsonPath = fullPath.replace(/\.md$/, '.json');
+        // Ensure _sections tracking
+        if (!jsonContent._sections) {
+          jsonContent._sections = { sections_complete: [], sections_pending: [] };
+        }
+        jsonContent._sections.sections_complete = sections_complete;
+        jsonContent._sections.sections_pending = sections_pending;
+        jsonContent._sections.updated = updated;
         fs.writeFileSync(jsonPath, JSON.stringify(jsonContent, null, 2) + '\n');
         jsonWritten = true;
       }
 
-      // ── Verify markdown ──────────────────────────────────────────────────
-      const written = fs.readFileSync(fullPath, "utf-8");
-      const hasSection = written.includes(section);
+      // ── Verify JSON ──────────────────────────────────────────────────────
+      if (!jsonWritten) {
+        return {
+          content: [{ type: "text", text: `ERROR: write_section requires jsonContent. The JSON is the single source of truth; Markdown is derived later.` }],
+          details: { success: false },
+          isError: true,
+        };
+      }
+
+      const written = fs.readFileSync(jsonPath, "utf-8");
+      const revalidated = JSON.parse(written);
+      const hasSections = revalidated._sections?.sections_complete?.includes(section);
+
+      if (!hasSections) {
+        return {
+          content: [{ type: "text", text: `ERROR: section '${section}' not found in written JSON.` }],
+          details: { success: false },
+          isError: true,
+        };
+      }
+
+      return {
+        content: [{
+          type: "text",
+          text: `Section written: ${section}\n` +
+            `  JSON: ${jsonPath}\n` +
+            `  Sections complete: ${sections_complete.length}\n` +
+            `  Sections pending: ${sections_pending.length}`,
+        }],
+        details: { success: true, section, jsonPath },
+      };
+    },
+  });
+}
       const hasContent = written.includes(content.slice(0, 50));
       const hasStatus = written.includes("status: in_progress");
       const hasUpdated = written.includes(`updated: ${updated}`);
@@ -1609,7 +1475,6 @@ export default function (pi: ExtensionAPI) {
   registerLint(pi, extDir);
   registerUpdateFrontmatter(pi);
   registerWriteSection(pi);
-  registerDualOutput(pi, extDir);
   registerHandoff(pi);
   registerGenerateTests(pi, extDir);
   registerGenerateDiagrams(pi, extDir);
