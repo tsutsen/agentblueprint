@@ -282,7 +282,12 @@
             "type": "string",
             "description": "How this criterion will be verified — automated test, manual check, load test, etc."
           },
-          "notes": { "type": "string" }
+          "notes": { "type": "string" },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) referenced by this success criterion's description.",
+            "items": { "$ref": "#/definitions/glId" }
+          }
         }
       }
     },

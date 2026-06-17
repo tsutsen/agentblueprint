@@ -2,136 +2,117 @@
   "version": "1.0.0",
   "schemaVersion": "1.0.0",
   "module": "LLMGateway",
-  "description": "Data model for the LLM Gateway system — routes queries to appropriate LLM backends.",
-  "primitives": ["string", "number", "boolean", "null", "void"],
+  "description": "Data entities for the LLM Gateway — manages queries, backends, and log entries.",
+
+  "primitives": ["string", "number", "boolean", "null"],
+
   "enums": [
     {
-      "name": "BackendType",
-      "description": "Type of LLM backend.",
-      "values": [
-        { "name": "LOCAL", "description": "Local LLM running on-premise." },
-        { "name": "CLOUD", "description": "Cloud-hosted LLM API." }
-      ]
-    },
-    {
       "name": "QueryStatus",
-      "description": "Status of a query lifecycle.",
       "values": [
-        { "name": "PENDING" },
-        { "name": "ROUTED" },
-        { "name": "COMPLETED" },
-        { "name": "FAILED" }
+        { "name": "PENDING", "description": "Query has been submitted but not yet routed." },
+        { "name": "ROUTED", "description": "Query has been assigned to a backend." },
+        { "name": "COMPLETED", "description": "Query has finished processing." },
+        { "name": "FAILED", "description": "Query processing failed." }
       ]
     },
     {
-      "name": "ComplexityTier",
-      "description": "Complexity tier assigned by the classifier.",
+      "name": "BackendStatus",
       "values": [
-        { "name": "SIMPLE", "description": "Simple query, can be handled by any backend." },
-        { "name": "MODERATE", "description": "Moderate complexity, needs a capable backend." },
-        { "name": "COMPLEX", "description": "Complex query, requires the most capable backend." }
+        { "name": "AVAILABLE", "description": "Backend is accepting new queries." },
+        { "name": "UNAVAILABLE", "description": "Backend is not accepting new queries." }
+      ]
+    },
+    {
+      "name": "LogSeverity",
+      "values": [
+        { "name": "INFO", "description": "Informational log entry." },
+        { "name": "WARN", "description": "Warning log entry." },
+        { "name": "ERROR", "description": "Error log entry." }
       ]
     }
   ],
+
   "entities": [
     {
-      "name": "Backend",
-      "description": "An LLM backend (local or cloud) available for routing.",
-      "fields": [
-        { "name": "id", "type": "string", "required": true, "description": "Unique backend identifier.", "example": "bck_xyz789" },
-        { "name": "name", "type": "string", "required": true, "description": "Human-readable name.", "example": "Ollama Local" },
-        { "name": "type", "type": "BackendType", "required": true, "description": "Whether local or cloud.", "example": "LOCAL" },
-        { "name": "url", "type": "string", "required": false, "description": "API endpoint URL.", "example": "http://localhost:11434" },
-        { "name": "isActive", "type": "boolean", "required": true, "description": "Whether this backend is available.", "example": true }
-      ],
-      "visibility": "public"
-    },
-    {
       "name": "Query",
-      "description": "A single query submitted by a developer.",
+      "description": "A query submitted for processing by the LLM Gateway.",
       "fields": [
-        { "name": "id", "type": "string", "required": true, "description": "Unique query identifier.", "example": "qry_def456" },
-        { "name": "content", "type": "string", "required": true, "description": "The query text.", "example": "Translate this to French" },
-        { "name": "status", "type": "QueryStatus", "required": true, "description": "Current lifecycle status.", "example": "COMPLETED" },
-        { "name": "latencyMs", "type": "number", "required": false, "description": "Response latency in milliseconds.", "example": 250 },
-        { "name": "createdAt", "type": "string", "required": true, "description": "ISO 8601 timestamp.", "example": "2025-06-15T10:30:00Z" },
-        { "name": "overrideBackendId", "type": "string", "required": false, "description": "If set, the query was forced to a specific backend.", "example": "bck_xyz789" }
+        { "name": "id", "type": "string", "required": true, "primaryKey": true, "description": "Unique identifier for the query.", "example": "qry_def456" },
+        { "name": "content", "type": "string", "required": true, "description": "The query text submitted by the user.", "example": "Translate this to French" },
+        { "name": "status", "type": "QueryStatus", "required": true, "description": "Current processing status of the query.", "example": "ROUTED" },
+        { "name": "assignedBackendId", "type": "string", "required": false, "description": "ID of the backend this query is assigned to.", "example": "bck_xyz789" },
+        { "name": "createdAt", "type": "string", "required": true, "description": "ISO 8601 timestamp when the query was created.", "example": "2024-01-15T10:30:00Z" },
+        { "name": "completedAt", "type": "string", "required": false, "description": "ISO 8601 timestamp when the query completed or failed." }
       ],
       "methods": [
-        { "name": "route", "apiRef": "FN-routeQuery", "description": "Route this query to a backend." },
-        { "name": "cancel", "apiRef": "FN-cancelQuery", "description": "Cancel an in-flight query." }
-      ],
-      "visibility": "public"
+        { "name": "cancel", "apiRef": "FN-cancelQuery", "description": "Cancels an in-flight query." },
+        { "name": "getHistory", "apiRef": "FN-getQueryHistory", "description": "Retrieves past query log entries." },
+        { "name": "get", "apiRef": "FN-getQuery", "description": "Fetches a query by ID." }
+      ]
     },
     {
-      "name": "RouteDecision",
-      "description": "Records which backend was selected for a query and why.",
+      "name": "Backend",
+      "description": "An LLM provider or service endpoint that processes queries.",
       "fields": [
-        { "name": "id", "type": "string", "required": true, "description": "Unique route decision identifier.", "example": "rd_001" },
-        { "name": "queryId", "type": "string", "required": true, "description": "The query this decision belongs to.", "example": "qry_def456" },
-        { "name": "backendId", "type": "string", "required": true, "description": "The selected backend.", "example": "bck_xyz789" },
-        { "name": "tier", "type": "ComplexityTier", "required": true, "description": "The complexity tier that influenced this decision.", "example": "SIMPLE" },
-        { "name": "reason", "type": "string", "required": false, "description": "Human-readable reason for the selection.", "example": "Highest priority available backend" }
+        { "name": "id", "type": "string", "required": true, "primaryKey": true, "description": "Unique identifier for the backend.", "example": "bck_xyz789" },
+        { "name": "name", "type": "string", "required": true, "description": "Human-readable name of the backend.", "example": "OpenAI GPT-4" },
+        { "name": "status", "type": "BackendStatus", "required": true, "description": "Current availability status.", "example": "AVAILABLE" },
+        { "name": "priority", "type": "number", "required": true, "description": "Routing priority (lower number = higher priority).", "example": 1 },
+        { "name": "config", "type": "string", "required": false, "description": "Configuration details for connecting to this backend." }
       ],
-      "visibility": "public"
+      "methods": [
+        { "name": "get", "apiRef": "FN-getBackend", "description": "Fetches a backend by ID." },
+        { "name": "list", "apiRef": "FN-listBackends", "description": "Lists all configured backends." }
+      ]
     },
     {
       "name": "LogEntry",
-      "description": "A persisted record of a processed query including routing outcome.",
+      "description": "A log entry recording a query processing event.",
       "fields": [
-        { "name": "id", "type": "string", "required": true, "description": "Unique log entry identifier.", "example": "log_001" },
-        { "name": "queryId", "type": "string", "required": true, "description": "The query this log entry records.", "example": "qry_def456" },
-        { "name": "backendId", "type": "string", "required": true, "description": "Which backend handled this query.", "example": "bck_xyz789" },
-        { "name": "response", "type": "string", "required": false, "description": "The LLM response text (truncated).", "example": "Voici la traduction..." },
-        { "name": "latencyMs", "type": "number", "required": false, "description": "Total response latency in milliseconds.", "example": 1200 },
-        { "name": "createdAt", "type": "string", "required": true, "description": "ISO 8601 timestamp of completion.", "example": "2025-06-15T10:30:01Z" }
-      ],
-      "methods": [
-        { "name": "getHistory", "apiRef": "FN-getQueryHistory", "description": "Retrieve past log entries." }
-      ],
-      "visibility": "public"
+        { "name": "id", "type": "string", "required": true, "primaryKey": true, "description": "Unique identifier for the log entry.", "example": "log_abc123" },
+        { "name": "queryId", "type": "string", "required": true, "description": "ID of the associated query.", "example": "qry_def456" },
+        { "name": "backendId", "type": "string", "required": false, "description": "ID of the backend involved in this event.", "example": "bck_xyz789" },
+        { "name": "severity", "type": "LogSeverity", "required": true, "description": "Severity level of the log entry.", "example": "INFO" },
+        { "name": "message", "type": "string", "required": true, "description": "Human-readable log message.", "example": "Query routed to backend" },
+        { "name": "timestamp", "type": "string", "required": true, "description": "ISO 8601 timestamp of the event.", "example": "2024-01-15T10:30:01Z" }
+      ]
     }
   ],
+
   "relationships": [
     {
       "from": "Query",
       "to": "Backend",
       "type": "association",
-      "cardinality": { "fromLabel": "1", "toLabel": "1" },
+      "cardinality": {
+        "fromLabel": "0..1",
+        "toLabel": "1"
+      },
       "label": "routed to",
-      "description": "Each query is routed to exactly one backend."
-    },
-    {
-      "from": "RouteDecision",
-      "to": "Query",
-      "type": "composition",
-      "cardinality": { "fromLabel": "1", "toLabel": "1" },
-      "label": "decides for",
-      "description": "A route decision is created for exactly one query; deleting the query removes its decision."
-    },
-    {
-      "from": "RouteDecision",
-      "to": "Backend",
-      "type": "association",
-      "cardinality": { "fromLabel": "1", "toLabel": "1" },
-      "label": "selects",
-      "description": "A route decision selects exactly one backend."
+      "description": "A query is assigned to at most one backend during processing."
     },
     {
       "from": "LogEntry",
       "to": "Query",
-      "type": "composition",
-      "cardinality": { "fromLabel": "1", "toLabel": "1" },
+      "type": "association",
+      "cardinality": {
+        "fromLabel": "1",
+        "toLabel": "1"
+      },
       "label": "records",
-      "description": "A log entry records exactly one query; deleting the query removes its log entry."
+      "description": "Each log entry is associated with exactly one query."
     },
     {
       "from": "LogEntry",
       "to": "Backend",
-      "type": "association",
-      "cardinality": { "fromLabel": "1", "toLabel": "1" },
-      "label": "handled by",
-      "description": "A log entry records which backend handled the query."
+      "type": "dependency",
+      "cardinality": {
+        "fromLabel": "0..1",
+        "toLabel": "1"
+      },
+      "label": "involves",
+      "description": "A log entry may reference a backend that handled the query."
     }
   ]
 }
