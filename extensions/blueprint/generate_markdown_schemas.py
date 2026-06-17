@@ -566,13 +566,15 @@ def main():
         md_filename = SCHEMA_TO_MD.get(schema_file, f"{type_name.title()}.md")
         md_path = os.path.join(output_dir, md_filename)
 
-        # Write file
+        # Write file (skip if exists to preserve hand-written content)
         os.makedirs(os.path.dirname(md_path), exist_ok=True)
-        with open(md_path, "w") as f:
-            f.write(md_content)
-
-        print(f"  GENERATED: {md_path}")
-        generated += 1
+        if os.path.exists(md_path):
+            print(f"  SKIP: {md_path} (already exists — hand-written content preserved)")
+        else:
+            with open(md_path, "w") as f:
+                f.write(md_content)
+            print(f"  GENERATED: {md_path}")
+            generated += 1
 
     print(f"\nGenerated {generated} markdown schema(s).")
 
