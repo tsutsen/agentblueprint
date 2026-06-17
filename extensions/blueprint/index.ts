@@ -1330,6 +1330,63 @@ function registerGenerateDiagrams(pi: ExtensionAPI, extDir: string) {
   });
 }
 
+// ── Tool: generate_markdown_schemas ─────────────────────────────────────────
+
+function registerGenerateMarkdownSchemas(pi: ExtensionAPI, extDir: string) {
+  pi.registerTool({
+    name: "generate_markdown_schemas",
+    label: "Generate Markdown Schemas",
+    description:
+      "Regenerate markdown schema documentation from JSON schema files. " +
+      "The JSON schema is the single source of truth; markdown is derived. " +
+      "Run after any JSON schema change to keep docs in sync.",
+    parameters: Type.Object({
+      artifactType: Type.Array(Type.String(), {
+        description: "Artifact types to regenerate. Omit for all.",
+        items: {
+          enum: [
+            "goal",
+            "glossary",
+            "design",
+            "arch",
+            "data",
+            "api",
+            "test",
+            "plan",
+            "issue",
+          ],
+        },
+      }),
+    }),
+    async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+      const { artifactType } = params;
+      const args = artifactType && artifactType.length > 0
+        ? [...artifactType.map((t: string) => "--type"), ...artifactType]
+        : [];
+
+      const cmd = [
+        process.execPath,
+        resolvePkgResource(extDir, "extensions/blueprint/generate_markdown_schemas.py"),
+        ...args,
+      ].join(" ");
+
+      try {
+        const { stdout, stderr } = await ctx.sh(cmd);
+        return {
+          content: [{ type: "text", text: stdout.trim() }],
+          details: { success: true },
+        };
+      } catch (err: any) {
+        return {
+          content: [{ type: "text", text: `generate_markdown_schemas failed:\n${stderr || err.message}` }],
+          details: { success: false, error: stderr || err.message },
+          isError: true,
+        };
+      }
+    },
+  });
+}
+
 // ── Tool: spec_upgrade ──────────────────────────────────────────────────────
 
 function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
@@ -1506,5 +1563,6 @@ export default function (pi: ExtensionAPI) {
   registerHandoff(pi);
   registerGenerateTests(pi, extDir);
   registerGenerateDiagrams(pi, extDir);
+  registerGenerateMarkdownSchemas(pi, extDir);
   registerSpecUpgrade(pi, extDir);
 }
