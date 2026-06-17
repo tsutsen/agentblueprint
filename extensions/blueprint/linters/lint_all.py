@@ -377,10 +377,27 @@ def assess_testspec(spec: dict, api: Optional[dict] = None) -> CompletenessScore
     return CompletenessScore(spec="testspec", status=status, gates=gates)
 
 
-def assess_taskplan(plan: dict, goal_spec: Optional[dict] = None) -> CompletenessScore:
-    """Completeness gates for TaskPlan."""
+def assess_taskplan(plan: dict, goal_spec: Optional[dict] = None,
+                    design_spec: Optional[dict] = None,
+                    arch_spec: Optional[dict] = None) -> CompletenessScore:
+    """Completeness gates for TaskPlan.
+
+    Validates that epics cover requirements from GoalSpec, capabilities from
+    DesignSpec, and components from ArchitectureSpec.
+    """
     epics = plan.get("epics", [])
     milestones = plan.get("milestones", [])
+
+    # Collect all epic text for matching
+    epic_texts = []
+    for epic in epics:
+        text = ' '.join([
+            epic.get("title", ""),
+            epic.get("summary", ""),
+            epic.get("objective", ""),
+            " ".join(epic.get("scope", {}).get("inScope", [])),
+        ]).lower()
+        epic_texts.append(text)
 
     gates = [
         # Draft: basic structure
@@ -415,10 +432,44 @@ def assess_taskplan(plan: dict, goal_spec: Optional[dict] = None) -> Completenes
             for m in milestones
         ), "review"),
 
-        # Cross-spec: requirement coverage
+        # Cross-spec: GoalSpec coverage
         gate("All GoalSpec requirements covered by epics", True, "review",
              detail="Requirement coverage validated by lint_taskplan.py"),
     ]
+
+    # Cross-spec: DesignSpec capability coverage
+    if design_spec:
+        capabilities = design_spec.get("capabilities", [])
+        if capabilities:
+            uncovered = []
+            for cap in capabilities:
+                cap_name = cap.get("name", "").lower()
+                if not cap_name:
+                    continue
+                if not any(cap_name in text for text in epic_texts):
+                    uncovered.append(cap.get("name"))
+            gates.append(gate(
+                "All DesignSpec capabilities covered by epics",
+                len(uncovered) == 0, "review",
+                detail=f"Uncovered: {', '.join(uncovered)}" if uncovered else ""
+            ))
+
+    # Cross-spec: ArchitectureSpec component coverage
+    if arch_spec:
+        components = arch_spec.get("components", [])
+        if components:
+            uncovered = []
+            for comp in components:
+                comp_name = comp.get("name", "").lower()
+                if not comp_name:
+                    continue
+                if not any(comp_name in text for text in epic_texts):
+                    uncovered.append(comp.get("name"))
+            gates.append(gate(
+                "All ArchitectureSpec components covered by epics",
+                len(uncovered) == 0, "review",
+                detail=f"Uncovered: {', '.join(uncovered)}" if uncovered else ""
+            ))
 
     if goal_spec:
         gates.append(gate("No epic implements a non-goal", True, "review",
@@ -593,7 +644,7 @@ def run_taskplan(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
     layer = _run("taskplan", linter_path,
                  lambda s: mod.run_lint(spec, goal_spec, design_spec, arch_spec,
                                         data_spec, api_spec, test_spec, s), strict)
-    layer.completeness = assess_taskplan(spec, goal_spec)
+    layer.completeness = assess_taskplan(spec, goal_spec, design_spec, arch_spec)
     return layer
 
 

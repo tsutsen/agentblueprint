@@ -144,6 +144,8 @@ Markdown/JSON drift.
 | `No circular dependencies` | review | TaskPlan |
 | `All milestones have demonstrable outcomes` | review | TaskPlan |
 | `All GoalSpec requirements covered by epics` | review | TaskPlan |
+| `All DesignSpec capabilities covered by epics` | review | TaskPlan |
+| `All ArchitectureSpec components covered by epics` | review | TaskPlan |
 | `No epic implements a non-goal` | review | TaskPlan |
 
 ### lint_consistency.py
