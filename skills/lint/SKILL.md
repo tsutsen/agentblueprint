@@ -60,6 +60,14 @@ Markdown/JSON drift.
 | `similar_entities_disconnected` | WARNING | Similar names but no relationship |
 | `entity_list_field` | WARNING | Entity has `Entity[]` field — should be a relationship |
 | `bidirectional_relationship` | WARNING | A → B and B → A both exist — DBML limitation |
+| `duplicate_relationship` | WARNING | Same entity pair has multiple relationships of same type |
+| `field_naming` | WARNING | Field doesn't follow camelCase convention |
+| `missing_entity_description` | INFO | Entity has no description |
+| `missing_field_description` | INFO | Field has no description |
+| `invalid_cardinality` | ERROR | Relationship has invalid cardinality value |
+| `invalid_apiRef` | WARNING | Method references undefined apiRef in ApiSpec |
+| `enum_value_naming` | WARNING | Enum value doesn't follow UPPER_SNAKE_CASE |
+| `orphan_relationship` | ERROR | Relationship references undefined entity |
 
 ### lint_apispec.py
 | Check | Severity | Description |
