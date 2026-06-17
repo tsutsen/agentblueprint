@@ -112,20 +112,13 @@ Markdown/JSON drift.
 | `fr_uncovered` | WARNING | GoalSpec FR not covered by any component |
 | `nfr_uncovered` | WARNING | GoalSpec NFR not covered by any component or constraint |
 | `constraint_no_nfr` | WARNING | Constraint has no NFR refs |
-| `flow_no_reqs` | WARNING | Data flow has no reqRefs at non-draft status |
 | `subsystem_empty` | WARNING | Subsystem has no components assigned |
 | `subsystem_overlap` | WARNING | Component assigned to multiple subsystems |
-| `flow_consecutive_component` | WARNING | Same component in consecutive flow steps |
-| `external_no_deps` | WARNING | External component has no dependencies |
 | `data_ref_missing` | WARNING | Data flow references undefined DataSpec entity |
-| `vague_responsibility` | WARNING | Component responsibility is too vague |
-| `vague_purpose` | WARNING | Component purpose is too vague |
-| `vague_action` | WARNING | Data flow step action is too vague |
-| `constraint_vague` | WARNING | Constraint description is too vague |
-| `component_responsibility_count` | WARNING | Component has >5 responsibilities |
-| `flow_step_count` | WARNING | Data flow has >10 steps |
-| `external_component_count` | WARNING | >30% of components are external |
-| `dependency_depth` | WARNING | Component has dependency chain >3 levels deep |
+| `component_responsibility_count` | WARNING | Component has >8 responsibilities |
+| `flow_step_count` | WARNING | Data flow has >15 steps |
+| `external_component_count` | WARNING | >50% of components are external |
+| `dependency_depth` | WARNING | Component has dependency chain >5 levels deep |
 
 ### lint_taskplan.py
 | Check | Severity | Description |
