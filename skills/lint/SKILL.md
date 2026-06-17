@@ -133,6 +133,18 @@ Markdown/JSON drift.
 | `All functions have error conditions` | review | ApiSpec |
 | `All functions declare entity affinity` | review | ApiSpec |
 | `All functions declare pure/impure` | confirmed | ApiSpec |
+| `Has at least one milestone` | draft | TaskPlan |
+| `Has at least one epic` | draft | TaskPlan |
+| `Every epic covers at least one requirement` | draft | TaskPlan |
+| `All epics assigned to a milestone` | draft | TaskPlan |
+| `All epics have acceptance criteria` | review | TaskPlan |
+| `All epics have scope (inScope + outOfScope)` | review | TaskPlan |
+| `All epics have explicit dependencies` | review | TaskPlan |
+| `Epics are in dependency order` | review | TaskPlan |
+| `No circular dependencies` | review | TaskPlan |
+| `All milestones have demonstrable outcomes` | review | TaskPlan |
+| `All GoalSpec requirements covered by epics` | review | TaskPlan |
+| `No epic implements a non-goal` | review | TaskPlan |
 
 ### lint_consistency.py
 | Check | Severity | Description |

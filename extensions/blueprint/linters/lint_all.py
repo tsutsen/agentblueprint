@@ -377,6 +377,57 @@ def assess_testspec(spec: dict, api: Optional[dict] = None) -> CompletenessScore
     return CompletenessScore(spec="testspec", status=status, gates=gates)
 
 
+def assess_taskplan(plan: dict, goal_spec: Optional[dict] = None) -> CompletenessScore:
+    """Completeness gates for TaskPlan."""
+    epics = plan.get("epics", [])
+    milestones = plan.get("milestones", [])
+
+    gates = [
+        # Draft: basic structure
+        gate("Has at least one milestone", len(milestones) >= 1, "draft"),
+        gate("Has at least one epic", len(epics) >= 1, "draft"),
+        gate("Every epic covers at least one requirement", all(
+            epic.get("requirements") for epic in epics
+        ), "draft"),
+        gate("All epics assigned to a milestone", all(
+            epic.get("milestone") for epic in epics
+        ), "draft"),
+
+        # Review: quality and completeness
+        gate("All epics have acceptance criteria", all(
+            epic.get("acceptanceCriteria") for epic in epics
+        ), "review"),
+        gate("All epics have scope (inScope + outOfScope)", all(
+            epic.get("scope", {}).get("inScope") and epic.get("scope", {}).get("outOfScope")
+            for epic in epics
+        ), "review"),
+        gate("All epics have explicit dependencies", all(
+            epic.get("dependencies", {}).get("blockedBy") is not None or
+            epic.get("dependencies", {}).get("blocks") is not None
+            for epic in epics
+        ), "review"),
+        gate("Epics are in dependency order", True, "review",
+             detail="Dependency order validated by lint_taskplan.py"),
+        gate("No circular dependencies", True, "review",
+             detail="Circular dependency check validated by lint_taskplan.py"),
+        gate("All milestones have demonstrable outcomes", all(
+            m.get("outcome") and len(m.get("outcome", "")) >= 10
+            for m in milestones
+        ), "review"),
+
+        # Cross-spec: requirement coverage
+        gate("All GoalSpec requirements covered by epics", True, "review",
+             detail="Requirement coverage validated by lint_taskplan.py"),
+    ]
+
+    if goal_spec:
+        gates.append(gate("No epic implements a non-goal", True, "review",
+                          detail="Non-goal compliance validated by lint_taskplan.py"))
+
+    status = plan.get("status", "draft")
+    return CompletenessScore(spec="taskplan", status=status, gates=gates)
+
+
 def assess_glossary_full(spec: dict) -> CompletenessScore:
     terms = spec.get("terms", [])
     categories = {t.get("category") for t in terms if t.get("category")}
@@ -542,6 +593,7 @@ def run_taskplan(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
     layer = _run("taskplan", linter_path,
                  lambda s: mod.run_lint(spec, goal_spec, design_spec, arch_spec,
                                         data_spec, api_spec, test_spec, s), strict)
+    layer.completeness = assess_taskplan(spec, goal_spec)
     return layer
 
 
