@@ -397,10 +397,80 @@ def check_screens_reachable(spec: dict, screen_ids: set[str], result: LintResult
                 hint="Add a journey step that passes through this screen, or reconsider whether it is needed.")
 
 
+def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LintResult):
+    """Check that personas, screens, components, and journey steps link to glossary terms.
+
+    Severity levels:
+      - Error: glossary provided but ref doesn't exist in it
+      - Warning: field has no glossaryRefs
+    """
+    gl_ids = set()
+    gl_by_term = {}  # term_lower -> id
+    if glossary:
+        for t in glossary.get("terms", []):
+            gl_ids.add(t["id"])
+            gl_by_term[t["term"].lower()] = t["id"]
+
+    def validate_refs(refs, label, name):
+        """Validate that each ref exists in the glossary (if glossary provided)."""
+        if not refs:
+            return
+        for ref in refs:
+            if gl_ids and ref not in gl_ids:
+                result.add("error", "glossary_ref_missing",
+                    f"{label} '{name}': glossaryRef '{ref}' not found in Glossary.",
+                    hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
+
+    # ── Personas[].role → glossaryRefs ────────────────────────────────
+    for persona in spec.get("personas", []):
+        pid = persona["id"]
+        refs = persona.get("glossaryRefs", [])
+        if not refs:
+            result.add("warning", "persona_no_glossary_refs",
+                f"Persona '{pid}': no glossaryRefs — role '{persona['role']}' not linked to glossary.",
+                hint="Add glossaryRefs (GL-NNN) for the actor role this persona represents.")
+        validate_refs(refs, f"Persona {pid}", pid)
+
+    # ── ScreenInventory[].purpose → glossaryRefs ──────────────────────
+    for screen in spec.get("screenInventory", []):
+        sid = screen["id"]
+        refs = screen.get("glossaryRefs", [])
+        if not refs:
+            result.add("warning", "screen_no_glossary_refs",
+                f"Screen '{sid}': no glossaryRefs — purpose not linked to glossary.",
+                hint="Add glossaryRefs (GL-NNN) for domain concepts in the screen's purpose.")
+        validate_refs(refs, f"Screen {sid}", sid)
+
+    # ── ScreenSpecs[].components[].purpose → glossaryRefs ─────────────
+    for ss in spec.get("screenSpecs", []):
+        screen_ref = ss["screenRef"]
+        for comp in ss.get("components", []):
+            cname = comp["name"]
+            refs = comp.get("glossaryRefs", [])
+            if not refs:
+                result.add("warning", "component_no_glossary_refs",
+                    f"Screen '{screen_ref}' component '{cname}': no glossaryRefs — purpose not linked to glossary.",
+                    hint="Add glossaryRefs (GL-NNN) for domain concepts in the component's purpose.")
+            validate_refs(refs, f"Component '{cname}' in {screen_ref}", cname)
+
+    # ── UserJourneys[].steps[].action → glossaryRefs ──────────────────
+    for journey in spec.get("userJourneys", []):
+        jid = journey["id"]
+        for i, step in enumerate(journey.get("steps", [])):
+            action = step.get("action", "")[:50]
+            refs = step.get("glossaryRefs", [])
+            if not refs:
+                result.add("warning", "journey_step_no_glossary_refs",
+                    f"{jid} step {i+1} ({step['actor']}): '{action}...' has no glossaryRefs.",
+                    hint="Add glossaryRefs (GL-NNN) for domain concepts in this step's action.")
+            validate_refs(refs, f"Journey step {jid}:{i+1}", f"{jid}:{i+1}")
+
+
 # ── Runner ────────────────────────────────────────────────────────────────────
 
 def run_lint(spec: dict, schema_path: Optional[Path],
-             goal: Optional[dict], strict: bool) -> LintResult:
+             goal: Optional[dict], strict: bool,
+             glossary: Optional[dict] = None) -> LintResult:
     result = LintResult()
 
     # JSON Schema validation
@@ -433,6 +503,7 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     check_us_journey_coverage(goal, covered_us_ids, result)
     check_screens_reachable(spec, screen_ids, result)
     check_forbidden_content(spec, result)
+    check_glossary_refs(spec, glossary, result)
 
     if strict:
         for w in result.warnings:

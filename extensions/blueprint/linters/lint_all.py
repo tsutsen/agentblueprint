@@ -585,7 +585,8 @@ def run_designspec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult
     schema_path = (schema_dir / "designspec.schema.json") if schema_dir else None
     mod = load_linter(linter_path)
     layer = _run("designspec", linter_path,
-                 lambda s: mod.run_lint(spec, schema_path, loaded.get("goal"), s), strict)
+                 lambda s: mod.run_lint(spec, schema_path, loaded.get("goal"), s,
+                                        glossary=loaded.get("glossary")), strict)
     layer.completeness = assess_designspec(spec)
     return layer
 

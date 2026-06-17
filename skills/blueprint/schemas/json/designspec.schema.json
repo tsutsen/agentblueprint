@@ -110,6 +110,12 @@
           "items": { "$ref": "#/definitions/iaNode" }
         }
       }
+    },
+
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier (GL-NNN).",
+      "pattern": "^GL-\\d{3}$"
     }
   },
 
@@ -205,7 +211,12 @@
             "description": "The persona's technical ability level.",
             "enum": ["non-technical", "basic", "intermediate", "advanced", "expert"]
           },
-          "notes": { "type": "string" }
+          "notes": { "type": "string" },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) that this persona's role maps to. Use for cross-spec traceability with actors in GoalSpec.",
+            "items": { "$ref": "#/definitions/glId" }
+          }
         }
       }
     },
@@ -264,6 +275,11 @@
                 "screenRef": {
                   "$ref": "#/definitions/screenId",
                   "description": "Screen the user is on during this step, if applicable."
+                },
+                "glossaryRefs": {
+                  "type": "array",
+                  "description": "Glossary term IDs (GL-NNN) referenced in this step's action description.",
+                  "items": { "$ref": "#/definitions/glId" }
                 }
               }
             }
@@ -333,6 +349,11 @@
             "type": "array",
             "description": "US-IDs this screen helps fulfil.",
             "items": { "$ref": "#/definitions/usId" }
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) referenced in the screen's purpose description.",
+            "items": { "$ref": "#/definitions/glId" }
           }
         }
       }
@@ -387,6 +408,11 @@
                   "type": "array",
                   "description": "Interaction pattern IDs that apply to this component.",
                   "items": { "$ref": "#/definitions/patternId" }
+                },
+                "glossaryRefs": {
+                  "type": "array",
+                  "description": "Glossary term IDs (GL-NNN) referenced in this component's purpose description.",
+                  "items": { "$ref": "#/definitions/glId" }
                 }
               }
             }
