@@ -60,12 +60,135 @@ and must always match the JSON source of truth.
 
 ---
 
+## Clarification Phase
+
+**⚠ DO NOT create a data model immediately.** Before proposing any entities,
+relationships, or fields, you MUST go through a structured clarification process.
+A data model built on unverified assumptions will cascade errors into ApiSpec
+and TestSpec.
+
+### Step 1: List All Assumptions
+
+Load `artifacts/ArchitectureSpec.json` and `artifacts/GoalSpec.json`. Extract:
+- Component names from ArchitectureSpec (potential entities)
+- Domain nouns from functional requirements in GoalSpec
+- Any relationships implied by the architecture
+
+**Then ask the user to validate every assumption:**
+
+```
+Based on the architecture and requirements, I have the following assumptions
+about the data model. Please confirm, correct, or add:
+
+1. Entities: [list each entity with a one-line description]
+   - Is this entity correct? Should it be renamed? Should any be added/removed?
+2. Domain terms: [list terms like "user" vs "customer"]
+   - Do these refer to the same entity or different ones?
+3. Relationships: [list implied relationships]
+   - Are these correct? Are any missing?
+```
+
+### Step 2: Clarify Ambiguous Terms
+
+When the user uses different terms that might refer to the same concept
+(e.g., "user" in one requirement, "customer" in another), **explicitly ask**:
+
+```
+"You mentioned 'user' in [requirement X] and 'customer' in [requirement Y].
+Are these the same entity, or are they different?"
+```
+
+Do not assume they are the same. Do not assume they are different. Ask.
+
+### Step 3: Clarify Relationship Cardinality
+
+For every relationship between entities, **ask the user about cardinality**:
+
+```
+Relationship: [EntityA] → [EntityB]
+
+Cardinality options:
+- 1 → 1: Each A has exactly one B, each B has exactly one A
+- 1 → 0..1: Each A has zero or one B
+- 1 → *: Each A has zero or more B's, each B belongs to exactly one A
+- * → *: Many-to-many (requires an association entity)
+
+Which applies here?"
+```
+
+### Step 4: Clarify Many-to-Many Relationships
+
+When the user describes a many-to-many relationship (e.g., "Orders have many
+Products" and "Products appear in many Orders"), **explicitly ask**:
+
+```
+"[EntityA] and [EntityB] have a many-to-many relationship. This requires an
+association entity (e.g., 'OrderItem' for Order ↔ Product). Should I create
+one? What fields should it have?"
+```
+
+### Step 5: Clarify Enum vs Entity Decisions
+
+For each enumerated type, **ask the user**:
+
+```
+"[Type] has values: [list values]. Should this be:
+- An enum (simple list of values, no methods)?
+- An entity (has methods, relationships, or complex behavior)?"
+```
+
+**Default to enum** unless the user indicates the type needs methods,
+relationships, or complex behavior.
+
+### Step 6: Clarify Field-Level Details
+
+For each entity, **ask the user**:
+
+```
+Entity: [EntityName]
+
+Fields:
+- [FieldName] ([Type]): [description]
+  - Is this field required? (default: yes)
+  - What is the primary key? (default: first field or field ending with 'Id')
+  - Can you give an example value?"
+```
+
+### Step 7: Clarify Relationship Labels
+
+For every relationship, **ask the user for a meaningful label**:
+
+```
+Relationship: [EntityA] → [EntityB]
+
+What verb describes this relationship? (e.g., 'places', 'contains', 'belongs to')
+This becomes the label on the relationship arrow."
+```
+
+### Step 8: Final Validation
+
+Before proceeding to create the data model, **summarize all decisions** and
+ask the user to confirm:
+
+```
+Here is the complete data model summary. Please confirm:
+
+Entities: [list with key fields]
+Relationships: [list with type, cardinality, label]
+Enums: [list with values]
+
+Any changes before I finalize?"
+```
+
+---
+
 ## Before the interview
 
 Load `artifacts/ArchitectureSpec.json`. Extract component names — these are
 candidates for entities. Also load `artifacts/GoalSpec.json` and note the
-domain nouns in functional requirements. Propose these as starting entities
-rather than asking the user to enumerate from scratch.
+domain nouns in functional requirements. Use these as a starting point for the
+clarification process described above. **Never propose a final data model without
+first completing the clarification phase.**
 
 ---
 
