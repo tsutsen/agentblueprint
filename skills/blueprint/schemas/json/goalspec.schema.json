@@ -47,6 +47,12 @@
       "type": "string",
       "minLength": 1,
       "description": "A Planguage threshold value or TBD marker. Use 'TBD' prefix when value is not yet known."
+    },
+
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier (GL-NNN).",
+      "pattern": "^GL-\\d{3}$"
     }
   },
 
@@ -102,6 +108,11 @@
           "type": "boolean",
           "description": "True when the objective has been re-read and confirmed after all other sections were completed.",
           "default": false
+        },
+        "glossaryRefs": {
+          "type": "array",
+          "description": "Glossary term IDs (GL-NNN) that this objective's key concepts map to. Use for cross-spec traceability.",
+          "items": { "$ref": "#/definitions/glId" }
         }
       }
     },
@@ -129,6 +140,11 @@
           "notes": {
             "type": "string",
             "description": "Optional clarifying context. Must not contain implementation decisions."
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) referenced by this requirement's description.",
+            "items": { "$ref": "#/definitions/glId" }
           }
         }
       }
@@ -177,7 +193,12 @@
             "$ref": "#/definitions/planguageLevel",
             "description": "Ideal outcome if conditions allow. Use 'TBD' if unknown."
           },
-          "notes": { "type": "string" }
+          "notes": { "type": "string" },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) referenced in the NFR's scale/meter descriptions. Optional — NFRs are measurement-focused.",
+            "items": { "$ref": "#/definitions/glId" }
+          }
         }
       }
     },
@@ -217,7 +238,12 @@
             "minItems": 1,
             "items": { "$ref": "#/definitions/reqId" }
           },
-          "notes": { "type": "string" }
+          "notes": { "type": "string" },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) referenced by this story's capability or outcome descriptions.",
+            "items": { "$ref": "#/definitions/glId" }
+          }
         }
       }
     },
@@ -279,6 +305,11 @@
             "type": "string",
             "description": "Why it is excluded: deferred, out of scope, handled elsewhere, etc.",
             "minLength": 5
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) for the excluded capability. Use for cross-spec traceability.",
+            "items": { "$ref": "#/definitions/glId" }
           }
         }
       }

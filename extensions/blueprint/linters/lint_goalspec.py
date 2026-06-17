@@ -315,9 +315,92 @@ def check_non_goals(spec: dict, result: LintResult):
                 hint="Explain why this is excluded: deferred, out of scope, handled elsewhere.")
 
 
+def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LintResult):
+    """Check that actors, FRs, USs, non-goals, and NFRs link to glossary terms.
+
+    Severity levels:
+      - Error: glossary provided but ref doesn't exist in it
+      - Warning: actor not defined in glossary
+      - Warning: FR/US/non-goal/NFR has no glossaryRefs
+    """
+    gl_ids = set()
+    gl_by_term = {}  # term_lower -> id
+    if glossary:
+        for t in glossary.get("terms", []):
+            gl_ids.add(t["id"])
+            gl_by_term[t["term"].lower()] = t["id"]
+
+    def validate_refs(refs, label, name):
+        """Validate that each ref exists in the glossary (if glossary provided)."""
+        if not refs:
+            return
+        for ref in refs:
+            if gl_ids and ref not in gl_ids:
+                result.add("error", "glossary_ref_missing",
+                    f"{label} '{name}': glossaryRef '{ref}' not found in Glossary.",
+                    hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
+
+    # ── Actors ──────────────────────────────────────────────────────────
+    # Collect all unique actor names from FRs and USs
+    actors_in_spec = set()
+    for fr in spec.get("functionalRequirements", []):
+        actor = fr.get("actor", "")
+        if actor:
+            actors_in_spec.add(actor)
+    for us in spec.get("userStories", []):
+        actor = us.get("actor", "")
+        if actor:
+            actors_in_spec.add(actor)
+
+    # Warn if an actor name doesn't match any glossary term
+    for actor in sorted(actors_in_spec):
+        actor_lower = actor.lower()
+        if actor_lower not in gl_by_term:
+            result.add("warning", "actor_not_in_glossary",
+                f"Actor '{actor}' is not defined in the Glossary.",
+                hint=f"Add a glossary entry for this actor (e.g., GL-NNN '{actor}').")
+
+    # ── FR Descriptions ─────────────────────────────────────────────────
+    for fr in spec.get("functionalRequirements", []):
+        refs = fr.get("glossaryRefs", [])
+        if not refs:
+            result.add("warning", "fr_no_glossary_refs",
+                f"{fr['id']}: no glossaryRefs — domain concepts in description not linked to glossary.",
+                hint="Add glossaryRefs (GL-NNN) for key domain terms in the description.")
+        validate_refs(refs, f"FR {fr['id']}", fr["id"])
+
+    # ── US Capability & Outcome ─────────────────────────────────────────
+    for us in spec.get("userStories", []):
+        refs = us.get("glossaryRefs", [])
+        if not refs:
+            result.add("warning", "us_no_glossary_refs",
+                f"{us['id']}: no glossaryRefs — capability/outcome not linked to glossary.",
+                hint="Add glossaryRefs (GL-NNN) for key domain terms in capability or outcome.")
+        validate_refs(refs, f"US {us['id']}", us["id"])
+
+    # ── Non-Goals ───────────────────────────────────────────────────────
+    for ng in spec.get("nonGoals", []):
+        refs = ng.get("glossaryRefs", [])
+        if not refs:
+            result.add("warning", "nongoal_no_glossary_refs",
+                f"Non-goal '{ng['capability']}': no glossaryRefs — excluded capability not linked to glossary.",
+                hint="Add glossaryRefs (GL-NNN) for the excluded capability, or consider adding it as a new glossary term.")
+        validate_refs(refs, "Non-goal", ng["capability"])
+
+    # ── NFRs (INFO level — NFRs are measurement-focused, fewer refs expected) ──
+    for nfr in spec.get("nonFunctionalRequirements", []):
+        refs = nfr.get("glossaryRefs", [])
+        if not refs:
+            result.add("warning", "nfr_no_glossary_refs",
+                f"{nfr['id']}: no glossaryRefs.",
+                hint="NFRs are measurement-focused; glossaryRefs are optional but helpful for domain concepts in scale/meter.")
+        validate_refs(refs, f"NFR {nfr['id']}", nfr["id"])
+
+
 # ── Runner ────────────────────────────────────────────────────────────────────
 
-def run_lint(spec: dict, schema_path: Optional[Path], strict: bool) -> LintResult:
+def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
+             glossary: Optional[dict] = None) -> LintResult:
     result = LintResult()
 
     # JSON Schema validation
@@ -340,6 +423,7 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool) -> LintResul
     sc_covered_reqs = check_success_criteria(spec, req_ids, nfr_ids, result)
     check_coverage(spec, req_ids, story_req_refs, sc_covered_reqs, result)
     check_non_goals(spec, result)
+    check_glossary_refs(spec, glossary, result)
 
     if strict:
         for w in result.warnings:

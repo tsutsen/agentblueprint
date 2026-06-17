@@ -549,14 +549,16 @@ def _run(name: str, linter_path: Path, fn, strict: bool) -> LayerResult:
     return layer
 
 
-def run_goalspec(linter_dir, schema_dir, paths, strict) -> LayerResult:
+def run_goalspec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
     if not paths.get("goal"):
         return LayerResult(name="goalspec", skipped=True, skip_reason="No goalspec provided.")
     linter_path = linter_dir / "lint_goalspec.py"
     spec = json.loads(Path(paths["goal"]).read_text())
     schema_path = (schema_dir / "goalspec.schema.json") if schema_dir else None
     mod = load_linter(linter_path)
-    layer = _run("goalspec", linter_path, lambda s: mod.run_lint(spec, schema_path, s), strict)
+    layer = _run("goalspec", linter_path,
+                 lambda s: mod.run_lint(spec, schema_path, s,
+                                        glossary=loaded.get("glossary")), strict)
     layer.completeness = assess_goalspec(spec)
     return layer
 
@@ -778,7 +780,7 @@ def run_suite(paths, linter_dir, schema_dir, strict, stop_on_error, args=None) -
                 l.add("error", "load_error", f"Failed to load {paths[path_key]}: {e}")
                 suite.layers.append(l)
 
-    if not add(run_goalspec(linter_dir, schema_dir, paths, strict)):          return suite
+    if not add(run_goalspec(linter_dir, schema_dir, paths, loaded, strict)):  return suite
     if not add(run_glossary(linter_dir, schema_dir, paths, loaded, strict)):  return suite
     if not add(run_designspec(linter_dir, schema_dir, paths, loaded, strict)):return suite
     if not add(run_archspec(linter_dir, schema_dir, paths, loaded, strict)):  return suite
