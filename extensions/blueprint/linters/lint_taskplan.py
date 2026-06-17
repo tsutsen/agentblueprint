@@ -48,13 +48,323 @@ class LayerResult:
             self.warnings.append(issue)
 
 
+def _check_epic_file_exists(plan: dict, layer: LayerResult):
+    """Check that epic files exist at the expected paths."""
+    import os
+    epics = plan.get("epics", [])
+    for epic in epics:
+        file_path = epic.get("filePath", "")
+        if file_path and not os.path.isfile(file_path):
+            layer.add("error", "file-exists",
+                       f"Epic {epic['id']}: file '{file_path}' does not exist.")
+
+
+def _check_acceptance_criteria_quality(plan: dict, layer: LayerResult):
+    """Check that acceptance criteria are verifiable and specific.
+
+    Warns if criteria contain vague words like 'correctly', 'properly', 'efficiently',
+    or describe implementation instead of behaviour.
+    """
+    vague_words = ["correctly", "properly", "efficiently", "well", "smoothly",
+                   "robust", "intuitively", "seamlessly"]
+    implementation_words = ["implement", "write", "create", "build", "code",
+                           "use", "add", "install", "configure"]
+
+    epics = plan.get("epics", [])
+    for epic in epics:
+        eid = epic.get("id", "?")
+        for i, ac in enumerate(epic.get("acceptanceCriteria", [])):
+            ac_lower = ac.lower()
+            # Check for vague words
+            for word in vague_words:
+                if word in ac_lower:
+                    layer.add("warning", "ac-quality",
+                               f"Epic {eid} AC #{i+1}: contains vague word '{word}'. "
+                               f"Make it measurable.",
+                               hint="Replace with measurable outcome, e.g. 'User receives error within 2s'.")
+                    break
+            # Check for implementation language
+            for word in implementation_words:
+                if word in ac_lower and "should" not in ac_lower and "must" not in ac_lower:
+                    layer.add("warning", "ac-quality",
+                               f"Epic {eid} AC #{i+1}: describes implementation, not behaviour.",
+                               hint="Describe what the user can do, not how it's built.")
+                    break
+
+
+def _check_title_action_oriented(plan: dict, layer: LayerResult):
+    """Check that epic titles are action-oriented, not technical layer descriptions.
+
+    Warns if title looks like a single technical task (e.g. 'Write database migrations',
+    'Implement parser', 'Set up infrastructure').
+    """
+    technical_patterns = [
+        r"(write|implement|create|build|set up|configure|install|add)\s+(all\s+)?(database|schema|migration|parser|infra|framework|library|module|class|function|endpoint|api)",
+        r"database\s+(migration|schema|setup)",
+        r"infrastructure\s+(setup|config|deployment)",
+        r"(set up|configure|install)\s+(the\s+)?(server|database|infra|framework)",
+    ]
+    import re
+    epics = plan.get("epics", [])
+    for epic in epics:
+        title = epic.get("title", "")
+        for pattern in technical_patterns:
+            if re.search(pattern, title.lower()):
+                layer.add("warning", "title-action",
+                           f"Epic {epic['id']}: title appears to describe a technical layer, not a capability.",
+                           hint="Reframe as user-facing capability, e.g. 'Enable document upload' instead of 'Write database migrations'.")
+                break
+
+
+def _check_outofscope_specificity(plan: dict, layer: LayerResult):
+    """Check that outOfScope items are specific, not vague.
+
+    Warns if outOfScope contains vague phrases like 'advanced features', 'future work',
+    'nice to have', 'later', etc.
+    """
+    vague_phrases = [
+        "advanced", "future", "nice to have", "later", "pending", "tbd",
+        "todo", "to be determined", "as needed", "when ready", "eventually",
+        "someday", "backlog", "roadmap", "phase 2", "v2", "version 2",
+    ]
+    epics = plan.get("epics", [])
+    for epic in epics:
+        eid = epic.get("id", "?")
+        scope = epic.get("scope", {})
+        for item in scope.get("outOfScope", []):
+            item_lower = item.lower()
+            for phrase in vague_phrases:
+                if phrase in item_lower:
+                    layer.add("warning", "scope-specific",
+                               f"Epic {eid} outOfScope: '{item}' is vague.",
+                               hint="Be specific about what is deferred, e.g. 'Batch upload of >10 files' instead of 'Advanced features'.")
+                    break
+
+
+def _check_milestone_epic_consistency(plan: dict, layer: LayerResult):
+    """Check that milestone epic lists match each epic's milestone field.
+
+    If milestone M1 lists EP-001, then EP-001's milestone field must be M1.
+    """
+    milestones = plan.get("milestones", [])
+    epics = plan.get("epics", [])
+
+    # Build expected mapping: milestone_id -> set of epic_ids
+    milestone_epics = {}
+    for m in milestones:
+        mid = m["id"]
+        milestone_epics[mid] = set(m.get("epics", []))
+
+    # Check each epic's milestone field
+    for epic in epics:
+        eid = epic["id"]
+        epic_milestone = epic.get("milestone")
+        if not epic_milestone:
+            continue  # Already caught by _check_epic_milestone_assignment
+
+        # Check that this epic is listed in its milestone's epic list
+        if epic_milestone in milestone_epics:
+            if eid not in milestone_epics[epic_milestone]:
+                layer.add("error", "milestone-consistency",
+                           f"Epic {eid} has milestone '{epic_milestone}' but that milestone doesn't list it.")
+
+        # Check that each epic in the milestone has the correct milestone field
+        for listed_eid in milestone_epics.get(epic_milestone, []):
+            listed_epic = next((e for e in epics if e["id"] == listed_eid), None)
+            if listed_epic and listed_epic.get("milestone") != epic_milestone:
+                layer.add("error", "milestone-consistency",
+                           f"Milestone {epic_milestone} lists {listed_eid}, but {listed_eid}'s milestone is '{listed_epic.get('milestone')}'.")
+
+
+def _check_circular_dependencies(plan: dict, layer: LayerResult):
+    """Detect circular dependencies among epics.
+
+    Uses DFS to find cycles in the dependency graph.
+    """
+    epics = plan.get("epics", [])
+    epic_map = {e["id"]: e for e in epics}
+
+    # Build adjacency list: epic -> epics it depends on
+    graph = {}
+    for epic in epics:
+        eid = epic["id"]
+        deps = epic.get("dependencies", {}).get("blockedBy", [])
+        graph[eid] = [d for d in deps if d in epic_map]
+
+    # DFS cycle detection
+    WHITE, GRAY, BLACK = 0, 1, 2
+    color = {eid: WHITE for eid in graph}
+    path = []
+
+    def dfs(node):
+        color[node] = GRAY
+        path.append(node)
+        for neighbor in graph.get(node, []):
+            if color[neighbor] == GRAY:
+                # Found a cycle
+                cycle_start = path.index(neighbor)
+                cycle = path[cycle_start:] + [neighbor]
+                layer.add("error", "circular-dependency",
+                           f"Circular dependency detected: {' → '.join(cycle)}")
+                return True
+            elif color[neighbor] == WHITE:
+                if dfs(neighbor):
+                    return True
+        path.pop()
+        color[node] = BLACK
+        return False
+
+    for eid in graph:
+        if color[eid] == WHITE:
+            if dfs(eid):
+                break  # Report first cycle only
+
+
+def _check_cross_spec_coverage(plan: dict, goal_spec: Optional[dict],
+                                design_spec: Optional[dict],
+                                arch_spec: Optional[dict],
+                                data_spec: Optional[dict],
+                                api_spec: Optional[dict],
+                                test_spec: Optional[dict],
+                                layer: LayerResult):
+    """Check that epics cover requirements from all specs, not just GoalSpec."""
+    epics = plan.get("epics", [])
+
+    # Collect all covered REQ-IDs
+    covered_reqs = set()
+    for epic in epics:
+        covered_reqs.update(epic.get("requirements", []))
+
+    # Check non-functional requirements from GoalSpec
+    if goal_spec:
+        nfrs = goal_spec.get("nonFunctionalRequirements", [])
+        for nfr in nfrs:
+            nfr_id = nfr.get("id", "")
+            if nfr_id and nfr_id not in covered_reqs:
+                # Check if it's referenced under a different naming convention
+                layer.add("warning", "nfr-coverage",
+                           f"Non-functional requirement {nfr_id} is not covered by any epic.")
+
+    # Check DesignSpec capabilities
+    if design_spec:
+        capabilities = design_spec.get("capabilities", [])
+        for cap in capabilities:
+            cap_name = cap.get("name", "").lower()
+            if not cap_name:
+                continue
+            # Check if capability name appears in any epic title or summary
+            found = False
+            for epic in epics:
+                title = epic.get("title", "").lower()
+                summary = epic.get("summary", "").lower()
+                objective = epic.get("objective", "").lower()
+                if cap_name in title or cap_name in summary or cap_name in objective:
+                    found = True
+                    break
+            if not found:
+                layer.add("warning", "cross-spec-coverage",
+                           f"DesignSpec capability '{cap.get('name')}' may not be covered by any epic.")
+
+    # Check ArchitectureSpec components
+    if arch_spec:
+        components = arch_spec.get("components", [])
+        for comp in components:
+            comp_name = comp.get("name", "").lower()
+            if not comp_name:
+                continue
+            found = False
+            for epic in epics:
+                title = epic.get("title", "").lower()
+                summary = epic.get("summary", "").lower()
+                objective = epic.get("objective", "").lower()
+                if comp_name in title or comp_name in summary or comp_name in objective:
+                    found = True
+                    break
+            if not found:
+                layer.add("warning", "cross-spec-coverage",
+                           f"ArchitectureSpec component '{comp.get('name')}' may not be covered by any epic.")
+
+    # Check DataSpec entities
+    if data_spec:
+        entities = data_spec.get("entities", [])
+        entity_names = {e.get("name", "").lower() for e in entities}
+        for ename in entity_names:
+            if not ename:
+                continue
+            found = False
+            for epic in epics:
+                title = epic.get("title", "").lower()
+                summary = epic.get("summary", "").lower()
+                objective = epic.get("objective", "").lower()
+                if ename in title or ename in summary or ename in objective:
+                    found = True
+                    break
+            if not found:
+                layer.add("warning", "cross-spec-coverage",
+                           f"DataSpec entity '{ename}' may not be covered by any epic.")
+
+    # Check ApiSpec endpoints
+    if api_spec:
+        functions = api_spec.get("functions", [])
+        for fn in functions:
+            fn_id = fn.get("id", "").lower()
+            fn_name = fn.get("name", "").lower()
+            if not fn_name:
+                continue
+            found = False
+            for epic in epics:
+                title = epic.get("title", "").lower()
+                summary = epic.get("summary", "").lower()
+                objective = epic.get("objective", "").lower()
+                if fn_name in title or fn_name in summary or fn_name in objective:
+                    found = True
+                    break
+            if not found:
+                layer.add("warning", "cross-spec-coverage",
+                           f"ApiSpec function '{fn.get('id')}' may not be covered by any epic.")
+
+    # Check TestSpec scenarios
+    if test_spec:
+        scenarios = test_spec.get("scenarios", [])
+        for scenario in scenarios:
+            scenario_desc = scenario.get("description", "").lower()
+            if not scenario_desc:
+                continue
+            # Extract key terms from scenario description
+            words = set(w for w in scenario_desc.split() if len(w) > 4)
+            found = False
+            for word in words:
+                for epic in epics:
+                    title = epic.get("title", "").lower()
+                    summary = epic.get("summary", "").lower()
+                    objective = epic.get("objective", "").lower()
+                    if word in title or word in summary or word in objective:
+                        found = True
+                        break
+                if found:
+                    break
+            if not found:
+                layer.add("warning", "cross-spec-coverage",
+                           f"TestSpec scenario may not be covered by any epic: '{scenario.get('description', '')[:80]}...'")
+
+
 def run_lint(plan: dict, goal_spec: Optional[dict] = None,
+             design_spec: Optional[dict] = None,
+             arch_spec: Optional[dict] = None,
+             data_spec: Optional[dict] = None,
+             api_spec: Optional[dict] = None,
+             test_spec: Optional[dict] = None,
              strict: bool = False) -> LayerResult:
     """Run all TaskPlan lint checks.
 
     Args:
         plan: The TaskPlan JSON object.
         goal_spec: Optional GoalSpec JSON for cross-reference validation.
+        design_spec: Optional DesignSpec JSON for capability coverage.
+        arch_spec: Optional ArchitectureSpec JSON for component coverage.
+        data_spec: Optional DataSpec JSON for entity coverage.
+        api_spec: Optional ApiSpec JSON for endpoint coverage.
+        test_spec: Optional TestSpec JSON for scenario coverage.
         strict: If True, warnings are treated as errors.
 
     Returns:
@@ -73,10 +383,20 @@ def run_lint(plan: dict, goal_spec: Optional[dict] = None,
     _check_dependency_order(plan, layer)
     _check_milestone_outcomes(plan, layer)
     _check_epic_milestone_assignment(plan, layer)
+    _check_epic_file_exists(plan, layer)
+    _check_acceptance_criteria_quality(plan, layer)
+    _check_title_action_oriented(plan, layer)
+    _check_outofscope_specificity(plan, layer)
+    _check_milestone_epic_consistency(plan, layer)
+    _check_circular_dependencies(plan, layer)
 
     # Cross-reference with GoalSpec if available
     if goal_spec:
         _check_req_refs_exist(plan, goal_spec, layer)
+
+    # Cross-spec coverage check
+    _check_cross_spec_coverage(plan, goal_spec, design_spec, arch_spec,
+                               data_spec, api_spec, test_spec, layer)
 
     return layer
 
@@ -289,13 +609,24 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Lint TaskPlan artifact.")
     parser.add_argument("plan", help="Path to TaskPlan JSON")
     parser.add_argument("--goal", help="Path to GoalSpec JSON (for cross-reference)")
+    parser.add_argument("--design", help="Path to DesignSpec JSON (for capability coverage)")
+    parser.add_argument("--arch", help="Path to ArchitectureSpec JSON (for component coverage)")
+    parser.add_argument("--data", help="Path to DataSpec JSON (for entity coverage)")
+    parser.add_argument("--api", help="Path to ApiSpec JSON (for endpoint coverage)")
+    parser.add_argument("--test", help="Path to TestSpec JSON (for scenario coverage)")
     parser.add_argument("--strict", action="store_true")
     args = parser.parse_args()
 
     plan = json.loads(Path(args.plan).read_text())
     goal_spec = json.loads(Path(args.goal).read_text()) if args.goal else None
+    design_spec = json.loads(Path(args.design).read_text()) if args.design else None
+    arch_spec = json.loads(Path(args.arch).read_text()) if args.arch else None
+    data_spec = json.loads(Path(args.data).read_text()) if args.data else None
+    api_spec = json.loads(Path(args.api).read_text()) if args.api else None
+    test_spec = json.loads(Path(args.test).read_text()) if args.test else None
 
-    result = run_lint(plan, goal_spec, args.strict)
+    result = run_lint(plan, goal_spec, design_spec, arch_spec, data_spec,
+                      api_spec, test_spec, args.strict)
 
     if result.errors:
         print(f"✗ {len(result.errors)} error(s)")

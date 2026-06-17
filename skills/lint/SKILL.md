@@ -95,6 +95,30 @@ Markdown/JSON drift.
 | `unused_function` | WARNING | Function not referenced by any entity's apiRef |
 | `type_case_mismatch` | ERROR | Type case doesn't match data spec |
 
+### lint_taskplan.py
+| Check | Severity | Description |
+|-------|----------|-------------|
+| `milestones` | ERROR | Milestone structure is valid |
+| `epics` | ERROR | Epic structure is valid |
+| `coverage` | ERROR | All GoalSpec requirements are covered by epics |
+| `non-goal` | ERROR | No epic implements a GoalSpec non-goal |
+| `dependencies` | ERROR | Epics are in dependency order; blockers before dependents |
+| `milestones` | ERROR | Milestones have demonstrable outcomes |
+| `milestones` | ERROR | Every epic belongs to exactly one milestone |
+| `cross-ref` | ERROR | All REQ-IDs in TaskPlan exist in GoalSpec |
+| `duplicate_entity_name` | ERROR | Duplicate entity name in DataSpec |
+| `duplicate_enum_name` | ERROR | Duplicate enum name in DataSpec |
+| `abstract_entity_composition` | ERROR | Abstract entity is target of composition/aggregation |
+| `duplicate_relationship` | WARNING | Same entity pair has multiple relationships of same type |
+| `file-exists` | ERROR | Epic file does not exist at expected path |
+| `ac-quality` | WARNING | Acceptance criterion uses vague or implementation language |
+| `title-action` | WARNING | Epic title describes technical layer, not capability |
+| `scope-specific` | WARNING | outOfScope item is vague |
+| `milestone-consistency` | ERROR | Milestone epic list mismatches epic milestone field |
+| `circular-dependency` | ERROR | Circular dependency detected among epics |
+| `nfr-coverage` | WARNING | Non-functional requirement not covered by any epic |
+| `cross-spec-coverage` | WARNING | Spec capability/component/entity may not be covered |
+
 ### lint_all.py (Completeness Gates)
 | Gate | Required At | Description |
 |------|-------------|-------------|

@@ -533,9 +533,15 @@ def run_taskplan(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
     linter_path = linter_dir / "lint_taskplan.py"
     spec = json.loads(Path(paths["plan"]).read_text())
     goal_spec = loaded.get("goal")
+    design_spec = loaded.get("design")
+    arch_spec = loaded.get("arch")
+    data_spec = loaded.get("data")
+    api_spec = loaded.get("api")
+    test_spec = loaded.get("test")
     mod = load_linter(linter_path)
     layer = _run("taskplan", linter_path,
-                 lambda s: mod.run_lint(spec, goal_spec, s), strict)
+                 lambda s: mod.run_lint(spec, goal_spec, design_spec, arch_spec,
+                                        data_spec, api_spec, test_spec, s), strict)
     return layer
 
 
