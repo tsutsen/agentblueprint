@@ -1330,6 +1330,150 @@ function registerGenerateDiagrams(pi: ExtensionAPI, extDir: string) {
   });
 }
 
+// ── Tool: spec_upgrade ──────────────────────────────────────────────────────
+
+function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
+  pi.registerTool({
+    name: "spec_upgrade",
+    label: "Spec Upgrade",
+    description:
+      "Migrate artifact files from old schema format to new format. " +
+      "Detects missing fields, prompts for values, and updates both Markdown and JSON files.",
+    parameters: Type.Object({
+      artifactType: Type.String({
+        description: "Artifact type: goal, glossary, design, arch, data, api, test, plan, issues",
+      }),
+      filePath: Type.String({
+        description: "Path to the markdown file (e.g. artifacts/GoalSpec.md)",
+      }),
+    }),
+    async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+      const { artifactType, filePath } = params;
+      const fullPath = path.resolve(ctx.cwd, filePath);
+      const jsonPath = fullPath.replace(/.md$/, ".json");
+
+      // 1. Load schema
+      const schemaName = artifactType === "arch" ? "archspec"
+        : artifactType === "data" ? "dataspec"
+        : artifactType === "api" ? "apispec"
+        : artifactType === "test" ? "testspec"
+        : artifactType === "design" ? "designspec"
+        : artifactType === "glossary" ? "glossary"
+        : artifactType === "goal" ? "goalspec"
+        : artifactType === "plan" ? "taskplan"
+        : artifactType === "issues" ? "issue"
+        : null;
+
+      if (!schemaName) {
+        return {
+          content: [{ type: "text", text: `Unknown artifact type: ${artifactType}` }],
+          details: { success: false },
+          isError: true,
+        };
+      }
+
+      const schemaPath = resolveSchemaPath(extDir, schemaName);
+      if (!fs.existsSync(schemaPath)) {
+        return {
+          content: [{ type: "text", text: `Schema not found: ${schemaPath}` }],
+          details: { success: false },
+          isError: true,
+        };
+      }
+
+      const schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"));
+
+      // 2. Load existing files
+      if (!fs.existsSync(fullPath)) {
+        return {
+          content: [{ type: "text", text: `File not found: ${fullPath}` }],
+          details: { success: false },
+          isError: true,
+        };
+      }
+
+      const markdown = fs.readFileSync(fullPath, "utf-8");
+      const fm = extractFrontmatter(markdown);
+
+      let existingJson: any = {};
+      if (fs.existsSync(jsonPath)) {
+        existingJson = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
+      }
+
+      // 3. Find missing fields
+      const missingFields: Array<{ path: string; type: string; schema: any }> = [];
+
+      function findMissingFields(obj: any, schema: any, prefix: string = "") {
+        if (!schema.properties) return;
+
+        for (const [key, fieldSchema] of Object.entries(schema.properties)) {
+          const fieldPath = prefix ? `${prefix}.${key}` : key;
+
+          // Check if field exists in existing data
+          if (obj[key] === undefined || obj[key] === null) {
+            missingFields.push({
+              path: fieldPath,
+              type: fieldSchema.type || "object",
+              schema: fieldSchema,
+            });
+          } else if (fieldSchema.type === "object" && typeof obj[key] === "object" && !Array.isArray(obj[key])) {
+            // Recurse into nested objects
+            findMissingFields(obj[key], fieldSchema, fieldPath);
+          } else if (fieldSchema.type === "array" && fieldSchema.items) {
+            // For arrays, check if items need upgrading
+            if (fieldSchema.items.$ref) {
+              // Reference to another definition
+              const refName = fieldSchema.items.$ref.split("/").pop();
+              const refSchema = schema.definitions?.[refName];
+              if (refSchema && refSchema.properties) {
+                // Check if array items are strings (old format) or objects (new format)
+                const firstItem = obj[key][0];
+                if (typeof firstItem === "string") {
+                  // Old format: convert to new format
+                  missingFields.push({
+                    path: fieldPath,
+                    type: "array-to-object",
+                    schema: { ...fieldSchema, items: refSchema },
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+
+      findMissingFields(existingJson, schema);
+
+      if (missingFields.length === 0) {
+        return {
+          content: [{ type: "text", text: `No missing fields detected. Artifact is up to date.` }],
+          details: { success: true, fieldsAdded: 0 },
+        };
+      }
+
+      // 4. Build upgrade plan
+      const upgradePlan = missingFields.map((f) => ({
+        path: f.path,
+        type: f.type,
+        description: f.schema.description || "",
+        suggested: f.type === "array" ? "[]" : f.type === "boolean" ? "false" : "''",
+      }));
+
+      // 5. Return upgrade plan for user to review
+      const planText = upgradePlan.map((p) => `- ${p.path}: ${p.type} ${p.description ? `(${p.description})` : ""} [suggested: ${p.suggested}]`).join("\n");
+
+      return {
+        content: [{
+          type: "text",
+          text: `Found ${missingFields.length} missing field(s) in ${artifactType} artifact.\n\nUpgrade plan:\n${planText}\n\nDo you want to proceed with the upgrade? Reply 'yes' to apply.`,
+        }],
+        details: { success: true, fieldsAdded: 0, plan: upgradePlan },
+        needsConfirmation: true,
+      };
+    },
+  });
+}
+
 // ── Schema path resolution ──────────────────────────────────────────────────
 // Schemas live at skills/blueprint/schemas/json/ relative to the package root.
 // extDir points to extensions/blueprint/ relative to the package root.
@@ -1362,4 +1506,5 @@ export default function (pi: ExtensionAPI) {
   registerHandoff(pi);
   registerGenerateTests(pi, extDir);
   registerGenerateDiagrams(pi, extDir);
+  registerSpecUpgrade(pi, extDir);
 }
