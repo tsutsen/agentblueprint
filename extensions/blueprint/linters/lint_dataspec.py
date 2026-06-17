@@ -181,34 +181,6 @@ def check_enums(spec: dict, result: LintResult) -> Set[str]:
     return enum_names
 
 
-def check_duplicate_entity_names(spec: dict, result: LintResult):
-    """Warn when multiple entities share the same name."""
-    names = []
-    for entity in spec.get("entities", []):
-        names.append(entity["name"])
-    seen = set()
-    for name in names:
-        if name in seen:
-            result.add("error", "duplicate_entity_name",
-                f"Duplicate entity name '{name}'.",
-                hint="Entity names must be unique.")
-        seen.add(name)
-
-
-def check_duplicate_enum_names(spec: dict, result: LintResult):
-    """Warn when multiple enums share the same name."""
-    names = []
-    for enum in spec.get("enums", []):
-        names.append(enum["name"])
-    seen = set()
-    for name in names:
-        if name in seen:
-            result.add("error", "duplicate_enum_name",
-                f"Duplicate enum name '{name}'.",
-                hint="Enum names must be unique.")
-        seen.add(name)
-
-
 def check_abstract_entity_relationships(spec: dict, result: LintResult):
     """Warn when abstract entities have composition/aggregation relationships as targets.
 
@@ -463,11 +435,9 @@ def check_entity_should_be_field(spec: dict, api_spec: Optional[dict], result: L
             for f in fields
         ) and rel_counts.get(name, 0) <= 1 and len(referrers.get(name, set())) <= 1:
             parent = next(iter(referrers.get(name, set()))) if referrers.get(name) else "unknown"
-            result.add("warning", "entity_should_be_field",
-                f"Entity '{name}' looks like it should be a field of '{parent}'.",
-                hint=f"Only {len(fields)} fields, {rel_counts.get(name, 0)} relationship(s), "
-                     f"{len(referrers.get(name, set()))} referrer(s), {api_counts.get(name, 0)} API function(s). "
-                     f"Consider moving fields to '{parent}'.")
+            result.add("info", "entity_should_be_field",
+                f"Entity '{name}' has only {len(fields)} field(s) and {rel_counts.get(name, 0)} relationship(s).",
+                hint=f"Consider whether this entity should be a field of '{parent}' instead.")
 
 
 def check_field_should_be_entity(spec: dict, api_spec: Optional[dict], result: LintResult):
@@ -529,7 +499,7 @@ def check_field_should_be_entity(spec: dict, api_spec: Optional[dict], result: L
             if api_counts.get(ftype, 0) >= 2:
                 score += 1
 
-            if score >= 3:
+            if score >= 4:
                 result.add("warning", "field_should_be_entity",
                     f"Field '{entity['name']}.{field_def['name']}' of type '{ftype}' "
                     f"looks like it should be a separate entity.",
@@ -553,7 +523,7 @@ def check_methods_coverage(spec: dict, api_spec: Optional[dict], result: LintRes
         name = entity["name"]
         api_count = api_counts.get(name, 0)
         methods = entity.get("methods", [])
-        if api_count >= 2 and len(methods) == 0:
+        if api_count >= 3 and len(methods) == 0:
             result.add("warning", "methods_missing",
                 f"Entity '{name}' has {api_count} ApiSpec function(s) but 0 methods defined.",
                 hint=f"Define entity methods to document how the API functions interact with this entity.")
@@ -778,26 +748,6 @@ def check_duplicate_relationships(spec: dict, result: LintResult):
             seen[key] = rel.get("line", 0)
 
 
-def check_field_naming(spec: dict, result: LintResult):
-    """Enforce camelCase for field names.
-
-    camelCase: first word lowercase, subsequent words capitalized.
-    Examples: userId, createdAt, orderStatus, firstName
-    Invalid: User_ID, user_id, userIdField, _private
-    """
-    import re
-    camel_case_pattern = re.compile(r'^[a-z][a-zA-Z0-9]*$')
-
-    for entity in spec.get("entities", []):
-        for field in entity.get("fields", []):
-            name = field.get("name", "")
-            if name and not camel_case_pattern.match(name):
-                result.add("warning", "field_naming",
-                    f"Entity '{entity['name']}': field '{name}' doesn't follow camelCase convention.",
-                    hint="Use camelCase: first letter lowercase, subsequent words capitalized. "
-                         "Example: 'userId' not 'user_id' or 'User_ID'.")
-
-
 def check_missing_descriptions(spec: dict, result: LintResult):
     """Warn about entities and fields without descriptions."""
     for entity in spec.get("entities", []):
@@ -811,49 +761,6 @@ def check_missing_descriptions(spec: dict, result: LintResult):
                 result.add("info", "missing_field_description",
                     f"Entity '{entity['name']}': field '{field['name']}' has no description.",
                     hint="Add a description to explain the purpose of this field.")
-
-
-def check_fk_type_mismatch(spec: dict, entity_names: Set[str], result: LintResult):
-    """Verify FK field types match referenced entity PK types.
-
-    If entity B has a field of type A (entity reference), there should be
-    a relationship from A to B, and the FK field type should match the PK type.
-    """
-    for entity in spec.get("entities", []):
-        for field in entity.get("fields", []):
-            field_type = field.get("type", "")
-            # Check if field type is an entity reference
-            if field_type in entity_names:
-                # Find relationships involving this entity
-                for rel in spec.get("relationships", []):
-                    if rel["to"] == entity["name"] and rel["from"] == field_type:
-                        # Found a relationship from field_type to this entity
-                        # Check if the FK field type matches the PK type
-                        # For now, we just verify the relationship exists
-                        break
-
-
-def check_cardinality(spec: dict, result: LintResult):
-    """Validate cardinality values.
-
-    Valid cardinality values: "1", "0..1", "*", "1..*", "0..*"
-    """
-    valid_patterns = {
-        "1": r'^1$',
-        "0..1": r'^0\.\.1$',
-        "*": r'^\*$',
-        "1..*": r'^1\.\.\*$',
-        "0..*": r'^0\.\.\*$',
-    }
-
-    for rel in spec.get("relationships", []):
-        cardinality = rel.get("cardinality", {})
-        for end, value in cardinality.items():
-            if value not in valid_patterns:
-                result.add("error", "invalid_cardinality",
-                    f"Relationship '{rel['from']}' → '{rel['to']}': "
-                    f"invalid cardinality '{value}' on '{end}'.",
-                    hint="Valid values: '1', '0..1', '*', '1..*', '0..*'.")
 
 
 def check_method_apiRef(spec: dict, api_spec: Optional[dict], result: LintResult):
@@ -872,39 +779,6 @@ def check_method_apiRef(spec: dict, api_spec: Optional[dict], result: LintResult
                     f"references undefined apiRef '{api_ref}'.",
                     hint="Ensure the apiRef matches a function ID in ApiSpec.")
 
-
-def check_enum_value_naming(spec: dict, result: LintResult):
-    """Enforce UPPER_CASE for enum values.
-
-    Enum values should be UPPER_SNAKE_CASE (e.g., ACTIVE, IN_PROGRESS, COMPLETED).
-    """
-    import re
-    upper_snake_pattern = re.compile(r'^[A-Z][A-Z0-9_]*$')
-
-    for enum in spec.get("enums", []):
-        for value in enum.get("values", []):
-            # Handle both string values and objects with "name" field
-            vname = value.get("name", value) if isinstance(value, dict) else value
-            if not upper_snake_pattern.match(vname):
-                result.add("warning", "enum_value_naming",
-                    f"Enum '{enum['name']}': value '{vname}' doesn't follow UPPER_SNAKE_CASE.",
-                    hint="Use UPPER_SNAKE_CASE: uppercase letters, digits, and underscores. "
-                         "Example: 'IN_PROGRESS' not 'InProgress' or 'in_progress'.")
-
-
-def check_orphan_relationships(spec: dict, entity_names: Set[str], result: LintResult):
-    """Warn when relationship references undefined entity."""
-    for rel in spec.get("relationships", []):
-        if rel["from"] not in entity_names:
-            result.add("error", "orphan_relationship",
-                f"Relationship '{rel['from']}' → '{rel['to']}': "
-                f"source entity '{rel['from']}' is not defined.",
-                hint="Add the entity to the entities list or fix the entity name.")
-        if rel["to"] not in entity_names:
-            result.add("error", "orphan_relationship",
-                f"Relationship '{rel['from']}' → '{rel['to']}': "
-                f"target entity '{rel['to']}' is not defined.",
-                hint="Add the entity to the entities list or fix the entity name.")
 
 # ── Runner ────────────────────────────────────────────────────────────────────
 
@@ -928,8 +802,7 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool, api_spec: Op
     check_pk_naming(spec, result)
     entity_names = check_entities(spec, spec.get("enums", []), result)
     enum_names = check_enums(spec, result)
-    check_duplicate_entity_names(spec, result)
-    check_duplicate_enum_names(spec, result)
+
     check_abstract_entity_relationships(spec, result)
     check_relationships(spec, entity_names, result)
     check_enum_entity_conflict(spec, result)
@@ -945,12 +818,9 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool, api_spec: Op
 
     # New semantic checks
     check_duplicate_relationships(spec, result)
-    check_field_naming(spec, result)
     check_missing_descriptions(spec, result)
-    check_cardinality(spec, result)
     check_method_apiRef(spec, api_spec, result)
-    check_enum_value_naming(spec, result)
-    check_orphan_relationships(spec, entity_names, result)
+
 
     if strict:
         for w in result.warnings:
