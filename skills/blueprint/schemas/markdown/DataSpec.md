@@ -1,3 +1,23 @@
+## Output
+
+After the interview is complete and the JSON artifact has been written via
+`write_section`, the Markdown file must be regenerated from the JSON to
+ensure zero drift between formats.
+
+Run the following tool after `dual_output` completes:
+
+```
+tool: generate_artifact_markdown
+args:
+  artifactType: data
+  jsonPath: artifacts/DataSpec.json
+```
+
+This overwrites the Markdown file with content derived from the JSON.
+The JSON is the single source of truth; the Markdown is derived.
+
+---
+
 ---
 name: DataSpec
 type: schema
