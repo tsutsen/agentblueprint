@@ -214,7 +214,7 @@
         "authStrategy": {
           "type": "string",
           "description": "How consumers authenticate with the system, e.g. 'API key in Authorization header', 'local Unix socket — no auth'.",
-          "minLength": 5
+          "minLength": 10
         },
         "notes": {
           "type": "string",

@@ -294,6 +294,261 @@ def check_fr_coverage(spec: dict, goal: Optional[dict], result: LintResult):
                 hint=f"Add reqRef '{fr['id']}' to the component responsible for this requirement.")
 
 
+def check_nfr_coverage(spec: dict, goal: Optional[dict], result: LintResult):
+    """Every NFR in GoalSpec should be covered by at least one component or constraint."""
+    if not goal:
+        return
+
+    covered_nfrs = set()
+    for comp in spec.get("components", []):
+        for ref in comp.get("nfrRefs", []):
+            covered_nfrs.add(ref)
+    for con in spec.get("constraints", []):
+        for ref in con.get("nfrRefs", []):
+            covered_nfrs.add(ref)
+
+    for nfr in goal.get("nonFunctionalRequirements", []):
+        if nfr["id"] not in covered_nfrs:
+            result.add("warning", "nfr_uncovered",
+                f"GoalSpec {nfr['id']} ('{nfr['description'][:60]}...') is not covered by any component or constraint.",
+                hint=f"Add nfrRef '{nfr['id']}' to a component or constraint responsible for this NFR.")
+
+
+def check_constraint_nfr_refs(spec: dict, goal: Optional[dict], result: LintResult):
+    """Warn if constraints have no NFR refs (orphaned constraints)."""
+    if not goal:
+        return
+
+    for con in spec.get("constraints", []):
+        if not con.get("nfrRefs"):
+            result.add("warning", "constraint_no_nfr",
+                f"Constraint '{con['id']}' has no NFR refs.",
+                hint="Link each constraint to the NFRs it helps satisfy.")
+
+
+def check_data_flow_req_refs(spec: dict, goal: Optional[dict], result: LintResult):
+    """Warn if data flows have no REQ refs at non-draft status."""
+    if not goal:
+        return
+
+    for flow in spec.get("dataFlow", []):
+        if not flow.get("reqRefs") and spec.get("status") in ("review", "confirmed"):
+            result.add("warning", "flow_no_reqs",
+                f"Data flow '{flow['id']}' has no reqRefs.",
+                hint="Link each data flow to the requirements it implements.")
+
+
+def check_subsystem_empty(spec: dict, component_ids: set[str], result: LintResult):
+    """Warn if a subsystem has no components assigned."""
+    subsystems = spec.get("overview", {}).get("subsystems", [])
+    for sub in subsystems:
+        refs = sub.get("componentRefs", [])
+        if not refs:
+            result.add("warning", "subsystem_empty",
+                f"Subsystem '{sub['name']}' has no components assigned.",
+                hint="Assign components to this subsystem or remove it.")
+
+
+def check_subsystem_overlap(spec: dict, result: LintResult):
+    """Warn if a component is assigned to multiple subsystems."""
+    subsystems = spec.get("overview", {}).get("subsystems", [])
+    comp_to_subs: dict[str, list[str]] = {}
+    for sub in subsystems:
+        for ref in sub.get("componentRefs", []):
+            comp_to_subs.setdefault(ref, []).append(sub["name"])
+    
+    for comp, subs in comp_to_subs.items():
+        if len(subs) > 1:
+            result.add("warning", "subsystem_overlap",
+                f"Component '{comp}' is assigned to multiple subsystems: {', '.join(subs)}.",
+                hint="Each component should belong to exactly one subsystem.")
+
+
+def check_data_flow_consecutive_component(spec: dict, result: LintResult):
+    """Warn if a data flow has the same component in consecutive steps."""
+    for flow in spec.get("dataFlow", []):
+        steps = flow.get("steps", [])
+        for i in range(len(steps) - 1):
+            if steps[i]["componentRef"] == steps[i + 1]["componentRef"]:
+                result.add("warning", "flow_consecutive_component",
+                    f"Flow '{flow['id']}' steps {i+1} and {i+2} are both performed by '{steps[i]['componentRef']}'.",
+                    hint="Consecutive steps by the same component may indicate a missing intermediate step.")
+
+
+def check_external_component_deps(spec: dict, result: LintResult):
+    """Warn if external components have no dependencies (might indicate missing peer)."""
+    external_comps = [c for c in spec.get("components", []) if c.get("visibility") == "external"]
+    for comp in external_comps:
+        deps = comp.get("dependencies", [])
+        if not deps:
+            result.add("warning", "external_no_deps",
+                f"External component '{comp['id']}' has no dependencies.",
+                hint="External components typically depend on other external components or services.")
+
+
+def check_data_ref_valid(spec: dict, data_spec: Optional[dict], result: LintResult):
+    """Warn if data flow steps reference non-existent DataSpec entities."""
+    if not data_spec:
+        return
+    
+    entity_names = {e["name"] for e in data_spec.get("entities", [])}
+    for flow in spec.get("dataFlow", []):
+        for step in flow.get("steps", []):
+            data_ref = step.get("dataRef", "")
+            if data_ref and data_ref not in entity_names:
+                result.add("warning", "data_ref_missing",
+                    f"Flow '{flow['id']}' step references data '{data_ref}' which is not a defined DataSpec entity.",
+                    hint=f"Add '{data_ref}' to DataSpec or correct the dataRef.")
+
+
+def check_vague_responsibilities(spec: dict, result: LintResult):
+    """Warn if component responsibilities are too vague."""
+    import re
+    vague_patterns = [
+        r"handles?\s+(data|users?|requests?|events?)",
+        r"manages?\s+(data|users?|requests?|the\s+lifecycle)",
+        r"provides?\s+(the\s+)?(functionality|service|api|interface)",
+        r"supports?\s+(the\s+)?(system|application|platform)",
+        r"processes?\s+(data|requests?|inputs?)",
+        r"stores?\s+(data|information)",
+        r"validates?\s+(inputs?|data)",
+        r"transforms?\s+(data)",
+    ]
+    for comp in spec.get("components", []):
+        for resp in comp.get("responsibilities", []):
+            resp_lower = resp.lower()
+            for pattern in vague_patterns:
+                if re.search(pattern, resp_lower):
+                    result.add("warning", "vague_responsibility",
+                        f"Component '{comp['id']}' responsibility '{resp}' is vague.",
+                        hint="Be specific about what the component does, e.g. 'Validates user credentials against LDAP' instead of 'Validates inputs'.")
+                    break
+
+
+def check_vague_purpose(spec: dict, result: LintResult):
+    """Warn if component purposes are too vague."""
+    import re
+    vague_patterns = [
+        r"provides?\s+(the\s+)?(functionality|service)",
+        r"handles?\s+(data|requests?|the\s+lifecycle)",
+        r"manages?\s+(data|users?|the\s+system)",
+        r"supports?\s+(the\s+)?(system|application|platform)",
+        r"is\s+(the\s+)?(core|main|primary)\s+(component|service|system)",
+    ]
+    for comp in spec.get("components", []):
+        purpose = comp.get("purpose", "")
+        purpose_lower = purpose.lower()
+        for pattern in vague_patterns:
+            if re.search(pattern, purpose_lower):
+                result.add("warning", "vague_purpose",
+                    f"Component '{comp['id']}' purpose '{purpose}' is vague.",
+                    hint="State what the component specifically does, e.g. 'Routes search queries to the appropriate index' instead of 'Provides search functionality'.")
+                break
+
+
+def check_vague_action(spec: dict, result: LintResult):
+    """Warn if data flow step actions are too vague."""
+    import re
+    vague_patterns = [
+        r"handles?\s+(data|requests?|the\s+request)",
+        r"processes?\s+(data|requests?|the\s+request)",
+        r"manages?\s+(data|the\s+request)",
+        r"validates?\s+(inputs?|data|the\s+request)",
+        r"transforms?\s+(data|the\s+request)",
+        r"stores?\s+(data|the\s+request)",
+        r"returns?\s+(the\s+)?(response|data)",
+        r"sends?\s+(the\s+)?(response|data)",
+    ]
+    for flow in spec.get("dataFlow", []):
+        for i, step in enumerate(flow.get("steps", [])):
+            action = step.get("action", "")
+            action_lower = action.lower()
+            for pattern in vague_patterns:
+                if re.search(pattern, action_lower):
+                    result.add("warning", "vague_action",
+                        f"Flow '{flow['id']}' step {i+1} action '{action}' is vague.",
+                        hint="Be specific about what happens, e.g. 'Validates JWT token signature' instead of 'Validates the request'.")
+                    break
+
+
+def check_constraint_vague(spec: dict, result: LintResult):
+    """Warn if constraint descriptions are too vague."""
+    import re
+    vague_patterns = [
+        r"must\s+(be\s+)?(secure|safe)",
+        r"must\s+(be\s+)?(reliable|dependable)",
+        r"must\s+(be\s+)?(scalable|extensible)",
+        r"must\s+(be\s+)?(maintainable|easy\s+to\s+maintain)",
+        r"must\s+(be\s+)?(performant|fast|efficient)",
+        r"must\s+(be\s+)?(user-friendly|intuitive)",
+        r"must\s+(be\s+)?(compliant|standard)",
+    ]
+    for con in spec.get("constraints", []):
+        desc = con.get("description", "")
+        desc_lower = desc.lower()
+        for pattern in vague_patterns:
+            if re.search(pattern, desc_lower):
+                result.add("warning", "constraint_vague",
+                    f"Constraint '{con['id']}' description '{desc}' is vague.",
+                    hint="State the specific requirement, e.g. 'Must encrypt data at rest using AES-256' instead of 'Must be secure'.")
+                break
+
+
+def check_component_responsibility_count(spec: dict, result: LintResult):
+    """Warn if a component has too many responsibilities (>5)."""
+    for comp in spec.get("components", []):
+        resps = comp.get("responsibilities", [])
+        if len(resps) > 5:
+            result.add("warning", "component_responsibility_count",
+                f"Component '{comp['id']}' has {len(resps)} responsibilities — consider splitting.",
+                hint="A component with >5 responsibilities may be doing too much. Consider splitting into multiple components.")
+
+
+def check_data_flow_step_count(spec: dict, result: LintResult):
+    """Warn if a data flow has too many steps (>10)."""
+    for flow in spec.get("dataFlow", []):
+        steps = flow.get("steps", [])
+        if len(steps) > 10:
+            result.add("warning", "flow_step_count",
+                f"Flow '{flow['id']}' has {len(steps)} steps — consider splitting.",
+                hint="A data flow with >10 steps may be too complex. Consider splitting into multiple flows.")
+
+
+def check_external_component_count(spec: dict, result: LintResult):
+    """Warn if too many components are external (>30% of total)."""
+    components = spec.get("components", [])
+    if not components:
+        return
+    external_count = sum(1 for c in components if c.get("visibility") == "external")
+    if external_count > len(components) * 0.3:
+        result.add("warning", "external_component_count",
+            f"{external_count}/{len(components)} components ({external_count/len(components):.0%}) are external.",
+            hint="Too many external components may indicate over-exposure. Review which components truly need to be external.")
+
+
+def check_dependency_depth(spec: dict, result: LintResult):
+    """Warn if any component has a dependency chain >3 levels deep."""
+    components = spec.get("components", [])
+    comp_deps = {c["id"]: c.get("dependencies", []) for c in components}
+    
+    def get_depth(comp_id, visited=None):
+        if visited is None:
+            visited = set()
+        if comp_id in visited:
+            return 0  # Circular, stop
+        visited.add(comp_id)
+        deps = comp_deps.get(comp_id, [])
+        if not deps:
+            return 0
+        return 1 + max(get_depth(d, visited.copy()) for d in deps)
+    
+    for comp_id in comp_deps:
+        depth = get_depth(comp_id)
+        if depth > 3:
+            result.add("warning", "dependency_depth",
+                f"Component '{comp_id}' has a dependency chain of {depth} levels.",
+                hint="Deep dependency chains can make the system hard to understand and maintain.")
+
 # ── Runner ────────────────────────────────────────────────────────────────────
 
 def run_lint(spec: dict, schema_path: Optional[Path],
