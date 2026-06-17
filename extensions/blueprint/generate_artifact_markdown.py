@@ -237,8 +237,17 @@ def generate_goal_spec_md(data: dict) -> str:
         must = nfr.get("must", "")
         plan = nfr.get("plan", "")
         wish = nfr.get("wish", "")
+        description = nfr.get("description", "")
 
-        lines.append(f"### {id_} — {category}")
+        # Use description as title if available, otherwise use scale or category
+        if description:
+            title = description[:60] + ("..." if len(description) > 60 else "")
+        elif scale:
+            title = scale[:60] + ("..." if len(scale) > 60 else "")
+        else:
+            title = category
+
+        lines.append(f"### {id_} — {title}")
         lines.append(f"Category: {category}")
         lines.append(f"Scale: {scale}")
         lines.append(f"Meter: {meter}")
@@ -262,7 +271,13 @@ def generate_goal_spec_md(data: dict) -> str:
         outcome = us.get("outcome", "")
         req_refs = us.get("reqRefs", [])
 
-        lines.append(f"- **{id_}**: As a {actor}, I want to {capability}, so that {outcome}.")
+        # Check if capability already contains the full story format
+        if capability.strip().startswith("As a"):
+            # Capability already has the full format, just use it
+            lines.append(f"- **{id_}**: {capability}, so that {outcome}.")
+        else:
+            # Format as standard user story
+            lines.append(f"- **{id_}**: As a {actor}, I want to {capability}, so that {outcome}.")
         if req_refs:
             lines.append(f"  → {', '.join(req_refs)}")
         if us.get("glossaryRefs"):
