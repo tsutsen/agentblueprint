@@ -642,9 +642,10 @@ def run_testspec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
     spec = json.loads(Path(paths["test"]).read_text())
     schema_path = (schema_dir / "testspec.schema.json") if schema_dir else None
     api = loaded.get("api")
+    glossary = loaded.get("glossary")
     mod = load_linter(linter_path)
     layer = _run("testspec", linter_path,
-                 lambda s: mod.run_lint(spec, schema_path, api, s), strict)
+                 lambda s: mod.run_lint(spec, schema_path, api, glossary, s), strict)
     layer.completeness = assess_testspec(spec, api)
     return layer
 

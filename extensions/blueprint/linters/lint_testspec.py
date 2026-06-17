@@ -291,6 +291,64 @@ def check_function_coverage_summary(spec: dict, result: LintResult):
                 hint=f"Add a functionCoverage entry for '{fn}' with out-of-scope declarations.")
 
 
+def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LintResult):
+    """WARN: Check that test descriptions, contract clauses, and out-of-scope items have glossaryRefs."""
+    if not glossary:
+        return
+
+    # Build glossary term map (lowercase -> id)
+    glossary_lower = {}
+    for t in glossary.get("terms", []):
+        glossary_lower[t["term"].lower()] = t["id"]
+
+    def has_domain_concept(text: str) -> bool:
+        text_lower = text.lower()
+        return any(len(term) > 3 and term in text_lower for term in glossary_lower)
+
+    def find_glossary_refs(text: str) -> list:
+        text_lower = text.lower()
+        return [tid for term, tid in glossary_lower.items()
+                if len(term) > 3 and term in text_lower]
+
+    # Check test cases
+    for t in spec.get("tests", []):
+        tid = t.get("id", "?")
+        desc = t.get("description", "")
+        clause = t.get("contractClause", "")
+        refs = t.get("glossaryRefs", [])
+
+        has_text = bool(desc) or bool(clause)
+        if not has_text or refs:
+            continue
+
+        # Check if description or contractClause has domain concepts
+        text_parts = [desc, clause]
+        combined = " ".join(text_parts)
+        if has_domain_concept(combined):
+            expected = find_glossary_refs(combined)
+            result.add("warning", "glossary",
+                f"Test '{tid}': description/contractClause references glossary terms "
+                f"({', '.join(expected)}) but has no glossaryRefs.",
+                hint="Add glossaryRefs (GL-NNN) for domain concepts in this test.")
+
+    # Check outOfScope items in functionCoverage
+    for fc in spec.get("functionCoverage", []):
+        fn_ref = fc.get("fnRef", "?")
+        for i, item in enumerate(fc.get("outOfScope", [])):
+            if isinstance(item, dict):
+                desc = item.get("description", "")
+                refs = item.get("glossaryRefs", [])
+            else:
+                desc = str(item)
+                refs = []
+            if desc and has_domain_concept(desc) and not refs:
+                expected = find_glossary_refs(desc)
+                result.add("warning", "glossary",
+                    f"functionCoverage '{fn_ref}' outOfScope #{i+1}: '{desc[:60]}...' references glossary terms "
+                    f"({', '.join(expected)}) but has no glossaryRefs.",
+                    hint="Add glossaryRefs (GL-NNN) for domain concepts in this outOfScope item.")
+
+
 def check_lifecycle(spec: dict, result: LintResult):
     """Status-aware completeness checks."""
     status = spec.get("status", "draft")
@@ -316,7 +374,7 @@ def check_lifecycle(spec: dict, result: LintResult):
 # ── Runner ────────────────────────────────────────────────────────────────────
 
 def run_lint(spec: dict, schema_path: Optional[Path],
-             api: Optional[dict], strict: bool) -> LintResult:
+             api: Optional[dict], glossary: Optional[dict], strict: bool) -> LintResult:
     result = LintResult()
 
     if schema_path and HAS_JSONSCHEMA:
@@ -335,6 +393,7 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     check_api_refs(spec, api, result)
     check_api_coverage(spec, api, result)
     check_function_coverage_summary(spec, result)
+    check_glossary_refs(spec, glossary, result)
     check_lifecycle(spec, result)
 
     if strict:
@@ -391,6 +450,7 @@ def main():
     parser.add_argument("input",    help="Path to testspec JSON")
     parser.add_argument("--schema", help="Path to testspec.schema.json")
     parser.add_argument("--api",    help="Path to apispec JSON for cross-spec checks")
+    parser.add_argument("--glossary", help="Path to glossary JSON for glossary reference checks")
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--json",   action="store_true")
     args = parser.parse_args()
@@ -398,8 +458,9 @@ def main():
     spec = json.loads(Path(args.input).read_text())
     schema_path = Path(args.schema) if args.schema else None
     api = json.loads(Path(args.api).read_text()) if args.api else None
+    glossary = json.loads(Path(args.glossary).read_text()) if args.glossary else None
 
-    result = run_lint(spec, schema_path, api, args.strict)
+    result = run_lint(spec, schema_path, api, glossary, args.strict)
 
     if args.json:
         print_json_output(result)

@@ -9,6 +9,12 @@
 
   "definitions": {
 
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier. Format: GL-NNN (3-digit zero-padded).",
+      "pattern": "^GL-\\d{3}$"
+    },
+
     "testId": {
       "type": "string",
       "description": "Format: TST-<functionName>-<NNN>, e.g. TST-createUser-001",
@@ -64,6 +70,25 @@
           "description": "Test case IDs that verify this requirement.",
           "items": { "$ref": "#/definitions/testId" },
           "minItems": 1
+        }
+      }
+    },
+
+    "glossaryRefItem": {
+      "type": "object",
+      "description": "A text item with inline glossary references.",
+      "required": ["description"],
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "glossaryRefs": {
+          "type": "array",
+          "description": "Glossary term identifiers (GL-NNN) referenced in this item.",
+          "items": { "$ref": "#/definitions/glId" },
+          "uniqueItems": true
         }
       }
     }
@@ -139,7 +164,12 @@
             "type": "array",
             "description": "Explicit list of behaviours this function's tests do NOT verify. Required — prevents false failures during verification.",
             "minItems": 1,
-            "items": { "type": "string", "minLength": 5 }
+            "items": {
+              "oneOf": [
+                { "type": "string", "minLength": 5 },
+                { "$ref": "#/definitions/glossaryRefItem" }
+              ]
+            }
           }
         }
       }
@@ -228,6 +258,13 @@
           "notes": {
             "type": "string",
             "description": "Optional clarifying context for this test case."
+          },
+
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term identifiers (GL-NNN) referenced in this test's description and contractClause.",
+            "items": { "$ref": "#/definitions/glId" },
+            "uniqueItems": true
           }
         }
       }
