@@ -668,8 +668,11 @@ def run_issues(linter_dir, paths, loaded, args, strict) -> LayerResult:
                            skip_reason="No --epic provided (issues lint is optional).")
     linter_path = linter_dir / "lint_issues.py"
     mod = load_linter(linter_path)
+    taskplan = loaded.get("plan")
+    goal = loaded.get("goal")
+    glossary = loaded.get("glossary")
     layer = _run("issues", linter_path,
-                 lambda s: mod.run_lint(epic_id, epics_dir, s), strict)
+                 lambda s: mod.run_lint(epic_id, epics_dir, taskplan, goal, glossary, s), strict)
     return layer
 
 
@@ -762,8 +765,8 @@ def run_suite(paths, linter_dir, schema_dir, strict, stop_on_error, args=None) -
 
     # Pre-load specs referenced by multiple layers
     loaded: dict = {}
-    for key, path_key in [("goal","goal"), ("data","data"), ("api","api"),
-                           ("test","test"), ("arch","arch"), ("plan","plan")]:
+    for key, path_key in [("goal","goal"), ("glossary","glossary"), ("data","data"),
+                           ("api","api"), ("test","test"), ("arch","arch"), ("plan","plan")]:
         if paths.get(path_key):
             try:
                 loaded[key] = json.loads(Path(paths[path_key]).read_text())

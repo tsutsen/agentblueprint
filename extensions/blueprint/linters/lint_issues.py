@@ -51,10 +51,12 @@ DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # ── Core linter ───────────────────────────────────────────────────────────────
 
 class IssueLinter:
-    def __init__(self, epics_dir: str, epic_id: str, strict: bool = False):
+    def __init__(self, epics_dir: str, epic_id: str, strict: bool = False,
+                 glossary: Optional[dict] = None):
         self.epics_dir = Path(epics_dir)
         self.epic_id = epic_id
         self.strict = strict
+        self.glossary = glossary
         self.issues: list[Issue] = []
         self.issue_files: list[IssueFile] = []
         self.epic_data: dict = {}
@@ -240,12 +242,23 @@ class IssueLinter:
     def lint_non_goal_violation(self):
         """Check that issue does not implement something explicitly out of scope.
         
-        Checks both the epic's out-of-scope section (if available) and the
-        GoalSpec's non-goals (if goal parameter was passed).
+        Uses glossary terms + synonyms for accurate matching. Falls back to
+        word-level overlap for items not in the glossary.
         """
-        out_of_scope_items = []
+        # Build glossary lookup: term_lower → {term, synonyms[], definition[]}
+        glossary_lookup: dict[str, dict] = {}
+        if self.glossary:
+            for entry in self.glossary.get("terms", []):
+                name = entry["term"]
+                glossary_lookup[name.lower()] = {
+                    "term": name,
+                    "synonyms": [s.lower() for s in entry.get("synonyms", [])],
+                    "definition": entry.get("definition", "").lower(),
+                }
+
+        # Collect out-of-scope items from epic + GoalSpec
+        out_of_scope_items: list[str] = []
         
-        # Check epic out-of-scope section
         if self.epic_data and self.epic_data.get("content"):
             out_of_scope_match = re.search(
                 r"##\s*out\s*of\s*scope\s*\n((?:-\s+.+\n?)*?)(?=\n##|$)",
@@ -254,20 +267,50 @@ class IssueLinter:
             )
             if out_of_scope_match:
                 out_of_scope_items.extend([
-                    line.strip().lstrip("- ").strip().lower()
+                    line.strip().lstrip("- ").strip()
                     for line in out_of_scope_match.group(1).split("\n")
-                    if line.strip().startswith("-")
+                    if line.strip().startswith("-") and len(line.strip()) > 5
                 ])
         
-        # Check GoalSpec non-goals (if provided)
         if hasattr(self, 'goal') and self.goal:
             for ng in self.goal.get("nonGoals", []):
-                ng_text = ng.strip().lower()
+                ng_text = ng.strip()
                 if len(ng_text) > 5:
                     out_of_scope_items.append(ng_text)
-        
+
         if not out_of_scope_items:
             return
+
+        # Expand each out-of-scope item with glossary synonyms
+        expanded_items: list[tuple[str, str]] = []  # (display_name, check_text)
+        unknown_items: list[str] = []
+        
+        for item in out_of_scope_items:
+            item_lower = item.lower()
+            check_terms: list[str] = [item_lower]
+            
+            # Strategy 1: Direct glossary match (term or synonym)
+            if item_lower in glossary_lookup:
+                entry = glossary_lookup[item_lower]
+                check_terms = [item_lower] + entry["synonyms"]
+                # Also extract meaningful words from definition
+                defn_words = {w for w in entry["definition"].split() if len(w) > 3}
+                if defn_words:
+                    check_terms.extend(list(defn_words))
+            
+            # Strategy 2: Item is a synonym of a known term
+            elif not any(item_lower in syn for syn in glossary_lookup.values()):
+                for term_entry in glossary_lookup.values():
+                    if item_lower in term_entry["synonyms"]:
+                        check_terms = [term_entry["term"].lower()] + term_entry["synonyms"]
+                        break
+            
+            # Strategy 3: Unknown term — fall back to word-level overlap
+            if not any(t in glossary_lookup for t in check_terms if len(t) > 3):
+                if item_lower not in glossary_lookup:
+                    unknown_items.append(item)
+            
+            expanded_items.append((item, " ".join(check_terms)))
 
         for issue_file in self.issue_files:
             md_content = issue_file.md_content.lower()
@@ -279,11 +322,19 @@ class IssueLinter:
             body_text = what_build.group(1) if what_build else ""
             full_text = f"{title} {body_text}"
 
-            for item in out_of_scope_items:
-                if item and len(item) > 5:
-                    if item in full_text:
+            for display_name, check_text in expanded_items:
+                # Exact phrase match
+                if display_name.lower() in full_text:
+                    self.add_issue("error", "scope",
+                        f"{issue_file.issue_id}: implements out-of-scope item '{display_name}'")
+                    continue
+                
+                # Check expanded terms (glossary synonyms + definition keywords)
+                for term in check_text.split():
+                    if len(term) > 3 and term in full_text:
                         self.add_issue("error", "scope",
-                            f"{issue_file.issue_id}: implements out-of-scope item '{item}'")
+                            f"{issue_file.issue_id}: implements out-of-scope item '{display_name}'")
+                        break
 
     def lint_milestone_consistency(self, taskplan: Optional[dict] = None):
         """Check that issue.milestone exists in TaskPlan milestones."""
@@ -513,11 +564,13 @@ class IssueLinter:
 
 # ── Integration with lint_all.py ──────────────────────────────────────────────
 
-def run_lint(epic_id: str, epics_dir: str, taskplan: Optional[dict] = None, goal: Optional[dict] = None, strict: bool = False):
+def run_lint(epic_id: str, epics_dir: str, taskplan: Optional[dict] = None,
+             goal: Optional[dict] = None, glossary: Optional[dict] = None, strict: bool = False):
     """Run the issue linter for a single epic. Returns a LayerResult."""
     from lint_all import LayerResult
-    linter = IssueLinter(epics_dir, epic_id, strict)
-    linter.goal = goal  # Store for non-goal violation check
+    linter = IssueLinter(epics_dir, epic_id, strict, glossary=glossary)
+    if goal:
+        linter.goal = goal
     issues = linter.run(taskplan)
 
     layer = LayerResult(name="issues")
@@ -536,6 +589,10 @@ def main():
                         help="Path to epics directory (default: tasks/epics)")
     parser.add_argument("--taskplan", default=None,
                         help="Path to taskplan.json for milestone validation")
+    parser.add_argument("--goal", default=None,
+                        help="Path to goalspec.json for non-goal violation check")
+    parser.add_argument("--glossary", default=None,
+                        help="Path to glossary.json for synonym expansion")
     parser.add_argument("--strict", action="store_true",
                         help="Treat warnings as errors")
     args = parser.parse_args()
@@ -547,7 +604,23 @@ def main():
         except (FileNotFoundError, json.JSONDecodeError):
             print(f"Warning: Could not load taskplan from {args.taskplan}")
 
-    linter = IssueLinter(args.epics_dir, args.epic, args.strict)
+    goal = None
+    if args.goal:
+        try:
+            goal = json.loads(Path(args.goal).read_text())
+        except (FileNotFoundError, json.JSONDecodeError):
+            print(f"Warning: Could not load goal from {args.goal}")
+
+    glossary = None
+    if args.glossary:
+        try:
+            glossary = json.loads(Path(args.glossary).read_text())
+        except (FileNotFoundError, json.JSONDecodeError):
+            print(f"Warning: Could not load glossary from {args.glossary}")
+
+    linter = IssueLinter(args.epics_dir, args.epic, args.strict, glossary=glossary)
+    if goal:
+        linter.goal = goal
     issues = linter.run(taskplan)
 
     print(linter.summary())

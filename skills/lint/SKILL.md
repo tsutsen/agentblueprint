@@ -200,7 +200,7 @@ Markdown/JSON drift.
 | `file_naming` | ERROR | Directory name does not match file name (IS-001/IS-001.md) |
 | `missing_section` | ERROR | Required markdown section missing (What to build, Acceptance criteria, Blocked by) |
 | `schema_field` | ERROR | Missing or invalid required field |
-| `non_goal_violation` | ERROR | Issue implements out-of-scope item |
+| `non_goal_violation` | ERROR | Issue implements out-of-scope item (uses glossary terms + synonyms for matching) |
 | `dependency_ordering` | WARNING | Blocked issue has higher IS-NNN than blocker |
 | `duplicate_blocked_by` | WARNING | Duplicate entries in blocked_by |
 | `date_ordering` | WARNING | updated date before created date |
