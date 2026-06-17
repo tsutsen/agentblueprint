@@ -590,6 +590,29 @@ def _check_epic_glossary_refs(plan: dict, glossary: Optional[dict], layer: Layer
                            f"({', '.join(expected_refs)}) but has no glossaryRefs.",
                            hint="Add glossaryRefs (GL-NNN) for domain concepts in this epic's objective.")
 
+        # Check inScope items
+        scope = epic.get("scope", {})
+        in_scope = scope.get("inScope", [])
+        in_scope_refs = scope.get("inScopeGlossaryRefs", [])
+        for i, item in enumerate(in_scope):
+            if has_domain_concept(item) and not in_scope_refs:
+                expected_refs = find_glossary_refs(item)
+                layer.add("warning", "inScope_no_glossary_refs",
+                           f"Epic {eid} inScope #{i+1}: '{item[:60]}...' references glossary terms "
+                           f"({', '.join(expected_refs)}) but has no inScopeGlossaryRefs.",
+                           hint="Add inScopeGlossaryRefs (GL-NNN) for domain concepts in scope items.")
+
+        # Check outOfScope items
+        out_of_scope = scope.get("outOfScope", [])
+        out_of_scope_refs = scope.get("outOfScopeGlossaryRefs", [])
+        for i, item in enumerate(out_of_scope):
+            if has_domain_concept(item) and not out_of_scope_refs:
+                expected_refs = find_glossary_refs(item)
+                layer.add("warning", "outOfScope_no_glossary_refs",
+                           f"Epic {eid} outOfScope #{i+1}: '{item[:60]}...' references glossary terms "
+                           f"({', '.join(expected_refs)}) but has no outOfScopeGlossaryRefs.",
+                           hint="Add outOfScopeGlossaryRefs (GL-NNN) for domain concepts in scope items.")
+
 
 def run_lint(plan: dict, goal_spec: Optional[dict] = None,
              design_spec: Optional[dict] = None,
