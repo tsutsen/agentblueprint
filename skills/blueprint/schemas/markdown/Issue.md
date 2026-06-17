@@ -52,6 +52,20 @@ epic: <EP-NNN>
 blocked_by:
   - <IS-NNN>        # or empty list []
 milestone: <M1 | M2 | ...>
+titleGlossaryRefs:
+  - GL-NNN          # glossary terms in title; [] if none
+inScope:
+  - description: <scope item description>
+    glossaryRefs:
+      - GL-NNN      # glossary terms in this item; [] if none
+outOfScope:
+  - description: <excluded item description>
+    glossaryRefs:
+      - GL-NNN      # glossary terms in this item; [] if none
+acceptanceCriteria:
+  - description: <verifiable criterion>
+    glossaryRefs:
+      - GL-NNN      # glossary terms in this criterion; [] if none
 created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 ---
@@ -69,6 +83,10 @@ updated: <YYYY-MM-DD>
 | `epic` | string | Yes | Format `EP-NNN` (3-digit zero-padded) |
 | `blocked_by` | array | Yes | List of IS-NNN strings; `[]` if none |
 | `milestone` | string | Yes | Format `M1`, `M2`, ... |
+| `titleGlossaryRefs` | array | No | GL-NNN identifiers for domain concepts in the title |
+| `inScope` | array | No | Structured scope items, each with `description` and `glossaryRefs` |
+| `outOfScope` | array | No | Structured out-of-scope items, each with `description` and `glossaryRefs` |
+| `acceptanceCriteria` | array | No | Structured acceptance criteria, each with `description` and `glossaryRefs` |
 | `created` | string | Yes | Date string `YYYY-MM-DD` |
 | `updated` | string | Yes | Date string `YYYY-MM-DD` |
 
@@ -129,12 +147,31 @@ Each issue has a parallel JSON file (`IS-NNN.json`) with the same data:
 {
   "artifact": "Issue",
   "id": "IS-001",
-  "title": "Create document upload endpoint",
+  "title": "Create research session with input validation",
   "type": "AFK",
   "status": "not_started",
   "epic": "EP-001",
   "blocked_by": [],
   "milestone": "M1",
+  "titleGlossaryRefs": ["GL-001", "GL-004"],
+  "inScope": [
+    {
+      "description": "Session creation with free-text research question",
+      "glossaryRefs": ["GL-001", "GL-004"]
+    }
+  ],
+  "outOfScope": [
+    {
+      "description": "Session sharing or collaboration",
+      "glossaryRefs": ["GL-001"]
+    }
+  ],
+  "acceptanceCriteria": [
+    {
+      "description": "User can create a session by entering a free-text research question",
+      "glossaryRefs": ["GL-001", "GL-004"]
+    }
+  ],
   "created": "2026-06-15",
   "updated": "2026-06-15"
 }
@@ -142,6 +179,19 @@ Each issue has a parallel JSON file (`IS-NNN.json`) with the same data:
 
 The JSON file contains only the front matter fields — no body content.
 The body content lives exclusively in the `.md` file.
+
+**Scope item structure:**
+
+```json
+{
+  "description": "<scope item description>",
+  "glossaryRefs": ["GL-NNN", ...]
+}
+```
+
+Each scope item (inScope/outOfScope) and each acceptance criterion has its
+description and inline `glossaryRefs`. The linter validates that domain
+concepts in the description have corresponding GL-NNN references.
 
 ---
 
