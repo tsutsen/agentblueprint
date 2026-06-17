@@ -85,6 +85,15 @@ Markdown/JSON drift.
 | `version_mismatch` | ERROR | dataSpecVersion must match data spec |
 | `fn_visibility_invalid` | ERROR | Visibility must be public/internal |
 | `fn_no_errors` | WARNING | Data-modifying functions should document errors |
+| `duplicate_function_name` | ERROR | Multiple functions share the same name |
+| `missing_function_description` | INFO | Function has no description |
+| `missing_parameter_description` | INFO | Parameter has no description |
+| `missing_output_description` | INFO | Output has no description |
+| `required_param_no_description` | WARNING | Required parameter has no description |
+| `internal_function_with_errors` | INFO | Internal function documents error conditions |
+| `internal_function_public_tags` | INFO | Internal function has public-facing tags |
+| `unused_function` | WARNING | Function not referenced by any entity's apiRef |
+| `type_case_mismatch` | ERROR | Type case doesn't match data spec |
 
 ### lint_all.py (Completeness Gates)
 | Gate | Required At | Description |

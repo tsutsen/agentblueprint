@@ -161,6 +161,164 @@ def check_visibility(spec: dict, result: LintResult):
                 hint="Function visibility must be 'public' or 'internal'.")
 
 
+
+
+def check_duplicate_names(spec: dict, result: LintResult):
+    """Warn when multiple functions share the same name."""
+    names = {}
+    for fn in spec.get("functions", []):
+        fname = fn.get("name", "")
+        if fname:
+            if fname in names:
+                result.add("error", "duplicate_function_name",
+                    f"Duplicate function name '{fname}' (IDs: {names[fname]} and {fn['id']}).",
+                    hint="Each function must have a unique name.")
+            else:
+                names[fname] = fn["id"]
+
+
+def check_missing_descriptions(spec: dict, result: LintResult):
+    """Warn about functions, parameters, and outputs without descriptions."""
+    for fn in spec.get("functions", []):
+        fid = fn["id"]
+
+        # Function description
+        if not fn.get("description"):
+            result.add("info", "missing_function_description",
+                f"Function '{fid}' has no description.",
+                hint="Add a one-sentence description of what this function does.")
+
+        # Parameter descriptions
+        for param in fn.get("inputs", []):
+            pname = param.get("name", "")
+            if not param.get("description") and pname:
+                result.add("info", "missing_parameter_description",
+                    f"Function '{fid}': parameter '{pname}' has no description.",
+                    hint="Add a description explaining the purpose of this parameter.")
+
+        # Output description
+        output = fn.get("output", {})
+        if output and not output.get("description"):
+            result.add("info", "missing_output_description",
+                f"Function '{fid}': output has no description.",
+                hint="Add a description explaining what this function returns.")
+
+
+def check_unused_functions(spec: dict, data_spec: Optional[Dict[str, Any]], result: LintResult):
+    """Warn about functions not referenced by any entity's apiRef."""
+    if not data_spec:
+        return
+
+    api_refs = set()
+    for entity in data_spec.get("entities", []):
+        for method in entity.get("methods", []):
+            api_ref = method.get("apiRef", "")
+            if api_ref:
+                api_refs.add(api_ref)
+
+    for fn in spec.get("functions", []):
+        fid = fn["id"]
+        if fid not in api_refs:
+            result.add("warning", "unused_function",
+                f"Function '{fid}' is not referenced by any entity's apiRef.",
+                hint="Either add this function to an entity's methods, or remove it if unused.")
+
+
+def check_cross_spec_types(spec: dict, data_spec: Optional[Dict[str, Any]], result: LintResult):
+    """Verify that types used in ApiSpec match exactly with DataSpec.
+
+    Checks:
+    - Entity names match exactly (case-sensitive)
+    - Enum names match exactly
+    - Primitive names match exactly
+    - Array notation is consistent
+    """
+    if not data_spec:
+        return
+
+    entity_names = {e["name"] for e in data_spec.get("entities", [])}
+    enum_names = {e["name"] for e in data_spec.get("enums", [])}
+    primitives = set(data_spec.get("primitives", ["string", "number", "boolean", "null", "any"]))
+    valid_types = entity_names | enum_names | primitives
+
+    for fn in spec.get("functions", []):
+        fid = fn["id"]
+
+        # Check parameter types
+        for param in fn.get("inputs", []):
+            ptype = param.get("type", "")
+            base = resolve_base_type(ptype)
+            if base and base not in valid_types:
+                # Check if it's close to a valid type (case-insensitive match)
+                similar = [t for t in valid_types if t.lower() == base.lower()]
+                if similar:
+                    result.add("error", "type_case_mismatch",
+                        f"Function '{fid}': parameter '{param['name']}' type '{ptype}' "
+                        f"case doesn't match data spec type '{similar[0]}'.",
+                        hint="Type names are case-sensitive. Use '{similar[0]}' (not '{base}').")
+                else:
+                    result.add("error", "type_ref_missing",
+                        f"Function '{fid}': parameter '{param['name']}' type '{ptype}' "
+                        f"is not defined in the data spec.",
+                        hint=f"Define '{base}' in the data spec or use an existing type.")
+
+        # Check output type
+        output_type = fn.get("output", {}).get("type", "")
+        if output_type:
+            base = resolve_base_type(output_type)
+            if base and base not in valid_types:
+                similar = [t for t in valid_types if t.lower() == base.lower()]
+                if similar:
+                    result.add("error", "type_case_mismatch",
+                        f"Function '{fid}': output type '{output_type}' "
+                        f"case doesn't match data spec type '{similar[0]}'.",
+                        hint="Type names are case-sensitive. Use '{similar[0]}' (not '{base}').")
+                else:
+                    result.add("error", "output_type_ref_missing",
+                        f"Function '{fid}': output type '{output_type}' "
+                        f"is not defined in the data spec.",
+                        hint=f"Define '{base}' in the data spec or use an existing type.")
+
+
+def check_required_parameter_description(spec: dict, result: LintResult):
+    """Required parameters must have descriptions."""
+    for fn in spec.get("functions", []):
+        fid = fn["id"]
+        for param in fn.get("inputs", []):
+            if param.get("required", False) and not param.get("description"):
+                result.add("warning", "required_param_no_description",
+                    f"Function '{fid}': required parameter '{param['name']}' has no description.",
+                    hint="Required parameters should always have a description explaining their purpose.")
+
+
+def check_internal_function_visibility(spec: dict, result: LintResult):
+    """Warn about internal functions that have public-facing characteristics.
+
+    Internal functions should not be:
+    - Documented with error conditions (errors are for public APIs)
+    - Have public-facing tags
+    """
+    for fn in spec.get("functions", []):
+        if fn.get("visibility") == "internal":
+            fid = fn["id"]
+
+            # Internal functions with error conditions
+            errors = fn.get("errors", [])
+            if errors:
+                result.add("info", "internal_function_with_errors",
+                    f"Function '{fid}' is internal but documents error conditions.",
+                    hint="Internal functions should handle errors internally. "
+                         "Consider making this public if errors need to be exposed.")
+
+            # Internal functions with public-facing tags
+            tags = fn.get("tags", [])
+            public_tags = {"public", "api", "rest", "graphql"}
+            if public_tags & set(tags):
+                result.add("info", "internal_function_public_tags",
+                    f"Function '{fid}' is internal but has public-facing tags: {tags}.",
+                    hint="Internal functions should not have public-facing tags.")
+
+
 # ── Cross-spec checks ─────────────────────────────────────────────────────────
 
 def check_entity_refs(spec: dict, data_spec: Optional[Dict[str, Any]], result: LintResult):
@@ -257,11 +415,17 @@ def run_lint(spec: dict, schema_path: Optional[Path], data_spec: Optional[Dict[s
     fn_ids = check_functions(spec, result)
     check_errors(spec, fn_ids, result)
     check_visibility(spec, result)
+    check_duplicate_names(spec, result)
+    check_missing_descriptions(spec, result)
+    check_required_parameter_description(spec, result)
+    check_internal_function_visibility(spec, result)
 
     # Cross-spec checks
     check_entity_refs(spec, data_spec, result)
     check_module_match(spec, data_spec, result)
     check_version_match(spec, data_spec, result)
+    check_unused_functions(spec, data_spec, result)
+    check_cross_spec_types(spec, data_spec, result)
 
     if strict:
         for w in result.warnings:
