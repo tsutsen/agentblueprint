@@ -97,8 +97,8 @@ AgentBlueprint/
 
 Each spec has two files:
 
-- **Interview schema** (`skills/blueprint/schemas/markdown/`) — human-readable instructions for the blueprint orchestrator
-- **JSON schema** (`skills/blueprint/schemas/json/`) — machine-validation schema
+- **Markdown schema** (`skills/blueprint/schemas/markdown/`) — reference documentation, generated Markdown adopts JSON schema structure
+- **JSON schema** (`skills/blueprint/schemas/json/`) — machine-validation schema, source of truth for structure
 
 ### Linters
 
@@ -128,13 +128,16 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 
 
 **Checks:**
-- Duplicate IDs, sequential numbering gaps
-- Reference resolution (reqRefs in stories/criteria → FRs/NFRs)
-- Planguage enforcement (no implementation details or thresholds in FRs)
-- Actor consistency between stories and requirements
-- Coverage (every FR referenced by a story and gated by a criterion)
-- NFR completeness (TBD Scale/Meter flagged by status level)
-- Non-goal quality (vague exclusions, weak reasoning)
+- `check_duplicates` — Duplicate IDs, sequential numbering gaps
+- `check_sequential` — Non-sequential ID numbering (gaps)
+- `check_objective` — Objective present and re-confirmed
+- `check_functional_requirements` — FR content validation
+- `check_nfrs` — NFR completeness (TBD Scale/Meter flagged)
+- `check_user_stories` — User story validation and actor consistency
+- `check_success_criteria` — Success criteria validation
+- `check_coverage` — Every FR referenced by a story and gated by a criterion
+- `check_non_goals` — Non-goal quality (vague exclusions, weak reasoning)
+- `check_glossary_refs` — Glossary reference validation
 
 **Completeness gates (10):**
 - `draft` — objective present, ≥1 FR, ≥1 story, ≥1 criterion, ≥1 non-goal
@@ -147,10 +150,14 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 
 
 **Checks:**
-- Circular definitions
-- Cross-spec coverage (terms referenced in other specs)
-- Definition quality (≥10 chars, examples/related terms)
-- Category coverage (domain-tagged terms)
+- `check_gl_ids` — Glossary ID format validation
+- `check_duplicates` — Duplicate term IDs
+- `check_self_reference` — Terms referencing themselves
+- `check_circular_definitions` — Circular definition chains
+- `check_related_terms` — Related terms completeness
+- `check_synonym_conflicts` — Synonym conflict detection
+- `check_definition_quality` — Definition quality (≥10 chars, examples/related terms)
+- `check_cross_spec_coverage` — Cross-spec coverage (terms referenced in other specs)
 
 **Completeness gates (5):**
 - `draft` — ≥3 terms, all definitions ≥10 chars
@@ -163,11 +170,20 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 
 
 **Checks:**
-- IA/screen consistency (all inventory screens have specs)
-- Journey coverage (all journeys reference user stories)
-- Forbidden content (implementation leaks in design goals)
-- UXAC completeness (all screens have acceptance criteria)
-- Pattern coverage (interaction patterns present)
+- `check_duplicates` — Duplicate IDs, sequential numbering gaps
+- `check_project_and_version` — Project and version pins
+- `check_design_goals` — Design goals validation
+- `check_personas` — Persona validation
+- `check_journeys` — Journey validation and user story coverage
+- `check_ia` — Information architecture validation
+- `check_screen_inventory` — Screen inventory completeness
+- `check_screen_specs` — Screen spec validation
+- `check_interaction_patterns` — Interaction patterns present
+- `check_uxac` — UXAC completeness (all screens have acceptance criteria)
+- `check_us_journey_coverage` — Journey coverage (all journeys reference user stories)
+- `check_forbidden_content` — Implementation leaks in design goals
+- `check_screens_reachable` — Screen reachability
+- `check_glossary_refs` — Glossary reference validation
 
 **Completeness gates (12):**
 - `draft` — design goals, ≥1 persona, ≥1 journey, ≥1 screen
@@ -180,11 +196,26 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 
 
 **Checks:**
-- Dependency cycles between components
-- REQ/NFR resolution (every requirement assigned to a component)
-- Overlapping responsibilities (components sharing REQ refs)
-- Isolated components (no dependency participation)
-- Version tracking (dataSpecVersion, apiSpecVersion)
+- `check_duplicates` — Duplicate IDs, sequential numbering gaps
+- `check_project_match` — Project name and version pins
+- `check_version_pins` — Version pin validation
+- `check_components` — Component validation
+- `check_subsystems` — Subsystem validation
+- `check_data_flows` — Data flow validation
+- `check_constraints` — Constraint validation
+- `check_req_nfr_refs` — REQ/NFR resolution (every requirement assigned to a component)
+- `check_fr_coverage` — Functional requirement coverage
+- `check_nfr_coverage` — Non-functional requirement coverage
+- `check_subsystem_empty` — Empty subsystem detection
+- `check_subsystem_overlap` — Overlapping responsibilities (components sharing REQ refs)
+- `check_data_ref_valid` — Data reference validation
+- `check_component_responsibility_count` — Component responsibility count
+- `check_data_flow_step_count` — Data flow step count
+- `check_external_component_count` — External component count
+- `check_dependency_depth` — Dependency depth validation
+- `check_isolated_components` — Isolated components (no dependency participation)
+- `check_flow_descriptions` — Flow descriptions present
+- `check_flow_data_refs` — Flow data reference validation
 
 **Completeness gates (10):**
 - `draft` — overview summary, ≥1 subsystem, ≥2 components, ≥1 data flow, ≥1 constraint
@@ -197,28 +228,28 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 
 
 **Checks:**
-- Entity naming (PascalCase), field naming (camelCase), method naming (camelCase)
-- Type resolution (primitives, entities, enums)
-- Relationship endpoints (valid entities, valid types, warns on self-references)
-- Enum formats (PascalCase), enum values (SCREAMING_SNAKE_CASE)
-- Method apiRef format (FN-<camelCase>)
-- Visibility validation (public/internal)
-- Primitives completeness (checks for missing primitives like `void`)
-- Primitives quality (warns on "any")
-- Enum-entity collision (same name as entity and enum)
-- Relationship targets enums (error — enums are types, not relationship targets)
-- Duplicate field names within entities
-- Entity→field heuristic (≤3 fields, all primitives, ≤1 relationship, ≤1 referrer)
-- Field→entity heuristic (>5 fields, has identity, ≥2 referrers, ≥1 relationship, ≥2 API functions)
-- Methods coverage (entity with ≥2 API functions but 0 methods defined)
-- Entity similarity (similar names + high field overlap)
-- Similar entities disconnected (similar names but no relationship)
-- Entity list fields (warns when entity has `Entity[]` field — should be a relationship)
-- Bidirectional relationships (warns when A → B and B → A both exist — DBML limitation)
-- Label keyword mismatch (warns when relationship label contains keywords suggesting a different type)
-- Label no keyword match (warns when relationship label doesn't match any known keyword patterns)
+- `check_duplicates` — Duplicate IDs, sequential numbering gaps
+- `check_entities` — Entity naming (PascalCase), field naming (camelCase)
+- `check_enums` — Enum formatting (PascalCase names, SCREAMING_SNAKE_CASE values)
+- `check_abstract_entity_relationships` — Abstract entity relationship validation
+- `check_relationships` — Relationship endpoints (valid entities, valid types, warns on self-references)
+- `check_relationship_label_keywords` — Label keyword matching
+- `check_enum_entity_conflict` — Enum-entity collision (same name as entity and enum)
+- `check_field_type_kinds` — Type resolution (primitives, entities, enums)
+- `check_duplicate_fields` — Duplicate field names within entities
+- `check_entity_should_be_field` — Entity→field heuristic (≤3 fields, all primitives, ≤1 relationship, ≤1 referrer)
+- `check_field_should_be_entity` — Field→entity heuristic (>5 fields, has identity, ≥2 referrers, ≥1 relationship, ≥2 API functions)
+- `check_methods_coverage` — Methods coverage (entity with ≥2 API functions but 0 methods defined)
+- `check_entity_similarity` — Entity similarity (similar names + high field overlap)
+- `check_similar_entities_connected` — Similar entities disconnected (similar names but no relationship)
+- `check_bidirectional_relationships` — Bidirectional relationships (warns when A → B and B → A both exist)
+- `check_entity_list_fields` — Entity list fields (warns when entity has `Entity[]` field)
+- `check_primitives` — Primitives completeness (checks for missing primitives like `void`), quality (warns on "any")
+- `check_pk_naming` — Primary key naming
+- `check_duplicate_relationships` — Duplicate relationship detection
+- `check_missing_descriptions` — Missing descriptions
 
-**Completeness gates (7):
+**Completeness gates (7):**
 - `draft` — ≥1 entity, ≥1 relationship
 - `review` — all entities have descriptions, no orphan entities, orphan percentage <20%
 - `confirmed` — all entities have field examples
@@ -229,12 +260,19 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 
 
 **Checks:**
-- Function ID format (FN-<camelCase>), parameter naming (camelCase)
-- Entity/type references (cross-checked against data spec)
-- Module/version match (against data spec)
-- Error code format (SCREAMING_SNAKE_CASE)
-- Side-effect detection (create/update/delete without error conditions)
-- Visibility validation
+- `check_duplicates` — Duplicate IDs, sequential numbering gaps
+- `check_functions` — Function ID format (FN-<camelCase>), parameter naming (camelCase)
+- `check_errors` — Error code format (SCREAMING_SNAKE_CASE)
+- `check_visibility` — Visibility validation
+- `check_duplicate_names` — Duplicate function names
+- `check_missing_descriptions` — Missing descriptions
+- `check_unused_functions` — Unused functions detection
+- `check_cross_spec_types` — Entity/type references (cross-checked against data spec)
+- `check_required_parameter_description` — Required parameter descriptions
+- `check_internal_function_visibility` — Internal function visibility enforcement
+- `check_entity_refs` — Entity reference validation
+- `check_module_match` — Module match (against data spec)
+- `check_version_match` — Version match (against data spec)
 
 **Completeness gates (6):**
 - `draft` — ≥1 function
@@ -247,11 +285,15 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 
 
 **Checks:**
-- fnRef resolution (against API spec)
-- Error coverage (every documented error has a test)
-- Placeholder detection (TODO/empty descriptions)
-- ID consistency (TST-<name>-NNN format, no duplicates)
-- Category balance (error-path and edge-case tests present)
+- `check_duplicate_ids` — Duplicate test IDs
+- `check_id_fn_consistency` — ID consistency (TST-<name>-NNN format), fnRef resolution
+- `check_category_rules` — Category balance (error-path and edge-case tests present)
+- `check_placeholder_values` — Placeholder detection (TODO/empty descriptions)
+- `check_api_refs` — API reference validation
+- `check_api_coverage` — Error coverage (every documented error has a test)
+- `check_function_coverage_summary` — Function coverage summary present
+- `check_glossary_refs` — Glossary reference validation
+- `check_lifecycle` — Lifecycle validation
 
 **Completeness gates (9):**
 - `draft` — ≥1 test, functionCoverage summary present
@@ -264,9 +306,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 
 
 **Checks:**
-- Requirement coverage (every REQ/NFR/US covered by tasks)
-- Dependency ordering (no circular or forward references)
-- Milestone outcomes (measurable, not just task lists)
+- `run_lint` — Requirement coverage (every REQ/NFR/US covered by tasks), dependency ordering (no circular or forward references), milestone outcomes (measurable, not just task lists)
 
 **Completeness gates:** None defined — taskplan coverage is derived from spec completeness.
 </details>
@@ -276,9 +316,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 
 
 **Checks:**
-- ID sequencing (IS-NNN gaps)
-- Dependency consistency (epic/issue parent references)
-- Epic coverage (all epics have issues)
+- `run_lint` — ID sequencing (IS-NNN gaps), dependency consistency (epic/issue parent references), epic coverage (all epics have issues)
 
 **Completeness gates:** None defined — issue lint is optional and epic-specific.
 </details>
@@ -288,11 +326,7 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 
 
 **Checks:**
-- REQ/NFR refs across all specs resolve correctly
-- US/FN refs consistent between specs
-- Entity/api refs match data spec definitions
-- API function coverage (every function tested)
-- Data-API alignment (API parameter/output types match data spec types)
+- `run_lint` — REQ/NFR refs across all specs resolve correctly, US/FN refs consistent between specs, entity/api refs match data spec definitions, API function coverage (every function tested), Data-API alignment (API parameter/output types match data spec types)
 
 **Completeness gates:** None — cross-spec layer is purely structural.
 </details>
@@ -302,10 +336,10 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 
 
 **Checks:**
-- Entity name drift (present in Markdown but not JSON, or vice versa)
-- Enum name drift (present in Markdown but not JSON, or vice versa)
-- Relationship drift (present in Markdown but not JSON, or vice versa)
-- Function ID drift (present in Markdown but not JSON, or vice versa)
+- `check_entity_consistency` — Entity name drift (present in Markdown but not JSON, or vice versa)
+- `check_enum_consistency` — Enum name drift (present in Markdown but not JSON, or vice versa)
+- `check_relationship_consistency` — Relationship drift (present in Markdown but not JSON, or vice versa)
+- `check_function_consistency` — Function ID drift (present in Markdown but not JSON, or vice versa)
 
 **Completeness gates:** None — consistency check is advisory.
 </details>
@@ -355,18 +389,19 @@ Each spec depends on:
 
 ## Output Layout
 
-After running a command, artifacts appear in the target project:
+After running a command, artifacts appear in the target project. JSON is the
+single source of truth; Markdown is derived from JSON.
 
 ```
 project/
-├── artifacts/              ← generated artifacts
-│   ├── GoalSpec.md + .json
-│   ├── Glossary.md + .json
-│   ├── DesignSpec.md + .json
-│   ├── ArchitectureSpec.md + .json
-│   ├── DataSpec.md + .json
-│   ├── ApiSpec.md + .json
-│   ├── TestSpec.md + .json
+├── artifacts/              ← generated artifacts (JSON is authoritative)
+│   ├── GoalSpec.json + .md
+│   ├── Glossary.json + .md
+│   ├── DesignSpec.json + .md
+│   ├── ArchitectureSpec.json + .md
+│   ├── DataSpec.json + .md
+│   ├── ApiSpec.json + .md
+│   ├── TestSpec.json + .md
 ├── tasks/                  ← generated tasks
 │   ├── PLAN.md
 │   ├── epics/
@@ -390,9 +425,8 @@ project/
 |------|-----------|---------|
 | `init_workspace` | `force?` | Creates directories, pre-creates artifact files, installs deps |
 | `load_artifact` | `artifactType` | Loads schema + dependencies, prefers JSON, validates required deps |
-| `write_section` | `filePath, section, content, sections_complete, sections_pending, jsonContent?` | Writes a confirmed section; optionally writes JSON artifact |
+| `write_section` | `filePath, section, content, sections_complete, sections_pending, jsonContent` | Writes JSON artifact (single source of truth); tracks section progress in `_sections` field |
 | `update_frontmatter` | `filePath, status, sections_complete, sections_pending` | Updates artifact frontmatter (status, sections, date) |
-| `dual_output` | `artifactType, filePath` | Validates existing JSON, sets status from frontmatter, finalizes JSON |
 | `lint` | `artifacts?[], mode?, epic?, epicsDir?` | Structural linting (`assess` for decisions, `raw` for full report) |
 | `handoff` | `{}` | Checks artifact availability against DEPS, produces handoff table |
 | `generate_tests` | `apiSpecPath?, goalSpecPath?, testSpecPath?, reqMappingPath?` | Auto-generate TestSpec from ApiSpec (happy/edge/error paths, reqRefs) |
@@ -423,9 +457,10 @@ project/
 
 ## Design Principles
 
-1. **Dual output** — every artifact has a Markdown version (human) and a JSON
-   version (machine). JSON is the authoritative dependency for downstream
-   artifacts.
+1. **JSON-first** — the JSON artifact is the single source of truth at all
+   times. `write_section` writes JSON directly during the interview.
+   Markdown is derived from JSON via `generate_artifact_markdown` after
+   lint passes. Zero risk of format drift.
 2. **Enforceable** — schemas define strict structure. Linters validate
    cross-spec consistency. No free-form gaps.
 3. **Composable** — each skill has a single responsibility. The orchestrator
@@ -435,8 +470,6 @@ project/
 5. **Read-only schemas** — schema files define the rules for artifacts but are
    never modified by artifact commands. To change a schema, edit it directly.
    Artifact commands only create new files in `artifacts/`.
-6. **JSON-first** — `write_section` accumulates JSON in memory across sections.
-   `dual_output` validates and finalizes. Markdown is never parsed for JSON.
-7. **Automation-ready** — `generate_tests` and `generate_diagrams` tools provide
+6. **Automation-ready** — `generate_tests` and `generate_diagrams` tools provide
    programmatic generation from ApiSpec and DataSpec, with post-generation
    review required.
