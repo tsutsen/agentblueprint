@@ -977,40 +977,6 @@ function registerWriteSection(pi: ExtensionAPI) {
     },
   });
 }
-      const hasContent = written.includes(content.slice(0, 50));
-      const hasStatus = written.includes("status: in_progress");
-      const hasUpdated = written.includes(`updated: ${updated}`);
-
-      if (!hasSection || !hasContent || !hasStatus || !hasUpdated) {
-        return {
-          content: [{ type: "text", text: `ERROR: write-section verification failed for ${filePath}` }],
-          details: { verified: false, path: filePath },
-          isError: true,
-        };
-      }
-
-      const jsonInfo = jsonWritten
-        ? `\n  JSON: ${jsonPath} written (${Object.keys(jsonContent).length} keys)`
-        : '';
-
-      return {
-        content: [{
-          type: "text",
-          text: `Section "${section}" written to ${filePath}. Frontmatter updated. Verified.${jsonInfo}`,
-        }],
-        details: {
-          verified: true,
-          path: filePath,
-          section,
-          status: "in_progress",
-          updated,
-          jsonWritten,
-          jsonPath: jsonPath || undefined,
-        },
-      };
-    },
-  });
-}
 
 // ── Tool: generate_tests ─────────────────────────────────────────────────────
 
