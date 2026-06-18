@@ -9,6 +9,7 @@
     "data":     "example.dataspec.json",
     "api":      "example.apispec.json",
     "test":     "example.testspec.json",
-    "plan":     "example.taskplan.json"
+    "plan":     "example.taskplan.json",
+    "issue":    "example.issue.json"
   }
 }

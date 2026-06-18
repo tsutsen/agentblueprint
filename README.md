@@ -92,6 +92,8 @@ AgentBlueprint/
 | `blueprint` | Orchestrator — loads schemas, manages dependencies, runs linters, delegates |
 | `interview` | Conducts schema-driven interviews with structured questioning |
 | `lint` | Runs the full SDLC lint suite — validates artifacts, checks completeness gates, detects drift |
+| `spec-upgrade` | Migrates artifact files from old schema format to new format |
+| `spec-generate-md` | Regenerates markdown schema docs from JSON schemas |
 
 ### Schemas
 
@@ -431,6 +433,9 @@ project/
 | `handoff` | `{}` | Checks artifact availability against DEPS, produces handoff table |
 | `generate_tests` | `apiSpecPath?, goalSpecPath?, testSpecPath?, reqMappingPath?` | Auto-generate TestSpec from ApiSpec (happy/edge/error paths, reqRefs) |
 | `generate_diagrams` | `dataSpecPath?, formats?, outputDir?` | Generate data model diagrams (puml, mermaid, drawio, dbml, d2) |
+| `generate_artifact_markdown` | `artifactType, jsonPath` | Convert JSON artifact to Markdown (derived, zero drift) |
+| `generate_markdown_schemas` | `artifactType?[]` | Regenerate markdown schema docs from JSON schemas |
+| `spec_upgrade` | `artifactType, filePath` | Migrate artifact from old schema format to new format |
 
 ## ID Naming Conventions
 
