@@ -1461,71 +1461,140 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
       let schemaFixes = 0;
       const schemaChanges: string[] = [];
 
-      // Known property renames: oldKey -> newKey
-      const propertyRenames: Record<string, Record<string, string>> = {
-        api: { parameters: "inputs" },
-      };
+      // Properties that are safe to keep even if not in schema (metadata, provenance)
+      const safeExtraProps = new Set([
+        "version", "schemaVersion", "module", "status", "artifact",
+        "createdAt", "updatedAt", "created", "updated",
+        "_comment", "_meta", "_source",
+      ]);
 
-      // Known properties to remove (renamed or deprecated)
-      const propertiesToRemove: Record<string, string[]> = {
-        // api: ["parameters"], // handled by rename
-      };
-
-      // Known properties to add with defaults
-      const propertiesToAdd: Record<string, Record<string, any>> = {
-        api: {
-          inputs: [],
-          glossaryRefs: [],
-        },
-      };
-
-      // Apply schema-level fixes
-      const renames = propertyRenames[artifactType] || {};
-      for (const [oldKey, newKey] of Object.entries(renames)) {
-        if (oldKey in existingJson && !(newKey in existingJson)) {
-          existingJson[newKey] = existingJson[oldKey];
-          delete existingJson[oldKey];
-          schemaFixes++;
-          schemaChanges.push(`Renamed "${oldKey}" → "${newKey}"`);
-        }
-      }
-
-      // Remove deprecated properties
-      const toRemove = propertiesToRemove[artifactType] || [];
-      for (const key of toRemove) {
-        if (key in existingJson) {
-          delete existingJson[key];
-          schemaFixes++;
-          schemaChanges.push(`Removed deprecated property "${key}"`);
-        }
-      }
-
-      // Add missing properties with defaults
-      const toAdd = propertiesToAdd[artifactType] || {};
-      for (const [key, defaultValue] of Object.entries(toAdd)) {
-        if (!(key in existingJson)) {
-          existingJson[key] = JSON.parse(JSON.stringify(defaultValue));
-          schemaFixes++;
-          schemaChanges.push(`Added missing property "${key}"`);
-        }
-      }
-
-      // Array-level schema fixes: fix function-level issues
-      if (artifactType === "api" && Array.isArray(existingJson.functions)) {
-        for (const fn of existingJson.functions) {
-          // Rename parameters → inputs at function level
-          if ("parameters" in fn && !("inputs" in fn)) {
-            fn.inputs = fn.parameters;
-            delete fn.parameters;
-            schemaFixes++;
-            schemaChanges.push(`Function ${fn.id}: renamed "parameters" → "inputs"`);
+      // Resolve a $ref to its schema definition
+      function resolveRef(ref: string): any {
+        if (!ref || !ref.startsWith("#/")) return null;
+        const parts = ref.slice(2).split("/");
+        let current: any = schema;
+        for (const part of parts) {
+          if (current && typeof current === "object") {
+            current = current[part];
+          } else {
+            return null;
           }
-          // Remove disallowed output.name (keep for now, schema allows it)
-          // Add inputs if missing
-          if (!("inputs" in fn)) {
-            fn.inputs = [];
+        }
+        return current;
+      }
+
+      // Get the effective schema for a value (resolving $ref, allOf, etc.)
+      function getEffectiveSchema(val: any, fieldSchema: any): any {
+        if (!fieldSchema) return null;
+        if (fieldSchema.$ref) {
+          return resolveRef(fieldSchema.$ref) || fieldSchema;
+        }
+        if (fieldSchema.allOf && Array.isArray(fieldSchema.allOf)) {
+          // Merge allOf schemas
+          let merged: any = { properties: {}, required: [] };
+          for (const sub of fieldSchema.allOf) {
+            const subSchema = getEffectiveSchema(val, sub);
+            if (subSchema?.properties) {
+              merged.properties = { ...merged.properties, ...subSchema.properties };
+            }
+            if (subSchema?.required) {
+              merged.required = [...(merged.required || []), ...subSchema.required];
+            }
+          }
+          return merged;
+        }
+        return fieldSchema;
+      }
+
+      // Recursively fix an object against its schema
+      function fixObjectAgainstSchema(
+        obj: any,
+        schema: any,
+        path: string,
+        removeExtra: boolean
+      ) {
+        if (!schema || !schema.properties || typeof obj !== "object" || Array.isArray(obj)) return;
+
+        const requiredFields = new Set(schema.required || []);
+        const schemaProps = new Set(Object.keys(schema.properties));
+
+        // Add missing required properties
+        for (const req of requiredFields) {
+          if (!(req in obj)) {
+            const reqSchema = schema.properties[req];
+            let defaultValue: any = null;
+            if (reqSchema) {
+              if (reqSchema.type === "array") defaultValue = [];
+              else if (reqSchema.type === "object") defaultValue = {};
+              else if (reqSchema.default !== undefined) defaultValue = reqSchema.default;
+            }
+            obj[req] = defaultValue;
             schemaFixes++;
-            schemaChanges.push(`Function ${fn.id}: added missing "inputs"`);
+            schemaChanges.push(`${path}.${req}: added (required)`);
+          }
+        }
+
+        // Remove extra properties not in schema
+        if (removeExtra && schema.additionalProperties === false) {
+          for (const key of Object.keys(obj)) {
+            if (!schemaProps.has(key) && !safeExtraProps.has(key)) {
+              // Check if it's a glossaryRefs field that schema now supports
+              const grf = glossaryRefsFieldMap[artifactType] || "glossaryRefs";
+              if (key === grf) {
+                // Schema doesn't have it yet — skip, will be added
+                continue;
+              }
+              delete obj[key];
+              schemaFixes++;
+              schemaChanges.push(`${path}.${key}: removed (not in schema)`);
+            }
+          }
+        }
+
+        // Recurse into nested objects and arrays
+        for (const [key, fieldSchema] of Object.entries(schema.properties)) {
+          if (!(key in obj)) continue;
+          const effective = getEffectiveSchema(obj[key], fieldSchema);
+          if (!effective) continue;
+
+          if (effective.type === "object" && typeof obj[key] === "object" && !Array.isArray(obj[key])) {
+            fixObjectAgainstSchema(obj[key], effective, `${path}.${key}`, true);
+          } else if (effective.type === "array" && effective.items && Array.isArray(obj[key])) {
+            for (let i = 0; i < obj[key].length; i++) {
+              const item = obj[key][i];
+              if (effective.items.$ref) {
+                const refSchema = resolveRef(effective.items.$ref);
+                if (refSchema && refSchema.properties) {
+                  fixObjectAgainstSchema(item, refSchema, `${path}.${key}[${i}]`, true);
+                }
+              } else if (effective.items.properties) {
+                fixObjectAgainstSchema(item, effective.items, `${path}.${key}[${i}]`, true);
+              }
+            }
+          }
+        }
+      }
+
+      // Run schema fix on the root object and all array items
+      if (schema.properties) {
+        fixObjectAgainstSchema(existingJson, schema, artifactType, true);
+
+        // Also fix array fields (e.g., functions[], userJourneys[])
+        for (const [key, fieldSchema] of Object.entries(schema.properties)) {
+          if (fieldSchema.type === "array" && fieldSchema.items && Array.isArray(existingJson[key])) {
+            const itemsSchema = fieldSchema.items.$ref
+              ? resolveRef(fieldSchema.items.$ref)
+              : fieldSchema.items;
+            if (itemsSchema && itemsSchema.properties) {
+              for (let i = 0; i < existingJson[key].length; i++) {
+                fixObjectAgainstSchema(
+                  existingJson[key][i],
+                  itemsSchema,
+                  `${key}[${i}]`,
+                  true
+                );
+              }
+            }
           }
         }
       }
