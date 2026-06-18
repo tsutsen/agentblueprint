@@ -1295,74 +1295,54 @@ function registerGenerateMarkdownSchemas(pi: ExtensionAPI, extDir: string) {
 // ── Tool: spec_upgrade ──────────────────────────────────────────────────────
 
 function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
-  pi.registerTool({
-    name: "spec_upgrade",
-    label: "Spec Upgrade",
-    description:
-      "Migrate artifact files from old schema format to new format. " +
-      "Detects and fixes schema mismatches (property renames, missing/extra fields). " +
-      "Loads the glossary and scans content to populate glossaryRefs intelligently. " +
-      "Converts old string arrays to structured objects. Updates both Markdown and JSON.",
-    parameters: Type.Object({
-      artifactType: Type.String({
-        description: "Artifact type: goal, glossary, design, arch, data, api, test, plan, issues",
-      }),
-      filePath: Type.String({
-        description: "Path to the markdown file (e.g. artifacts/GoalSpec.md)",
-      }),
-    }),
-    async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-      const { artifactType, filePath } = params;
-      const fullPath = path.resolve(ctx.cwd, filePath);
-      const jsonPath = fullPath.replace(/.md$/, ".json");
+  // Map of command keys to schema names and default file paths
+  const ARTIFACT_TYPES: Array<{ command: string; schemaName: string; mdPath: string; jsonPath: string }> = [
+    { command: "goal", schemaName: "goalspec", mdPath: "artifacts/GoalSpec.md", jsonPath: "artifacts/GoalSpec.json" },
+    { command: "glossary", schemaName: "glossary", mdPath: "artifacts/Glossary.md", jsonPath: "artifacts/Glossary.json" },
+    { command: "design", schemaName: "designspec", mdPath: "artifacts/DesignSpec.md", jsonPath: "artifacts/DesignSpec.json" },
+    { command: "arch", schemaName: "archspec", mdPath: "artifacts/ArchitectureSpec.md", jsonPath: "artifacts/ArchitectureSpec.json" },
+    { command: "data", schemaName: "dataspec", mdPath: "artifacts/DataSpec.md", jsonPath: "artifacts/DataSpec.json" },
+    { command: "api", schemaName: "apispec", mdPath: "artifacts/ApiSpec.md", jsonPath: "artifacts/ApiSpec.json" },
+    { command: "test", schemaName: "testspec", mdPath: "artifacts/TestSpec.md", jsonPath: "artifacts/TestSpec.json" },
+    { command: "plan", schemaName: "taskplan", mdPath: "tasks/PLAN.md", jsonPath: "tasks/PLAN.json" },
+    { command: "issues", schemaName: "issue", mdPath: "", jsonPath: "" }, // issues uses per-issue files
+  ];
 
-      // 1. Load schema
-      const schemaName = artifactType === "arch" ? "archspec"
-        : artifactType === "data" ? "dataspec"
-        : artifactType === "api" ? "apispec"
-        : artifactType === "test" ? "testspec"
-        : artifactType === "design" ? "designspec"
-        : artifactType === "glossary" ? "glossary"
-        : artifactType === "goal" ? "goalspec"
-        : artifactType === "plan" ? "taskplan"
-        : artifactType === "issues" ? "issue"
-        : null;
+  // Helper: upgrade a single artifact. Returns result text and details.
+  async function upgradeSingleArtifact(
+    artifactType: string,
+    mdPath: string,
+    jsonPath: string,
+    extDir: string,
+    ctx: any
+  ): Promise<{ text: string; details: any }> {
+    const fullPath = path.resolve(ctx.cwd, mdPath);
 
-      if (!schemaName) {
-        return {
-          content: [{ type: "text", text: `Unknown artifact type: ${artifactType}` }],
-          details: { success: false },
-          isError: true,
-        };
-      }
+    // 1. Load schema
+    const schemaName = ARTIFACT_TYPES.find(a => a.command === artifactType)?.schemaName;
+    if (!schemaName) {
+      return { text: `Unknown artifact type: ${artifactType}`, details: { success: false } };
+    }
 
-      const schemaPath = resolveSchemaPath(extDir, schemaName);
-      if (!fs.existsSync(schemaPath)) {
-        return {
-          content: [{ type: "text", text: `Schema not found: ${schemaPath}` }],
-          details: { success: false },
-          isError: true,
-        };
-      }
+    const schemaPath = resolveSchemaPath(extDir, schemaName);
+    if (!fs.existsSync(schemaPath)) {
+      return { text: `Schema not found: ${schemaPath}`, details: { success: false, error: "schema_missing" } };
+    }
 
-      const schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"));
+    const schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"));
 
-      // 2. Load existing files
-      if (!fs.existsSync(fullPath)) {
-        return {
-          content: [{ type: "text", text: `File not found: ${fullPath}` }],
-          details: { success: false },
-          isError: true,
-        };
-      }
+    // 2. Load existing files
+    if (!fs.existsSync(fullPath)) {
+      return { text: `File not found: ${fullPath}`, details: { success: false, error: "file_missing" } };
+    }
 
-      const markdown = fs.readFileSync(fullPath, "utf-8");
-      const fm = extractFrontmatter(markdown);
+    const markdown = fs.readFileSync(fullPath, "utf-8");
+    const fm = extractFrontmatter(markdown);
 
-      let existingJson: any = {};
-      if (fs.existsSync(jsonPath)) {
-        existingJson = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
-      }
+    let existingJson: any = {};
+    if (jsonPath && fs.existsSync(path.resolve(ctx.cwd, jsonPath))) {
+      existingJson = JSON.parse(fs.readFileSync(path.resolve(ctx.cwd, jsonPath), "utf-8"));
+    }
 
       // 3. Load glossary for term matching
       let glossaryTerms: Array<{ id: string; term: string; description: string }> = [];
@@ -1469,6 +1449,37 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
         confidence: "high" | "medium" | "low" | "none";
         reason: string;
       }> = [];
+
+      // Collect all definitions referenced by the schema and verify they exist
+      const schemaRefErrors: string[] = [];
+      function validateSchemaRefs(schemaObj: any, path = "") {
+        if (!schemaObj || typeof schemaObj !== "object") return;
+        if (schemaObj.$ref && typeof schemaObj.$ref === "string" && schemaObj.$ref.startsWith("#/definitions/")) {
+          const defName = schemaObj.$ref.split("/").pop();
+          if (!schema.definitions || !schema.definitions[defName]) {
+            schemaRefErrors.push(`${path || "root"}: \"$ref: ${schemaObj.$ref}\" — definition \"${defName}\" not found in schema definitions.`);
+          }
+        }
+        for (const key of Object.keys(schemaObj)) {
+          if (key === "$ref" || key === "description" || key === "type" || key === "required" || key === "additionalProperties" || key === "items" || key === "properties" || key === "allOf" || key === "anyOf" || key === "oneOf" || key === "default" || key === "pattern" || key === "minLength" || key === "maxLength" || key === "minItems" || key === "maxItems" || key === "uniqueItems" || key === "readOnly" || key === "minProperties" || key === "maxProperties") {
+            // skip known JSON Schema keywords
+          } else {
+            validateSchemaRefs(schemaObj[key], `${path}.${key}`);
+          }
+        }
+        // Also check items and allOf/anyOf/oneOf sub-schemas
+        if (schemaObj.items) validateSchemaRefs(schemaObj.items, `${path}.items`);
+        if (schemaObj.allOf) schemaObj.allOf.forEach((s: any, i: number) => validateSchemaRefs(s, `${path}.allOf[${i}]`));
+        if (schemaObj.anyOf) schemaObj.anyOf.forEach((s: any, i: number) => validateSchemaRefs(s, `${path}.anyOf[${i}]`));
+        if (schemaObj.oneOf) schemaObj.oneOf.forEach((s: any, i: number) => validateSchemaRefs(s, `${path}.oneOf[${i}]`));
+        // Also recurse into properties to find $refs inside property schemas
+        if (schemaObj.properties) {
+          for (const [propName, propSchema] of Object.entries(schemaObj.properties)) {
+            validateSchemaRefs(propSchema, `${path}.properties.${propName}`);
+          }
+        }
+      }
+      validateSchemaRefs(schema);
 
       // GlossaryRefs field name map (needed by fixObjectAgainstSchema)
       const glossaryRefsFieldMap: Record<string, string> = {
@@ -1626,7 +1637,10 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
           for (const key of Object.keys(obj)) {
             if (!schemaProps.has(key) && !safeExtraProps.has(key)) {
               const grf = glossaryRefsFieldMap[artifactType] || "glossaryRefs";
-              if (key === grf) continue;
+              // Only skip glossaryRefs if it's actually defined in the schema at this level.
+              // If the schema doesn't define it (e.g. requirementsTestEntry in testspec),
+              // treat it as an extra property that violates additionalProperties: false.
+              if (key === grf && schemaProps.has(grf)) continue;
 
               const value = obj[key];
               if (!hasMeaningfulValue(value)) {
@@ -1662,16 +1676,25 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
                 schemaFixes++;
                 schemaChanges.push(`${path}.${key} → ${targetInfo.target} (auto-migrated)`);
               } else {
-                // Medium/low confidence — report for approval, don't migrate
-                dataAtRisk.push({
-                  path,
-                  key,
-                  value,
-                  valueType: Array.isArray(value) ? "array" : typeof value,
-                  suggestedTarget: targetInfo?.target,
-                  confidence: targetInfo?.confidence || "low",
-                  reason: `Not in schema (confidence: ${targetInfo?.confidence || "none"})`,
-                });
+                // additionalProperties: false violation — field not in schema.
+                // Remove it (matches linter behavior) and report as schema fix.
+                if (targetInfo && targetInfo.confidence === "medium") {
+                  // Medium confidence — remove but report for awareness
+                  dataAtRisk.push({
+                    path,
+                    key,
+                    value,
+                    valueType: Array.isArray(value) ? "array" : typeof value,
+                    suggestedTarget: targetInfo.target,
+                    confidence: "medium",
+                    reason: `Not in schema (confidence: medium, suggested target: ${targetInfo.target})`,
+                  });
+                } else {
+                  // No plausible target or low confidence — just remove
+                  delete obj[key];
+                  schemaFixes++;
+                  schemaChanges.push(`${path}.${key}: removed (not in schema)`);
+                }
               }
             }
           }
@@ -1812,9 +1835,10 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
       const migratedCount = schemaChanges.filter(c => c.includes("→") && c.includes("migrated")).length;
       const removedCount = schemaChanges.filter(c => c.includes("removed")).length;
       const hasDataAtRisk = dataAtRisk.length > 0;
+      const hasSchemaRefErrors = schemaRefErrors.length > 0;
 
       let resultText = "";
-      if (allChanges.length === 0 && !hasDataAtRisk) {
+      if (allChanges.length === 0 && !hasDataAtRisk && !hasSchemaRefErrors) {
         resultText = `Upgrade complete for ${artifactType}: No changes needed. Files are up to date.`;
       } else {
         resultText = `Upgrade complete for ${artifactType}:\n`;
@@ -1826,6 +1850,14 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
         if (fieldsAdded > 0) resultText += `  Glossary fields added: ${fieldsAdded}\n`;
         if (allChanges.length > 0) {
           resultText += `  Changes:\n${allChanges.map(c => `    - ${c}`).join("\n")}\n`;
+        }
+        if (hasSchemaRefErrors) {
+          resultText += `\n⚠️  Schema reference errors (schema-level issue — schema must be fixed):\n`;
+          for (const err of schemaRefErrors) {
+            resultText += `    ✗ ${err}\n`;
+          }
+          resultText += `\n  These errors indicate the schema itself is broken (e.g., a \"$ref\" points to a definition that doesn't exist).\n`;
+          resultText += `  The spec-upgrade tool cannot fix these. Fix the JSON schema file, then re-run spec-upgrade.\n`;
         }
         if (hasDataAtRisk) {
           const needsApproval = dataAtRisk.filter(r => r.confidence !== "high");
@@ -1847,12 +1879,84 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
           resultText += `\n  These fields were NOT migrated. Run /skill:spec-upgrade again with --approve flag\n`;
           resultText += `  to auto-migrate medium-confidence matches, or handle manually.\n`;
         }
-        resultText += `\nFiles updated:\n  - ${filePath}\n  - ${jsonPath}\n\nRun /skill:lint ${artifactType} to verify.`;
+        resultText += `\nFiles updated:\n  - ${mdPath}\n  - ${jsonPath}\n\nRun /skill:lint ${artifactType} to verify.`;
       }
 
       return {
-        content: [{ type: "text", text: resultText }],
-        details: { success: true, fieldsAdded, changes, schemaFixes, dataAtRisk },
+        text: resultText,
+        details: { success: true, fieldsAdded, changes, schemaFixes, dataAtRisk, schemaRefErrors },
+      };
+  }
+
+  pi.registerTool({
+    name: "spec_upgrade",
+    label: "Spec Upgrade",
+    description:
+      "Migrate artifact files from old schema format to new format. " +
+      "Detects and fixes schema mismatches (property renames, missing/extra fields). " +
+      "Loads the glossary and scans content to populate glossaryRefs intelligently. " +
+      "Converts old string arrays to structured objects. Updates both Markdown and JSON. " +
+      'Pass artifactType "all" to upgrade every artifact at once.',
+    parameters: Type.Object({
+      artifactType: Type.String({
+        description: "Artifact type: goal, glossary, design, arch, data, api, test, plan, issues. Use 'all' to upgrade every artifact.",
+      }),
+      filePath: Type.Optional(Type.String({
+        description: "Path to the markdown file (e.g. artifacts/GoalSpec.md). Not needed when artifactType is 'all'.",
+      })),
+    }),
+    async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+      const { artifactType, filePath } = params;
+
+      // Handle artifactType: "all"
+      if (artifactType === "all") {
+        const results: Array<{ artifact: string; text: string; details: any }> = [];
+        for (const art of ARTIFACT_TYPES) {
+          // Skip issues - uses per-issue files
+          if (art.command === "issues") continue;
+          // Skip if no mdPath (plan uses tasks/PLAN.md which may not exist yet)
+          if (!art.mdPath) continue;
+          const result = await upgradeSingleArtifact(art.command, art.mdPath, art.jsonPath, extDir, ctx);
+          results.push({ artifact: art.command, text: result.text, details: result.details });
+        }
+        const lines = results.map(r => r.text);
+        return {
+          content: [{ type: "text", text: lines.join("\n\n") }],
+          details: { success: true, results },
+        };
+      }
+
+      // Single artifact upgrade
+      const art = ARTIFACT_TYPES.find(a => a.command === artifactType);
+      if (!art) {
+        return {
+          content: [{ type: "text", text: `Unknown artifact type: ${artifactType}` }],
+          details: { success: false },
+          isError: true,
+        };
+      }
+
+      const mdPath = filePath || art.mdPath;
+      const result = await upgradeSingleArtifact(artifactType, mdPath, art.jsonPath, extDir, ctx);
+
+      if (result.details && result.details.error === "file_missing") {
+        return {
+          content: [{ type: "text", text: result.text }],
+          details: result.details,
+          isError: true,
+        };
+      }
+      if (result.details && result.details.error === "schema_missing") {
+        return {
+          content: [{ type: "text", text: result.text }],
+          details: result.details,
+          isError: true,
+        };
+      }
+
+      return {
+        content: [{ type: "text", text: result.text }],
+        details: result.details,
       };
     },
   });
