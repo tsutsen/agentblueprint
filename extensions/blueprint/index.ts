@@ -1460,6 +1460,14 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
       // 4. Schema mismatch detection and auto-fix
       let schemaFixes = 0;
       const schemaChanges: string[] = [];
+      const dataAtRisk: Array<{
+        path: string;
+        key: string;
+        value: any;
+        valueType: string;
+        suggestedTarget?: string;
+        reason: string;
+      }> = [];
 
       // Properties that are safe to keep even if not in schema (metadata, provenance)
       const safeExtraProps = new Set([
@@ -1467,6 +1475,71 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
         "createdAt", "updatedAt", "created", "updated",
         "_comment", "_meta", "_source",
       ]);
+
+      // Check if a value has meaningful content (not empty/null/placeholder)
+      function hasMeaningfulValue(val: any): boolean {
+        if (val === null || val === undefined) return false;
+        if (typeof val === "string") return val.trim().length > 0;
+        if (Array.isArray(val)) return val.length > 0;
+        if (typeof val === "object") {
+          const keys = Object.keys(val);
+          return keys.length > 0 && keys.some(k => hasMeaningfulValue(val[k]));
+        }
+        return true;
+      }
+
+      // Find the best-fitting target field for a value
+      function findBestTarget(value: any, currentPath: string, schema: any): string | undefined {
+        if (!schema || !schema.properties) return undefined;
+
+        const valueStr = JSON.stringify(value).slice(0, 100);
+        const valueKeys = typeof value === "object" && value !== null ? Object.keys(value) : [];
+
+        // Strategy 1: Look for a field with a matching name pattern
+        const nameMap: Record<string, string[]> = {
+          "inputs": ["inputs", "parameters", "args", "arguments"],
+          "output": ["output", "result", "response", "returnValue"],
+          "description": ["description", "desc", "detail", "summary"],
+          "name": ["name", "title", "label"],
+          "type": ["type", "kind", "category"],
+          "version": ["version", "ver", "revision"],
+          "component": ["component", "module", "part"],
+          "properties": ["properties", "fields", "attributes", "schema"],
+        };
+
+        for (const [target, patterns] of Object.entries(nameMap)) {
+          if (target in schema.properties) {
+            // Check if any pattern matches the current key or value structure
+            for (const pattern of patterns) {
+              if (currentPath.includes(pattern) || valueKeys.some(k => k.includes(pattern))) {
+                return target;
+              }
+            }
+          }
+        }
+
+        // Strategy 2: If value is a simple string/number, look for any string/number field
+        if (typeof value === "string" || typeof value === "number") {
+          for (const [key, fieldSchema] of Object.entries(schema.properties)) {
+            if ((fieldSchema as any).type === "string" || (fieldSchema as any).type === "number") {
+              if (key === "description" || key === "notes" || key === "comment") {
+                return key;
+              }
+            }
+          }
+        }
+
+        // Strategy 3: If value is an array, look for any array field
+        if (Array.isArray(value)) {
+          for (const [key, fieldSchema] of Object.entries(schema.properties)) {
+            if ((fieldSchema as any).type === "array") {
+              return key;
+            }
+          }
+        }
+
+        return undefined;
+      }
 
       // Resolve a $ref to its schema definition
       function resolveRef(ref: string): any {
@@ -1490,7 +1563,6 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
           return resolveRef(fieldSchema.$ref) || fieldSchema;
         }
         if (fieldSchema.allOf && Array.isArray(fieldSchema.allOf)) {
-          // Merge allOf schemas
           let merged: any = { properties: {}, required: [] };
           for (const sub of fieldSchema.allOf) {
             const subSchema = getEffectiveSchema(val, sub);
@@ -1534,19 +1606,27 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
           }
         }
 
-        // Remove extra properties not in schema
+        // Check extra properties — report but don't auto-remove if they have data
         if (removeExtra && schema.additionalProperties === false) {
           for (const key of Object.keys(obj)) {
             if (!schemaProps.has(key) && !safeExtraProps.has(key)) {
-              // Check if it's a glossaryRefs field that schema now supports
               const grf = glossaryRefsFieldMap[artifactType] || "glossaryRefs";
-              if (key === grf) {
-                // Schema doesn't have it yet — skip, will be added
-                continue;
+              if (key === grf) continue;
+
+              const value = obj[key];
+              if (hasMeaningfulValue(value)) {
+                // Data exists — find best target and report
+                const target = findBestTarget(value, key, schema);
+                dataAtRisk.push({
+                  path,
+                  key,
+                  value,
+                  valueType: Array.isArray(value) ? "array" : typeof value,
+                  suggestedTarget: target,
+                  reason: "Not in schema but has meaningful data",
+                });
               }
-              delete obj[key];
-              schemaFixes++;
-              schemaChanges.push(`${path}.${key}: removed (not in schema)`);
+              // Don't remove — report and let user decide
             }
           }
         }
@@ -1695,13 +1775,41 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
 
       // 6. Return result
       const allChanges = [...schemaChanges, ...changes];
-      const resultText = allChanges.length === 0
-        ? `Upgrade complete for ${artifactType}: No changes needed. Files are up to date.`
-        : `Upgrade complete for ${artifactType}:\n  Schema fixes: ${schemaFixes}\n  Glossary fields added: ${fieldsAdded}\n${allChanges.map(c => `  - ${c}`).join("\n")}\n\nFiles updated:\n  - ${filePath}\n  - ${jsonPath}\n\nRun /skill:lint ${artifactType} to verify.`;
+      const hasDataAtRisk = dataAtRisk.length > 0;
+
+      let resultText = "";
+      if (allChanges.length === 0 && !hasDataAtRisk) {
+        resultText = `Upgrade complete for ${artifactType}: No changes needed. Files are up to date.`;
+      } else {
+        resultText = `Upgrade complete for ${artifactType}:\n`;
+        if (schemaFixes > 0) resultText += `  Schema fixes: ${schemaFixes}\n`;
+        if (fieldsAdded > 0) resultText += `  Glossary fields added: ${fieldsAdded}\n`;
+        if (allChanges.length > 0) {
+          resultText += `  Changes:\n${allChanges.map(c => `    - ${c}`).join("\n")}\n`;
+        }
+        if (hasDataAtRisk) {
+          resultText += `\n⚠️  ${dataAtRisk.length} field(s) not in schema with meaningful data:\n`;
+          for (const risk of dataAtRisk.slice(0, 20)) {
+            const valPreview = risk.valueType === "array"
+              ? `[${risk.value.length} items]`
+              : JSON.stringify(risk.value).slice(0, 80);
+            resultText += `    - ${risk.path}.${risk.key} (${risk.valueType}): ${valPreview}\n`;
+            if (risk.suggestedTarget) {
+              resultText += `      → Suggested target: ${risk.suggestedTarget}\n`;
+            }
+          }
+          if (dataAtRisk.length > 20) {
+            resultText += `    ... and ${dataAtRisk.length - 20} more\n`;
+          }
+          resultText += `\n  These fields were NOT removed. Review and decide how to migrate the data.\n`;
+          resultText += `  Run /skill:lint ${artifactType} to see remaining schema violations.\n`;
+        }
+        resultText += `\nFiles updated:\n  - ${filePath}\n  - ${jsonPath}\n\nRun /skill:lint ${artifactType} to verify.`;
+      }
 
       return {
         content: [{ type: "text", text: resultText }],
-        details: { success: true, fieldsAdded, changes },
+        details: { success: true, fieldsAdded, changes, schemaFixes, dataAtRisk },
       };
     },
   });
