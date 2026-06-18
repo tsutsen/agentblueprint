@@ -1470,6 +1470,19 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
         reason: string;
       }> = [];
 
+      // GlossaryRefs field name map (needed by fixObjectAgainstSchema)
+      const glossaryRefsFieldMap: Record<string, string> = {
+        goal: "glossaryRefs",
+        glossary: "glossaryRefs",
+        design: "glossaryRefs",
+        arch: "glossaryRefs",
+        data: "glossaryRefs",
+        api: "glossaryRefs",
+        test: "glossaryRefs",
+        plan: "glossaryRefs",
+        issues: "glossaryRefs",
+      };
+
       // Properties that are safe to keep even if not in schema (metadata, provenance)
       const safeExtraProps = new Set([
         "version", "schemaVersion", "module", "status", "artifact",
@@ -1717,18 +1730,6 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
       const changes: string[] = [];
 
       // Apply glossaryRefs to all text fields
-      const glossaryRefsFieldMap: Record<string, string> = {
-        goal: "glossaryRefs",
-        glossary: "glossaryRefs",
-        design: "glossaryRefs",
-        arch: "glossaryRefs",
-        data: "glossaryRefs",
-        api: "glossaryRefs",
-        test: "glossaryRefs",
-        plan: "glossaryRefs",
-        issues: "glossaryRefs",
-      };
-
       const grf = glossaryRefsFieldMap[artifactType] || "glossaryRefs";
       applyGlossaryRefs(existingJson, schema, grf);
 
