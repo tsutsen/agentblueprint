@@ -712,10 +712,14 @@ function registerLint(pi: ExtensionAPI, extDir: string) {
           fs.existsSync(path.resolve(ctx.cwd, "artifacts", name))
         );
 
+        // Resolve linters and schemas directory paths
+        const lintersDir = path.resolve(extDir, "linters");
+        const schemasDir = resolvePkgResource(extDir, 'skills/blueprint/schemas/json');
+
         let args: string[];
         if (actualArtifacts.length > 0) {
           // Prefer actual artifacts over suite.json examples
-          args = [linter, "--json"];
+          args = [linter, "--json", "--linters", lintersDir, "--schemas", schemasDir];
           if (params.epic) args.push("--epic", params.epic);
           if (params.epicsDir) args.push("--epics-dir", params.epicsDir);
 
@@ -738,7 +742,7 @@ function registerLint(pi: ExtensionAPI, extDir: string) {
           }
         } else {
           // No actual artifacts — fall back to suite.json for example validation
-          args = [linter, "--json", "--suite", suiteFile];
+          args = [linter, "--json", "--suite", suiteFile, "--linters", lintersDir, "--schemas", schemasDir];
           if (params.epic) args.push("--epic", params.epic);
           if (params.epicsDir) args.push("--epics-dir", params.epicsDir);
         }
