@@ -1555,11 +1555,14 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
           }
         }
 
-        // Strategy 3: Array type match — medium confidence
+        // Strategy 3: Array type match — low confidence
+        // Only a last resort: generic array-to-array has no semantic guarantee.
+        // Low confidence means it will be removed as an extra property,
+        // not suggested as a migration target.
         if (Array.isArray(value)) {
           for (const [key, fieldSchema] of Object.entries(schema.properties)) {
             if ((fieldSchema as any).type === "array") {
-              return { target: key, confidence: "medium" };
+              return { target: key, confidence: "low" };
             }
           }
         }
