@@ -1606,7 +1606,7 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
           }
         }
 
-        // Check extra properties — report but don't auto-remove if they have data
+        // Check extra properties — migrate data or remove if no target
         if (removeExtra && schema.additionalProperties === false) {
           for (const key of Object.keys(obj)) {
             if (!schemaProps.has(key) && !safeExtraProps.has(key)) {
@@ -1614,19 +1614,55 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
               if (key === grf) continue;
 
               const value = obj[key];
-              if (hasMeaningfulValue(value)) {
-                // Data exists — find best target and report
-                const target = findBestTarget(value, key, schema);
+              if (!hasMeaningfulValue(value)) {
+                // No meaningful data — safe to remove
+                delete obj[key];
+                schemaFixes++;
+                schemaChanges.push(`${path}.${key}: removed (empty/no data)`);
+                continue;
+              }
+
+              // Data exists — find best target and migrate
+              const target = findBestTarget(value, key, schema);
+              if (target) {
+                // Migrate: merge value into target field
+                const targetField = schema.properties[target];
+                const targetType = (targetField as any).type;
+
+                if (targetType === "string" && typeof value === "string") {
+                  // Append to existing string
+                  obj[target] = obj[target] ? `${obj[target]} | ${value}` : value;
+                } else if (targetType === "array" && Array.isArray(value)) {
+                  // Merge arrays
+                  obj[target] = [...(obj[target] || []), ...value];
+                } else if (targetType === "array" && typeof value === "string") {
+                  // Wrap string in array
+                  obj[target] = [...(obj[target] || []), value];
+                } else if (targetType === "object" && typeof value === "object" && value !== null) {
+                  // Merge objects
+                  obj[target] = { ...(obj[target] || {}), ...value };
+                } else if (targetType === typeof value) {
+                  // Same type — use value directly
+                  obj[target] = value;
+                } else {
+                  // Type mismatch — store as string representation
+                  obj[target] = obj[target] ? `${obj[target]} | ${JSON.stringify(value).slice(0, 100)}` : JSON.stringify(value).slice(0, 100);
+                }
+
+                delete obj[key];
+                schemaFixes++;
+                schemaChanges.push(`${path}.${key} → ${target} (migrated)`);
+              } else {
+                // No target found — keep as-is, report for manual review
                 dataAtRisk.push({
                   path,
                   key,
                   value,
                   valueType: Array.isArray(value) ? "array" : typeof value,
-                  suggestedTarget: target,
-                  reason: "Not in schema but has meaningful data",
+                  suggestedTarget: undefined,
+                  reason: "Not in schema with no auto-migration target",
                 });
               }
-              // Don't remove — report and let user decide
             }
           }
         }
@@ -1775,6 +1811,8 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
 
       // 6. Return result
       const allChanges = [...schemaChanges, ...changes];
+      const migratedCount = schemaChanges.filter(c => c.includes("→") && c.includes("migrated")).length;
+      const removedCount = schemaChanges.filter(c => c.includes("removed")).length;
       const hasDataAtRisk = dataAtRisk.length > 0;
 
       let resultText = "";
@@ -1782,27 +1820,27 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
         resultText = `Upgrade complete for ${artifactType}: No changes needed. Files are up to date.`;
       } else {
         resultText = `Upgrade complete for ${artifactType}:\n`;
-        if (schemaFixes > 0) resultText += `  Schema fixes: ${schemaFixes}\n`;
+        if (migratedCount > 0) resultText += `  Migrated: ${migratedCount} field(s) → schema-compliant target\n`;
+        if (removedCount > 0) resultText += `  Removed: ${removedCount} field(s) (empty/no data)\n`;
+        if (schemaFixes - migratedCount - removedCount > 0) {
+          resultText += `  Other fixes: ${schemaFixes - migratedCount - removedCount}\n`;
+        }
         if (fieldsAdded > 0) resultText += `  Glossary fields added: ${fieldsAdded}\n`;
         if (allChanges.length > 0) {
           resultText += `  Changes:\n${allChanges.map(c => `    - ${c}`).join("\n")}\n`;
         }
         if (hasDataAtRisk) {
-          resultText += `\n⚠️  ${dataAtRisk.length} field(s) not in schema with meaningful data:\n`;
+          resultText += `\n⚠️  ${dataAtRisk.length} field(s) could not be auto-migrated:\n`;
           for (const risk of dataAtRisk.slice(0, 20)) {
             const valPreview = risk.valueType === "array"
               ? `[${risk.value.length} items]`
               : JSON.stringify(risk.value).slice(0, 80);
             resultText += `    - ${risk.path}.${risk.key} (${risk.valueType}): ${valPreview}\n`;
-            if (risk.suggestedTarget) {
-              resultText += `      → Suggested target: ${risk.suggestedTarget}\n`;
-            }
           }
           if (dataAtRisk.length > 20) {
             resultText += `    ... and ${dataAtRisk.length - 20} more\n`;
           }
-          resultText += `\n  These fields were NOT removed. Review and decide how to migrate the data.\n`;
-          resultText += `  Run /skill:lint ${artifactType} to see remaining schema violations.\n`;
+          resultText += `\n  These need manual review. Run /skill:lint ${artifactType} to see remaining violations.\n`;
         }
         resultText += `\nFiles updated:\n  - ${filePath}\n  - ${jsonPath}\n\nRun /skill:lint ${artifactType} to verify.`;
       }
