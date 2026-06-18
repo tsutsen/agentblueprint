@@ -1300,6 +1300,7 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
     label: "Spec Upgrade",
     description:
       "Migrate artifact files from old schema format to new format. " +
+      "Detects and fixes schema mismatches (property renames, missing/extra fields). " +
       "Loads the glossary and scans content to populate glossaryRefs intelligently. " +
       "Converts old string arrays to structured objects. Updates both Markdown and JSON.",
     parameters: Type.Object({
@@ -1456,7 +1457,80 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
         }
       }
 
-      // 4. Apply intelligent upgrades
+      // 4. Schema mismatch detection and auto-fix
+      let schemaFixes = 0;
+      const schemaChanges: string[] = [];
+
+      // Known property renames: oldKey -> newKey
+      const propertyRenames: Record<string, Record<string, string>> = {
+        api: { parameters: "inputs" },
+      };
+
+      // Known properties to remove (renamed or deprecated)
+      const propertiesToRemove: Record<string, string[]> = {
+        // api: ["parameters"], // handled by rename
+      };
+
+      // Known properties to add with defaults
+      const propertiesToAdd: Record<string, Record<string, any>> = {
+        api: {
+          inputs: [],
+          glossaryRefs: [],
+        },
+      };
+
+      // Apply schema-level fixes
+      const renames = propertyRenames[artifactType] || {};
+      for (const [oldKey, newKey] of Object.entries(renames)) {
+        if (oldKey in existingJson && !(newKey in existingJson)) {
+          existingJson[newKey] = existingJson[oldKey];
+          delete existingJson[oldKey];
+          schemaFixes++;
+          schemaChanges.push(`Renamed "${oldKey}" → "${newKey}"`);
+        }
+      }
+
+      // Remove deprecated properties
+      const toRemove = propertiesToRemove[artifactType] || [];
+      for (const key of toRemove) {
+        if (key in existingJson) {
+          delete existingJson[key];
+          schemaFixes++;
+          schemaChanges.push(`Removed deprecated property "${key}"`);
+        }
+      }
+
+      // Add missing properties with defaults
+      const toAdd = propertiesToAdd[artifactType] || {};
+      for (const [key, defaultValue] of Object.entries(toAdd)) {
+        if (!(key in existingJson)) {
+          existingJson[key] = JSON.parse(JSON.stringify(defaultValue));
+          schemaFixes++;
+          schemaChanges.push(`Added missing property "${key}"`);
+        }
+      }
+
+      // Array-level schema fixes: fix function-level issues
+      if (artifactType === "api" && Array.isArray(existingJson.functions)) {
+        for (const fn of existingJson.functions) {
+          // Rename parameters → inputs at function level
+          if ("parameters" in fn && !("inputs" in fn)) {
+            fn.inputs = fn.parameters;
+            delete fn.parameters;
+            schemaFixes++;
+            schemaChanges.push(`Function ${fn.id}: renamed "parameters" → "inputs"`);
+          }
+          // Remove disallowed output.name (keep for now, schema allows it)
+          // Add inputs if missing
+          if (!("inputs" in fn)) {
+            fn.inputs = [];
+            schemaFixes++;
+            schemaChanges.push(`Function ${fn.id}: added missing "inputs"`);
+          }
+        }
+      }
+
+      // 5. Apply intelligent upgrades (glossaryRefs)
       let fieldsAdded = 0;
       const changes: string[] = [];
 
@@ -1551,9 +1625,10 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
       }
 
       // 6. Return result
-      const resultText = fieldsAdded === 0
-        ? `Upgrade complete for ${artifactType}: No glossary references found in content. Files are up to date.`
-        : `Upgrade complete for ${artifactType}:\n  Fields added: ${fieldsAdded}\n${changes.map(c => `  - ${c}`).join("\n")}\n\nFiles updated:\n  - ${filePath}\n  - ${jsonPath}\n\nRun /skill:lint ${artifactType} to verify.`;
+      const allChanges = [...schemaChanges, ...changes];
+      const resultText = allChanges.length === 0
+        ? `Upgrade complete for ${artifactType}: No changes needed. Files are up to date.`
+        : `Upgrade complete for ${artifactType}:\n  Schema fixes: ${schemaFixes}\n  Glossary fields added: ${fieldsAdded}\n${allChanges.map(c => `  - ${c}`).join("\n")}\n\nFiles updated:\n  - ${filePath}\n  - ${jsonPath}\n\nRun /skill:lint ${artifactType} to verify.`;
 
       return {
         content: [{ type: "text", text: resultText }],
