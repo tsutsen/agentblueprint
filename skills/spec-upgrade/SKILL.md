@@ -7,7 +7,7 @@ description: >
   Converts old string arrays to structured objects.
   Use when schema changes require updating existing artifacts.
   By default (no extra arguments), scans and upgrades ALL artifacts.
-version: 1.0.0
+version: 2.0.0
 ---
 
 # Spec Upgrade
@@ -38,21 +38,30 @@ args:
   filePath: artifacts/<ArtifactType>.md
 ```
 
-## What it does
+## What the tool does
 
 The tool performs three types of upgrades:
 
 ### 1. Schema Mismatch Detection & Auto-Fix
 
-Compares the artifact against its current schema and:
+Compares the artifact against its current schema:
+
 - **Adds missing required properties** with sensible defaults
-- **Auto-migrates** properties with high-confidence name matches:
-  - `parameters` → `inputs`
-  - `output.name` → `output.description`
-  - `component` → `description`
-- **Reports** medium/low-confidence matches for approval (shows field, value preview, suggested target, confidence level)
-- **Removes** empty/no-data fields safely
-- **Does NOT remove** data without a clear migration target
+- **Auto-migrates** properties with high-confidence name alias matches:
+
+  | Source field | Target schema property |
+  |--------------|----------------------|
+  | `parameters`, `args`, `arguments` | `inputs` |
+  | `output`, `result`, `response` | `output` |
+  | `description`, `desc`, `detail`, `summary` | `description` |
+  | `name`, `title`, `label` | `name` |
+  | `type`, `kind`, `category` | `type` |
+  | `version`, `ver`, `revision` | `version` |
+  | `component`, `module`, `part` | `component` |
+  | `properties`, `fields`, `attributes` | `properties` |
+
+- **Removes empty/no-data fields** (safe — no data loss)
+- **Does NOT remove fields with meaningful data** — reports them as schema violations in `dataAtRisk`
 
 ### 2. Glossary Term Matching
 
@@ -75,13 +84,22 @@ New format (structured objects):
 ]
 ```
 
-## Migration Confidence Levels
+### 4. Schema Reference Validation
 
-| Confidence | Action | Example |
-|------------|--------|---------|
-| **High** | Auto-migrate | `parameters` → `inputs` |
-| **Medium** | Report for approval | `output.properties` → `output` |
-| **Low/None** | Report for manual review | Unknown field with no clear target |
+Checks the schema itself for broken `$ref` pointers (e.g., referencing a
+definition that doesn't exist). Reports these as schema-level errors that
+must be fixed in the JSON schema file.
+
+## Migration Confidence
+
+| Confidence | Action |
+|------------|--------|
+| **High** | Auto-migrate (clear name alias match) |
+| **None** | Report as schema violation — field stays in JSON |
+
+**The tool never removes data with meaningful content.** If a field has data
+but doesn't match any schema property, it is reported in `dataAtRisk` for
+the skill/agent to review.
 
 ## Output
 
@@ -94,18 +112,33 @@ Upgrade complete for <ArtifactType>:
   Glossary fields added: 10
   Changes:
     - functions[0].parameters → inputs (auto-migrated)
-    - functions[1].output.name → output.description (auto-migrated)
+    - functions[1].desc → description (auto-migrated)
     - titleGlossaryRefs: [GL-001, GL-004]
     ...
 
-⚠️  3 field(s) need approval before migration:
-  ~ functions[0].output.properties (object): {"type":"string",...}
-    → Suggested target: output
-    Confidence: medium
-  ? (root).apiSpecVersion (string): "1.0.0"
-    Confidence: none
+⚠️  Schema reference errors (schema-level issue — schema must be fixed):
+    ✗ .properties.glossaryRefs.items: "$ref: #/definitions/glId" — definition "glId" not found.
 
-These fields were NOT migrated. Run /skill:lint <artifactType> to verify.
+⚠️  31 field(s) violate schema (additionalProperties: false) — not auto-removed:
+    ✗ requirementsTests[0].glossaryRefs (array): [1 items]
+      → Not in schema (additionalProperties: false)
+    ✗ requirementsTests[1].glossaryRefs (array): [1 items]
+      → Not in schema (additionalProperties: false)
+    ...
+
+  The tool does NOT remove fields with meaningful data.
+  The skill/agent should review these violations and decide whether to:
+    - Remove the fields from the artifact
+    - Add the fields to the schema
+    - Rename the fields to match the schema
+
+  Run /skill:lint <artifactType> to verify these are resolved.
+
+Files updated:
+  - artifacts/TestSpec.md
+  - artifacts/TestSpec.json
+
+Run /skill:lint test to verify.
 ```
 
 If no changes needed:
@@ -113,3 +146,13 @@ If no changes needed:
 ```
 Upgrade complete for <ArtifactType>: No changes needed. Files are up to date.
 ```
+
+## Skill/Agent Action Items
+
+When the tool reports `dataAtRisk` violations, the skill/agent should:
+
+1. **Review each violation** — is the field truly unnecessary, or does the schema need updating?
+2. **If the field should be removed** — use the `edit` tool to remove it from the JSON, then regenerate the Markdown.
+3. **If the field should be in the schema** — update the JSON schema file (after verifying with the team).
+4. **If the field is a renamed schema property** — rename it to match the current schema.
+5. **Re-run lint** to confirm all violations are resolved.
