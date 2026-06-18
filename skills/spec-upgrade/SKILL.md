@@ -2,9 +2,11 @@
 name: spec-upgrade
 description: >
   Migrates artifact files (Markdown + JSON) from old schema format to new format.
+  Detects and fixes schema mismatches (property renames, missing/extra fields).
   Loads the glossary and scans content to populate glossaryRefs intelligently.
   Converts old string arrays to structured objects.
   Use when schema changes require updating existing artifacts.
+  By default (no extra arguments), scans and upgrades ALL artifacts.
 version: 1.0.0
 ---
 
@@ -16,6 +18,19 @@ Migrates artifact files from old schema format to new format.
 
 **Run the upgrade tool immediately.** Do not show documentation or ask for clarification.
 
+### Default: Upgrade all artifacts
+
+```
+tool: spec_upgrade
+args:
+  artifactType: all
+```
+
+This scans all artifacts in `artifacts/`, compares each against its current schema,
+and migrates as needed.
+
+### Single artifact
+
 ```
 tool: spec_upgrade
 args:
@@ -23,26 +38,29 @@ args:
   filePath: artifacts/<ArtifactType>.md
 ```
 
-The tool will:
-1. Load the current schema for the artifact type
-2. Load the Glossary.json if available
-3. Scan all text fields for glossary term references
-4. Populate `glossaryRefs` arrays with matched GL-NNN IDs
-5. Convert old string arrays to structured `{description, glossaryRefs}` objects
-6. Update both the Markdown and JSON files
+## What it does
 
-## Migration Strategy
+The tool performs three types of upgrades:
 
-The upgrade is **fully automatic** — it does not ask the user for values.
-It scans content and makes intelligent suggestions based on the glossary.
+### 1. Schema Mismatch Detection & Auto-Fix
 
-### Glossary Term Matching
+Compares the artifact against its current schema and:
+- **Adds missing required properties** with sensible defaults
+- **Auto-migrates** properties with high-confidence name matches:
+  - `parameters` → `inputs`
+  - `output.name` → `output.description`
+  - `component` → `description`
+- **Reports** medium/low-confidence matches for approval (shows field, value preview, suggested target, confidence level)
+- **Removes** empty/no-data fields safely
+- **Does NOT remove** data without a clear migration target
 
-The tool loads `artifacts/Glossary.json` and performs **whole-word, case-insensitive**
+### 2. Glossary Term Matching
+
+Loads `artifacts/Glossary.json` and performs **whole-word, case-insensitive**
 matching against all text fields. If a glossary term appears in a field's text,
 its GL-NNN ID is added to that field's `glossaryRefs`.
 
-### Array Conversion
+### 3. Array Conversion
 
 Old format (string arrays):
 ```json
@@ -57,20 +75,13 @@ New format (structured objects):
 ]
 ```
 
-### Fields Populated Per Artifact Type
+## Migration Confidence Levels
 
-- **GoalSpec**: `objective.glossaryRefs`, `functionalRequirements[].glossaryRefs`,
-  `nonFunctionalRequirements[].glossaryRefs`, `userStories[].glossaryRefs`,
-  `nonGoals[].glossaryRefs`
-- **DesignSpec**: `userPersonas[].glossaryRefs`, `userJourneys[].steps[].glossaryRefs`,
-  `screenInventory[].glossaryRefs`, `screenSpecs[].components[].glossaryRefs`
-- **ArchitectureSpec**: `components[].glossaryRefs`, `dataFlows[].glossaryRefs`,
-  `constraints[].glossaryRefs`
-- **DataSpec**: `entities[].glossaryRefs`, `entities[].fields[].glossaryRefs`
-- **TaskPlan**: `epics[].inScope[].glossaryRefs`, `epics[].outOfScope[].glossaryRefs`
-- **TestSpec**: `tests[].glossaryRefs`, `functionCoverage[].outOfScope[].glossaryRefs`
-- **Issue**: `titleGlossaryRefs`, `inScope[].glossaryRefs`,
-  `outOfScope[].glossaryRefs`, `acceptanceCriteria[].glossaryRefs`
+| Confidence | Action | Example |
+|------------|--------|---------|
+| **High** | Auto-migrate | `parameters` → `inputs` |
+| **Medium** | Report for approval | `output.properties` → `output` |
+| **Low/None** | Report for manual review | Unknown field with no clear target |
 
 ## Output
 
@@ -78,20 +89,27 @@ After migration, the tool reports:
 
 ```
 Upgrade complete for <ArtifactType>:
-  Fields added: N
-  - titleGlossaryRefs: [GL-001, GL-004]
-  - epics[].inScope[].glossaryRefs: [GL-002]
-  ...
+  Migrated: 5 field(s) → schema-compliant target
+  Removed: 2 field(s) (empty/no data)
+  Glossary fields added: 10
+  Changes:
+    - functions[0].parameters → inputs (auto-migrated)
+    - functions[1].output.name → output.description (auto-migrated)
+    - titleGlossaryRefs: [GL-001, GL-004]
+    ...
 
-Files updated:
-  - artifacts/<ArtifactType>.md
-  - artifacts/<ArtifactType>.json
+⚠️  3 field(s) need approval before migration:
+  ~ functions[0].output.properties (object): {"type":"string",...}
+    → Suggested target: output
+    Confidence: medium
+  ? (root).apiSpecVersion (string): "1.0.0"
+    Confidence: none
 
-Run /skill:lint <artifactType> to verify.
+These fields were NOT migrated. Run /skill:lint <artifactType> to verify.
 ```
 
-If no glossary terms were found in the content:
+If no changes needed:
 
 ```
-Upgrade complete for <ArtifactType>: No glossary references found in content. Files are up to date.
+Upgrade complete for <ArtifactType>: No changes needed. Files are up to date.
 ```
