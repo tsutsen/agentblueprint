@@ -1513,14 +1513,26 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
         return true;
       }
 
-      // Find the best-fitting target field for a value
-      // Returns { target, confidence } where confidence is 'high' | 'medium' | 'low'
-      function findBestTarget(value: any, currentPath: string, schema: any): { target: string; confidence: "high" | "medium" | "low" } | null {
+      // Find the best-fitting target field for a value.
+      // Only returns matches for clear, unambiguous cases.
+      // For ambiguous cases (semantic judgment), returns null so the
+      // skill/agent can use an LLM to decide.
+      //
+      // Confidence levels:
+      //   high   — auto-migrate (tool is confident)
+      //   null   — report as dataAtRisk (skill/agent should review)
+      //
+      // Note: extensions cannot call LLMs directly. The skill that invokes
+      // this tool receives dataAtRisk in its output and can use the agent's
+      // LLM to resolve ambiguous field mappings.
+      function findBestTarget(value: any, currentPath: string, schema: any): { target: string; confidence: "high" } | null {
         if (!schema || !schema.properties) return null;
 
         const valueKeys = typeof value === "object" && value !== null ? Object.keys(value) : [];
 
-        // Strategy 1: Exact name match — high confidence
+        // Strategy 1: Name alias match — high confidence
+        // Only match when the field name is clearly an alias of a schema property.
+        // These are well-known renames that appear across projects.
         const nameMap: Record<string, string[]> = {
           "inputs": ["inputs", "parameters", "args", "arguments"],
           "output": ["output", "result", "response", "returnValue"],
@@ -1536,37 +1548,14 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
           if (target in schema.properties) {
             for (const pattern of patterns) {
               if (currentPath.includes(pattern) || valueKeys.some(k => k.includes(pattern))) {
-                // Check if the pattern is a direct alias (high confidence)
-                const isDirectAlias = patterns.length <= 3;
-                return { target, confidence: isDirectAlias ? "high" : "medium" };
+                return { target, confidence: "high" };
               }
             }
           }
         }
 
-        // Strategy 2: Type-based match — medium confidence
-        if (typeof value === "string" || typeof value === "number") {
-          for (const [key, fieldSchema] of Object.entries(schema.properties)) {
-            if ((fieldSchema as any).type === "string" || (fieldSchema as any).type === "number") {
-              if (key === "description" || key === "notes" || key === "comment") {
-                return { target: key, confidence: "medium" };
-              }
-            }
-          }
-        }
-
-        // Strategy 3: Array type match — low confidence
-        // Only a last resort: generic array-to-array has no semantic guarantee.
-        // Low confidence means it will be removed as an extra property,
-        // not suggested as a migration target.
-        if (Array.isArray(value)) {
-          for (const [key, fieldSchema] of Object.entries(schema.properties)) {
-            if ((fieldSchema as any).type === "array") {
-              return { target: key, confidence: "low" };
-            }
-          }
-        }
-
+        // No clear match — return null. The skill/agent will handle this
+        // via LLM if needed.
         return null;
       }
 
@@ -1654,7 +1643,10 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
                 continue;
               }
 
-              // Data exists — find best target
+              // Data exists — find best target.
+              // Only high-confidence matches are auto-migrated.
+              // Everything else is reported as a schema violation for the
+              // skill/agent to review (the tool does NOT remove data).
               const targetInfo = findBestTarget(value, key, schema);
               if (targetInfo && targetInfo.confidence === "high") {
                 // High confidence — auto-migrate
@@ -1679,25 +1671,16 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
                 schemaFixes++;
                 schemaChanges.push(`${path}.${key} → ${targetInfo.target} (auto-migrated)`);
               } else {
-                // additionalProperties: false violation — field not in schema.
-                // Remove it (matches linter behavior) and report as schema fix.
-                if (targetInfo && targetInfo.confidence === "medium") {
-                  // Medium confidence — remove but report for awareness
-                  dataAtRisk.push({
-                    path,
-                    key,
-                    value,
-                    valueType: Array.isArray(value) ? "array" : typeof value,
-                    suggestedTarget: targetInfo.target,
-                    confidence: "medium",
-                    reason: `Not in schema (confidence: medium, suggested target: ${targetInfo.target})`,
-                  });
-                } else {
-                  // No plausible target or low confidence — just remove
-                  delete obj[key];
-                  schemaFixes++;
-                  schemaChanges.push(`${path}.${key}: removed (not in schema)`);
-                }
+                // No clear migration target — report as schema violation.
+                // The field is NOT removed; the skill/agent decides what to do.
+                dataAtRisk.push({
+                  path,
+                  key,
+                  value,
+                  valueType: Array.isArray(value) ? "array" : typeof value,
+                  confidence: "none",
+                  reason: `Not in schema (additionalProperties: false)`,
+                });
               }
             }
           }
@@ -1863,24 +1846,23 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
           resultText += `  The spec-upgrade tool cannot fix these. Fix the JSON schema file, then re-run spec-upgrade.\n`;
         }
         if (hasDataAtRisk) {
-          const needsApproval = dataAtRisk.filter(r => r.confidence !== "high");
-          resultText += `\n⚠️  ${needsApproval.length} field(s) need approval before migration:\n`;
-          for (const risk of needsApproval.slice(0, 20)) {
+          resultText += `\n⚠️  ${dataAtRisk.length} field(s) violate schema (additionalProperties: false) — not auto-removed:\n`;
+          for (const risk of dataAtRisk.slice(0, 30)) {
             const valPreview = risk.valueType === "array"
               ? `[${risk.value.length} items]`
               : JSON.stringify(risk.value).slice(0, 80);
-            const confBadge = risk.confidence === "high" ? "✓" : risk.confidence === "medium" ? "~" : "?";
-            resultText += `    ${confBadge} ${risk.path}.${risk.key} (${risk.valueType}): ${valPreview}\n`;
-            if (risk.suggestedTarget) {
-              resultText += `      → Suggested target: ${risk.suggestedTarget}\n`;
-            }
-            resultText += `      Confidence: ${risk.confidence}\n`;
+            resultText += `    ✗ ${risk.path}.${risk.key} (${risk.valueType}): ${valPreview}\n`;
+            resultText += `      → ${risk.reason}\n`;
           }
-          if (needsApproval.length > 20) {
-            resultText += `    ... and ${needsApproval.length - 20} more\n`;
+          if (dataAtRisk.length > 30) {
+            resultText += `    ... and ${dataAtRisk.length - 30} more\n`;
           }
-          resultText += `\n  These fields were NOT migrated. Run /skill:spec-upgrade again with --approve flag\n`;
-          resultText += `  to auto-migrate medium-confidence matches, or handle manually.\n`;
+          resultText += `\n  The tool does NOT remove fields with meaningful data.
+  The skill/agent should review these violations and decide whether to:
+    - Remove the fields from the artifact
+    - Add the fields to the schema
+    - Rename the fields to match the schema
+\n  Run /skill:lint ${artifactType} to verify these are resolved.\n`;
         }
         resultText += `\nFiles updated:\n  - ${mdPath}\n  - ${jsonPath}\n\nRun /skill:lint ${artifactType} to verify.`;
       }
