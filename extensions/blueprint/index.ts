@@ -1466,6 +1466,7 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
         value: any;
         valueType: string;
         suggestedTarget?: string;
+        confidence: "high" | "medium" | "low" | "none";
         reason: string;
       }> = [];
 
@@ -1489,13 +1490,13 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
       }
 
       // Find the best-fitting target field for a value
-      function findBestTarget(value: any, currentPath: string, schema: any): string | undefined {
-        if (!schema || !schema.properties) return undefined;
+      // Returns { target, confidence } where confidence is 'high' | 'medium' | 'low'
+      function findBestTarget(value: any, currentPath: string, schema: any): { target: string; confidence: "high" | "medium" | "low" } | null {
+        if (!schema || !schema.properties) return null;
 
-        const valueStr = JSON.stringify(value).slice(0, 100);
         const valueKeys = typeof value === "object" && value !== null ? Object.keys(value) : [];
 
-        // Strategy 1: Look for a field with a matching name pattern
+        // Strategy 1: Exact name match — high confidence
         const nameMap: Record<string, string[]> = {
           "inputs": ["inputs", "parameters", "args", "arguments"],
           "output": ["output", "result", "response", "returnValue"],
@@ -1509,36 +1510,37 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
 
         for (const [target, patterns] of Object.entries(nameMap)) {
           if (target in schema.properties) {
-            // Check if any pattern matches the current key or value structure
             for (const pattern of patterns) {
               if (currentPath.includes(pattern) || valueKeys.some(k => k.includes(pattern))) {
-                return target;
+                // Check if the pattern is a direct alias (high confidence)
+                const isDirectAlias = patterns.length <= 3;
+                return { target, confidence: isDirectAlias ? "high" : "medium" };
               }
             }
           }
         }
 
-        // Strategy 2: If value is a simple string/number, look for any string/number field
+        // Strategy 2: Type-based match — medium confidence
         if (typeof value === "string" || typeof value === "number") {
           for (const [key, fieldSchema] of Object.entries(schema.properties)) {
             if ((fieldSchema as any).type === "string" || (fieldSchema as any).type === "number") {
               if (key === "description" || key === "notes" || key === "comment") {
-                return key;
+                return { target: key, confidence: "medium" };
               }
             }
           }
         }
 
-        // Strategy 3: If value is an array, look for any array field
+        // Strategy 3: Array type match — medium confidence
         if (Array.isArray(value)) {
           for (const [key, fieldSchema] of Object.entries(schema.properties)) {
             if ((fieldSchema as any).type === "array") {
-              return key;
+              return { target: key, confidence: "medium" };
             }
           }
         }
 
-        return undefined;
+        return null;
       }
 
       // Resolve a $ref to its schema definition
@@ -1606,7 +1608,7 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
           }
         }
 
-        // Check extra properties — migrate data or remove if no target
+        // Check extra properties — auto-migrate high-confidence, report medium/low
         if (removeExtra && schema.additionalProperties === false) {
           for (const key of Object.keys(obj)) {
             if (!schemaProps.has(key) && !safeExtraProps.has(key)) {
@@ -1622,45 +1624,40 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
                 continue;
               }
 
-              // Data exists — find best target and migrate
-              const target = findBestTarget(value, key, schema);
-              if (target) {
-                // Migrate: merge value into target field
-                const targetField = schema.properties[target];
+              // Data exists — find best target
+              const targetInfo = findBestTarget(value, key, schema);
+              if (targetInfo && targetInfo.confidence === "high") {
+                // High confidence — auto-migrate
+                const targetField = schema.properties[targetInfo.target];
                 const targetType = (targetField as any).type;
 
                 if (targetType === "string" && typeof value === "string") {
-                  // Append to existing string
-                  obj[target] = obj[target] ? `${obj[target]} | ${value}` : value;
+                  obj[targetInfo.target] = obj[targetInfo.target] ? `${obj[targetInfo.target]} | ${value}` : value;
                 } else if (targetType === "array" && Array.isArray(value)) {
-                  // Merge arrays
-                  obj[target] = [...(obj[target] || []), ...value];
+                  obj[targetInfo.target] = [...(obj[targetInfo.target] || []), ...value];
                 } else if (targetType === "array" && typeof value === "string") {
-                  // Wrap string in array
-                  obj[target] = [...(obj[target] || []), value];
+                  obj[targetInfo.target] = [...(obj[targetInfo.target] || []), value];
                 } else if (targetType === "object" && typeof value === "object" && value !== null) {
-                  // Merge objects
-                  obj[target] = { ...(obj[target] || {}), ...value };
+                  obj[targetInfo.target] = { ...(obj[targetInfo.target] || {}), ...value };
                 } else if (targetType === typeof value) {
-                  // Same type — use value directly
-                  obj[target] = value;
+                  obj[targetInfo.target] = value;
                 } else {
-                  // Type mismatch — store as string representation
-                  obj[target] = obj[target] ? `${obj[target]} | ${JSON.stringify(value).slice(0, 100)}` : JSON.stringify(value).slice(0, 100);
+                  obj[targetInfo.target] = obj[targetInfo.target] ? `${obj[targetInfo.target]} | ${JSON.stringify(value).slice(0, 100)}` : JSON.stringify(value).slice(0, 100);
                 }
 
                 delete obj[key];
                 schemaFixes++;
-                schemaChanges.push(`${path}.${key} → ${target} (migrated)`);
+                schemaChanges.push(`${path}.${key} → ${targetInfo.target} (auto-migrated)`);
               } else {
-                // No target found — keep as-is, report for manual review
+                // Medium/low confidence — report for approval, don't migrate
                 dataAtRisk.push({
                   path,
                   key,
                   value,
                   valueType: Array.isArray(value) ? "array" : typeof value,
-                  suggestedTarget: undefined,
-                  reason: "Not in schema with no auto-migration target",
+                  suggestedTarget: targetInfo?.target,
+                  confidence: targetInfo?.confidence || "low",
+                  reason: `Not in schema (confidence: ${targetInfo?.confidence || "none"})`,
                 });
               }
             }
@@ -1830,17 +1827,24 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
           resultText += `  Changes:\n${allChanges.map(c => `    - ${c}`).join("\n")}\n`;
         }
         if (hasDataAtRisk) {
-          resultText += `\n⚠️  ${dataAtRisk.length} field(s) could not be auto-migrated:\n`;
-          for (const risk of dataAtRisk.slice(0, 20)) {
+          const needsApproval = dataAtRisk.filter(r => r.confidence !== "high");
+          resultText += `\n⚠️  ${needsApproval.length} field(s) need approval before migration:\n`;
+          for (const risk of needsApproval.slice(0, 20)) {
             const valPreview = risk.valueType === "array"
               ? `[${risk.value.length} items]`
               : JSON.stringify(risk.value).slice(0, 80);
-            resultText += `    - ${risk.path}.${risk.key} (${risk.valueType}): ${valPreview}\n`;
+            const confBadge = risk.confidence === "high" ? "✓" : risk.confidence === "medium" ? "~" : "?";
+            resultText += `    ${confBadge} ${risk.path}.${risk.key} (${risk.valueType}): ${valPreview}\n`;
+            if (risk.suggestedTarget) {
+              resultText += `      → Suggested target: ${risk.suggestedTarget}\n`;
+            }
+            resultText += `      Confidence: ${risk.confidence}\n`;
           }
-          if (dataAtRisk.length > 20) {
-            resultText += `    ... and ${dataAtRisk.length - 20} more\n`;
+          if (needsApproval.length > 20) {
+            resultText += `    ... and ${needsApproval.length - 20} more\n`;
           }
-          resultText += `\n  These need manual review. Run /skill:lint ${artifactType} to see remaining violations.\n`;
+          resultText += `\n  These fields were NOT migrated. Run /skill:spec-upgrade again with --approve flag\n`;
+          resultText += `  to auto-migrate medium-confidence matches, or handle manually.\n`;
         }
         resultText += `\nFiles updated:\n  - ${filePath}\n  - ${jsonPath}\n\nRun /skill:lint ${artifactType} to verify.`;
       }
