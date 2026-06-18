@@ -4,55 +4,60 @@
   "title": "TestSpec",
   "description": "Test specification for all API functions. Produced before implementation. Source of truth for test authorship and independent verification. Version 1.0.0.",
   "type": "object",
-  "required": ["version", "schemaVersion", "project", "apiSpecVersion", "tests"],
+  "required": [
+    "version",
+    "schemaVersion",
+    "project",
+    "apiSpecVersion",
+    "tests"
+  ],
   "additionalProperties": false,
-
   "definitions": {
-
     "glId": {
       "type": "string",
       "description": "Glossary term identifier. Format: GL-NNN (3-digit zero-padded).",
       "pattern": "^GL-\\d{3}$"
     },
-
     "testId": {
       "type": "string",
       "description": "Format: TST-<functionName>-<NNN>, e.g. TST-createUser-001",
       "pattern": "^TST-[a-zA-Z][a-zA-Z0-9]*-\\d{3}$"
     },
-
     "fnRef": {
       "type": "string",
       "description": "Function ID from ApiSpec. Format: FN-camelCase, e.g. FN-createUser",
       "pattern": "^FN-[a-z][A-Za-z0-9]*$"
     },
-
     "testCategory": {
       "type": "string",
       "description": "Which category of test this is.",
-      "enum": ["happy-path", "edge-case", "error-path"]
+      "enum": [
+        "happy-path",
+        "edge-case",
+        "error-path"
+      ]
     },
-
     "reqId": {
       "type": "string",
       "description": "Functional requirement identifier, format REQ-NNN. Must match an ID in GoalSpec.",
       "pattern": "^REQ-\\d{3}$"
     },
-
     "nfrId": {
       "type": "string",
       "description": "Non-functional requirement identifier, format NFR-NNN. Must match an ID in GoalSpec.",
       "pattern": "^NFR-\\d{3}$"
     },
-
     "concreteValue": {
-      "description": "A concrete example value — string, number, boolean, object, or array. Must NOT be a placeholder like 'a valid userId' or 'some string'."
+      "description": "A concrete example value \u2014 string, number, boolean, object, or array. Must NOT be a placeholder like 'a valid userId' or 'some string'."
     },
-
     "requirementsTestEntry": {
       "type": "object",
-      "description": "Maps a requirement to the test cases that verify it. Useful for REQ→test traceability.",
-      "required": ["reqRef", "description", "testIds"],
+      "description": "Maps a requirement to the test cases that verify it. Useful for REQ\u2192test traceability.",
+      "required": [
+        "reqRef",
+        "description",
+        "testIds"
+      ],
       "additionalProperties": false,
       "properties": {
         "reqRef": {
@@ -68,16 +73,19 @@
         "testIds": {
           "type": "array",
           "description": "Test case IDs that verify this requirement.",
-          "items": { "$ref": "#/definitions/testId" },
+          "items": {
+            "$ref": "#/definitions/testId"
+          },
           "minItems": 1
         }
       }
     },
-
     "glossaryRefItem": {
       "type": "object",
       "description": "A text item with inline glossary references.",
-      "required": ["description"],
+      "required": [
+        "description"
+      ],
       "additionalProperties": false,
       "properties": {
         "description": {
@@ -87,67 +95,77 @@
         "glossaryRefs": {
           "type": "array",
           "description": "Glossary term identifiers (GL-NNN) referenced in this item.",
-          "items": { "$ref": "#/definitions/glId" },
+          "items": {
+            "$ref": "#/definitions/glId"
+          },
           "uniqueItems": true
         }
       }
     }
   },
-
   "properties": {
-
     "version": {
       "type": "string",
       "description": "Semver version of this test document instance.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
-
     "schemaVersion": {
       "type": "string",
       "description": "Version of the TestSpec schema this document conforms to. Must be '1.0.0'.",
       "const": "1.0.0"
     },
-
     "project": {
       "type": "string",
       "description": "Must match project name across all other specs.",
       "minLength": 1
     },
-
     "apiSpecVersion": {
       "type": "string",
       "description": "Version of the ApiSpec this test spec was authored against.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
-
     "dataSpecVersion": {
       "type": "string",
       "description": "Version of the DataSpec used for type resolution.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
-
     "status": {
       "type": "string",
-      "enum": ["draft", "review", "confirmed", "superseded"],
+      "enum": [
+        "draft",
+        "review",
+        "confirmed",
+        "superseded"
+      ],
       "default": "draft"
     },
-
     "verificationStatus": {
       "type": "string",
       "description": "Whether the independent clean-context verification step has been performed.",
-      "enum": ["pending", "passed", "failed"],
+      "enum": [
+        "pending",
+        "passed",
+        "failed"
+      ],
       "default": "pending"
     },
-
     "functionCoverage": {
       "type": "array",
       "description": "Per-function coverage summary. One entry per function in ApiSpec. Used for completeness assessment.",
       "items": {
         "type": "object",
-        "required": ["fnRef", "happyPathCount", "edgeCaseCount", "errorPathCount", "outOfScope"],
+        "required": [
+          "fnRef",
+          "happyPathCount",
+          "edgeCaseCount",
+          "errorPathCount",
+          "outOfScope"
+        ],
         "additionalProperties": false,
         "properties": {
-          "fnRef": { "$ref": "#/definitions/fnRef" },
+          "fnRef": {
+            "$ref": "#/definitions/fnRef"
+          },
           "happyPathCount": {
             "type": "integer",
             "minimum": 0
@@ -162,103 +180,120 @@
           },
           "outOfScope": {
             "type": "array",
-            "description": "Explicit list of behaviours this function's tests do NOT verify. Required — prevents false failures during verification.",
+            "description": "Explicit list of behaviours this function's tests do NOT verify. Required \u2014 prevents false failures during verification.",
             "minItems": 1,
-            "items": { "$ref": "#/definitions/glossaryRefItem" }
+            "items": {
+              "$ref": "#/definitions/glossaryRefItem"
+            }
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) referenced in this coverage entry.",
+            "items": {
+              "$ref": "#/definitions/glId"
+            }
           }
         }
       }
     },
-
     "requirementsTests": {
       "type": "array",
-      "description": "Maps each requirement to the test cases that verify it. Optional — useful for REQ→test traceability. Use the generate_tests tool to populate automatically.",
-      "items": { "$ref": "#/definitions/requirementsTestEntry" }
+      "description": "Maps each requirement to the test cases that verify it. Optional \u2014 useful for REQ\u2192test traceability. Use the generate_tests tool to populate automatically.",
+      "items": {
+        "$ref": "#/definitions/requirementsTestEntry"
+      }
     },
-
     "tests": {
       "type": "array",
       "description": "All test cases across all functions.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "fnRef", "category", "description", "input", "contractClause"],
+        "required": [
+          "id",
+          "fnRef",
+          "category",
+          "description",
+          "input",
+          "contractClause"
+        ],
         "additionalProperties": false,
         "properties": {
-
-          "id": { "$ref": "#/definitions/testId" },
-
+          "id": {
+            "$ref": "#/definitions/testId"
+          },
           "fnRef": {
             "$ref": "#/definitions/fnRef",
             "description": "The function this test exercises. Must match a function ID in ApiSpec."
           },
-
-          "category": { "$ref": "#/definitions/testCategory" },
-
+          "category": {
+            "$ref": "#/definitions/testCategory"
+          },
           "description": {
             "type": "string",
             "description": "The scenario being tested in plain language.",
             "minLength": 5
           },
-
           "input": {
             "type": "object",
-            "description": "Concrete input values keyed by parameter name. Every required parameter from ApiSpec must be present. Values must be concrete — no placeholders.",
+            "description": "Concrete input values keyed by parameter name. Every required parameter from ApiSpec must be present. Values must be concrete \u2014 no placeholders.",
             "minProperties": 0,
-            "additionalProperties": { "$ref": "#/definitions/concreteValue" }
+            "additionalProperties": {
+              "$ref": "#/definitions/concreteValue"
+            }
           },
-
           "expectedOutput": {
             "description": "The exact expected return value or shape. Required for happy-path and edge-case tests.",
             "$ref": "#/definitions/concreteValue"
           },
-
           "expectedOutputType": {
             "type": "string",
             "description": "The type name of the expected output, for cross-spec validation against DataSpec."
           },
-
           "contractClause": {
             "type": "string",
             "description": "Which part of the ApiSpec contract this test verifies. Quote or paraphrase the relevant clause.",
             "minLength": 5
           },
-
           "reqRefs": {
             "type": "array",
             "description": "REQ-IDs this test verifies. Include when the test directly validates a requirement. Omit for technical tests (error paths, edge cases, infrastructure).",
-            "items": { "$ref": "#/definitions/reqId" }
+            "items": {
+              "$ref": "#/definitions/reqId"
+            }
           },
-
           "errorCode": {
             "type": "string",
             "description": "Required for error-path tests. Must match an error code documented on this function in ApiSpec.",
             "pattern": "^[A-Z][A-Z0-9_]*$"
           },
-
           "expectedError": {
             "type": "object",
             "description": "For error-path tests: what the caller receives.",
             "additionalProperties": false,
             "properties": {
-              "code":       { "type": "string" },
-              "returnType": { "type": "string" },
+              "code": {
+                "type": "string"
+              },
+              "returnType": {
+                "type": "string"
+              },
               "messageContains": {
                 "type": "string",
                 "description": "Optional substring the error message must contain."
               }
             }
           },
-
           "notes": {
             "type": "string",
             "description": "Optional clarifying context for this test case."
           },
-
           "glossaryRefs": {
             "type": "array",
             "description": "Glossary term identifiers (GL-NNN) referenced in this test's description and contractClause.",
-            "items": { "$ref": "#/definitions/glId" },
+            "items": {
+              "$ref": "#/definitions/glId"
+            },
             "uniqueItems": true
           }
         }

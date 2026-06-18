@@ -15,85 +15,79 @@
     "constraints"
   ],
   "additionalProperties": false,
-
   "definitions": {
-
     "componentId": {
       "type": "string",
       "description": "kebab-case component identifier, e.g. 'search-service', 'api-gateway'.",
       "pattern": "^[a-z][a-z0-9-]*$"
     },
-
     "reqId": {
       "type": "string",
       "pattern": "^REQ-\\d{3}$"
     },
-
     "nfrId": {
       "type": "string",
       "pattern": "^NFR-\\d{3}$"
     },
-
     "glId": {
       "type": "string",
       "description": "Glossary term identifier, format GL-NNN. Must match an ID in Glossary.json.",
       "pattern": "^GL-\\d{3}$"
     }
   },
-
   "properties": {
-
     "version": {
       "type": "string",
       "description": "Semver version of this archspec document instance.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
-
     "schemaVersion": {
       "type": "string",
       "description": "Version of the ArchSpec schema this document conforms to. Must be '1.0.0'.",
       "const": "1.0.0"
     },
-
     "project": {
       "type": "string",
       "description": "Must match the project name in the corresponding GoalSpec.",
       "minLength": 1
     },
-
     "status": {
       "type": "string",
-      "enum": ["draft", "review", "confirmed", "superseded"],
+      "enum": [
+        "draft",
+        "review",
+        "confirmed",
+        "superseded"
+      ],
       "default": "draft"
     },
-
     "goalSpecVersion": {
       "type": "string",
       "description": "Version of the GoalSpec this architecture was designed against.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
-
     "dataSpecVersion": {
       "type": "string",
       "description": "Version of the DataSpec this architecture references. Optional if DataSpec not yet produced.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
-
     "apiSpecVersion": {
       "type": "string",
       "description": "Version of the ApiSpec this architecture references. Optional if ApiSpec not yet produced.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
-
     "overview": {
       "type": "object",
       "description": "High-level description of the system structure. Must be understandable without implementation knowledge.",
-      "required": ["summary", "subsystems"],
+      "required": [
+        "summary",
+        "subsystems"
+      ],
       "additionalProperties": false,
       "properties": {
         "summary": {
           "type": "string",
-          "description": "2–4 sentences describing the system structure, major subsystems, and how they interact.",
+          "description": "2\u20134 sentences describing the system structure, major subsystems, and how they interact.",
           "minLength": 30
         },
         "subsystems": {
@@ -102,7 +96,10 @@
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["name", "purpose"],
+            "required": [
+              "name",
+              "purpose"
+            ],
             "additionalProperties": false,
             "properties": {
               "name": {
@@ -118,38 +115,49 @@
               "componentRefs": {
                 "type": "array",
                 "description": "Component IDs that belong to this subsystem.",
-                "items": { "$ref": "#/definitions/componentId" }
+                "items": {
+                  "$ref": "#/definitions/componentId"
+                }
               }
             }
+          }
+        },
+        "glossaryRefs": {
+          "type": "array",
+          "description": "Glossary term IDs (GL-NNN) referenced in the overview.",
+          "items": {
+            "$ref": "#/definitions/glId"
           }
         }
       }
     },
-
     "components": {
       "type": "array",
       "description": "All major architectural units. Each component has exclusive ownership of its responsibilities.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "name", "purpose", "responsibilities"],
+        "required": [
+          "id",
+          "name",
+          "purpose",
+          "responsibilities"
+        ],
         "additionalProperties": false,
         "properties": {
-
-          "id": { "$ref": "#/definitions/componentId" },
-
+          "id": {
+            "$ref": "#/definitions/componentId"
+          },
           "name": {
             "type": "string",
             "description": "Human-readable component name.",
             "minLength": 1
           },
-
           "purpose": {
             "type": "string",
             "description": "One sentence: what this component exists to do.",
             "minLength": 10
           },
-
           "responsibilities": {
             "type": "array",
             "description": "Exclusive behaviours owned by this component. No two components may share the same responsibility.",
@@ -159,46 +167,52 @@
               "minLength": 5
             }
           },
-
           "dependencies": {
             "type": "array",
             "description": "Component IDs this component depends on. Must reference real component IDs in this spec.",
-            "items": { "$ref": "#/definitions/componentId" }
+            "items": {
+              "$ref": "#/definitions/componentId"
+            }
           },
-
           "reqRefs": {
             "type": "array",
             "description": "REQ-IDs from the GoalSpec that this component helps satisfy.",
-            "items": { "$ref": "#/definitions/reqId" }
+            "items": {
+              "$ref": "#/definitions/reqId"
+            }
           },
-
           "nfrRefs": {
             "type": "array",
             "description": "NFR-IDs from the GoalSpec that this component is responsible for meeting.",
-            "items": { "$ref": "#/definitions/nfrId" }
+            "items": {
+              "$ref": "#/definitions/nfrId"
+            }
           },
-
           "visibility": {
             "type": "string",
             "description": "Whether this component is exposed externally or internal only.",
-            "enum": ["external", "internal"],
+            "enum": [
+              "external",
+              "internal"
+            ],
             "default": "internal"
           },
-
           "glossaryRefs": {
             "type": "array",
             "description": "Glossary term IDs (GL-NNN) that this component's concepts map to. Use for cross-spec traceability.",
-            "items": { "$ref": "#/definitions/glId" }
+            "items": {
+              "$ref": "#/definitions/glId"
+            }
           },
-
-          "notes": { "type": "string" }
+          "notes": {
+            "type": "string"
+          }
         }
       }
     },
-
     "dataModel": {
       "type": "object",
-      "description": "Reference to the canonical DataSpec. If a DataSpec exists, all entity definitions live there — do not duplicate them here.",
+      "description": "Reference to the canonical DataSpec. If a DataSpec exists, all entity definitions live there \u2014 do not duplicate them here.",
       "additionalProperties": false,
       "properties": {
         "dataSpecRef": {
@@ -212,10 +226,9 @@
         }
       }
     },
-
     "apiContract": {
       "type": "object",
-      "description": "Reference to the canonical ApiSpec. If an ApiSpec exists, all interface definitions live there — do not duplicate them here.",
+      "description": "Reference to the canonical ApiSpec. If an ApiSpec exists, all interface definitions live there \u2014 do not duplicate them here.",
       "additionalProperties": false,
       "properties": {
         "apiSpecRef": {
@@ -225,7 +238,7 @@
         },
         "authStrategy": {
           "type": "string",
-          "description": "How consumers authenticate with the system, e.g. 'API key in Authorization header', 'local Unix socket — no auth'.",
+          "description": "How consumers authenticate with the system, e.g. 'API key in Authorization header', 'local Unix socket \u2014 no auth'.",
           "minLength": 10
         },
         "notes": {
@@ -234,14 +247,17 @@
         }
       }
     },
-
     "dataFlow": {
       "type": "array",
       "description": "Named flows describing how data moves through the system. Each flow names a source component, optional transforms, and a sink component.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "name", "steps"],
+        "required": [
+          "id",
+          "name",
+          "steps"
+        ],
         "additionalProperties": false,
         "properties": {
           "id": {
@@ -256,17 +272,21 @@
           },
           "description": {
             "type": "string",
-            "description": "Optional prose summary of this flow. Should not be empty — use to explain the flow's purpose in one sentence."
+            "description": "Optional prose summary of this flow. Should not be empty \u2014 use to explain the flow's purpose in one sentence."
           },
           "glossaryRefs": {
             "type": "array",
             "description": "Glossary term IDs (GL-NNN) that this flow's concepts map to.",
-            "items": { "$ref": "#/definitions/glId" }
+            "items": {
+              "$ref": "#/definitions/glId"
+            }
           },
           "reqRefs": {
             "type": "array",
             "description": "REQ-IDs this flow implements.",
-            "items": { "$ref": "#/definitions/reqId" }
+            "items": {
+              "$ref": "#/definitions/reqId"
+            }
           },
           "steps": {
             "type": "array",
@@ -274,7 +294,10 @@
             "minItems": 2,
             "items": {
               "type": "object",
-              "required": ["componentRef", "action"],
+              "required": [
+                "componentRef",
+                "action"
+              ],
               "additionalProperties": false,
               "properties": {
                 "componentRef": {
@@ -290,21 +313,25 @@
                   "type": "string",
                   "description": "Optional: name of the entity or payload moving through this step."
                 },
-                "notes": { "type": "string" }
+                "notes": {
+                  "type": "string"
+                }
               }
             }
           }
         }
       }
     },
-
     "constraints": {
       "type": "array",
       "description": "Architectural limitations and hard requirements. Each must be independently verifiable.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "description"],
+        "required": [
+          "id",
+          "description"
+        ],
         "additionalProperties": false,
         "properties": {
           "id": {
@@ -324,12 +351,16 @@
           "glossaryRefs": {
             "type": "array",
             "description": "Glossary term IDs (GL-NNN) that this constraint's concepts map to.",
-            "items": { "$ref": "#/definitions/glId" }
+            "items": {
+              "$ref": "#/definitions/glId"
+            }
           },
           "nfrRefs": {
             "type": "array",
             "description": "NFR-IDs this constraint helps satisfy.",
-            "items": { "$ref": "#/definitions/nfrId" }
+            "items": {
+              "$ref": "#/definitions/nfrId"
+            }
           }
         }
       }

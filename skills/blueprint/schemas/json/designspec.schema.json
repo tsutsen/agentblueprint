@@ -23,76 +23,77 @@
     "uxAcceptanceCriteria"
   ],
   "additionalProperties": false,
-
   "definitions": {
-
     "screenId": {
       "type": "string",
       "description": "kebab-case screen identifier, e.g. 'library-screen', 'search-panel'.",
       "pattern": "^[a-z][a-z0-9-]*$"
     },
-
     "patternId": {
       "type": "string",
       "description": "kebab-case interaction pattern identifier, e.g. 'keyboard-navigation'.",
       "pattern": "^[a-z][a-z0-9-]*$"
     },
-
     "personaId": {
       "type": "string",
       "description": "kebab-case persona identifier, e.g. 'power-developer'.",
       "pattern": "^[a-z][a-z0-9-]*$"
     },
-
     "reqId": {
       "type": "string",
       "pattern": "^REQ-\\d{3}$"
     },
-
     "usId": {
       "type": "string",
       "pattern": "^US-\\d{3}$"
     },
-
     "uxacId": {
       "type": "string",
       "pattern": "^UXAC-\\d{3}$"
     },
-
     "vdrId": {
       "type": "string",
       "pattern": "^VDR-\\d{3}$"
     },
-
     "arId": {
       "type": "string",
       "pattern": "^AR-\\d{3}$"
     },
-
     "namedRequirement": {
       "type": "object",
       "description": "A verifiable design requirement with a stable ID.",
-      "required": ["id", "description"],
+      "required": [
+        "id",
+        "description"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
         "description": {
           "type": "string",
-          "description": "The requirement in plain language. Must be verifiable — avoid subjective terms.",
+          "description": "The requirement in plain language. Must be verifiable \u2014 avoid subjective terms.",
           "minLength": 10
         },
-        "rationale": { "type": "string" },
+        "rationale": {
+          "type": "string"
+        },
         "reqRefs": {
           "type": "array",
-          "items": { "$ref": "#/definitions/reqId" }
+          "items": {
+            "$ref": "#/definitions/reqId"
+          }
         }
       }
     },
-
     "iaNode": {
       "type": "object",
       "description": "A node in the information architecture tree.",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "additionalProperties": false,
       "properties": {
         "name": {
@@ -106,58 +107,60 @@
         },
         "children": {
           "type": "array",
-          "description": "Child nodes. If present, this is a grouping node — screenRef should be omitted.",
-          "items": { "$ref": "#/definitions/iaNode" }
+          "description": "Child nodes. If present, this is a grouping node \u2014 screenRef should be omitted.",
+          "items": {
+            "$ref": "#/definitions/iaNode"
+          }
         }
       }
     },
-
     "glId": {
       "type": "string",
       "description": "Glossary term identifier (GL-NNN).",
       "pattern": "^GL-\\d{3}$"
     }
   },
-
   "properties": {
-
     "version": {
       "type": "string",
       "description": "Semver version of this designspec document instance.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
-
     "schemaVersion": {
       "type": "string",
       "description": "Version of the DesignSpec schema this document conforms to. Must be '3.0.0'.",
       "const": "3.0.0"
     },
-
     "project": {
       "type": "string",
       "description": "Must match the project name in the corresponding GoalSpec.",
       "minLength": 1
     },
-
     "goalSpecVersion": {
       "type": "string",
       "description": "Version of the GoalSpec this design was produced against.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
-
     "status": {
       "type": "string",
-      "enum": ["draft", "review", "confirmed", "superseded"],
+      "enum": [
+        "draft",
+        "review",
+        "confirmed",
+        "superseded"
+      ],
       "default": "draft"
     },
-
     "designGoals": {
       "type": "array",
       "description": "High-level UX objectives. Each must describe a desired user experience quality, not an implementation approach.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "goal"],
+        "required": [
+          "id",
+          "goal"
+        ],
         "additionalProperties": false,
         "properties": {
           "id": {
@@ -169,21 +172,31 @@
             "description": "A UX quality the design must achieve.",
             "minLength": 5
           },
-          "rationale": { "type": "string" }
+          "rationale": {
+            "type": "string"
+          }
         }
       }
     },
-
     "personas": {
       "type": "array",
       "description": "Descriptions of target users. Persona roles must be consistent with actors in the GoalSpec.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "name", "role", "goals", "painPoints", "technicalSkillLevel"],
+        "required": [
+          "id",
+          "name",
+          "role",
+          "goals",
+          "painPoints",
+          "technicalSkillLevel"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": { "$ref": "#/definitions/personaId" },
+          "id": {
+            "$ref": "#/definitions/personaId"
+          },
           "name": {
             "type": "string",
             "description": "Human name for the persona, e.g. 'Leon'.",
@@ -198,36 +211,59 @@
             "type": "array",
             "description": "What this persona is trying to accomplish.",
             "minItems": 1,
-            "items": { "type": "string", "minLength": 3 }
+            "items": {
+              "type": "string",
+              "minLength": 3
+            }
           },
           "painPoints": {
             "type": "array",
             "description": "Current frustrations this system addresses.",
             "minItems": 1,
-            "items": { "type": "string", "minLength": 3 }
+            "items": {
+              "type": "string",
+              "minLength": 3
+            }
           },
           "technicalSkillLevel": {
             "type": "string",
             "description": "The persona's technical ability level.",
-            "enum": ["non-technical", "basic", "intermediate", "advanced", "expert"]
+            "enum": [
+              "non-technical",
+              "basic",
+              "intermediate",
+              "advanced",
+              "expert"
+            ]
           },
-          "notes": { "type": "string" },
+          "notes": {
+            "type": "string"
+          },
           "glossaryRefs": {
             "type": "array",
             "description": "Glossary term IDs (GL-NNN) that this persona's role maps to. Use for cross-spec traceability with actors in GoalSpec.",
-            "items": { "$ref": "#/definitions/glId" }
+            "items": {
+              "$ref": "#/definitions/glId"
+            }
           }
         }
       }
     },
-
     "userJourneys": {
       "type": "array",
       "description": "End-to-end workflows from the user's perspective. Each must reference a GoalSpec user story.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "name", "personaRef", "usRefs", "startingState", "steps", "desiredOutcome"],
+        "required": [
+          "id",
+          "name",
+          "personaRef",
+          "usRefs",
+          "startingState",
+          "steps",
+          "desiredOutcome"
+        ],
         "additionalProperties": false,
         "properties": {
           "id": {
@@ -246,7 +282,9 @@
             "type": "array",
             "description": "US-IDs from GoalSpec this journey implements. Must not be empty.",
             "minItems": 1,
-            "items": { "$ref": "#/definitions/usId" }
+            "items": {
+              "$ref": "#/definitions/usId"
+            }
           },
           "startingState": {
             "type": "string",
@@ -259,13 +297,19 @@
             "minItems": 2,
             "items": {
               "type": "object",
-              "required": ["actor", "action"],
+              "required": [
+                "actor",
+                "action"
+              ],
               "additionalProperties": false,
               "properties": {
                 "actor": {
                   "type": "string",
                   "description": "Who performs this step.",
-                  "enum": ["user", "system"]
+                  "enum": [
+                    "user",
+                    "system"
+                  ]
                 },
                 "action": {
                   "type": "string",
@@ -279,7 +323,9 @@
                 "glossaryRefs": {
                   "type": "array",
                   "description": "Glossary term IDs (GL-NNN) referenced in this step's action description.",
-                  "items": { "$ref": "#/definitions/glId" }
+                  "items": {
+                    "$ref": "#/definitions/glId"
+                  }
                 }
               }
             }
@@ -288,37 +334,62 @@
             "type": "string",
             "description": "The end state the user has reached when the journey succeeds.",
             "minLength": 5
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) referenced in this journey.",
+            "items": {
+              "$ref": "#/definitions/glId"
+            }
           }
         }
       }
     },
-
     "informationArchitecture": {
       "type": "object",
       "description": "Navigation structure of the application. Leaf nodes must reference screen IDs.",
-      "required": ["root"],
+      "required": [
+        "root"
+      ],
       "additionalProperties": false,
       "properties": {
         "root": {
           "type": "array",
           "description": "Top-level navigation nodes.",
           "minItems": 1,
-          "items": { "$ref": "#/definitions/iaNode" }
+          "items": {
+            "$ref": "#/definitions/iaNode"
+          }
         },
-        "notes": { "type": "string" }
+        "notes": {
+          "type": "string"
+        },
+        "glossaryRefs": {
+          "type": "array",
+          "description": "Glossary term IDs (GL-NNN) referenced in the information architecture.",
+          "items": {
+            "$ref": "#/definitions/glId"
+          }
+        }
       }
     },
-
     "screenInventory": {
       "type": "array",
       "description": "All screens and views in the system. Screen IDs are the shared key referenced throughout the spec.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "name", "purpose", "primaryActions"],
+        "required": [
+          "id",
+          "name",
+          "purpose",
+          "primaryActions"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": { "$ref": "#/definitions/screenId" },
+          "id": {
+            "$ref": "#/definitions/screenId"
+          },
           "name": {
             "type": "string",
             "description": "Human-readable screen name.",
@@ -333,39 +404,54 @@
             "type": "array",
             "description": "The main things a user can do on this screen.",
             "minItems": 1,
-            "items": { "type": "string", "minLength": 2 }
+            "items": {
+              "type": "string",
+              "minLength": 2
+            }
           },
           "inputs": {
             "type": "array",
             "description": "Data or content the user provides on this screen.",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
           "outputs": {
             "type": "array",
             "description": "Data or content the screen produces or displays.",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
           "usRefs": {
             "type": "array",
             "description": "US-IDs this screen helps fulfil.",
-            "items": { "$ref": "#/definitions/usId" }
+            "items": {
+              "$ref": "#/definitions/usId"
+            }
           },
           "glossaryRefs": {
             "type": "array",
             "description": "Glossary term IDs (GL-NNN) referenced in the screen's purpose description.",
-            "items": { "$ref": "#/definitions/glId" }
+            "items": {
+              "$ref": "#/definitions/glId"
+            }
           }
         }
       }
     },
-
     "screenSpecs": {
       "type": "array",
       "description": "Detailed specifications for each screen. Must cover every screen in the inventory.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["screenRef", "layout", "components", "states"],
+        "required": [
+          "screenRef",
+          "layout",
+          "components",
+          "states"
+        ],
         "additionalProperties": false,
         "properties": {
           "screenRef": {
@@ -387,7 +473,10 @@
             "minItems": 1,
             "items": {
               "type": "object",
-              "required": ["name", "purpose"],
+              "required": [
+                "name",
+                "purpose"
+              ],
               "additionalProperties": false,
               "properties": {
                 "name": {
@@ -407,12 +496,16 @@
                 "patternRefs": {
                   "type": "array",
                   "description": "Interaction pattern IDs that apply to this component.",
-                  "items": { "$ref": "#/definitions/patternId" }
+                  "items": {
+                    "$ref": "#/definitions/patternId"
+                  }
                 },
                 "glossaryRefs": {
                   "type": "array",
                   "description": "Glossary term IDs (GL-NNN) referenced in this component's purpose description.",
-                  "items": { "$ref": "#/definitions/glId" }
+                  "items": {
+                    "$ref": "#/definitions/glId"
+                  }
                 }
               }
             }
@@ -423,7 +516,10 @@
             "minItems": 1,
             "items": {
               "type": "object",
-              "required": ["name", "description"],
+              "required": [
+                "name",
+                "description"
+              ],
               "additionalProperties": false,
               "properties": {
                 "name": {
@@ -444,7 +540,10 @@
             "description": "User interactions available on this screen.",
             "items": {
               "type": "object",
-              "required": ["trigger", "response"],
+              "required": [
+                "trigger",
+                "response"
+              ],
               "additionalProperties": false,
               "properties": {
                 "trigger": {
@@ -463,20 +562,32 @@
                 }
               }
             }
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) referenced in this screen spec.",
+            "items": {
+              "$ref": "#/definitions/glId"
+            }
           }
         }
       }
     },
-
     "interactionPatterns": {
       "type": "array",
       "description": "Reusable interaction rules defined once and referenced throughout screen specs.",
       "items": {
         "type": "object",
-        "required": ["id", "name", "description"],
+        "required": [
+          "id",
+          "name",
+          "description"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": { "$ref": "#/definitions/patternId" },
+          "id": {
+            "$ref": "#/definitions/patternId"
+          },
           "name": {
             "type": "string",
             "minLength": 1
@@ -489,48 +600,59 @@
           "examples": {
             "type": "array",
             "description": "Concrete instances of this pattern in the UI.",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
           "keyboardShortcuts": {
             "type": "array",
             "description": "Keyboard shortcuts associated with this pattern.",
             "items": {
               "type": "object",
-              "required": ["keys", "action"],
+              "required": [
+                "keys",
+                "action"
+              ],
               "additionalProperties": false,
               "properties": {
                 "keys": {
                   "type": "string",
                   "description": "Key combination, e.g. 'Ctrl+K', 'Escape'."
                 },
-                "action": { "type": "string" }
+                "action": {
+                  "type": "string"
+                }
               }
             }
           }
         }
       }
     },
-
     "visualDesignRequirements": {
       "type": "array",
       "description": "Appearance constraints. Must describe requirements, not artistic preferences.",
       "minItems": 1,
       "items": {
         "allOf": [
-          { "$ref": "#/definitions/namedRequirement" },
+          {
+            "$ref": "#/definitions/namedRequirement"
+          },
           {
             "properties": {
-              "id": { "pattern": "^VDR-\\d{3}$" }
+              "id": {
+                "pattern": "^VDR-\\d{3}$"
+              }
             }
           }
         ]
       }
     },
-
     "designSystem": {
       "type": "object",
       "description": "Reusable UI building blocks that define consistency across the product.",
-      "required": ["components"],
+      "required": [
+        "components"
+      ],
       "additionalProperties": false,
       "properties": {
         "baseStyle": {
@@ -543,7 +665,10 @@
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["name", "purpose"],
+            "required": [
+              "name",
+              "purpose"
+            ],
             "additionalProperties": false,
             "properties": {
               "name": {
@@ -559,42 +684,56 @@
               "variants": {
                 "type": "array",
                 "description": "Named variants of this component, e.g. 'primary', 'destructive', 'ghost'.",
-                "items": { "type": "string" }
+                "items": {
+                  "type": "string"
+                }
               },
-              "usageNotes": { "type": "string" }
+              "usageNotes": {
+                "type": "string"
+              }
             }
           }
         },
-        "notes": { "type": "string" }
+        "notes": {
+          "type": "string"
+        }
       }
     },
-
     "accessibilityRequirements": {
       "type": "array",
       "description": "Accessibility expectations. Each must be independently verifiable.",
       "minItems": 1,
       "items": {
         "allOf": [
-          { "$ref": "#/definitions/namedRequirement" },
+          {
+            "$ref": "#/definitions/namedRequirement"
+          },
           {
             "properties": {
-              "id": { "pattern": "^AR-\\d{3}$" }
+              "id": {
+                "pattern": "^AR-\\d{3}$"
+              }
             }
           }
         ]
       }
     },
-
     "uxAcceptanceCriteria": {
       "type": "array",
       "description": "Design-specific success criteria. Each must be binary, verifiable, and linked to a GoalSpec story or requirement.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "description", "refs"],
+        "required": [
+          "id",
+          "description",
+          "refs"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": { "$ref": "#/definitions/uxacId" },
+          "id": {
+            "$ref": "#/definitions/uxacId"
+          },
           "description": {
             "type": "string",
             "description": "A binary pass/fail UX condition. Must not be subjective.",
@@ -605,8 +744,18 @@
             "description": "At least one US-ID or REQ-ID must be provided.",
             "additionalProperties": false,
             "properties": {
-              "usRefs":  { "type": "array", "items": { "$ref": "#/definitions/usId" } },
-              "reqRefs": { "type": "array", "items": { "$ref": "#/definitions/reqId" } }
+              "usRefs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/usId"
+                }
+              },
+              "reqRefs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/reqId"
+                }
+              }
             }
           },
           "verificationMethod": {
