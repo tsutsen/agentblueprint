@@ -696,32 +696,51 @@ function registerLint(pi: ExtensionAPI, extDir: string) {
       }
 
       try {
-        const args = [linter, "--json", "--suite", suiteFile];
-        if (params.epic) {
-          args.push("--epic", params.epic);
-        }
-        if (params.epicsDir) {
-          args.push("--epics-dir", params.epicsDir);
-        }
-        if (params.artifacts && params.artifacts.length > 0) {
-          const flagMap: Record<string, string> = {
-            goal: "--goal",
-            glossary: "--glossary",
-            design: "--design",
-            arch: "--arch",
-            data: "--data",
-            api: "--api",
-            test: "--test",
-          };
-          for (const art of params.artifacts) {
-            const flag = flagMap[art];
-            if (flag) {
-              const jsonPath = path.resolve(ctx.cwd, `artifacts/${art === "arch" ? "ArchitectureSpec" : art === "data" ? "DataSpec" : art === "api" ? "ApiSpec" : art === "design" ? "DesignSpec" : art === "glossary" ? "Glossary" : art === "test" ? "TestSpec" : "GoalSpec"}.json`);
-              if (fs.existsSync(jsonPath)) {
-                args.push(flag, jsonPath);
+        // Map artifact types to their JSON file names
+        const jsonNames: Record<string, string> = {
+          goal: "GoalSpec.json", glossary: "Glossary.json",
+          design: "DesignSpec.json", arch: "ArchitectureSpec.json",
+          data: "DataSpec.json", api: "ApiSpec.json", test: "TestSpec.json",
+        };
+        const flagMap: Record<string, string> = {
+          goal: "--goal", glossary: "--glossary", design: "--design",
+          arch: "--arch", data: "--data", api: "--api", test: "--test",
+        };
+
+        // Check for actual artifact files in artifacts/
+        const actualArtifacts = Object.entries(jsonNames).filter(([_, name]) =>
+          fs.existsSync(path.resolve(ctx.cwd, "artifacts", name))
+        );
+
+        let args: string[];
+        if (actualArtifacts.length > 0) {
+          // Prefer actual artifacts over suite.json examples
+          args = [linter, "--json"];
+          if (params.epic) args.push("--epic", params.epic);
+          if (params.epicsDir) args.push("--epics-dir", params.epicsDir);
+
+          if (params.artifacts && params.artifacts.length > 0) {
+            // Lint only specified artifacts
+            for (const art of params.artifacts) {
+              const f = flagMap[art];
+              if (f) {
+                const jsonPath = path.resolve(ctx.cwd, "artifacts", jsonNames[art]);
+                if (fs.existsSync(jsonPath)) args.push(f, jsonPath);
+              }
+            }
+          } else {
+            // Lint all found artifacts
+            for (const [key, name] of actualArtifacts) {
+              if (flagMap[key]) {
+                args.push(flagMap[key], path.resolve(ctx.cwd, "artifacts", name));
               }
             }
           }
+        } else {
+          // No actual artifacts — fall back to suite.json for example validation
+          args = [linter, "--json", "--suite", suiteFile];
+          if (params.epic) args.push("--epic", params.epic);
+          if (params.epicsDir) args.push("--epics-dir", params.epicsDir);
         }
 
         const { stdout, stderr } = await execFilePromise("python", args, {
