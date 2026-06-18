@@ -44,19 +44,33 @@ Each term must include:
 * **Examples** (optional) — concrete instances that clarify the definition.
 * **Synonyms** (optional) — other names for this term used in the project.
   Synonyms must NOT have their own glossary entry.
-* **Related Terms** (optional) — names of other terms in this glossary
-  that are closely related. Must reference terms that exist.
-* **Category** (optional) — grouping tag: `domain`, `technical`, `process`.
+* **Related Terms** (required) — GL-NNN identifiers of other terms in this glossary
+  that are closely related. Must reference terms that exist. At least one.
+* **Category** (required) — one of: `domain`, `technical`, `security`, `ui`.
 
-**Rules:**
+**Definition Rules:**
 
-* No circular definitions — term A must not be defined using term B if
-  term B is defined using term A.
-* Synonyms must not also have independent entries.
-* Every term referenced as a `relatedTerm` must exist in this glossary.
-* Actor names from GoalSpec must have entries.
-* Entity names from DataSpec (when it exists) should have entries.
-* Component names from ArchSpec (when it exists) should have entries.
+* **No self-reference** — the term must not appear in its own definition.
+* **No file paths or schema names** — describe the concept abstractly, not by file reference.
+* **No "related to" / "refers to" starters** — these belong in the `relatedTerms` field.
+  Start with what the term IS (e.g., "A structured piece of information..." not "Related to
+  extraction, this is...").
+* **At least one full sentence** — aim for 8-50 words.
+* **No circular definitions** — term A must not be defined using term B if
+  term B is defined using term A (direct or transitive).
+* **Synonyms must not also have independent entries.**
+* **Every term referenced as a `relatedTerm` must exist in this glossary.**
+* **Actor names from GoalSpec must have entries.**
+* **Entity names from DataSpec (when it exists) should have entries.**
+* **Component names from ArchSpec (when it exists) should have entries.**
+* **UI screen names from DesignSpec (when it exists) should have entries.**
+
+**Category Definitions:**
+
+* `domain` — Research concepts, entities, and relationships (papers, sources, queries, concepts, findings).
+* `technical` — System components, data models, engines, interfaces, data types.
+* `security` — Authentication, authorization, access control.
+* `ui` — Screen, interface, and presentation terms (panels, dashboards, dialogs).
 
 ---
 

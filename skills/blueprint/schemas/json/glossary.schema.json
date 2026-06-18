@@ -45,7 +45,7 @@
           },
           "definition": {
             "type": "string",
-            "description": "Precise, unambiguous definition. Must not use the term itself in the definition.",
+            "description": "Precise, unambiguous definition. Must not use the term itself in the definition. Must not contain file paths or schema names. Must not start with 'related to' or 'refers to' — use the 'relatedTerms' field instead."
             "minLength": 10
           },
           "examples": {
@@ -74,7 +74,8 @@
           },
           "category": {
             "type": "string",
-            "description": "Optional grouping tag, e.g. 'domain', 'technical', 'process'."
+            "description": "Required. Grouping tag for the term.",
+            "enum": ["domain", "technical", "security", "ui"]
           },
           "id": {
             "type": "string",

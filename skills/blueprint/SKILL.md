@@ -299,3 +299,60 @@ After handoff completes, remind the user:
 
 > "Open a fresh session for the next artifact and run the corresponding
 > command — the skill orients itself automatically from `artifacts/`."
+
+---
+
+## Glossary Alignment Pass (Final Step)
+
+**When to run:** After ALL other specs (GoalSpec, DesignSpec, ArchitectureSpec,
+DataSpec, ApiSpec, TestSpec, TaskPlan) are complete and linted.
+
+**Purpose:** Ensure the glossary is the single source of truth — every term
+used in any spec has a glossary entry, and every spec has glossaryRefs for
+terms it references.
+
+### Process
+
+1. **Scan all specs for glossary terms** — Extract all terms referenced in
+   spec text (requirements, descriptions, function names, entity names,
+   screen names, etc.).
+
+2. **Compare against glossary** — For each term found:
+   - If it exists in the glossary: verify it has a `glossaryRefs` entry in
+     the spec where it appears.
+   - If it does NOT exist in the glossary: **offer to add it**.
+
+3. **Add missing terms** — For each term not in the glossary:
+   - Present the term and its context to the user.
+   - Propose a definition (based on how it's used in the spec).
+   - Propose a category (domain, technical, security, ui).
+   - Propose related terms.
+   - On approval: add to glossary, re-generate Glossary.md.
+
+4. **Fix missing glossaryRefs** — For each spec that references a glossary
+   term without a `glossaryRefs` entry:
+   - Add the term's GL-NNN ID to the appropriate level (top-level,
+     section-level, or item-level).
+   - Re-run lint to confirm.
+
+5. **Check for near-duplicates** — Run the linter's near-duplicate check.
+   If two terms are >70% lexically similar, present them to the user and
+   suggest consolidation.
+
+6. **Final lint** — Run `lint()` across all artifacts. All errors must be
+   resolved. Warnings about intentional ID gaps (from removed terms) are
+   acceptable.
+
+### Integration with Other Specs
+
+When creating any spec (DesignSpec, ArchitectureSpec, DataSpec, ApiSpec,
+TestSpec, TaskPlan):
+
+- **During the interview:** When a term is identified that might need a
+  glossary entry, note it for the alignment pass. Do NOT add terms directly
+  to the glossary during spec creation.
+- **After the spec is written:** Note any new terms for the alignment pass.
+- **The glossary is updated in bulk** during the alignment pass, not incrementally.
+
+This keeps spec creation focused and prevents glossary churn during iterative
+development.

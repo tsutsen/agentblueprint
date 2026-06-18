@@ -5,13 +5,16 @@ Optionally cross-checks all other specs to find undefined terms and unused entri
 
 What this catches beyond JSON Schema:
   - Duplicate term names
+  - Near-duplicate terms (>70% lexical similarity, e.g. Source vs ScholarlySource)
   - Circular definitions (term A defined using term B defined using term A)
   - Self-referential definitions (term used in its own definition)
   - relatedTerms referencing terms not in the glossary
   - synonyms that also have their own glossary entry (conflict)
   - Domain terms from other specs missing from the glossary
   - Glossary terms never referenced in any spec (unused)
-  - Definition smell: too short, too vague, or placeholder-like
+  - Definition smell: too short, too vague, placeholder-like
+  - Definition quality: file paths, schema names, "related to" starters
+  - Cross-spec glossaryRefs: specs must have glossaryRefs for terms they reference
 
 Usage:
     python lint_glossary.py <glossary.json> [--schema glossary.schema.json]
@@ -27,6 +30,7 @@ import argparse
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
+from difflib import SequenceMatcher
 
 # Regex for GL-NNN ID format (e.g. GL-001)
 GL_ID_RE = re.compile(r"^GL-\d{3}$")
@@ -171,6 +175,23 @@ def check_duplicates(glossary: dict, result: LintResult) -> dict[str, dict]:
     return seen
 
 
+def check_near_duplicates(term_map: dict[str, dict], result: LintResult):
+    """Flag terms that are lexically similar but not identical (>70% similarity)."""
+    terms = list(term_map.keys())
+    reported = set()
+    for i in range(len(terms)):
+        for j in range(i + 1, len(terms)):
+            a, b = terms[i], terms[j]
+            ratio = SequenceMatcher(None, a.lower(), b.lower()).ratio()
+            if 0.7 < ratio < 1.0:
+                key = frozenset([a, b])
+                if key not in reported:
+                    reported.add(key)
+                    result.add("warning", "near_duplicate",
+                        f"Terms '{a}' and '{b}' are lexically similar ({ratio:.0%}).",
+                        hint="Consider if these are truly distinct concepts or should be consolidated.")
+
+
 def check_self_reference(term_map: dict[str, dict], result: LintResult):
     """A term must not appear in its own definition."""
     for name, entry in term_map.items():
@@ -262,30 +283,56 @@ def check_synonym_conflicts(gl_id_map: dict[str, dict], result: LintResult):
 
 
 def check_definition_quality(gl_id_map: dict[str, dict], result: LintResult):
-    """Flag definitions that are suspiciously short or placeholder-like."""
+    """Flag definitions that are suspiciously short, placeholder-like, or contain file refs."""
     placeholder_patterns = ["tbd", "todo", "see above", "see below", "n/a", "same as"]
     vague_starters = ["a thing", "something that", "refers to", "relates to"]
+    file_ref_patterns = [
+        r"\.json",
+        r"\.yaml",
+        r"\.yml",
+        r"\.md",
+        r"\.txt",
+        r"schema.*\.json",
+        r"file.*path",
+        r"path.*to",
+    ]
 
     for name, entry in gl_id_map.items():
         defn = entry.get("definition", "")
         defn_lower = defn.lower().strip()
 
+        # Placeholder check
         for p in placeholder_patterns:
             if defn_lower.startswith(p) or defn_lower == p:
                 result.add("error", "definition_placeholder",
                     f"Term '{name}': definition appears to be a placeholder ('{defn[:30]}').",
                     hint="Write a complete, precise definition.")
 
+        # Vague starter check
         for v in vague_starters:
             if defn_lower.startswith(v):
                 result.add("warning", "definition_vague",
                     f"Term '{name}': definition starts with vague phrasing ('{v}...').",
                     hint="Start with what the term IS, not how it relates to other things.")
 
-        if len(defn.split()) < 5:
+        # File path / schema name check
+        for pattern in file_ref_patterns:
+            if re.search(pattern, defn, re.IGNORECASE):
+                result.add("warning", "definition_file_ref",
+                    f"Term '{name}': definition contains a file path or schema reference.",
+                    hint="Describe the concept abstractly, not by file reference. Remove file paths and schema names from definitions.")
+                break
+
+        # Word count checks
+        word_count = len(defn.split())
+        if word_count < 8:
             result.add("warning", "definition_too_short",
-                f"Term '{name}': definition is very short ({len(defn.split())} words).",
-                hint="Definitions should be precise and complete — aim for at least one full sentence.")
+                f"Term '{name}': definition is very short ({word_count} words).",
+                hint="Definitions should be precise and complete — aim for at least one full sentence (8+ words).")
+        elif word_count > 50:
+            result.add("warning", "definition_too_long",
+                f"Term '{name}': definition is very long ({word_count} words).",
+                hint="Definitions should be concise — aim for 8-50 words. Split into multiple terms if needed.")
 
 
 def check_cross_spec_coverage(
@@ -363,6 +410,7 @@ def run_lint(
     if gl_id_map:  # Only run name-based checks if GL-IDs are valid
         check_self_reference(term_map, result)
         check_circular_definitions(term_map, result)
+        check_near_duplicates(term_map, result)
     check_related_terms(gl_id_map, result)
     check_synonym_conflicts(gl_id_map, result)
     check_definition_quality(gl_id_map, result)
