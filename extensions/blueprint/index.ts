@@ -1311,7 +1311,8 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
     label: "Spec Upgrade",
     description:
       "Migrate artifact files from old schema format to new format. " +
-      "Detects missing fields, prompts for values, and updates both Markdown and JSON files.",
+      "Loads the glossary and scans content to populate glossaryRefs intelligently. " +
+      "Converts old string arrays to structured objects. Updates both Markdown and JSON.",
     parameters: Type.Object({
       artifactType: Type.String({
         description: "Artifact type: goal, glossary, design, arch, data, api, test, plan, issues",
@@ -1373,41 +1374,92 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
         existingJson = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
       }
 
-      // 3. Find missing fields
-      const missingFields: Array<{ path: string; type: string; schema: any }> = [];
+      // 3. Load glossary for term matching
+      let glossaryTerms: Array<{ id: string; term: string; description: string }> = [];
+      const glossaryPath = path.resolve(ctx.cwd, "artifacts/Glossary.json");
+      if (fs.existsSync(glossaryPath)) {
+        try {
+          const glossary = JSON.parse(fs.readFileSync(glossaryPath, "utf-8"));
+          glossaryTerms = (glossary.terms || []).map((t: any) => ({
+            id: t.id,
+            term: t.term,
+            description: t.description || "",
+          }));
+        } catch {
+          // Glossary not available, will skip glossaryRefs
+        }
+      }
 
-      function findMissingFields(obj: any, schema: any, prefix: string = "") {
+      // Helper: find glossary term IDs that match words in text
+      function findGlossaryRefs(text: string): string[] {
+        if (!text || !glossaryTerms.length) return [];
+        const found: string[] = [];
+        const lowerText = text.toLowerCase();
+        for (const term of glossaryTerms) {
+          // Match term as whole word (case-insensitive)
+          const regex = new RegExp(`\\b${term.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+          if (regex.test(lowerText)) {
+            found.push(term.id);
+          }
+        }
+        return [...new Set(found)]; // unique
+      }
+
+      // Helper: recursively apply glossaryRefs to text fields
+      function applyGlossaryRefs(obj: any, schema: any, glossaryRefsField: string) {
         if (!schema.properties) return;
 
         for (const [key, fieldSchema] of Object.entries(schema.properties)) {
-          const fieldPath = prefix ? `${prefix}.${key}` : key;
+          const fieldPath = key;
 
-          // Check if field exists in existing data
-          if (obj[key] === undefined || obj[key] === null) {
-            missingFields.push({
-              path: fieldPath,
-              type: fieldSchema.type || "object",
-              schema: fieldSchema,
-            });
-          } else if (fieldSchema.type === "object" && typeof obj[key] === "object" && !Array.isArray(obj[key])) {
+          if (fieldSchema.type === "object" && typeof obj[key] === "object" && !Array.isArray(obj[key])) {
             // Recurse into nested objects
-            findMissingFields(obj[key], fieldSchema, fieldPath);
+            applyGlossaryRefs(obj[key], fieldSchema, glossaryRefsField);
+          } else if (fieldSchema.type === "string" && glossaryRefsField && key === glossaryRefsField) {
+            // This is a glossaryRefs field - skip, it will be set by the caller
+          } else if (fieldSchema.type === "string" && key !== glossaryRefsField && key !== "id" && key !== "artifact" && key !== "status" && key !== "type" && key !== "epic" && key !== "milestone" && key !== "created" && key !== "updated" && key !== "blocked_by") {
+            // This is a text field - check if it needs glossaryRefs added
+            if (obj[key] && typeof obj[key] === "string" && obj[key].length > 5) {
+              const refs = findGlossaryRefs(obj[key]);
+              if (refs.length > 0) {
+                // We'll set this on the parent object
+                if (!obj[glossaryRefsField]) obj[glossaryRefsField] = [];
+                obj[glossaryRefsField] = [...new Set([...obj[glossaryRefsField], ...refs])];
+              }
+            }
           } else if (fieldSchema.type === "array" && fieldSchema.items) {
-            // For arrays, check if items need upgrading
+            // Process array items
             if (fieldSchema.items.$ref) {
-              // Reference to another definition
               const refName = fieldSchema.items.$ref.split("/").pop();
               const refSchema = schema.definitions?.[refName];
               if (refSchema && refSchema.properties) {
-                // Check if array items are strings (old format) or objects (new format)
-                const firstItem = obj[key][0];
-                if (typeof firstItem === "string") {
-                  // Old format: convert to new format
-                  missingFields.push({
-                    path: fieldPath,
-                    type: "array-to-object",
-                    schema: { ...fieldSchema, items: refSchema },
-                  });
+                const items = obj[key] || [];
+                for (let i = 0; i < items.length; i++) {
+                  const item = items[i];
+
+                  // Convert string items to objects
+                  if (typeof item === "string") {
+                    items[i] = { description: item, glossaryRefs: [] };
+                    // Try to find glossary refs in the string
+                    const refs = findGlossaryRefs(item);
+                    if (refs.length > 0) {
+                      items[i].glossaryRefs = refs;
+                    }
+                  } else if (typeof item === "object" && !item[glossaryRefsField]) {
+                    // Object missing glossaryRefs - scan its description
+                    const desc = item.description || item.title || "";
+                    if (desc && typeof desc === "string") {
+                      const refs = findGlossaryRefs(desc);
+                      if (refs.length > 0) {
+                        item[glossaryRefsField] = refs;
+                      }
+                    }
+                  }
+
+                  // Recurse into nested objects
+                  if (typeof items[i] === "object" && !Array.isArray(items[i])) {
+                    applyGlossaryRefs(items[i], refSchema, glossaryRefsField);
+                  }
                 }
               }
             }
@@ -1415,33 +1467,108 @@ function registerSpecUpgrade(pi: ExtensionAPI, extDir: string) {
         }
       }
 
-      findMissingFields(existingJson, schema);
+      // 4. Apply intelligent upgrades
+      let fieldsAdded = 0;
+      const changes: string[] = [];
 
-      if (missingFields.length === 0) {
-        return {
-          content: [{ type: "text", text: `No missing fields detected. Artifact is up to date.` }],
-          details: { success: true, fieldsAdded: 0 },
-        };
+      // Apply glossaryRefs to all text fields
+      const glossaryRefsFieldMap: Record<string, string> = {
+        goal: "glossaryRefs",
+        glossary: "glossaryRefs",
+        design: "glossaryRefs",
+        arch: "glossaryRefs",
+        data: "glossaryRefs",
+        api: "glossaryRefs",
+        test: "glossaryRefs",
+        plan: "glossaryRefs",
+        issues: "glossaryRefs",
+      };
+
+      const grf = glossaryRefsFieldMap[artifactType] || "glossaryRefs";
+      applyGlossaryRefs(existingJson, schema, grf);
+
+      // Check for specific field upgrades
+      // Issue: titleGlossaryRefs
+      if (artifactType === "issues" && existingJson.title && !existingJson.titleGlossaryRefs) {
+        const refs = findGlossaryRefs(existingJson.title);
+        if (refs.length > 0) {
+          existingJson.titleGlossaryRefs = refs;
+          fieldsAdded++;
+          changes.push(`titleGlossaryRefs: [${refs.join(", ")}]`);
+        }
       }
 
-      // 4. Build upgrade plan
-      const upgradePlan = missingFields.map((f) => ({
-        path: f.path,
-        type: f.type,
-        description: f.schema.description || "",
-        suggested: f.type === "array" ? "[]" : f.type === "boolean" ? "false" : "''",
-      }));
+      // TaskPlan: collect inScope/outOfScope glossaryRefs
+      if (artifactType === "plan" && existingJson.epics) {
+        for (const epic of (existingJson.epics || [])) {
+          if (epic.inScope && Array.isArray(epic.inScope)) {
+            for (const item of epic.inScope) {
+              if (typeof item === "string") {
+                const refs = findGlossaryRefs(item);
+                if (refs.length > 0) {
+                  fieldsAdded++;
+                  changes.push(`epics[].inScope[].glossaryRefs: [${refs.join(", ")}]`);
+                }
+              } else if (item.description && !item.glossaryRefs) {
+                const refs = findGlossaryRefs(item.description);
+                if (refs.length > 0) {
+                  item.glossaryRefs = refs;
+                  fieldsAdded++;
+                  changes.push(`epics[].inScope[].glossaryRefs: [${refs.join(", ")}]`);
+                }
+              }
+            }
+          }
+          if (epic.outOfScope && Array.isArray(epic.outOfScope)) {
+            for (const item of epic.outOfScope) {
+              if (typeof item === "string") {
+                const refs = findGlossaryRefs(item);
+                if (refs.length > 0) {
+                  fieldsAdded++;
+                  changes.push(`epics[].outOfScope[].glossaryRefs: [${refs.join(", ")}]`);
+                }
+              } else if (item.description && !item.glossaryRefs) {
+                const refs = findGlossaryRefs(item.description);
+                if (refs.length > 0) {
+                  item.glossaryRefs = refs;
+                  fieldsAdded++;
+                  changes.push(`epics[].outOfScope[].glossaryRefs: [${refs.join(", ")}]`);
+                }
+              }
+            }
+          }
+        }
+      }
 
-      // 5. Return upgrade plan for user to review
-      const planText = upgradePlan.map((p) => `- ${p.path}: ${p.type} ${p.description ? `(${p.description})` : ""} [suggested: ${p.suggested}]`).join("\n");
+      // 5. Write updated files
+      fs.writeFileSync(jsonPath, JSON.stringify(existingJson, null, 2) + "\n");
+
+      // Update markdown frontmatter
+      if (fs.existsSync(fullPath)) {
+        const updated = new Date().toISOString().slice(0, 10);
+        const fmLinesNew: string[] = ["---"];
+        const artifactMatch = markdown.match(/^---\nartifact:\s*(.+?)\n/m);
+        if (artifactMatch) {
+          fmLinesNew.push(`artifact: ${artifactMatch[1].trim()}`);
+        }
+        fmLinesNew.push(`status: ${fm.status || "in_progress"}`);
+        fmLinesNew.push(`updated: ${updated}`);
+        fmLinesNew.push("---");
+
+        const newFm = fmLinesNew.join("\n") + "\n";
+        const fmRegex = /^---\n[\s\S]*?\n---\n/;
+        const body = markdown.replace(fmRegex, newFm);
+        fs.writeFileSync(fullPath, body, "utf-8");
+      }
+
+      // 6. Return result
+      const resultText = fieldsAdded === 0
+        ? `Upgrade complete for ${artifactType}: No glossary references found in content. Files are up to date.`
+        : `Upgrade complete for ${artifactType}:\n  Fields added: ${fieldsAdded}\n${changes.map(c => `  - ${c}`).join("\n")}\n\nFiles updated:\n  - ${filePath}\n  - ${jsonPath}\n\nRun /skill:lint ${artifactType} to verify.`;
 
       return {
-        content: [{
-          type: "text",
-          text: `Found ${missingFields.length} missing field(s) in ${artifactType} artifact.\n\nUpgrade plan:\n${planText}\n\nDo you want to proceed with the upgrade? Reply 'yes' to apply.`,
-        }],
-        details: { success: true, fieldsAdded: 0, plan: upgradePlan },
-        needsConfirmation: true,
+        content: [{ type: "text", text: resultText }],
+        details: { success: true, fieldsAdded, changes },
       };
     },
   });
