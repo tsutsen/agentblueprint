@@ -255,11 +255,19 @@
     display: inline-block;
   }
   .dropdown-toggle {
-    padding: 6px 14px 6px 6px;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    border-right: none;
+    padding: 6px 28px 6px 12px;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--btn-text, #888888) !important;
+    font-size: 11px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
     position: relative;
+  }
+  .dropdown-toggle:hover {
+    background-color: var(--surface2);
   }
   .dropdown-toggle::after {
     content: '';
