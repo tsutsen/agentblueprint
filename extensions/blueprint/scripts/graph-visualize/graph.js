@@ -21,10 +21,12 @@ const LABEL_NODE_RADIUS_THRESHOLD = 8;
 const LABEL_CHAR_WIDTH = 0.62; // Inter average, world-space units
 const LABEL_PAD_X = 4; // horizontal padding each side (world-space)
 const LABEL_PAD_Y = 2; // vertical padding above node
+const LABEL_HYSTERESIS = 0.15; // Zoom change needed before rebuilding label set
 
 // HTML label elements (replaces canvas text rendering)
 let _labelElements = new Map(); // nodeId -> HTMLDivElement
 let _labelVisibleSet = null; // nodes that should show labels (progressive disclosure)
+let _lastLabelZoom = 0; // track last zoom level to detect significant changes
 
 /**
  * Call once per render(), before drawing any labels.
@@ -32,6 +34,14 @@ let _labelVisibleSet = null; // nodes that should show labels (progressive discl
  * using a simple grid spatial index to avoid O(n²).
  */
 function buildLabelSet() {
+  // Check if zoom changed significantly (hysteresis to prevent flickering)
+  const zoomDelta = Math.abs(zoom.k - _lastLabelZoom);
+  if (zoomDelta < LABEL_HYSTERESIS && _labelVisibleSet !== null) {
+    // Zoom hasn't changed enough, skip rebuilding
+    return;
+  }
+  _lastLabelZoom = zoom.k;
+
   // Track previous visible labels to detect changes
   const prevVisible = _labelVisibleSet ? new Set(_labelVisibleSet) : null;
   _labelVisibleSet = new Set();
