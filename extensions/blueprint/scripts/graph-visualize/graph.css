@@ -274,7 +274,7 @@
   .dropdown-toggle::after {
     content: '';
     position: absolute;
-    right: 3px;
+    right: 5px;
     top: 50%;
     transform: translateY(-50%);
     width: 0;
