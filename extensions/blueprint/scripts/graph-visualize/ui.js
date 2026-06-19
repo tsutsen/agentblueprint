@@ -184,6 +184,8 @@ function applyFilters() {
 
   // Trigger scale animation (it internally calls recalcSizeRange and computes connectedSet)
   if (typeof startScaleAnimation === 'function') startScaleAnimation();
+  // Ensure immediate render after filters
+  if (typeof render === 'function') render();
 }
 
 // ─── Zoom ───
