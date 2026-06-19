@@ -91,6 +91,7 @@ function main() {
     definition: t.definition,
     category: t.category,
     relatedCount: (t.relatedTerms || []).length,
+    degree: 0, // will be updated below
     specRefCount: 0, // will be updated below
   }));
 
@@ -139,6 +140,7 @@ function main() {
       definition: `Specification file: ${specName}.json`,
       category: 'spec',
       relatedCount: termSet.size,
+      degree: 0,
       specRefCount: 0,
       specs: [],
     });
@@ -174,6 +176,18 @@ function main() {
         });
       }
     }
+  }
+
+  // Compute degree from all edges
+  const degreeMap = new Map();
+  for (const e of [...edges, ...crossSpecEdges]) {
+    degreeMap.set(e.source, (degreeMap.get(e.source) || 0) + 1);
+    degreeMap.set(e.target, (degreeMap.get(e.target) || 0) + 1);
+  }
+
+  // Set degree on all nodes
+  for (const n of [...nodes, ...specNodes]) {
+    n.degree = degreeMap.get(n.id) || 0;
   }
 
   // Output
