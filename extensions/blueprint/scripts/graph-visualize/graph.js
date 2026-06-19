@@ -17,6 +17,7 @@ let isDragging = false;
 let zoom = { x: 0, y: 0, k: 1 };
 let isPanning = false;
 let panStart = { x: 0, y: 0 };
+let isMouseDown = false;
 
 // ─── Init graph ───
 function initGraph() {
@@ -247,6 +248,7 @@ function findNodeAt(pos) {
 
 function onMouseDown(event) {
   if (event.button === 0) {
+    isMouseDown = true;
     const pos = getMousePos(event);
     const node = findNodeAt(pos);
     if (node) {
@@ -275,8 +277,8 @@ function onMouseMove(event) {
     return;
   }
 
-  // Start panning if mouse moved significantly
-  if (!draggedNode && !isPanning) {
+  // Start panning if mouse moved significantly (only when mouse is held down)
+  if (!draggedNode && !isPanning && isMouseDown) {
     const dx = event.clientX - panStart.x;
     const dy = event.clientY - panStart.y;
     if (dx * dx + dy * dy > 25) { // 5px threshold
@@ -304,6 +306,7 @@ function onMouseUp(event) {
   if (isPanning) {
     isPanning = false;
   }
+  isMouseDown = false;
   if (draggedNode && !isDragging) {
     // It was a click on a node
     const pos = getMousePos(event);
