@@ -84,10 +84,21 @@ function initUI() {
   document.getElementById('btn-simulate').addEventListener('click', toggleSimulation);
   document.getElementById('btn-labels').addEventListener('click', toggleLabels);
 
-  // Size metric dropdown
-  const sizeSelect = document.getElementById('size-metric');
-  sizeSelect.addEventListener('change', (e) => {
-    sizeMetric = e.target.value;
+  // Size metric button - cycles through options
+  const sizeMetricBtn = document.getElementById('btn-size-metric');
+  const sizeMetrics = ['degree', 'blast', 'risk', 'centrality', 'type'];
+  const sizeLabels = {
+    degree: 'Size: Degree',
+    blast: 'Size: Blast Radius',
+    risk: 'Size: Risk Score',
+    centrality: 'Size: Centrality',
+    type: 'Size: Type',
+  };
+  let currentMetricIndex = sizeMetrics.indexOf(sizeMetric);
+  sizeMetricBtn.addEventListener('click', () => {
+    currentMetricIndex = (currentMetricIndex + 1) % sizeMetrics.length;
+    sizeMetric = sizeMetrics[currentMetricIndex];
+    sizeMetricBtn.textContent = sizeLabels[sizeMetric];
     console.log('Size metric changed to:', sizeMetric);
     if (typeof recalcSizeRange === 'function') recalcSizeRange();
     if (typeof startScaleAnimation === 'function') startScaleAnimation();
