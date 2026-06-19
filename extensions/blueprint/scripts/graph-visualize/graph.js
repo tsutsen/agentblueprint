@@ -74,6 +74,9 @@ function initGraph() {
   for (let i = 0; i < 100; i++) simulation.tick();
   simulation.stop();
 
+  // ── Initial render ──
+  render();
+
   // ── Event listeners ──
   canvas.addEventListener('mousedown', onMouseDown);
   canvas.addEventListener('mousemove', onMouseMove);
