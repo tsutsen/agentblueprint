@@ -1,0 +1,37 @@
+<!-- ─── Canvas Component ─── -->
+<div id="graph-container">
+  <svg id="graph-svg"></svg>
+
+  <div id="controls">
+    <button id="btn-zoom-reset">Reset view</button>
+    <button id="btn-labels" class="active">Labels</button>
+    <button id="btn-specs" class="active">Specs</button>
+    <button id="btn-reheat">Re-layout</button>
+  </div>
+
+  <div id="legend">
+    <h4>Connections</h4>
+    <div class="legend-row">
+      <div class="legend-line legend-line-related"></div>
+      <span>Related terms</span>
+    </div>
+    <div class="legend-row">
+      <div class="legend-line legend-line-spec"></div>
+      <span>Spec references</span>
+    </div>
+    <div class="legend-row">
+      <div class="legend-line legend-line-cross"></div>
+      <span>Cross-spec</span>
+    </div>
+  </div>
+
+  <div id="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div id="loading-text">Laying out graph… (F12 for console)</div>
+  </div>
+
+  <div id="debug-panel">
+    <div class="debug-title">🔍 Debug</div>
+    <div id="debug-content"></div>
+  </div>
+</div>

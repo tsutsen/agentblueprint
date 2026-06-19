@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glossary Link Graph</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0f111a;
+    --surface: #161927;
+    --surface2: #1e2235;
+    --border: #2a2f45;
+    --text: #c9cdd8;
+    --text-dim: #6b7194;
+    --text-bright: #e4e7f0;
+    --accent: #7c8cf8;
+    --accent-glow: rgba(124, 140, 248, 0.15);
+    --domain: #f472b6;
+    --technical: #38bdf8;
+    --security: #fbbf24;
+    --ui: #a78bfa;
+    --spec: #34d399;
+    --edge-related: rgba(100, 110, 160, 0.25);
+    --edge-spec: rgba(56, 189, 248, 0.15);
+    --edge-cross: rgba(251, 191, 36, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  #app { display: flex; height: 100vh; }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: 300px; min-width: 300px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden; z-index: 10;
+  }
+
+  #sidebar-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  #sidebar-header h1 {
+    font-size: 15px; font-weight: 700;
+    color: var(--text-bright); margin-bottom: 2px;
+  }
+  #sidebar-header .subtitle { font-size: 11px; color: var(--text-dim); }
+
+  /* ── Search ── */
+  #search-box { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  #search-input {
+    width: 100%; padding: 8px 12px 8px 32px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text);
+    font-size: 12px; font-family: inherit;
+    outline: none; transition: border-color 0.2s;
+  }
+  #search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  #search-input::placeholder { color: var(--text-dim); }
+  #search-wrapper { position: relative; }
+  #search-wrapper::before {
+    content: '⌕'; position: absolute; left: 10px; top: 50%;
+    transform: translateY(-50%); color: var(--text-dim);
+    font-size: 14px; pointer-events: none;
+  }
+
+  /* ── Filters ── */
+  #filters { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  #filters > h3 {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 8px;
+  }
+  .filter-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 6px; border-radius: 6px;
+    cursor: pointer; transition: background 0.15s;
+    font-size: 12px; user-select: none;
+  }
+  .filter-item:hover { background: var(--surface2); }
+  .filter-item input[type="checkbox"] {
+    appearance: none; width: 14px; height: 14px;
+    border: 1.5px solid var(--border); border-radius: 4px;
+    background: var(--bg); cursor: pointer;
+    position: relative; flex-shrink: 0; transition: all 0.15s;
+  }
+  .filter-item input[type="checkbox"]:checked {
+    background: var(--accent); border-color: var(--accent);
+  }
+  .filter-item input[type="checkbox"]:checked::after {
+    content: '✓'; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); font-size: 10px;
+    color: white; font-weight: 700;
+  }
+  .filter-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .filter-count {
+    margin-left: auto; font-size: 10px;
+    color: var(--text-dim); background: var(--bg);
+    padding: 1px 6px; border-radius: 8px;
+  }
+
+  .edge-filters { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .edge-filters > h3 {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 6px;
+  }
+  .edge-filter-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 3px 6px; border-radius: 6px;
+    cursor: pointer; font-size: 11px;
+    color: var(--text-dim); user-select: none;
+  }
+  .edge-filter-item:hover { background: var(--surface2); }
+  .edge-filter-item input[type="checkbox"] {
+    appearance: none; width: 12px; height: 12px;
+    border: 1.5px solid var(--border); border-radius: 3px;
+    background: var(--bg); cursor: pointer;
+    position: relative; flex-shrink: 0; transition: all 0.15s;
+  }
+  .edge-filter-item input[type="checkbox"]:checked {
+    background: var(--accent); border-color: var(--accent);
+  }
+  .edge-filter-item input[type="checkbox"]:checked::after {
+    content: '✓'; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); font-size: 8px;
+    color: white; font-weight: 700;
+  }
+  .edge-line {
+    width: 18px; height: 2px; flex-shrink: 0; border-radius: 1px;
+  }
+
+  /* ── Term list ── */
+  #term-list { flex: 1; overflow-y: auto; padding: 6px; }
+  .term-list-item {
+    padding: 7px 10px; border-radius: 6px;
+    cursor: pointer; font-size: 12px;
+    transition: background 0.15s;
+    display: flex; align-items: center; gap: 8px;
+    user-select: none;
+  }
+  .term-list-item:hover { background: var(--surface2); }
+  .term-list-item.active {
+    background: var(--accent-glow);
+    outline: 1px solid rgba(124, 140, 248, 0.3);
+  }
+  .term-list-item .term-id {
+    font-family: 'SF Mono', 'JetBrains Mono', monospace;
+    font-size: 9px; color: var(--text-dim);
+    background: var(--bg); padding: 2px 5px;
+    border-radius: 3px; flex-shrink: 0; letter-spacing: 0.02em;
+  }
+  .term-list-item .term-name {
+    flex: 1; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; color: var(--text);
+  }
+
+  /* ── Graph area ── */
+  #graph-container {
+    flex: 1; position: relative; overflow: hidden;
+  }
+  #graph-svg { width: 100%; height: 100%; }
+
+  /* ── Controls ── */
+  #controls {
+    position: absolute; top: 14px; right: 14px;
+    display: flex; gap: 4px; z-index: 5;
+  }
+  #controls button {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-dim); padding: 6px 10px;
+    border-radius: 8px; font-size: 11px;
+    font-family: inherit; cursor: pointer;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  #controls button:hover {
+    background: var(--surface2); color: var(--text);
+    border-color: var(--accent);
+  }
+  #controls button.active {
+    background: var(--accent); color: white;
+    border-color: var(--accent);
+  }
+
+  /* ── Detail panel ── */
+  #detail-panel {
+    position: absolute; bottom: 16px; left: 16px; right: 16px;
+    max-width: 500px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 20px; z-index: 20;
+    transform: translateY(130%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    max-height: 280px; overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+  #detail-panel.visible { transform: translateY(0); }
+
+  #detail-panel .detail-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 8px;
+  }
+  #detail-panel .detail-header .term-id {
+    font-family: 'SF Mono', 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--accent);
+    background: var(--accent-glow); padding: 2px 8px;
+    border-radius: 4px; font-weight: 600;
+  }
+  #detail-panel .detail-header .term-name {
+    font-size: 15px; font-weight: 600; color: var(--text-bright);
+  }
+  #detail-panel .detail-header .category-badge {
+    font-size: 9px; text-transform: uppercase;
+    letter-spacing: 0.08em; padding: 2px 8px;
+    border-radius: 4px; margin-left: auto; font-weight: 600;
+  }
+  #detail-panel .detail-def {
+    font-size: 12px; color: var(--text-dim);
+    line-height: 1.6; margin-bottom: 10px;
+  }
+  #detail-panel .detail-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+  #detail-panel .detail-stats span {
+    background: var(--bg); padding: 4px 10px;
+    border-radius: 6px; font-size: 11px; color: var(--text-dim);
+  }
+  #detail-panel .close-btn {
+    position: absolute; top: 12px; right: 12px;
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text-dim); cursor: pointer;
+    font-size: 14px; width: 24px; height: 24px;
+    border-radius: 6px; display: flex;
+    align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  #detail-panel .close-btn:hover {
+    color: var(--text); border-color: var(--accent);
+  }
+
+  /* ── Legend ── */
+  #legend {
+    position: absolute; bottom: 16px; right: 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 16px;
+    font-size: 11px; z-index: 5;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+  #legend h4 {
+    font-size: 9px; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .legend-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 5px; color: var(--text-dim);
+  }
+  .legend-line {
+    width: 24px; height: 2px; border-radius: 1px; flex-shrink: 0;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── Node / Edge styles ── */
+  .node circle {
+    transition: r 0.2s ease, stroke-width 0.2s ease, opacity 0.2s ease;
+    cursor: grab;
+  }
+  .node circle:active { cursor: grabbing; }
+  .node.highlighted circle {
+    stroke: #fff !important; stroke-width: 2.5px !important;
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+  .node text {
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .edge-line {
+    transition: opacity 0.2s ease, stroke-width 0.2s ease;
+  }
+  .dimmed { opacity: 0.04 !important; }
+  .highlighted { opacity: 1 !important; }
+
+  /* ── Debug panel ── */
+  #debug-panel {
+    position: absolute; top: 14px; left: 14px;
+    background: rgba(0,0,0,0.9); color: #0f0;
+    font-family: 'SF Mono', 'JetBrains Mono', monospace;
+    font-size: 10px; padding: 10px 14px;
+    border-radius: 8px; z-index: 50;
+    line-height: 1.6; min-width: 240px;
+    border: 1px solid #333;
+  }
+  #debug-panel .debug-title {
+    font-size: 11px; font-weight: 700;
+    color: #fff; margin-bottom: 6px;
+    font-family: 'Inter', sans-serif;
+  }
+  #debug-panel .debug-row {
+    display: flex; justify-content: space-between;
+  }
+  #debug-panel .debug-label { color: #888; }
+  #debug-panel .debug-value { color: #0f0; }
+  #debug-panel .debug-warn { color: #f80; }
+  #debug-panel .debug-err { color: #f44; }
+
+  /* ── Loading overlay ── */
+  #loading-overlay {
+    position: absolute; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 100; transition: opacity 0.5s;
+  }
+  #loading-overlay.hidden {
+    opacity: 0; pointer-events: none;
+  }
+  .loading-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading-text {
+    font-size: 13px; color: var(--text-dim);
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <h1>Glossary Graph</h1>
+      <div class="subtitle" id="project-name">Loading...</div>
+    </div>
+    <div id="search-box">
+      <div class="search-wrapper">
+        <input type="text" id="search-input" placeholder="Search terms or IDs...">
+      </div>
+    </div>
+    <div id="filters">
+      <h3>Categories</h3>
+      <div id="category-filters"></div>
+    </div>
+    <div class="edge-filters">
+      <h3>Edges</h3>
+      <div id="edge-type-filters"></div>
+    </div>
+    <div id="term-list"></div>
+  </div>
+
+  <div id="graph-container">
+    <svg id="graph-svg"></svg>
+
+    <div id="controls">
+      <button id="btn-zoom-reset">Reset view</button>
+      <button id="btn-labels" class="active">Labels</button>
+      <button id="btn-specs" class="active">Specs</button>
+      <button id="btn-reheat">Re-layout</button>
+    </div>
+
+    <div id="legend">
+      <h4>Connections</h4>
+      <div class="legend-row">
+        <div class="legend-line" style="background: var(--edge-related)"></div>
+        <span>Related terms</span>
+      </div>
+      <div class="legend-row">
+        <div class="legend-line" style="background: var(--edge-spec)"></div>
+        <span>Spec references</span>
+      </div>
+      <div class="legend-row">
+        <div class="legend-line" style="background: var(--edge-cross)"></div>
+        <span>Cross-spec</span>
+      </div>
+    </div>
+
+    <div id="detail-panel">
+      <button class="close-btn" id="close-detail">×</button>
+      <div class="detail-header">
+        <span class="term-id" id="detail-id"></span>
+        <span class="term-name" id="detail-name"></span>
+        <span class="category-badge" id="detail-category"></span>
+      </div>
+      <div class="detail-def" id="detail-def"></div>
+      <div class="detail-stats" id="detail-stats"></div>
+    </div>
+
+    <div id="loading-overlay">
+      <div class="loading-spinner"></div>
+      <div id="loading-text">Laying out graph… (F12 for console)</div>
+    </div>
+
+    <div id="debug-panel">
+      <div class="debug-title">🔍 Debug</div>
+      <div id="debug-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORY_COLORS = {
+  domain: '#f472b6',
+  technical: '#38bdf8',
+  security: '#fbbf24',
+  ui: '#a78bfa',
+  spec: '#34d399',
+};
+
+const EDGE_COLORS = {
+  relatedTerms: 'rgba(100, 110, 160, 0.25)',
+  specRef: 'rgba(56, 189, 248, 0.15)',
+  crossSpec: 'rgba(251, 191, 36, 0.15)',
+};
+
+// ── State ──
+let graphData = null;
+let simulation = null;
+let validEdges = null;
+let svg, g, linkGroup, nodeGroup, labelsG;
+let link, node, labelText;
+let selectedNode = null;
+let showLabels = true;
+let showSpecs = true;
+let debugVisible = false;
+let tickCount = 0;
+let startTime = 0;
+let activeCategories = new Set();
+let activeEdgeTypes = new Set();
+let searchTerm = '';
+let width, height;
+let dragging = false;
+
+// Two different friction (velocityDecay) values for two different feels.
+// Live dragging wants looser friction so neighbor reactions feel snappy
+// and responsive. The settle/cooldown phase after release wants heavier
+// damping so velocity actually reaches ~0 BEFORE alpha hits its floor —
+// otherwise whatever momentum remains gets clipped abruptly the instant
+// the simulation's timer stops, which is what reads as a "hard stop."
+const DRAG_FRICTION = 0.4;
+const SETTLE_FRICTION = 0.65;
+
+// ── Debug helpers ──
+function log(...args) {
+  console.log('[GlossaryGraph]', ...args);
+}
+function warn(...args) {
+  console.warn('[GlossaryGraph]', ...args);
+}
+function err(...args) {
+  console.error('[GlossaryGraph]', ...args);
+}
+function updateDebug() {
+  if (!debugVisible || !simulation) return;
+  const el = document.getElementById('debug-content');
+  if (!el) return;
+  const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
+  const alpha = simulation.alpha().toFixed(4);
+  const nodeCount = simulation.nodes().length;
+  const linkCount = simulation.force('link').links().length;
+
+  // Check for stuck nodes (all at origin)
+  let stuckNodes = 0;
+  let validPositions = 0;
+  let edgeIssues = 0;
+  for (const n of simulation.nodes()) {
+    if (n.x === undefined && n.y === undefined) stuckNodes++;
+    else if (n.x !== undefined || n.y !== undefined) validPositions++;
+  }
+  for (const e of validEdges) {
+    const src = e.source;
+    const tgt = e.target;
+    if (typeof src === 'string' || typeof tgt === 'string') {
+      edgeIssues++;
+    }
+  }
+
+  el.innerHTML = `
+    <div class="debug-row"><span class="debug-label">Time:</span><span class="debug-value">${elapsed}s</span></div>
+    <div class="debug-row"><span class="debug-label">Ticks:</span><span class="debug-value">${tickCount}</span></div>
+    <div class="debug-row"><span class="debug-label">Alpha:</span><span class="debug-value">${alpha}</span></div>
+    <div class="debug-row"><span class="debug-label">Nodes:</span><span class="debug-value">${nodeCount}</span></div>
+    <div class="debug-row"><span class="debug-label">Links:</span><span class="debug-value">${linkCount}</span></div>
+    <div class="debug-row"><span class="debug-label">Valid pos:</span><span class="debug-value">${validPositions}</span></div>
+    <div class="debug-row"><span class="debug-label">Stuck (0,0):</span><span class="${stuckNodes > 0 ? 'debug-warn' : 'debug-value'}">${stuckNodes}</span></div>
+    <div class="debug-row"><span class="debug-label">Unresolved edges:</span><span class="${edgeIssues > 0 ? 'debug-err' : 'debug-value'}">${edgeIssues}</span></div>
+    <div class="debug-row"><span class="debug-label">Sim running:</span><span class="debug-value">${simulation.alpha() > simulation.alphaMin() ? 'yes' : 'no'}</span></div>
+  `;
+}
+
+// ─── Load data ───
+async function loadGraphData() {
+  log('loadGraphData: starting');
+  try {
+    log('  fetching graph-data.json');
+    const resp = await fetch('graph-data.json');
+    log('  fetch status:', resp.status);
+    graphData = await resp.json();
+    log('  loaded:', graphData.summary.totalTerms, 'terms,', graphData.summary.totalEdges, 'edges');
+  } catch (e) {
+    err('  fetch failed:', e.message);
+    try {
+      log('  trying ./graph-data.json');
+      const resp = await fetch('./graph-data.json');
+      graphData = await resp.json();
+      log('  loaded:', graphData.summary.totalTerms, 'terms');
+    } catch (e2) {
+      err('  also failed:', e2.message);
+      document.getElementById('loading-text').textContent =
+        'Could not load graph-data.json. Run `node extract-graph-data.js` first.';
+      return;
+    }
+  }
+  log('  calling initUI');
+  initUI();
+  log('  calling initGraph');
+  startTime = performance.now();
+  tickCount = 0;
+  initGraph();
+  log('  initGraph done');
+}
+
+// ─── Init UI ───
+function initUI() {
+  document.getElementById('project-name').textContent =
+    `${graphData.project} · v${graphData.version}`;
+
+  // Category filters
+  const catContainer = document.getElementById('category-filters');
+  for (const [cat, count] of Object.entries(graphData.summary.categories)) {
+    const div = document.createElement('div');
+    div.className = 'filter-item';
+    div.innerHTML = `
+      <input type="checkbox" checked data-category="${cat}">
+      <div class="filter-dot" style="background:${CATEGORY_COLORS[cat]}"></div>
+      <span>${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
+      <span class="filter-count">${count}</span>`;
+    div.querySelector('input').addEventListener('change', (e) => {
+      e.target.checked ? activeCategories.add(cat) : activeCategories.delete(cat);
+      applyFilters();
+    });
+    activeCategories.add(cat);
+    catContainer.appendChild(div);
+  }
+
+  // Edge type filters
+  const edgeContainer = document.getElementById('edge-type-filters');
+  const edgeLabels = { relatedTerms: 'Related', specRef: 'Spec refs', crossSpec: 'Cross-spec' };
+  for (const [type, color] of Object.entries(EDGE_COLORS)) {
+    const div = document.createElement('div');
+    div.className = 'edge-filter-item';
+    div.innerHTML = `
+      <input type="checkbox" checked data-edgetype="${type}">
+      <div class="edge-line" style="background:${color}"></div>
+      <span>${edgeLabels[type] || type}</span>`;
+    div.querySelector('input').addEventListener('change', (e) => {
+      e.target.checked ? activeEdgeTypes.add(type) : activeEdgeTypes.delete(type);
+      applyFilters();
+    });
+    activeEdgeTypes.add(type);
+    edgeContainer.appendChild(div);
+  }
+
+  // Search
+  document.getElementById('search-input').addEventListener('input', (e) => {
+    searchTerm = e.target.value.trim();
+    applyFilters();
+  });
+
+  // Detail panel
+  document.getElementById('close-detail').addEventListener('click', deselectNode);
+
+  // Controls
+  document.getElementById('btn-zoom-reset').addEventListener('click', resetZoom);
+  document.getElementById('btn-labels').addEventListener('click', toggleLabels);
+  document.getElementById('btn-specs').addEventListener('click', toggleSpecs);
+  document.getElementById('btn-reheat').addEventListener('click', reheatSimulation);
+
+  buildTermList();
+}
+
+// ─── Build term list ───
+function buildTermList() {
+  const list = document.getElementById('term-list');
+  list.innerHTML = '';
+
+  const termNodes = graphData.nodes.filter(n => n.category !== 'spec');
+  const filtered = termNodes.filter(n => {
+    const catMatch = activeCategories.has(n.category);
+    const searchMatch = !searchTerm ||
+      n.term.toLowerCase().includes(searchTerm) ||
+      n.id.toLowerCase().includes(searchTerm);
+    return catMatch && searchMatch;
+  });
+
+  filtered.sort((a, b) => {
+    const aConn = (a.specRefCount || 0) + (a.relatedCount || 0);
+    const bConn = (b.specRefCount || 0) + (b.relatedCount || 0);
+    if (bConn !== aConn) return bConn - aConn;
+    return a.term.localeCompare(b.term);
+  });
+
+  for (const n of filtered) {
+    const div = document.createElement('div');
+    div.className = 'term-list-item';
+    div.dataset.id = n.id;
+    div.innerHTML = `
+      <span class="term-id">${n.id}</span>
+      <span class="term-name">${n.term}</span>`;
+    div.addEventListener('click', () => selectNodeById(n.id));
+    list.appendChild(div);
+  }
+}
+
+// ─── Apply filters ───
+// KEY: We DON'T call simulation.nodes(). Instead we toggle visibility
+// via CSS opacity. The simulation keeps all nodes but we hide some.
+function applyFilters() {
+  buildTermList();
+
+  for (const n of graphData.nodes) {
+    const catVisible = activeCategories.has(n.category);
+    const searchMatch = !searchTerm ||
+      n.term.toLowerCase().includes(searchTerm) ||
+      n.id.toLowerCase().includes(searchTerm);
+    const specHidden = n.category === 'spec' && !showSpecs;
+    n.visible = catVisible && searchMatch && !specHidden;
+  }
+
+  for (const e of validEdges) {
+    const typeVisible = activeEdgeTypes.has(e.type);
+    const srcId = e.source.id;
+    const tgtId = e.target.id;
+    e.visible = typeVisible && graphData.nodes.find(n => n.id === srcId)?.visible &&
+                          graphData.nodes.find(n => n.id === tgtId)?.visible;
+  }
+
+  // Update visibilities — NO simulation.nodes() call!
+  node.classed('dimmed', d => !d.visible);
+  link.classed('dimmed', d => !d.visible);
+
+  labelsG.selectAll('text')
+    .transition().duration(150)
+    .style('opacity', d => (d.visible && showLabels) ? 0.7 : 0);
+}
+
+// ─── Init graph ───
+function initGraph() {
+  log('initGraph called');
+  log('  graphData.nodes:', graphData.nodes.length);
+  log('  graphData.edges:', graphData.edges.length);
+
+  const container = document.getElementById('graph-container');
+  width = container.clientWidth;
+  height = container.clientHeight;
+  log('  container:', width, 'x', height);
+
+  svg = d3.select('#graph-svg')
+    .attr('width', width)
+    .attr('height', height);
+
+  log('  SVG created');
+
+  // ── Pre-resolve edges: filter dangling refs, resolve string IDs to node objects ──
+  const nodeMap = new Map();
+  for (const n of graphData.nodes) nodeMap.set(n.id, n);
+  validEdges = [];
+  for (const e of graphData.edges) {
+    const srcId = typeof e.source === 'object' ? e.source.id : e.source;
+    const tgtId = typeof e.target === 'object' ? e.target.id : e.target;
+    const srcNode = nodeMap.get(srcId);
+    const tgtNode = nodeMap.get(tgtId);
+    if (!srcNode || !tgtNode) {
+      warn(`Skipping edge: ${srcId} -> ${tgtId} (missing node)`);
+      continue;
+    }
+    e.source = srcNode;
+    e.target = tgtNode;
+    validEdges.push(e);
+  }
+  log(`Edges: ${graphData.edges.length} total, ${validEdges.length} valid`);
+
+  const defs = svg.append('defs');
+
+  // Grid pattern
+  const pattern = defs.append('pattern')
+    .attr('id', 'grid')
+    .attr('width', 40)
+    .attr('height', 40)
+    .attr('patternUnits', 'userSpaceOnUse');
+  pattern.append('path')
+    .attr('d', 'M 40 0 L 0 0 0 40')
+    .attr('fill', 'none')
+    .attr('stroke', 'rgba(255,255,255,0.02)')
+    .attr('stroke-width', 0.5);
+
+  svg.append('rect')
+    .attr('width', width)
+    .attr('height', height)
+    .attr('fill', 'url(#grid)');
+
+  // ── Zoom ──
+  const zoom = d3.zoom()
+    .scaleExtent([0.05, 8])
+    .on('zoom', (event) => {
+      g.attr('transform', event.transform);
+      const k = event.transform.k;
+      labelsG.selectAll('text')
+        .attr('font-size', d => {
+          const base = d.category === 'spec' ? 10 : 9;
+          return Math.max(base / Math.sqrt(k), 6);
+        });
+    });
+  svg.call(zoom);
+
+  g = svg.append('g');
+
+  // ── Labels group ──
+  labelsG = g.append('g').attr('class', 'labels');
+
+  // ── Links ──
+  linkGroup = g.append('g').attr('class', 'links');
+  link = linkGroup.selectAll('line')
+    .data(validEdges)
+    .join('line')
+    .attr('stroke', d => EDGE_COLORS[d.type])
+    .attr('stroke-width', d => d.type === 'crossSpec' ? 1.5 : d.type === 'relatedTerms' ? 1 : 0.7)
+    .attr('stroke-dasharray', d => d.type === 'specRef' ? '3,4' : d.type === 'crossSpec' ? '5,4' : 'none')
+    .attr('opacity', 1);
+
+  // ── Nodes ──
+  nodeGroup = g.append('g').attr('class', 'nodes');
+  node = nodeGroup.selectAll('g')
+    .data(graphData.nodes)
+    .join('g')
+    .attr('class', 'node')
+    .call(d3.drag()
+      .on('start', dragStarted)
+      .on('drag', dragged)
+      .on('end', dragEnded));
+
+  node.append('circle')
+    .attr('r', d => {
+      if (d.category === 'spec') return 10;
+      const totalConn = (d.specRefCount || 0) + (d.relatedCount || 0);
+      return Math.max(4, Math.min(12, 3 + totalConn * 0.6));
+    })
+    .attr('fill', d => CATEGORY_COLORS[d.category])
+    .attr('stroke', d => d3.color(CATEGORY_COLORS[d.category]).darker(0.8).formatHex())
+    .attr('stroke-width', 1)
+    .on('click', (event, d) => { event.stopPropagation(); selectNode(event, d); });
+
+  node.on('mouseenter', function(event, d) {
+    if (selectedNode && selectedNode.id === d.id) return;
+    d3.select(this).select('circle')
+      .transition().duration(100)
+      .attr('stroke', '#fff').attr('stroke-width', 2);
+  }).on('mouseleave', function(event, d) {
+    if (selectedNode && selectedNode.id === d.id) return;
+    d3.select(this).select('circle')
+      .transition().duration(100)
+      .attr('stroke', d3.color(CATEGORY_COLORS[d.category]).darker(0.8).formatHex())
+      .attr('stroke-width', 1);
+  });
+
+  // ── Labels ──
+  labelsG.selectAll('text')
+    .data(graphData.nodes)
+    .join('text')
+    .text(d => d.term)
+    .attr('font-size', d => d.category === 'spec' ? 10 : 9)
+    .attr('fill', d => CATEGORY_COLORS[d.category])
+    .attr('dy', d => d.category === 'spec' ? -14 : -12)
+    .attr('text-anchor', 'middle')
+    .style('opacity', showLabels ? 0.7 : 0)
+    .style('font-weight', d => d.category === 'spec' ? 600 : 400)
+    .style('paint-order', 'stroke')
+    .style('stroke', '#0f111a')
+    .style('stroke-width', '3px')
+    .style('stroke-linecap', 'round')
+    .style('stroke-linejoin', 'round');
+
+  // ─── Force Simulation ───
+  // Compute degree for collision radius
+  const degreeMap = new Map();
+  for (const n of graphData.nodes) degreeMap.set(n.id, 0);
+  for (const e of validEdges) {
+    const srcId = e.source.id;
+    const tgtId = e.target.id;
+    degreeMap.set(srcId, (degreeMap.get(srcId) || 0) + 1);
+    degreeMap.set(tgtId, (degreeMap.get(tgtId) || 0) + 1);
+  }
+
+  // Create the simulation — pass ALL nodes, NOT filtered
+  simulation = d3.forceSimulation(graphData.nodes)
+    .alpha(1)
+    .alphaMin(0.001)
+    // Governs how fast alpha (and therefore every force's strength) falls
+    // back toward 0 once released. 0.0228 is d3's stock default and takes
+    // ~250 ticks (~4s @60fps) to fully settle — that's the "coasts too
+    // long" feeling. 0.06 settles in ~70-90 ticks (~1.2-1.5s): still a
+    // visible, smooth tail, just not a long drift. Raise toward ~0.1 for
+    // an even snappier stop, lower toward ~0.03 for more glide.
+    .alphaDecay(0.06)
+    .velocityDecay(DRAG_FRICTION)
+    .force('link', d3.forceLink(validEdges)
+      .distance(d => {
+        if (d.type === 'crossSpec') return 250;
+        if (d.type === 'specRef') return 150;
+        return 55;
+      })
+      .strength(d => {
+        if (d.type === 'crossSpec') return 0.1;
+        if (d.type === 'specRef') return 0.15;
+        return 0.5;
+      }))
+    .force('charge', d3.forceManyBody()
+      .strength(-100)
+      .distanceMax(350))
+    .force('collision', d3.forceCollide()
+      .radius(d => {
+        if (d.category === 'spec') return 35;
+        const deg = degreeMap.get(d.id) || 0;
+        return 18 + Math.min(deg * 1.2, 20);
+      })
+      .strength(0.6))
+    .force('center', d3.forceCenter(width / 2, height / 2)
+      .strength(0.015))
+    .on('tick', ticked);
+
+  log('  simulation created, alpha:', simulation.alpha());
+  log('  first node x:', graphData.nodes[0].x, 'y:', graphData.nodes[0].y);
+
+  // Run enough ticks synchronously for a stable initial layout
+  simulation.tick(400);
+
+  // Render the settled layout
+  ticked();
+
+  // Hide overlay — layout is complete
+  document.getElementById('loading-overlay').classList.add('hidden');
+
+  // Stop the simulation completely — no more drift
+  simulation.stop();
+
+  // Pin every node at its settled position. This is the real fix:
+  // stop() only halts the ticker, it does NOT freeze positions. Anything
+  // that later calls simulation.restart() (resize, reheat, browser firing
+  // a spurious 'resize' on initial layout) will otherwise send every node
+  // back into free-floating physics. Pinning fx/fy makes that impossible
+  // regardless of what touches the simulation later.
+  graphData.nodes.forEach(d => {
+    d.fx = d.x;
+    d.fy = d.y;
+  });
+
+  log('  simulation stopped + nodes pinned after warmup');
+}
+
+function ticked() {
+  tickCount++;
+
+  link
+    .attr('x1', d => d.source.x)
+    .attr('y1', d => d.source.y)
+    .attr('x2', d => d.target.x)
+    .attr('y2', d => d.target.y);
+
+  node.attr('transform', d => `translate(${d.x},${d.y})`);
+
+  labelsG.selectAll('text')
+    .attr('x', d => d.x)
+    .attr('y', d => d.y);
+
+  if (tickCount % 10 === 0) updateDebug();
+}
+
+// ─── Node selection ───
+function selectNode(event, d) {
+  event.stopPropagation();
+  selectedNode = d;
+
+  const connectedIds = new Set([d.id]);
+  const connectedEdgeSet = new Set();
+
+  for (const e of validEdges) {
+    const srcId = typeof e.source === 'object' ? e.source.id : e.source;
+    const tgtId = typeof e.target === 'object' ? e.target.id : e.target;
+    if (srcId === d.id || tgtId === d.id) {
+      connectedIds.add(srcId);
+      connectedIds.add(tgtId);
+      connectedEdgeSet.add(e);
+    }
+  }
+
+  node.classed('highlighted', n => connectedIds.has(n.id));
+  node.classed('dimmed', n => !connectedIds.has(n.id));
+
+  link.classed('highlighted', e => connectedEdgeSet.has(e));
+  link.classed('dimmed', e => !connectedEdgeSet.has(e));
+
+  labelsG.selectAll('text')
+    .transition().duration(200)
+    .style('opacity', n => {
+      if (!showLabels) return 0;
+      return connectedIds.has(n.id) ? 0.9 : 0.02;
+    });
+
+  document.querySelectorAll('.term-list-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === d.id);
+  });
+  const activeItem = document.querySelector('.term-list-item.active');
+  if (activeItem) activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+  showDetail(d);
+
+  // Pan to node
+  const scale = 1.5;
+  svg.transition().duration(600).call(
+    d3.zoom().transform,
+    d3.zoomIdentity
+      .translate(width / 2 - d.x * scale, height / 2 - d.y * scale)
+      .scale(scale)
+  );
+}
+
+function selectNodeById(id) {
+  const d = graphData.nodes.find(n => n.id === id);
+  if (d) selectNode(new Event('click'), d);
+}
+
+function deselectNode() {
+  selectedNode = null;
+  node.classed('highlighted', false).classed('dimmed', false);
+  link.classed('highlighted', false).classed('dimmed', false);
+  labelsG.selectAll('text')
+    .transition().duration(200)
+    .style('opacity', showLabels ? 0.7 : 0);
+  document.querySelectorAll('.term-list-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('detail-panel').classList.remove('visible');
+}
+
+function showDetail(d) {
+  const panel = document.getElementById('detail-panel');
+  document.getElementById('detail-id').textContent = d.id;
+  document.getElementById('detail-name').textContent = d.term;
+
+  const catBadge = document.getElementById('detail-category');
+  catBadge.textContent = d.category;
+  const catColor = CATEGORY_COLORS[d.category];
+  catBadge.style.background = catColor + '22';
+  catBadge.style.color = catColor;
+
+  document.getElementById('detail-def').textContent = d.definition || 'No definition available.';
+
+  const stats = document.getElementById('detail-stats');
+  let html = '';
+  if (d.relatedCount) html += `<span>🔗 ${d.relatedCount} related</span>`;
+  if (d.specRefCount) html += `<span>📄 ${d.specRefCount} specs</span>`;
+  if (d.specs && d.specs.length) {
+    html += `<span style="white-space:normal">📋 ${d.specs.join(', ')}</span>`;
+  }
+  stats.innerHTML = html;
+
+  panel.classList.add('visible');
+}
+
+// ─── Controls ───
+function resetZoom() {
+  svg.transition().duration(600).call(
+    d3.zoom().transform, d3.zoomIdentity
+  );
+}
+
+function toggleLabels() {
+  showLabels = !showLabels;
+  document.getElementById('btn-labels').classList.toggle('active', showLabels);
+  labelsG.selectAll('text')
+    .transition().duration(200)
+    .style('opacity', showLabels ? 0.7 : 0);
+}
+
+function toggleSpecs() {
+  showSpecs = !showSpecs;
+  document.getElementById('btn-specs').classList.toggle('active', showSpecs);
+  applyFilters();
+}
+
+function toggleDebug() {
+  debugVisible = !debugVisible;
+  document.getElementById('btn-debug').classList.toggle('active', debugVisible);
+  document.getElementById('debug-panel').classList.toggle('visible', debugVisible);
+  if (debugVisible) updateDebug();
+}
+
+function reheatSimulation() {
+  // Every node is pinned (fx/fy set) after initial layout and after drags.
+  // A bare .restart() would do nothing visible since pinned nodes ignore
+  // forces. To actually re-layout, unpin everyone, run it, then re-pin.
+  graphData.nodes.forEach(d => {
+    d.fx = null;
+    d.fy = null;
+  });
+  simulation.alpha(0.8).restart();
+
+  // Re-pin once it settles back down naturally via alphaMin/alphaDecay,
+  // so it doesn't drift forever after this manual re-layout either.
+  simulation.on('end', () => {
+    graphData.nodes.forEach(d => {
+      d.fx = d.x;
+      d.fy = d.y;
+    });
+  });
+}
+
+function dragStarted(event, d) {
+  // Just pin the node; don't restart the simulation yet. Neighbors should
+  // only react once actual movement happens (see dragged()).
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragged(event, d) {
+  d.fx = event.x;
+  d.fy = event.y;
+
+  // Wake the simulation so neighbors react, but only kick it on the
+  // FIRST movement of this gesture, not every mousemove.
+  if (!dragging) {
+    dragging = true;
+
+    // Every node is pinned (fx/fy set) at rest — either from the initial
+    // layout warmup or from the end of a previous drag. Pinned nodes are
+    // completely immune to forces in d3 (their position is forced to
+    // fx/fy every tick regardless of alpha or force strength), which is
+    // why neighbors weren't reacting at all. Release everyone EXCEPT the
+    // node being dragged so forces can actually move them for the
+    // duration of this gesture.
+    graphData.nodes.forEach(n => {
+      if (n !== d) {
+        n.fx = null;
+        n.fy = null;
+      }
+    });
+
+    // alphaTarget(0.3) alone isn't enough here: the simulation sits
+    // parked near alpha=0 between drags, and alpha only approaches
+    // alphaTarget gradually via alphaDecay — every d3 force scales its
+    // strength by the current alpha, so a slow ramp means neighbors
+    // barely move during a quick drag. Bumping alpha directly makes the
+    // live reaction immediate; alphaTarget then holds it there for the
+    // rest of the gesture.
+    simulation
+      .velocityDecay(DRAG_FRICTION)
+      .alphaTarget(0.3)
+      .alpha(Math.max(simulation.alpha(), 0.3))
+      .restart();
+  }
+
+  // Render immediately regardless of simulation/tick state. Dragging must
+  // never depend on the simulation loop being "awake" — if it is asleep
+  // for any reason, the node should still visibly follow the cursor.
+  ticked();
+}
+
+function dragEnded(event, d) {
+  dragging = false;
+
+  // Keep the node pinned exactly where the user dropped it.
+  d.fx = event.x;
+  d.fy = event.y;
+
+  // Ease back to rest instead of hard-stopping on mouseup. Switching to
+  // heavier friction here (vs. the looser DRAG_FRICTION used while live-
+  // dragging) is what actually fixes the "hard stop" — it makes velocity
+  // itself decay faster than alpha does, so by the time alpha crosses
+  // alphaMin and the timer halts, nodes have already coasted to a near-
+  // standstill rather than still carrying visible momentum that gets
+  // abruptly clipped. We let the simulation's own alphaMin floor end it
+  // naturally (no explicit .stop() here), then re-pin everyone once it's
+  // actually at rest so nothing can drift afterward.
+  simulation.velocityDecay(SETTLE_FRICTION).alphaTarget(0);
+
+  simulation.on('end.dragSettle', () => {
+    graphData.nodes.forEach(n => {
+      n.fx = n.x;
+      n.fy = n.y;
+    });
+    simulation.velocityDecay(DRAG_FRICTION);
+    simulation.on('end.dragSettle', null);
+  });
+}
+
+// ─── Resize ───
+window.addEventListener('resize', () => {
+  const container = document.getElementById('graph-container');
+  width = container.clientWidth;
+  height = container.clientHeight;
+  svg.attr('width', width).attr('height', height);
+  simulation.force('center', d3.forceCenter(width / 2, height / 2));
+  // NOTE: previously did simulation.alpha(0.15).restart() here.
+  // Since every node has fx/fy pinned after layout, restarting the
+  // simulation has no visible effect on pinned nodes anyway — but it
+  // wastes cycles and risks a brief jump for the center force before
+  // node restats settle. Updating the center force target alone is
+  // enough; no restart needed.
+});
+
+// Click background to deselect
+document.getElementById('graph-container').addEventListener('click', (e) => {
+  if (e.target.id === 'graph-svg' || e.target.tagName === 'svg') {
+    deselectNode();
+  }
+});
+
+// ─── Global error handler ───
+window.addEventListener('error', (e) => {
+  err('Global error:', e.message, 'at', e.filename, ':', e.lineno);
+  const overlay = document.getElementById('loading-overlay');
+  if (overlay) {
+    overlay.innerHTML = `<div style="color:#f44;font-size:14px;padding:20px;text-align:center;">
+      <strong>❌ JavaScript Error</strong><br><br>
+      <code style="font-size:11px;word-break:break-all;">${e.message}</code><br><br>
+      <span style="font-size:11px;color:#888;">${e.filename}:${e.lineno}</span><br><br>
+      <span style="font-size:11px;color:#f80;">Check browser console (F12) for details</span>
+    </div>`;
+  }
+});
+
+window.addEventListener('unhandledrejection', (e) => {
+  err('Unhandled promise rejection:', e.reason);
+});
+
+// ─── Start ───
+log('Page loaded, starting...');
+loadGraphData();
+</script>
+</body>
+</html>

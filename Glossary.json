@@ -1,0 +1,934 @@
+{
+  "version": "1.0.0",
+  "schemaVersion": "1.0.0",
+  "project": "Research Distillery",
+  "terms": [
+    {
+      "term": "ResearchSession",
+      "definition": "A named research investigation, identified by `session_id`. Contains a motivation brief, search tags, queries, papers, catalog entries, and report. Persisted as a set of JSON artifacts on disk.",
+      "relatedTerms": [
+        "GL-035",
+        "GL-006",
+        "GL-008"
+      ],
+      "category": "domain",
+      "id": "GL-001"
+    },
+    {
+      "term": "KeyConcept",
+      "definition": "A term extracted from the research brief, carrying a context-specific `definition`, `synonyms` (feeds search tag generation), and `role` (construct, variable, method, outcome, or context).",
+      "relatedTerms": [
+        "GL-003"
+      ],
+      "category": "domain",
+      "id": "GL-002"
+    },
+    {
+      "term": "SearchTag",
+      "definition": "A classification of terms derived from KeyConcepts. Three categories: primary_terms (strong relevance signal), supporting_terms (secondary signal), exclusion_terms (out-of-scope indicator). Also includes domain_tags, methodology_tags, and key_authors.",
+      "relatedTerms": [
+        "GL-002",
+        "GL-004"
+      ],
+      "category": "domain",
+      "id": "GL-003"
+    },
+    {
+      "term": "Query",
+      "definition": "A search string variant generated from SearchTags, carrying a formatted string, target endpoint, filters, execution order, and variant type classification (broad, narrow, methodological, author-focused, venue-focused, or temporal).",
+      "relatedTerms": [
+        "GL-003",
+        "GL-005"
+      ],
+      "category": "domain",
+      "id": "GL-004"
+    },
+    {
+      "term": "Search",
+      "definition": "A campaign within a research session, grouping queries and their collected scholarly documents. Manages the lifecycle of query execution, result collection, and document acquisition.",
+      "relatedTerms": [
+        "GL-004",
+        "GL-035"
+      ],
+      "category": "domain",
+      "id": "GL-005"
+    },
+    {
+      "term": "CatalogEntry",
+      "definition": "Structured findings extracted from an approved scholarly work. Contains bibliographic data, relevance score, extraction confidence, research alignment (hypothesis support/contradiction + evidence type), findings (main claim, key results, conclusions, limitations, future work), methodology (study design, sample size, dataset, methods/tools), evidence (key metrics with values, direct quotes), and related DOIs.",
+      "relatedTerms": [
+        "GL-035",
+        "GL-010",
+        "GL-007"
+      ],
+      "category": "domain",
+      "id": "GL-006"
+    },
+    {
+      "term": "EvidenceType",
+      "definition": "Classification of a scholarly work's contribution type: empirical quantitative, empirical qualitative, systematic review, meta-analysis, theoretical, case study, or mixed. Used for filtering, tagging, and thematic grouping.",
+      "relatedTerms": [
+        "GL-035",
+        "GL-006",
+        "GL-010"
+      ],
+      "category": "domain",
+      "id": "GL-007"
+    },
+    {
+      "term": "Report",
+      "definition": "The final synthesised output (defined by the output schema). Contains summary, hypothesis verdicts, and supporting evidence from catalog entries.",
+      "relatedTerms": [
+        "GL-009",
+        "GL-006"
+      ],
+      "category": "domain",
+      "id": "GL-008"
+    },
+    {
+      "term": "HypothesisVerdict",
+      "definition": "The report's assessment of the stated hypothesis: `supported`, `contradicted`, `mixed`, `insufficient_evidence`, or null (no hypothesis). Includes confidence score and supporting/contradicting DOI lists.",
+      "relatedTerms": [
+        "GL-008"
+      ],
+      "category": "domain",
+      "id": "GL-009"
+    },
+    {
+      "term": "ExtractionFlag",
+      "definition": "Quality indicators on a structured finding when extraction is imperfect. Examples: short source, OCR noise, missing methods, paywall partial.",
+      "relatedTerms": [
+        "GL-006",
+        "GL-007"
+      ],
+      "category": "domain",
+      "id": "GL-010"
+    },
+    {
+      "term": "User",
+      "definition": "The human actor operating the Research Distillery system. Includes researchers, scholars, and graduate students conducting academic research.",
+      "category": "technical",
+      "relatedTerms": [
+        "GL-012"
+      ],
+      "id": "GL-011"
+    },
+    {
+      "term": "System",
+      "definition": "The automated Research Distillery application that processes research queries, manages pipelines, and produces reports.",
+      "category": "technical",
+      "relatedTerms": [
+        "GL-011"
+      ],
+      "id": "GL-012"
+    },
+    {
+      "term": "Session Manager",
+      "definition": "The system component responsible for creating, tracking, and persisting research sessions throughout their lifecycle.",
+      "category": "technical",
+      "relatedTerms": [
+        "GL-014",
+        "GL-019"
+      ],
+      "id": "GL-013"
+    },
+    {
+      "term": "Search Engine",
+      "definition": "The system component that executes queries against scholarly search APIs and retrieves paper metadata.",
+      "category": "technical",
+      "relatedTerms": [
+        "GL-013",
+        "GL-015"
+      ],
+      "id": "GL-014"
+    },
+    {
+      "term": "Ranking Engine",
+      "definition": "The system component that scores retrieved papers across multiple relevance dimensions and produces ranked lists with accept/reject decisions.",
+      "category": "technical",
+      "relatedTerms": [
+        "GL-014",
+        "GL-017"
+      ],
+      "id": "GL-015"
+    },
+    {
+      "term": "Downloader",
+      "definition": "The system component responsible for fetching full-text PDFs from open-access sources and Sci-Hub for accepted papers.",
+      "category": "technical",
+      "relatedTerms": [
+        "GL-017",
+        "GL-022"
+      ],
+      "id": "GL-016"
+    },
+    {
+      "term": "Document Processor",
+      "definition": "The system component that parses downloaded PDFs and extracts structured content for catalog entry generation.",
+      "category": "technical",
+      "relatedTerms": [
+        "GL-016",
+        "GL-019",
+        "GL-018"
+      ],
+      "id": "GL-017"
+    },
+    {
+      "term": "Report Synthesiser",
+      "definition": "The system component that assembles the research catalog into a structured report with hypothesis verdicts and sufficiency assessments.",
+      "category": "technical",
+      "relatedTerms": [
+        "GL-017",
+        "GL-019",
+        "GL-020"
+      ],
+      "id": "GL-018"
+    },
+    {
+      "term": "Persistence Layer",
+      "definition": "The system component that stores and retrieves all research session artifacts (briefs, queries, papers, catalogs, reports) on disk.",
+      "category": "technical",
+      "relatedTerms": [
+        "GL-013",
+        "GL-017",
+        "GL-022"
+      ],
+      "id": "GL-019"
+    },
+    {
+      "term": "Citation Network Builder",
+      "definition": "The system component that generates co-citation and citation link data from the paper set for visualisation in the catalog view.",
+      "category": "technical",
+      "relatedTerms": [
+        "GL-021",
+        "GL-018"
+      ],
+      "id": "GL-020"
+    },
+    {
+      "term": "Citation Export",
+      "definition": "The system component that generates citation files in standard formats (BibTeX, APA, MLA, Chicago) for selected papers.",
+      "category": "technical",
+      "relatedTerms": [
+        "GL-020"
+      ],
+      "id": "GL-021"
+    },
+    {
+      "term": "Error Handling Middleware (Shared)",
+      "definition": "The shared system component that intercepts failures across pipeline stages and presents actionable remediation options to the user.",
+      "category": "technical",
+      "relatedTerms": [
+        "GL-019",
+        "GL-016"
+      ],
+      "id": "GL-022"
+    },
+    {
+      "term": "ResearchBrief",
+      "category": "domain",
+      "definition": "Structured research brief derived from the user's free-text research question, containing hypotheses, scope constraints, and key concepts.",
+      "relatedTerms": [
+        "GL-001",
+        "GL-002",
+        "GL-003"
+      ],
+      "id": "GL-023"
+    },
+    {
+      "term": "Finding",
+      "category": "domain",
+      "definition": "A structured piece of information extracted from a paper, containing a statement, supporting evidence, and optional confidence score.",
+      "relatedTerms": [
+        "GL-006",
+        "GL-025"
+      ],
+      "id": "GL-024"
+    },
+    {
+      "term": "Claim",
+      "category": "domain",
+      "definition": "An extracted assertion from a paper with supporting and contradicting evidence.",
+      "relatedTerms": [
+        "GL-024",
+        "GL-006"
+      ],
+      "id": "GL-025"
+    },
+    {
+      "term": "FindingCluster",
+      "category": "domain",
+      "definition": "A thematic grouping of catalog entries with a consensus summary showing supporting and contradicting source counts.",
+      "relatedTerms": [
+        "GL-006",
+        "GL-008"
+      ],
+      "id": "GL-026"
+    },
+    {
+      "term": "CitationNetwork",
+      "category": "domain",
+      "definition": "Citation network data containing co-citation links between authors and citation links between papers.",
+      "relatedTerms": [
+        "GL-035",
+        "GL-028"
+      ],
+      "id": "GL-027"
+    },
+    {
+      "term": "AuthorCoCitation",
+      "category": "domain",
+      "definition": "A co-citation link between two authors, recording how many times they are cited together.",
+      "relatedTerms": [
+        "GL-027"
+      ],
+      "id": "GL-028"
+    },
+    {
+      "term": "ExportArchive",
+      "category": "technical",
+      "definition": "Metadata for an exported research session archive, including format, path, and included papers.",
+      "relatedTerms": [
+        "GL-001"
+      ],
+      "id": "GL-030"
+    },
+    {
+      "term": "ClarificationTurn",
+      "category": "domain",
+      "definition": "A single clarification Q&A turn between user and system during research brief refinement.",
+      "relatedTerms": [
+        "GL-023",
+        "GL-001"
+      ],
+      "id": "GL-031"
+    },
+    {
+      "term": "UserEdit",
+      "category": "domain",
+      "definition": "A user edit or redaction to a catalog entry, recording the original and replaced values with timestamp.",
+      "relatedTerms": [
+        "GL-006"
+      ],
+      "id": "GL-032"
+    },
+    {
+      "term": "VerdictOutcome",
+      "category": "technical",
+      "definition": "Possible outcomes for a hypothesis verdict: supported, contradicted, inconclusive, or not applicable.",
+      "relatedTerms": [
+        "GL-009"
+      ],
+      "examples": [
+        "SUPPORTED",
+        "CONTRADICTED",
+        "INCONCLUSIVE"
+      ],
+      "id": "GL-033"
+    },
+    {
+      "term": "SufficiencyVerdict",
+      "category": "technical",
+      "definition": "Assessment of whether collected sources constitute an adequate review.",
+      "relatedTerms": [
+        "GL-008"
+      ],
+      "examples": [
+        "SUFFICIENT",
+        "NEEDS_MORE",
+        "EXCESSIVE"
+      ],
+      "id": "GL-034"
+    },
+    {
+      "term": "Source",
+      "category": "domain",
+      "definition": "A scholarly document such as a paper, conference proceeding, preprint, or technical report. Identified by a unique identifier. May be retrieved via scholarly search APIs or imported from citation managers.",
+      "relatedTerms": [
+        "GL-001",
+        "GL-037",
+        "GL-024",
+        "GL-025"
+      ],
+      "id": "GL-035"
+    },
+    {
+      "term": "Error",
+      "category": "technical",
+      "definition": "A logged system event recording a failure with context (session, source, failure code) and suggested recovery actions.",
+      "relatedTerms": [
+        "GL-001",
+        "GL-035"
+      ],
+      "examples": [
+        "NETWORK_ERROR",
+        "PAYWALL_ERROR"
+      ],
+      "id": "GL-036"
+    },
+    {
+      "term": "SourceStatus",
+      "category": "technical",
+      "definition": "Lifecycle status of a source within a research session, from ranked through extracted or rejected.",
+      "relatedTerms": [
+        "GL-035"
+      ],
+      "examples": [
+        "RANKED",
+        "APPROVED",
+        "EXTRACTED",
+        "REJECTED"
+      ],
+      "id": "GL-037"
+    },
+    {
+      "term": "CASE_CONTROL",
+      "category": "domain",
+      "definition": "An observational study where two groups are compared — one with the outcome of interest (cases) and one without (controls).",
+      "relatedTerms": [
+        "GL-007"
+      ],
+      "examples": [
+        "CASE_CONTROL"
+      ],
+      "id": "GL-038"
+    },
+    {
+      "term": "CASE_SERIES",
+      "category": "domain",
+      "definition": "A descriptive study tracking patients with a known exposure or treatment, without a control group.",
+      "relatedTerms": [
+        "GL-007"
+      ],
+      "examples": [
+        "CASE_SERIES"
+      ],
+      "id": "GL-039"
+    },
+    {
+      "term": "SYSTEMATIC_REVIEW",
+      "category": "domain",
+      "definition": "A high-level study that identifies, appraises, and synthesizes all relevant studies on a research question.",
+      "relatedTerms": [
+        "GL-007"
+      ],
+      "examples": [
+        "SYSTEMATIC_REVIEW"
+      ],
+      "id": "GL-040"
+    },
+    {
+      "term": "CROSS_SECTIONAL",
+      "category": "domain",
+      "definition": "A study that observes a population at a single point in time to assess prevalence.",
+      "relatedTerms": [
+        "GL-007"
+      ],
+      "examples": [
+        "CROSS_SECTIONAL"
+      ],
+      "id": "GL-041"
+    },
+    {
+      "term": "MIXED_METHODS",
+      "category": "domain",
+      "definition": "A study design that combines quantitative and qualitative research methods.",
+      "relatedTerms": [
+        "GL-007"
+      ],
+      "examples": [
+        "MIXED_METHODS"
+      ],
+      "id": "GL-042"
+    },
+    {
+      "term": "IN_VITRO",
+      "category": "domain",
+      "definition": "Research conducted in a controlled environment outside a living organism (e.g., cell culture).",
+      "relatedTerms": [
+        "GL-007"
+      ],
+      "examples": [
+        "IN_VITRO"
+      ],
+      "id": "GL-043"
+    },
+    {
+      "term": "IN_VIVO",
+      "category": "domain",
+      "definition": "Research conducted within a living organism (e.g., animal studies).",
+      "relatedTerms": [
+        "GL-007"
+      ],
+      "examples": [
+        "IN_VIVO"
+      ],
+      "id": "GL-044"
+    },
+    {
+      "term": "FORMULA_HEAVY",
+      "category": "technical",
+      "definition": "A PDF source that contains many mathematical formulas, which may have extraction errors.",
+      "relatedTerms": [
+        "GL-010"
+      ],
+      "examples": [
+        "FORMULA_HEAVY"
+      ],
+      "id": "GL-045"
+    },
+    {
+      "term": "SCANNED_PDF",
+      "category": "technical",
+      "definition": "A PDF that is a scanned image rather than text, potentially with poor OCR quality.",
+      "relatedTerms": [
+        "GL-010"
+      ],
+      "examples": [
+        "SCANNED_PDF"
+      ],
+      "id": "GL-046"
+    },
+    {
+      "term": "NON_ENGLISH",
+      "category": "technical",
+      "definition": "A source written in a language other than English, which may have translation gaps.",
+      "relatedTerms": [
+        "GL-010"
+      ],
+      "examples": [
+        "NON_ENGLISH"
+      ],
+      "id": "GL-047"
+    },
+    {
+      "term": "NOT_APPLICABLE",
+      "category": "technical",
+      "definition": "A verdict outcome indicating the hypothesis is not applicable to the collected evidence.",
+      "relatedTerms": [
+        "GL-033"
+      ],
+      "examples": [
+        "NOT_APPLICABLE"
+      ],
+      "id": "GL-048"
+    },
+    {
+      "term": "NEEDS_MORE",
+      "category": "technical",
+      "definition": "A sufficiency verdict indicating more sources are needed to reach adequate coverage.",
+      "relatedTerms": [
+        "GL-034"
+      ],
+      "examples": [
+        "NEEDS_MORE"
+      ],
+      "id": "GL-049"
+    },
+    {
+      "term": "AuthorCitation",
+      "category": "domain",
+      "definition": "A citation link between two authors, recording how many times they are cited together in the literature.",
+      "relatedTerms": [
+        "GL-027",
+        "GL-035"
+      ],
+      "id": "GL-050"
+    },
+    {
+      "term": "SourceCitation",
+      "category": "domain",
+      "definition": "A citation link between two scholarly sources, recording that one source cites another.",
+      "relatedTerms": [
+        "GL-027",
+        "GL-035"
+      ],
+      "id": "GL-051"
+    },
+    {
+      "term": "SessionSummary",
+      "category": "technical",
+      "definition": "A lightweight metadata snapshot of a research session, including title, status, and references to its queries, papers, catalog entries, and report.",
+      "relatedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-008"
+      ],
+      "id": "GL-052"
+    },
+    {
+      "term": "Message",
+      "category": "technical",
+      "definition": "A single chat communication exchanged between the user and the system within a research session, carrying role (user/system), content, and timestamp.",
+      "relatedTerms": [
+        "GL-001",
+        "GL-011",
+        "GL-012"
+      ],
+      "id": "GL-053"
+    },
+    {
+      "term": "Library",
+      "category": "technical",
+      "definition": "A curated collection of scholarly sources organized by the user, containing multiple research sessions and their associated papers, findings, and reports.",
+      "relatedTerms": [
+        "GL-001",
+        "GL-035",
+        "GL-011"
+      ],
+      "id": "GL-054"
+    },
+    {
+      "term": "ErrorCode",
+      "category": "technical",
+      "definition": "Machine-readable error codes used to classify system failures, including network errors, parsing errors, download failures, rate limits, authentication failures, storage errors, validation errors, and unknown errors.",
+      "relatedTerms": [
+        "GL-036"
+      ],
+      "examples": [
+        "NETWORK_ERROR",
+        "PARSING_ERROR",
+        "DOWNLOAD_FAILED",
+        "RATE_LIMIT",
+        "AUTH_FAILED",
+        "STORAGE_ERROR",
+        "VALIDATION_ERROR",
+        "UNKNOWN_ERROR"
+      ],
+      "id": "GL-055"
+    },
+    {
+      "term": "ErrorSeverity",
+      "category": "technical",
+      "definition": "Error severity levels used to prioritise error handling and user notification.",
+      "relatedTerms": [
+        "GL-036"
+      ],
+      "examples": [
+        "INFO",
+        "WARNING",
+        "ERROR",
+        "CRITICAL"
+      ],
+      "id": "GL-056"
+    },
+    {
+      "term": "QueryStatus",
+      "category": "technical",
+      "definition": "Query execution lifecycle status, tracking a query from creation through execution to completion or failure.",
+      "relatedTerms": [
+        "GL-004"
+      ],
+      "examples": [
+        "PENDING",
+        "RUNNING",
+        "COMPLETE",
+        "CANCELLED",
+        "FAILED"
+      ],
+      "id": "GL-057"
+    },
+    {
+      "term": "QuerySource",
+      "category": "technical",
+      "definition": "Origin of a query: whether it was manually entered by the user, automatically generated from search tags, or derived from a similar source.",
+      "relatedTerms": [
+        "GL-004",
+        "GL-003"
+      ],
+      "examples": [
+        "USER_DEFINED",
+        "AUTO_GENERATED",
+        "FIND_SIMILAR"
+      ],
+      "id": "GL-058"
+    },
+    {
+      "term": "SearchStatus",
+      "category": "technical",
+      "definition": "Search campaign lifecycle status, tracking whether a search is currently running, has completed, or was cancelled.",
+      "relatedTerms": [
+        "GL-005"
+      ],
+      "examples": [
+        "RUNNING",
+        "COMPLETE",
+        "CANCELLED"
+      ],
+      "id": "GL-059"
+    },
+    {
+      "term": "ErrorRecovery",
+      "category": "technical",
+      "definition": "Suggested recovery actions for a logged error event, providing actionable remediation options to the user.",
+      "relatedTerms": [
+        "GL-036"
+      ],
+      "id": "GL-060"
+    },
+    {
+      "term": "SessionFilter",
+      "category": "technical",
+      "definition": "Optional filter criteria used when querying research sessions, including status, text search, and library scope.",
+      "relatedTerms": [
+        "GL-001"
+      ],
+      "id": "GL-061"
+    },
+    {
+      "term": "Hypothesis",
+      "category": "domain",
+      "definition": "A testable statement about the expected relationship between variables, derived from the research question and refined through the clarification process.",
+      "relatedTerms": [
+        "GL-009",
+        "GL-023"
+      ],
+      "id": "GL-062"
+    },
+    {
+      "term": "ResearchQuestion",
+      "category": "domain",
+      "definition": "The free-text question provided by the user that defines the scope and objective of the research session.",
+      "relatedTerms": [
+        "GL-023",
+        "GL-001"
+      ],
+      "id": "GL-063"
+    },
+    {
+      "term": "RelevanceScore",
+      "category": "technical",
+      "definition": "A numerical score computed by the ranking engine that indicates how well a paper matches the research question, used for accept/reject decisions.",
+      "relatedTerms": [
+        "GL-015",
+        "GL-035"
+      ],
+      "id": "GL-065"
+    },
+    {
+      "term": "Bibliography",
+      "category": "domain",
+      "definition": "A formatted list of citations for selected papers, exported in standard academic formats such as BibTeX, APA, MLA, or Chicago.",
+      "relatedTerms": [
+        "GL-021",
+        "GL-006"
+      ],
+      "id": "GL-066"
+    },
+    {
+      "term": "SessionState",
+      "category": "technical",
+      "definition": "The complete persisted state of a research session including all artifacts, ensuring zero data loss after transient failures.",
+      "relatedTerms": [
+        "GL-001",
+        "GL-019"
+      ],
+      "id": "GL-067"
+    },
+    {
+      "term": "CitationManager",
+      "category": "technical",
+      "definition": "A citation management tool (e.g., Zotero, Mendeley) from which users can import paper lists into a research session.",
+      "relatedTerms": [
+        "GL-035",
+        "GL-001"
+      ],
+      "id": "GL-068"
+    },
+    {
+      "term": "TransientFailure",
+      "category": "technical",
+      "definition": "A temporary failure in the pipeline (e.g., network timeout, API rate limit) that may resolve on retry without user intervention.",
+      "relatedTerms": [
+        "GL-036"
+      ],
+      "id": "GL-069"
+    },
+    {
+      "term": "Consensus",
+      "category": "domain",
+      "definition": "The degree of agreement among catalog entries on a finding, measured by supporting versus contradicting source counts within a thematic cluster.",
+      "relatedTerms": [
+        "GL-026",
+        "GL-006"
+      ],
+      "id": "GL-070"
+    },
+    {
+      "term": "SourceMetadata",
+      "category": "technical",
+      "definition": "Bibliographic information about a scholarly source including title, authors, abstract, publication year, journal, and DOI, retrieved from search APIs.",
+      "relatedTerms": [
+        "GL-035",
+        "GL-005"
+      ],
+      "id": "GL-071"
+    },
+    {
+      "term": "AcceptRejectDecision",
+      "category": "domain",
+      "definition": "The user's explicit decision to include or exclude a borderline-scored paper from further processing.",
+      "relatedTerms": [
+        "GL-035",
+        "GL-015"
+      ],
+      "id": "GL-072"
+    },
+    {
+      "term": "Archive",
+      "category": "technical",
+      "definition": "A packaged export of a complete research session including report, catalog, and metadata, suitable for sharing or backup.",
+      "relatedTerms": [
+        "GL-030",
+        "GL-001"
+      ],
+      "id": "GL-073"
+    },
+    {
+      "term": "Authentication",
+      "category": "security",
+      "definition": "The process of verifying the identity of a user or system component before granting access to resources.",
+      "relatedTerms": [
+        "GL-018"
+      ],
+      "id": "GL-074"
+    },
+    {
+      "term": "Classification",
+      "category": "domain",
+      "definition": "The process of categorizing papers or findings into predefined categories or taxonomies.",
+      "relatedTerms": [
+        "GL-006",
+        "GL-026"
+      ],
+      "id": "GL-075"
+    },
+    {
+      "term": "Clustering",
+      "category": "domain",
+      "definition": "The unsupervised grouping of papers or findings based on similarity, used for thematic analysis.",
+      "relatedTerms": [
+        "GL-026",
+        "GL-008"
+      ],
+      "id": "GL-076"
+    },
+    {
+      "term": "Database",
+      "category": "technical",
+      "definition": "A structured data store (relational or document-based) used for persistent storage of application data.",
+      "relatedTerms": [
+        "GL-001"
+      ],
+      "id": "GL-077"
+    },
+    {
+      "term": "Extraction",
+      "category": "domain",
+      "definition": "The process of extracting structured information (findings, claims, metadata) from unstructured PDF documents.",
+      "relatedTerms": [
+        "GL-010",
+        "GL-035"
+      ],
+      "id": "GL-078"
+    },
+    {
+      "term": "Filtering",
+      "category": "technical",
+      "definition": "The process of selecting a subset of items based on specified criteria.",
+      "relatedTerms": [
+        "GL-004",
+        "GL-005"
+      ],
+      "id": "GL-079"
+    },
+    {
+      "term": "Keyword",
+      "category": "domain",
+      "definition": "A significant word or phrase extracted from text, used for indexing and search.",
+      "relatedTerms": [
+        "GL-003",
+        "GL-005"
+      ],
+      "id": "GL-080"
+    },
+    {
+      "term": "Migration",
+      "category": "technical",
+      "definition": "The process of transferring data between storage systems, formats, or databases.",
+      "relatedTerms": [
+        "GL-001"
+      ],
+      "id": "GL-081"
+    },
+    {
+      "term": "PDF",
+      "category": "technical",
+      "definition": "Portable Document Format, a file format used for distributing documents, commonly used for scholarly papers.",
+      "relatedTerms": [
+        "GL-035",
+        "GL-016"
+      ],
+      "id": "GL-082"
+    },
+    {
+      "term": "Parsing",
+      "category": "technical",
+      "definition": "The process of analyzing a string of symbols (text or structured data) to determine its grammatical structure.",
+      "relatedTerms": [
+        "GL-016",
+        "GL-010"
+      ],
+      "id": "GL-083"
+    },
+    {
+      "term": "Ranking",
+      "category": "domain",
+      "definition": "The process of ordering papers or results by relevance score or other criteria.",
+      "relatedTerms": [
+        "GL-015",
+        "GL-067"
+      ],
+      "id": "GL-084"
+    },
+    {
+      "term": "Retry",
+      "category": "technical",
+      "definition": "The act of attempting an operation again after a failure, often with exponential backoff.",
+      "relatedTerms": [
+        "GL-036",
+        "GL-073"
+      ],
+      "id": "GL-085"
+    },
+    {
+      "term": "Scoring",
+      "category": "domain",
+      "definition": "The process of assigning a numerical value to indicate quality, relevance, or confidence.",
+      "relatedTerms": [
+        "GL-015",
+        "GL-067"
+      ],
+      "id": "GL-086"
+    },
+    {
+      "term": "Schema",
+      "category": "technical",
+      "definition": "A blueprint or definition of the structure of data, including field names, types, and constraints.",
+      "relatedTerms": [
+        "GL-049"
+      ],
+      "id": "GL-087"
+    },
+    {
+      "term": "Version",
+      "category": "technical",
+      "definition": "A specific release or iteration of a software component, document, or data model.",
+      "relatedTerms": [
+        "GL-087",
+        "GL-081"
+      ],
+      "id": "GL-089"
+    }
+  ]
+}

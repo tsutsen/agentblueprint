@@ -6,19 +6,22 @@ function initUI() {
   document.getElementById('project-name').textContent =
     `${graphData.project} · v${graphData.version}`;
 
-  // Category filters
+  // Category/type filters
   const catContainer = document.getElementById('category-filters');
   const categoryCounts = {};
   for (const n of graphData.nodes) {
-    categoryCounts[n.category] = (categoryCounts[n.category] || 0) + 1;
+    // New format: use typeCat, legacy: use category
+    const cat = n.typeCat || n.category || 'other';
+    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
   }
-  for (const [cat, count] of Object.entries(categoryCounts)) {
+  for (const [cat, count] of Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])) {
     const div = document.createElement('div');
     div.className = 'filter-item';
+    const label = cat.charAt(0).toUpperCase() + cat.slice(1);
     div.innerHTML = `
       <input type="checkbox" checked data-category="${cat}">
       <div class="filter-dot filter-dot-${cat}"></div>
-      <span>${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
+      <span>${label}</span>
       <span class="filter-count">${count}</span>`;
     div.querySelector('input').addEventListener('change', (e) => {
       e.target.checked ? activeCategories.add(cat) : activeCategories.delete(cat);
@@ -37,7 +40,7 @@ function initUI() {
 
   // Edge type filters
   const edgeContainer = document.getElementById('edge-type-filters');
-  const edgeLabels = { relatedTerms: 'Related', specRef: 'Spec refs', crossSpec: 'Cross-spec' };
+  const edgeLabels = { relatedTerms: 'Related', specRef: 'Spec refs', crossSpec: 'Cross-spec', architecture: 'Architecture' };
   for (const [type, color] of Object.entries(EDGE_COLORS)) {
     const div = document.createElement('div');
     div.className = 'edge-filter-item';
@@ -60,23 +63,26 @@ function initUI() {
     edgeContainer.appendChild(div);
   }
 
-  // ── Term List ──
+  // ── Node List ──
   const termList = document.getElementById('term-list');
   const sortedNodes = [...graphData.nodes]
     .sort((a, b) => {
-      if (a.category === 'spec' && b.category !== 'spec') return -1;
-      if (a.category !== 'spec' && b.category === 'spec') return 1;
-      return a.term.localeCompare(b.term);
+      const aSpec = (a.type === 'spec' || a.category === 'spec') ? 1 : 0;
+      const bSpec = (b.type === 'spec' || b.category === 'spec') ? 1 : 0;
+      if (aSpec !== bSpec) return bSpec - aSpec;
+      return (a.term || a.label || a.id).localeCompare(b.term || b.label || b.id);
     });
 
   sortedNodes.forEach(n => {
     const div = document.createElement('div');
     div.className = 'term-list-item';
     div.dataset.nodeId = n.id;
+    const idDisplay = (n.type === 'spec' || n.category === 'spec') ? 'SPEC' : n.id;
+    const catDisplay = n.typeLabel || n.type || n.category || 'unknown';
     div.innerHTML = `
-      <div class="item-id">${n.category === 'spec' ? 'SPEC' : n.id}</div>
-      <div class="item-name">${n.term}</div>
-      <div class="item-cat">${n.category === 'spec' ? 'Spec' : n.category}</div>`;
+      <div class="item-id">${idDisplay}</div>
+      <div class="item-name">${n.term || n.label || n.id}</div>
+      <div class="item-cat">${catDisplay}</div>`;
     div.addEventListener('click', (e) => {
       e.stopPropagation();
       const node = graphData.nodes.find(nd => nd.id === n.id);
@@ -159,11 +165,14 @@ function initUI() {
 
 // ─── Filters ───
 function applyFilters() {
-  // Apply category filter
+  // Apply category/type filter
   const filteredIds = new Set();
   for (const n of graphData.nodes) {
-    const catVisible = activeCategories.has(n.category);
-    const searchMatch = searchTerm ? n.term.toLowerCase().includes(searchTerm) ||
+    // New format: use typeCat or category
+    const cat = n.typeCat || n.category || 'other';
+    const catVisible = activeCategories.size === 0 || activeCategories.has(cat);
+    const name = n.term || n.label || n.id;
+    const searchMatch = searchTerm ? name.toLowerCase().includes(searchTerm) ||
       n.id.toLowerCase().includes(searchTerm) : true;
     n.visible = catVisible && searchMatch;
     if (n.visible) filteredIds.add(n.id);
@@ -272,18 +281,20 @@ function deselectNode() {
 
 function showDetail(d) {
   const panel = document.getElementById('detail-panel');
-  document.getElementById('detail-id').textContent = d.category === 'spec' ? 'SPEC' : d.id;
-  document.getElementById('detail-name').textContent = d.term;
+  document.getElementById('detail-id').textContent = (d.type === 'spec' || d.category === 'spec') ? 'SPEC' : d.id;
+  document.getElementById('detail-name').textContent = d.term || d.label || d.id;
 
   const catBadge = document.getElementById('detail-category');
-  catBadge.textContent = d.category;
-  catBadge.className = `category-badge category-badge-${d.category}`;
+  // Show typeLabel for new format, category for legacy
+  const displayType = d.typeLabel || d.type || d.category || 'unknown';
+  catBadge.textContent = displayType;
+  catBadge.className = `category-badge category-badge-${d.type || d.category || 'other'}`;
 
   document.getElementById('detail-def').textContent = d.definition || 'No definition available.';
 
   const stats = document.getElementById('detail-stats');
   let html = `<div><strong>Connections:</strong> ${d.relatedCount || 0}</div>`;
-  html += `<div><strong>Spec refs:</strong> ${d.specRefCount || 0}</div>`;
+  html += `<div><strong>Type:</strong> ${d.type || d.category || 'unknown'}</div>`;
 
   if (d.specs && d.specs.length > 0) {
     html += `<div><strong>In specs:</strong></div>`;

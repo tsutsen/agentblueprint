@@ -146,117 +146,124 @@ def _extract_glossary_refs(obj, refs: set):
 
 def build_graph_data(artifacts_dir: str) -> dict:
     """
-    Build the visualization graph data from graph_metrics.py output + glossary metadata.
+    Build the visualization graph data from graph_metrics.py raw graph output + glossary metadata.
+    Shows the FULL architecture graph, not just glossary terms.
     """
-    debug(f"Step 1: Getting graph from metrics...")
-    metrics = run_graph_metrics(artifacts_dir)
-    if not metrics:
-        print("ERROR: Could not get graph data from graph_metrics.py", file=sys.stderr)
+    debug(f"Step 1: Getting full graph from metrics...")
+
+    # Run graph_metrics with --dump-graph to get raw node/edge data
+    if not GRAPH_METRICS_SCRIPT.exists():
+        print(f"ERROR: graph_metrics.py not found at {GRAPH_METRICS_SCRIPT}", file=sys.stderr)
         return None
 
-    graph_stats = metrics.get("graph_stats", {})
-    node_types = graph_stats.get("node_types", {})
-    gl_count = node_types.get("GL", 0)
-    total_nodes = graph_stats.get("nodes", 0)
-    total_edges = graph_stats.get("edges", 0)
-    debug(f"Metrics: {total_nodes} nodes, {total_edges} edges, {gl_count} GL terms")
+    try:
+        result = subprocess.run(
+            ["python3", str(GRAPH_METRICS_SCRIPT), "--artifacts", artifacts_dir, "--dump-graph"],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        if result.returncode != 0:
+            print(f"WARNING: graph_metrics.py --dump-graph failed: {result.stderr.strip()}", file=sys.stderr)
+            return None
 
-    debug(f"Step 2: Loading glossary...")
+        graph_data = json.loads(result.stdout)
+        raw_nodes = graph_data.get("nodes", [])
+        raw_edges = graph_data.get("edges", [])
+        debug(f"Raw graph: {len(raw_nodes)} nodes, {len(raw_edges)} edges")
+    except Exception as e:
+        print(f"WARNING: Failed to dump graph: {e}", file=sys.stderr)
+        return None
+
+    debug(f"Step 2: Loading glossary metadata...")
     term_map, related_map = load_glossary(artifacts_dir)
 
-    debug(f"Step 3: Collecting spec references...")
-    spec_term_refs = collect_spec_refs(artifacts_dir)
+    # Node type display names and categories
+    TYPE_INFO = {
+        "REQ": {"label": "Requirement", "cat": "req", "color": "#38bdf8"},
+        "NFR": {"label": "Non-Functional Req", "cat": "req", "color": "#7dd3fc"},
+        "CON": {"label": "Component", "cat": "con", "color": "#a78bfa"},
+        "FN": {"label": "Function", "cat": "fn", "color": "#34d399"},
+        "IS": {"label": "Integration Test", "cat": "test", "color": "#fb923c"},
+        "TST": {"label": "Test", "cat": "test", "color": "#f87171"},
+        "FN": {"label": "Function", "cat": "fn", "color": "#34d399"},
+        "GL": {"label": "Glossary Term", "cat": "gl", "color": "#fbbf24"},
+        "UJ": {"label": "User Journey", "cat": "design", "color": "#c084fc"},
+        "US": {"label": "User Story", "cat": "design", "color": "#a78bfa"},
+        "UXAC": {"label": "UX Acceptance Criteria", "cat": "design", "color": "#8b5cf6"},
+        "DG": {"label": "Design Goal", "cat": "design", "color": "#60a5fa"},
+        "SC": {"label": "Screen", "cat": "design", "color": "#38bdf8"},
+        "Entity": {"label": "Entity", "cat": "data", "color": "#4ade80"},
+        "Enum": {"label": "Enum", "cat": "data", "color": "#22d3ee"},
+        "API": {"label": "API Endpoint", "cat": "api", "color": "#f472b6"},
+        "EP": {"label": "Epic", "cat": "plan", "color": "#facc15"},
+        "TASK": {"label": "Task", "cat": "plan", "color": "#f59e0b"},
+        "ISSUE": {"label": "Issue", "cat": "plan", "color": "#ef4444"},
+    }
 
-    # Build termSpecRefs (GL ID -> Set of spec names)
-    term_spec_refs = {}
-    for spec_name, gl_ids in spec_term_refs.items():
-        for gl_id in gl_ids:
-            if gl_id not in term_spec_refs:
-                term_spec_refs[gl_id] = set()
-            term_spec_refs[gl_id].add(spec_name)
-
-    # Build nodes
+    # Build enriched nodes
     nodes = []
-    for tid, tinfo in term_map.items():
-        specs = term_spec_refs.get(tid, set())
-        nodes.append({
-            "id": tid,
-            "term": tinfo.get("term", tid),
-            "definition": tinfo.get("definition", ""),
-            "category": tinfo.get("category", "technical"),
-            "relatedCount": len(related_map.get(tid, [])),
-            "specRefCount": len(specs),
-            "specs": sorted(specs),
-        })
+    for node in raw_nodes:
+        nid = node["id"]
+        ntype = node["type"]
+        info = TYPE_INFO.get(ntype, {"label": ntype, "cat": "other", "color": "#94a3b8"})
 
-    # Spec nodes
-    spec_nodes = []
-    for spec_name, gl_ids in spec_term_refs.items():
-        spec_nodes.append({
-            "id": f"SPEc:{spec_name}",
-            "term": spec_name,
-            "definition": f"Specification: {spec_name}.json",
-            "category": "spec",
-            "relatedCount": len(gl_ids),
-            "specRefCount": 0,
-            "specs": [],
-        })
+        # Enrich GL nodes with glossary metadata
+        if ntype == "GL" and nid in term_map:
+            tinfo = term_map[nid]
+            nodes.append({
+                "id": nid,
+                "term": tinfo.get("term", nid),
+                "definition": tinfo.get("definition", ""),
+                "category": tinfo.get("category", "technical"),
+                "type": ntype,
+                "typeLabel": info["label"],
+                "typeCat": info["cat"],
+                "color": info["color"],
+                "relatedCount": len(related_map.get(nid, [])),
+                "label": tinfo.get("term", nid),
+            })
+        else:
+            nodes.append({
+                "id": nid,
+                "term": node.get("label", nid),
+                "definition": "",
+                "category": info["cat"],
+                "type": ntype,
+                "typeLabel": info["label"],
+                "typeCat": info["cat"],
+                "color": info["color"],
+                "relatedCount": 0,
+                "label": node.get("label", nid),
+            })
 
     # Build edges
     edges = []
-    edge_set = set()
+    for edge in raw_edges:
+        edges.append({
+            "source": edge["source"],
+            "target": edge["target"],
+            "type": "architecture",
+        })
 
-    # relatedTerms edges
-    for tid, related in related_map.items():
-        for related_id in related:
-            key = tuple(sorted([tid, related_id]))
-            edge_key = f"{key[0]}→{key[1]}"
-            if edge_key not in edge_set:
-                edge_set.add(edge_key)
-                edges.append({"source": tid, "target": related_id, "type": "relatedTerms"})
-
-    # specRef edges
-    for sn in spec_nodes:
-        spec_id = sn["id"]
-        for gl_id in spec_term_refs.get(sn["term"], set()):
-            edge_key = f"{spec_id}→{gl_id}"
-            if edge_key not in edge_set:
-                edge_set.add(edge_key)
-                edges.append({"source": spec_id, "target": gl_id, "type": "specRef"})
-
-    # crossSpec edges
-    spec_names = sorted(spec_term_refs.keys())
-    for i in range(len(spec_names)):
-        for j in range(i + 1, len(spec_names)):
-            set_a = spec_term_refs[spec_names[i]]
-            set_b = spec_term_refs[spec_names[j]]
-            shared = sorted(set_a & set_b)
-            if shared:
-                edges.append({
-                    "source": f"SPEc:{spec_names[i]}",
-                    "target": f"SPEc:{spec_names[j]}",
-                    "type": "crossSpec",
-                    "sharedTerms": shared,
-                    "sharedCount": len(shared),
-                })
-
-    categories = {}
+    # Count by type
+    type_counts = {}
     for node in nodes:
-        cat = node["category"]
-        categories[cat] = categories.get(cat, 0) + 1
+        t = node["type"]
+        type_counts[t] = type_counts.get(t, 0) + 1
 
     output = {
         "summary": {
-            "totalTerms": len(term_map),
+            "totalNodes": len(nodes),
             "totalEdges": len(edges),
-            "totalSpecs": len(spec_term_refs),
-            "categories": categories,
+            "typeCounts": type_counts,
         },
-        "nodes": nodes + spec_nodes,
+        "nodes": nodes,
         "edges": edges,
     }
 
-    debug(f"Built graph: {len(nodes)} term nodes + {len(spec_nodes)} spec nodes, {len(edges)} edges")
+    debug(f"Built visualization graph: {len(nodes)} nodes, {len(edges)} edges")
+    debug(f"Node types: {json.dumps(type_counts)}")
     return output
 
 
@@ -282,8 +289,8 @@ def serve_graph(artifacts_dir: str, port: int, no_server: bool = False, open_bro
     summary = graph_data["summary"]
 
     print(f"\nGraph data written to: {output_path}", file=sys.stderr, flush=True)
-    print(f"  {summary['totalTerms']} terms, {summary['totalEdges']} edges, {summary['totalSpecs']} specs", file=sys.stderr, flush=True)
-    print(f"  Categories: {json.dumps(summary['categories'])}", file=sys.stderr, flush=True)
+    print(f"  {summary['totalNodes']} nodes, {summary['totalEdges']} edges", file=sys.stderr, flush=True)
+    print(f"  Types: {json.dumps(summary['typeCounts'])}", file=sys.stderr, flush=True)
 
     if no_server:
         return True

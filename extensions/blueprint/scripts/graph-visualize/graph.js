@@ -105,7 +105,7 @@ function initGraph() {
     .data(validEdges)
     .join('line')
     .attr('stroke', d => getEdgeColor(d.type))
-    .attr('stroke-width', d => d.type === 'crossSpec' ? 1.5 : d.type === 'relatedTerms' ? 1 : 0.7)
+    .attr('stroke-width', d => d.type === 'crossSpec' ? 1.5 : d.type === 'relatedTerms' ? 1 : 0.5)
     .attr('stroke-dasharray', d => d.type === 'specRef' ? '3,4' : d.type === 'crossSpec' ? '5,4' : 'none')
     .attr('opacity', 1);
 
@@ -121,18 +121,23 @@ function initGraph() {
       .on('drag', dragged)
       .on('end', dragEnded));
 
-  function getCategoryColor(cat) {
-    return getComputedStyle(document.documentElement).getPropertyValue(`--${cat}`).trim();
+  function getNodeColor(d) {
+    // New format: use TYPE_COLORS for node types
+    if (d.type && TYPE_COLORS[d.type]) return TYPE_COLORS[d.type];
+    // Legacy format: use CATEGORY_COLORS
+    return getComputedStyle(document.documentElement).getPropertyValue(`--${d.category || 'other'}`).trim() || '#94a3b8';
+  }
+
+  function getNodeRadius(d) {
+    if (d.type === 'spec' || d.category === 'spec') return 10;
+    const totalConn = (d.specRefCount || 0) + (d.relatedCount || 0);
+    return Math.max(4, Math.min(12, 3 + totalConn * 0.6));
   }
 
   node.append('circle')
-    .attr('r', d => {
-      if (d.category === 'spec') return 10;
-      const totalConn = (d.specRefCount || 0) + (d.relatedCount || 0);
-      return Math.max(4, Math.min(12, 3 + totalConn * 0.6));
-    })
-    .attr('fill', d => getCategoryColor(d.category))
-    .attr('stroke', d => d3.color(getCategoryColor(d.category)).darker(0.8).formatHex())
+    .attr('r', d => getNodeRadius(d))
+    .attr('fill', d => getNodeColor(d))
+    .attr('stroke', d => d3.color(getNodeColor(d)).darker(0.8).formatHex())
     .attr('stroke-width', 1)
     .on('click', (event, d) => { event.stopPropagation(); selectNode(event, d); });
 
@@ -145,7 +150,7 @@ function initGraph() {
     if (selectedNode && selectedNode.id === d.id) return;
     d3.select(this).select('circle')
       .transition().duration(100)
-      .attr('stroke', d3.color(getCategoryColor(d.category)).darker(0.8).formatHex())
+      .attr('stroke', d3.color(getNodeColor(d)).darker(0.8).formatHex())
       .attr('stroke-width', 1);
   });
 
@@ -153,13 +158,13 @@ function initGraph() {
   labelsG.selectAll('text')
     .data(graphData.nodes)
     .join('text')
-    .text(d => d.term)
-    .attr('font-size', d => d.category === 'spec' ? 10 : 9)
-    .attr('fill', d => d3.color(getCategoryColor(d.category)).darker(0.8).formatHex())
-    .attr('dy', d => d.category === 'spec' ? -14 : -12)
+    .text(d => d.term || d.label || d.id)
+    .attr('font-size', d => (d.type === 'spec' || d.category === 'spec') ? 10 : 9)
+    .attr('fill', d => d3.color(getNodeColor(d)).darker(0.8).formatHex())
+    .attr('dy', d => (d.type === 'spec' || d.category === 'spec') ? -14 : -12)
     .attr('text-anchor', 'middle')
     .style('opacity', showLabels ? 0.7 : 0)
-    .style('font-weight', d => d.category === 'spec' ? 600 : 400)
+    .style('font-weight', d => (d.type === 'spec' || d.category === 'spec') ? 600 : 400)
     .attr('class', 'node-label');
 
   // ─── Force Simulation ───
@@ -339,29 +344,18 @@ function dragEnded(event, d) {
 
 // ─── Theme Update ───
 function updateThemeColors() {
-  const edgeVar = getComputedStyle(document.documentElement).getPropertyValue('--edge-related').trim();
-  console.log('Edge color var:', edgeVar);
   if (link) {
     link.attr('stroke', d => {
-      const map = { relatedTerms: '--edge-related', specRef: '--edge-spec', crossSpec: '--edge-cross' };
-      const val = getComputedStyle(document.documentElement).getPropertyValue(map[d.type]).trim();
-      console.log('Setting stroke for', d.type, ':', val);
-      return val;
+      const map = { relatedTerms: '--edge-related', specRef: '--edge-spec', crossSpec: '--edge-cross', architecture: '--edge-architecture' };
+      const cssVar = map[d.type] || '--edge-architecture';
+      return getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim();
     });
   }
   if (node) {
-    node.select('circle').attr('fill', d => {
-      const fill = getComputedStyle(document.documentElement).getPropertyValue(`--${d.category}`).trim();
-      return fill;
-    }).attr('stroke', d => {
-      const fill = getComputedStyle(document.documentElement).getPropertyValue(`--${d.category}`).trim();
-      return d3.color(fill).darker(0.8).formatHex();
-    });
+    node.select('circle').attr('fill', d => getNodeColor(d)).attr('stroke', d => d3.color(getNodeColor(d)).darker(0.8).formatHex());
   }
   if (labelsG) {
-    labelsG.selectAll('text').attr('fill', d => {
-      return getComputedStyle(document.documentElement).getPropertyValue(`--${d.category}`).trim();
-    });
+    labelsG.selectAll('text').attr('fill', d => d3.color(getNodeColor(d)).darker(0.8).formatHex());
   }
 }
 

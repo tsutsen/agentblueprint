@@ -1095,6 +1095,8 @@ def main():
     parser.add_argument("--report", default=None, help="Path to write report file")
     parser.add_argument("--format", choices=["json", "text"], default="text",
                         help="Output format (default: text)")
+    parser.add_argument("--dump-graph", action="store_true",
+                        help="Dump raw graph nodes/edges as JSON (for visualization)")
     args = parser.parse_args()
 
     artifacts_dir = args.artifacts
@@ -1137,6 +1139,21 @@ def main():
         "epic_coherence": epic_coh,
         "layer_violations": layer_viols,
     }
+
+    # Dump raw graph if requested
+    if args.dump_graph:
+        graph_dump = {
+            "nodes": [
+                {"id": nid, "type": info["type"], "label": info.get("label", nid), "source": info.get("source", "")}
+                for nid, info in g.nodes.items()
+            ],
+            "edges": [
+                {"source": frm, "target": to}
+                for frm, to in g.edges
+            ],
+        }
+        print(json.dumps(graph_dump, indent=2))
+        sys.exit(0)
 
     # Output
     if args.format == "json":
