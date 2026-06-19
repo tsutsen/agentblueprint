@@ -1970,7 +1970,7 @@ function registerGraphMetrics(pi: ExtensionAPI, extDir: string) {
     if (reportPath) args.push("--report", reportPath);
 
     try {
-      const { stdout, stderr } = await execFilePromise("python3", args, {
+      const { stdout, stderr } = await execFilePromise("python3", [script, ...args], {
         cwd: extDir,
         timeout: 60000,
       });
