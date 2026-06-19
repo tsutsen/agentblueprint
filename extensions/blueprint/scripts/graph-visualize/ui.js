@@ -247,7 +247,7 @@ function showDetail(d) {
   const panel = document.getElementById('detail-panel');
   const shortId = (d.type === 'spec' || d.category === 'spec') ? 'SPEC' : d.id.split('-').slice(0, 2).join('-');
   const displayName = d.term || d.label || d.id;
-  document.getElementById('detail-name').innerHTML = `${displayName} <span class="term-id">[${shortId}]</span>`;
+  document.getElementById('detail-name').innerHTML = `${displayName}&nbsp;<span class="term-id">[${shortId}]</span>`;
 
   const catBadge = document.getElementById('detail-category');
   // Show typeLabel for new format, category for legacy
