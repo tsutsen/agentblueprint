@@ -188,7 +188,7 @@ function updateHtmlLabels() {
     // Position label relative to container
     labelEl.style.left = `${labelX}px`;
     labelEl.style.top = `${labelY}px`;
-    labelEl.style.fontSize = `${(node.type === "spec" ? 14 : 13) * zoom.k}px`;
+    labelEl.style.fontSize = `${node.type === "spec" ? 14 : 13}px`;
 
     // Show/hide based on progressive disclosure
     const isVisible = shouldShowLabel(node);
