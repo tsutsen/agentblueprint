@@ -216,7 +216,6 @@ let panStart = { x: 0, y: 0 };
 let zoomStart = { x: 0, y: 0 };
 let isMouseDown = false;
 let sizeRange = {
-  relatedCount: [0, 1],
   degree: [0, 1],
   blast: [0, 1],
   risk: [0, 1],
@@ -271,7 +270,6 @@ function initGraph() {
   const _initMetrics = [
     "blastRadius",
     "degree",
-    "relatedCount",
     "risk",
     "volume",
     "centrality",
@@ -279,7 +277,6 @@ function initGraph() {
   const rangeKeys = [
     "blast",
     "degree",
-    "relatedCount",
     "risk",
     "volume",
     "centrality",
@@ -362,7 +359,6 @@ function recalcSizeRange() {
   const _metrics = [
     { nodeKey: "blastRadius", rangeKey: "blast" },
     { nodeKey: "degree", rangeKey: "degree" },
-    { nodeKey: "relatedCount", rangeKey: "relatedCount" },
     { nodeKey: "risk", rangeKey: "risk" },
     { nodeKey: "centrality", rangeKey: "centrality" },
   ];
@@ -396,7 +392,6 @@ function recalcSizeRange() {
         JSON.stringify({
           degree: sizeRange.degree,
           blast: sizeRange.blast,
-          relatedCount: sizeRange.relatedCount,
         }),
       );
     } else {
@@ -422,16 +417,13 @@ function recalcSizeRange() {
 
   // Only log when visible count changes
   if (visibleNodes.length !== _lastVisibleCount) {
-    const maxRC = Math.max(...visibleNodes.map((n) => n.relatedCount || 0));
     const maxDeg = Math.max(...visibleNodes.map((n) => n.degree || 0));
     console.log(
       "[SIZE] visible:",
       _lastVisibleCount,
       "->",
       visibleNodes.length,
-      "| maxRC:",
-      maxRC,
-      "maxDeg:",
+      "| maxDeg:",
       maxDeg,
       "connected:",
       sizeRange._connected,
@@ -787,8 +779,7 @@ function getNodeRadius(d) {
     sizeRange._connected && connectedSet && connectedSet.has(d.id);
   let rangeKey;
 
-  if (sizeMetric === "relatedCount") rangeKey = "relatedCount";
-  else if (sizeMetric === "degree") rangeKey = "degree";
+  if (sizeMetric === "degree") rangeKey = "degree";
   else if (sizeMetric === "blast") rangeKey = "blast";
   else if (sizeMetric === "risk") rangeKey = "risk";
   else if (sizeMetric === "centrality") rangeKey = "centrality";
@@ -861,8 +852,7 @@ function getNodeRadius(d) {
   }
 
   let value = 0;
-  if (sizeMetric === "relatedCount") value = d.relatedCount || 0;
-  else if (sizeMetric === "degree") value = d.degree || 0;
+  if (sizeMetric === "degree") value = d.degree || 0;
   else if (sizeMetric === "blast") value = d.blastRadius || 0;
   else if (sizeMetric === "risk") value = d.risk || 0;
   else if (sizeMetric === "centrality") value = d.centrality || 0;
@@ -896,7 +886,7 @@ function getNodeColor(d) {
 let hoveredNode = null;
 let isSimulating = false;
 let simulation = null;
-let sizeMetric = "relatedCount"; // Default sizing metric
+let sizeMetric = "degree"; // Default sizing metric
 let dimAnimation = null; // Animation frame for dimming
 let currentDim = 1; // Current dim opacity (1 = full, 0.15 = dimmed)
 
