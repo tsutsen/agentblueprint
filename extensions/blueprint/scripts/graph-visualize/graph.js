@@ -66,10 +66,10 @@ function initGraph() {
     n.vy = 0;
   });
 
-  const linkForce = d3.forceLink(validEdges).distance(80).strength(0.1);
-  const chargeForce = d3.forceManyBody().strength(-50);
-  const centerForce = d3.forceCenter(width / 2, height / 2).strength(0.05);
-  const collisionForce = d3.forceCollide().radius(15);
+  const linkForce = d3.forceLink(validEdges).distance(120).strength(0.05);
+  const chargeForce = d3.forceManyBody().strength(-150);
+  const centerForce = d3.forceCenter(width / 2, height / 2).strength(0.02);
+  const collisionForce = d3.forceCollide().radius(25);
 
   const simulation = d3.forceSimulation(graphData.nodes)
     .force('link', linkForce)
@@ -80,7 +80,7 @@ function initGraph() {
     .alphaDecay(0.1)
     .velocityDecay(0.4);
 
-  for (let i = 0; i < 100; i++) simulation.tick();
+  for (let i = 0; i < 200; i++) simulation.tick();
   simulation.stop();
 
   // ── Initial render ──
