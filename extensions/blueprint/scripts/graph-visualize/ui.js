@@ -180,15 +180,6 @@ function applyFilters() {
       return n.visible ? 0.7 : 0.02;
     });
 
-  // Restart simulation with only visible nodes for performance
-  if (simulation) {
-    const visibleNodes = graphData.nodes.filter(n => n.visible !== false);
-    const visibleEdges = validEdges.filter(e => e.visible !== false);
-    simulation.nodes(visibleNodes);
-    simulation.force('link').links(visibleEdges);
-    simulation.alpha(0.3).restart();
-  }
-
   // Update term list
   document.querySelectorAll('.term-list-item').forEach(el => {
     const nodeId = el.dataset.nodeId;

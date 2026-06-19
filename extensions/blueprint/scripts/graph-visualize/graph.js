@@ -1,7 +1,6 @@
 
 // ─── Graph State ───
 let graphData = null;
-let simulation = null;
 let validEdges = null;
 let svg, g, linkGroup, nodeGroup, labelsG;
 let link, node, labelText;
@@ -170,88 +169,44 @@ function initGraph() {
     degreeMap.set(tgtId, (degreeMap.get(tgtId) || 0) + 1);
   }
 
-  // Filter to visible nodes and edges for simulation
-  const visibleNodes = graphData.nodes.filter(n => n.visible !== false);
-  const visibleEdges = validEdges.filter(e => e.visible !== false);
+  // Static layout — place nodes in concentric circles by category
+  const categories = [...new Set(graphData.nodes.map(n => n.typeCat || n.category || 'other'))];
+  const catMap = {};
+  const catGroups = categories.map(c => []);
+  graphData.nodes.forEach((n, i) => {
+    const cat = n.typeCat || n.category || 'other';
+    if (!catMap[cat]) catMap[cat] = catGroups.length;
+    catGroups[catMap[cat]].push(n);
+  });
 
-  // Create the simulation — only visible nodes for performance
-  simulation = d3.forceSimulation(visibleNodes)
-    .alpha(1)
-    .alphaMin(0.001)
-    .alphaDecay(0.06)
-    .velocityDecay(DRAG_FRICTION)
-    .force('link', d3.forceLink(visibleEdges)
-      .distance(d => {
-        if (d.type === 'crossSpec') return 350;
-        if (d.type === 'specRef') return 200;
-        return 80;
-      })
-      .strength(d => {
-        if (d.type === 'crossSpec') return 0.1;
-        if (d.type === 'specRef') return 0.15;
-        return 0.5;
-      }))
-    .force('charge', d3.forceManyBody()
-      .strength(-250)
-      .distanceMax(500))
-    .force('collision', d3.forceCollide()
-      .radius(d => {
-        if (d.type === 'spec' || d.category === 'spec') return 35;
-        const deg = degreeMap.get(d.id) || 0;
-        return 18 + Math.min(deg * 1.2, 20);
-      })
-      .strength(0.6))
-    .force('center', d3.forceCenter(width / 2, height / 2)
-      .strength(0.015))
-    .on('tick', ticked);
+  const cx = width / 2;
+  const cy = height / 2;
+  const maxRadius = Math.min(width, height) * 0.4;
+  catGroups.forEach((group, ci) => {
+    const radius = group.length > 50 ? maxRadius * 0.7 : maxRadius * 0.4;
+    const angleStep = (2 * Math.PI) / group.length;
+    group.forEach((n, ni) => {
+      const angle = ci * angleStep * 0.5 + ni * angleStep;
+      n.x = cx + radius * Math.cos(angle);
+      n.y = cy + radius * Math.sin(angle);
+    });
+  });
 
 
 
   // Run enough ticks synchronously for a stable initial layout.
   // With alphaDecay(0.06), alpha halves roughly every 12 ticks.
-  // After ~800 ticks, alpha is ~0 and nodes have naturally slowed down.
-  // The key is running enough ticks — the simulation naturally coasts
-  // to a stop rather than halting abruptly.
-  simulation.tick(800);
-
-  // Render the settled layout
+  // Render the initial layout
   ticked();
 
   // Hide overlay — layout is complete
   document.getElementById('loading-overlay').classList.add('hidden');
 
-  // Stop the simulation completely — no more drift
-  simulation.stop();
-
-  // Pin every node at its settled position AND zero out velocity.
-  // stop() only halts the ticker; it does NOT freeze positions or velocities.
-  // Anything that later calls simulation.restart() (resize, reheat, browser
-  // firing a spurious 'resize' on initial layout) will otherwise send every
-  // node back into free-floating physics. Pinning fx/fy + zeroing vx/vy makes
-  // that impossible regardless of what touches the simulation later.
-  graphData.nodes.forEach(d => {
-    d.fx = d.x;
-    d.fy = d.y;
-    d.vx = 0;
-    d.vy = 0;
-  });
-
 
 }
 
 function ticked() {
-  tickCount++;
-
-  // Ease the dragged node toward the cursor each tick instead of having
-  // it hard-pinned to the raw mouse position. This runs through the same
-  // integrator/smoothing as everything else, which is what removes the
-  // jitter — neighbors now see continuous motion instead of being
-  // shoved by sudden teleport jumps.
-  if (draggedNode) {
-    draggedNode.fx += (dragTargetX - draggedNode.fx) * DRAG_SMOOTHING;
-    draggedNode.fy += (dragTargetY - draggedNode.fy) * DRAG_SMOOTHING;
-  }
-
+  // Update positions (only called during drag now)
   link
     .attr('x1', d => d.source.x)
     .attr('y1', d => d.source.y)
@@ -270,66 +225,46 @@ function ticked() {
 // moves >= 20px between mousedown and mouseup. Pure clicks pass through.
 
 function dragStart(event, d) {
-  // Pin the node at its current position — don't restart simulation yet.
-  // Neighbors only react once actual movement happens (see dragged()).
-  d.fx = d.x;
-  d.fy = d.y;
   draggedNode = d;
-  dragTargetX = event.x;
-  dragTargetY = event.y;
+  dragStartX = event.x;
+  dragStartY = event.y;
   isDragging = false;
 }
 
 function dragged(event, d) {
   if (!draggedNode) return;
-  dragTargetX = event.x;
-  dragTargetY = event.y;
 
-  // Wake the simulation so neighbors react.
-  // All nodes are pinned (fx/fy set) at rest — pinned nodes are immune
-  // to forces in d3. Release everyone EXCEPT the dragged node so forces
-  // can actually move them during this gesture.
-  if (!isDragging) {
-    // Only wake up if movement exceeds threshold (ignore micro-shakes from clicks)
-    const dx = event.x - dragStartX;
-    const dy = event.y - dragStartY;
-    if (dx * dx + dy * dy < 100) return; // < 10px threshold
-    isDragging = true;
-    graphData.nodes.forEach(n => {
-      if (n !== d) {
-        n.fx = null;
-        n.fy = null;
-      }
-    });
-    // Keep simulation running with steady alpha during drag
-    simulation.alphaTarget(0.3).restart();
-  }
+  // Only treat as drag if movement exceeds threshold (ignore clicks)
+  const dx = event.x - dragStartX;
+  const dy = event.y - dragStartY;
+  if (dx * dx + dy * dy < 100) return; // < 10px threshold
+
+  isDragging = true;
+
+  // Move the dragged node
+  d.x = event.x;
+  d.y = event.y;
+
+  // Update links connected to this node
+  link
+    .attr('x1', e => e.source === d ? d.x : e.source.x)
+    .attr('y1', e => e.source === d ? d.y : e.source.y)
+    .attr('x2', e => e.target === d ? d.x : e.target.x)
+    .attr('y2', e => e.target === d ? d.y : e.target.y);
+
+  // Update node position
+  node.filter(n => n === d).attr('transform', `translate(${d.x},${d.y})`);
+
+  // Update label position
+  labelsG.selectAll('text').filter(n => n === d)
+    .attr('x', d.x)
+    .attr('y', d.y);
 }
 
 function dragEnded(event, d) {
-  isDragging = false;
   draggedNode = null;
   delete d._dragStartX;
   delete d._dragStartY;
-
-  // Pin the dragged node at its current position
-  d.fx = d.x;
-  d.fy = d.y;
-
-  // Let all other nodes coast with momentum — don't pin yet.
-  // Set alphaTarget(0) so alpha decays naturally, giving nodes
-  // time to settle into their new positions with smooth momentum.
-  simulation.alphaTarget(0);
-  simulation.velocityDecay(DRAG_FRICTION);
-
-  // Once settled, pin everything for a stable resting state
-  simulation.on('end.dragSettle', () => {
-    graphData.nodes.forEach(n => {
-      n.fx = n.x;
-      n.fy = n.y;
-    });
-    simulation.on('end.dragSettle', null);
-  });
 }
 
 // ─── Theme Update ───
