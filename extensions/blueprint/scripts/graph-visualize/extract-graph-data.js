@@ -103,7 +103,6 @@ function main() {
       type: type,
       typeLabel: type,
       typeCat: t.category,
-      color: null, // will be set below
       relatedCount: (t.relatedTerms || []).length,
       degree: 0, // will be updated below
       specRefCount: 0, // will be updated below
@@ -157,7 +156,6 @@ function main() {
       type: 'spec',
       typeLabel: 'Specification',
       typeCat: 'spec',
-      color: null,
       relatedCount: termSet.size,
       degree: 0,
       specRefCount: 0,
@@ -204,10 +202,9 @@ function main() {
     degreeMap.set(e.target, (degreeMap.get(e.target) || 0) + 1);
   }
 
-  // Set degree and color on all nodes
+  // Set degree on all nodes
   for (const n of [...nodes, ...specNodes]) {
     n.degree = degreeMap.get(n.id) || 0;
-    n.color = null; // Will be set by TYPE_COLORS in graph.js
   }
 
   // Output
