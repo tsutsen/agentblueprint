@@ -297,11 +297,16 @@ function onMouseUp(event) {
     canvas.style.cursor = 'grab';
   }
   if (draggedNode && !isDragging) {
-    // It was a click, not a drag
+    // It was a click on a node
     const pos = getMousePos(event);
     const node = findNodeAt(pos);
     if (node) selectNode(event, node);
     else deselectNode();
+    draggedNode = null;
+    isDragging = false;
+  } else if (!draggedNode && !isPanning) {
+    // Click on empty space - deselect
+    deselectNode();
   }
   draggedNode = null;
   isDragging = false;
