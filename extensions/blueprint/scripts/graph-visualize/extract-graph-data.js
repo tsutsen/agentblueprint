@@ -84,16 +84,31 @@ function main() {
     specTermRefs.set(specFile.replace('.json', ''), termSet);
   }
 
+  // Category to type mapping
+  const categoryToType = {
+    domain: 'GL', technical: 'CON', security: 'UXAC', ui: 'UJ',
+    spec: 'spec', req: 'REQ', nfr: 'NFR', con: 'CON', fn: 'FN',
+    test: 'TST', gl: 'GL', design: 'DG', data: 'Entity',
+    api: 'API', plan: 'EP', other: 'GL',
+  };
+
   // Build graph nodes from glossary terms
-  const nodes = terms.map((t) => ({
-    id: t.id,
-    term: t.term,
-    definition: t.definition,
-    category: t.category,
-    relatedCount: (t.relatedTerms || []).length,
-    degree: 0, // will be updated below
-    specRefCount: 0, // will be updated below
-  }));
+  const nodes = terms.map((t) => {
+    const type = categoryToType[t.category] || 'GL';
+    return {
+      id: t.id,
+      term: t.term,
+      definition: t.definition,
+      category: t.category,
+      type: type,
+      typeLabel: type,
+      typeCat: t.category,
+      color: null, // will be set below
+      relatedCount: (t.relatedTerms || []).length,
+      degree: 0, // will be updated below
+      specRefCount: 0, // will be updated below
+    };
+  });
 
   // Count how many specs reference each term
   const termSpecRefs = new Map(); // GL-ID -> Set of spec names
@@ -139,6 +154,10 @@ function main() {
       term: specName,
       definition: `Specification file: ${specName}.json`,
       category: 'spec',
+      type: 'spec',
+      typeLabel: 'Specification',
+      typeCat: 'spec',
+      color: null,
       relatedCount: termSet.size,
       degree: 0,
       specRefCount: 0,
@@ -185,9 +204,10 @@ function main() {
     degreeMap.set(e.target, (degreeMap.get(e.target) || 0) + 1);
   }
 
-  // Set degree on all nodes
+  // Set degree and color on all nodes
   for (const n of [...nodes, ...specNodes]) {
     n.degree = degreeMap.get(n.id) || 0;
+    n.color = null; // Will be set by TYPE_COLORS in graph.js
   }
 
   // Output
