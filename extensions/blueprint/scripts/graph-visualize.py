@@ -407,8 +407,8 @@ if __name__ == "__main__":
                         help="HTTP server port (default: 3001)")
     parser.add_argument("--no-server", action="store_true",
                         help="Only generate graph-data.json, don't start server")
-    parser.add_argument("--open", action="store_true",
-                        help="Open the visualization URL in the default browser")
+    parser.add_argument("--no-open", action="store_true",
+                        help="Don't open browser (enabled by default)")
     args = parser.parse_args()
 
     artifacts_dir = os.path.abspath(args.artifacts_dir)
@@ -416,5 +416,5 @@ if __name__ == "__main__":
         print(f"ERROR: Artifacts directory not found: {artifacts_dir}", file=sys.stderr)
         sys.exit(1)
 
-    success = serve_graph(artifacts_dir, args.port, args.no_server, args.open)
+    success = serve_graph(artifacts_dir, args.port, args.no_server, not args.no_open)
     sys.exit(0 if success else 1)
