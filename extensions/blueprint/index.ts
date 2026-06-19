@@ -2094,6 +2094,9 @@ function registerGraphVisualize(pi: ExtensionAPI, extDir: string) {
       noServer: Type.Optional(Type.Boolean({
         description: "Only generate graph-data.json without starting server",
       })),
+      openBrowser: Type.Optional(Type.Boolean({
+        description: "Open the visualization in the default browser",
+      })),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
       if (!fs.existsSync(script)) {
@@ -2107,9 +2110,11 @@ function registerGraphVisualize(pi: ExtensionAPI, extDir: string) {
       const artifacts = params.artifacts || path.resolve(ctx.cwd, "artifacts");
       const port = params.port || 3001;
       const noServer = !!params.noServer;
+      const openBrowser = !!params.openBrowser;
 
       const args = [script, artifacts, "--port", String(port)];
       if (noServer) args.push("--no-server");
+      if (openBrowser) args.push("--open");
 
       try {
         const { stdout, stderr } = await execFilePromise("python3", args, {

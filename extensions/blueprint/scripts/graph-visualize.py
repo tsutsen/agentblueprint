@@ -269,7 +269,7 @@ def write_graph_data(graph_data: dict) -> str:
     return str(output_path)
 
 
-def serve_graph(artifacts_dir: str, port: int, no_server: bool = False) -> bool:
+def serve_graph(artifacts_dir: str, port: int, no_server: bool = False, open_browser: bool = False) -> bool:
     """Generate graph data and optionally serve the visualization."""
     print(f"Building glossary graph from {artifacts_dir}...", file=sys.stderr, flush=True)
 
@@ -338,6 +338,16 @@ socketserver.TCPServer(("", int(sys.argv[2])), H).serve_forever()
     print(f"  Open: http://localhost:{port}", file=sys.stderr, flush=True)
     print(f"  Server running in background (PID: {server_proc.pid})", file=sys.stderr, flush=True)
 
+    # Open browser if requested
+    if open_browser:
+        import webbrowser
+        url = f"http://localhost:{port}"
+        try:
+            webbrowser.open(url)
+            debug(f"Opened {url} in browser")
+        except Exception as e:
+            print(f"WARNING: Could not open browser: {e}", file=sys.stderr)
+
     # Exit immediately - server keeps running in background
     return True
 
@@ -350,6 +360,8 @@ if __name__ == "__main__":
                         help="HTTP server port (default: 3001)")
     parser.add_argument("--no-server", action="store_true",
                         help="Only generate graph-data.json, don't start server")
+    parser.add_argument("--open", action="store_true",
+                        help="Open the visualization URL in the default browser")
     args = parser.parse_args()
 
     artifacts_dir = os.path.abspath(args.artifacts_dir)
@@ -357,5 +369,5 @@ if __name__ == "__main__":
         print(f"ERROR: Artifacts directory not found: {artifacts_dir}", file=sys.stderr)
         sys.exit(1)
 
-    success = serve_graph(artifacts_dir, args.port, args.no_server)
+    success = serve_graph(artifacts_dir, args.port, args.no_server, args.open)
     sys.exit(0 if success else 1)
