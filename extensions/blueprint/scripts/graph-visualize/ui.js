@@ -142,6 +142,7 @@ function initUI() {
 function applyFilters() {
   // Apply category/type filter
   const filteredIds = new Set();
+  console.log('applyFilters: activeCategories =', activeCategories, 'size =', activeCategories.size);
   for (const n of graphData.nodes) {
     // New format: use typeCat or category
     const cat = n.typeCat || n.category || 'other';
@@ -152,6 +153,7 @@ function applyFilters() {
     n.visible = catVisible && searchMatch;
     if (n.visible) filteredIds.add(n.id);
   }
+  console.log('applyFilters: visible nodes =', filteredIds.size);
 
   // Apply edge filter (only source/target visibility matters now)
   for (const e of validEdges) {
