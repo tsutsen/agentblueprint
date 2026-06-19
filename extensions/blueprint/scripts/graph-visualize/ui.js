@@ -81,6 +81,7 @@ function initUI() {
 
   // Controls
   document.getElementById('btn-zoom-reset').addEventListener('click', resetZoom);
+  document.getElementById('btn-simulate').addEventListener('click', toggleSimulation);
   document.getElementById('btn-labels').addEventListener('click', toggleLabels);
 
   // Theme dropdown
