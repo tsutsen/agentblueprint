@@ -739,12 +739,14 @@ function onMouseUp(event) {
     else deselectNode();
     draggedNode = null;
     isDragging = false;
+  } else if (draggedNode && isDragging) {
+    // Node was dragged - preserve selection
+    draggedNode = null;
+    isDragging = false;
   } else if (!draggedNode && !isPanning) {
     // Click on empty space - deselect
     deselectNode();
   }
-  draggedNode = null;
-  isDragging = false;
 }
 
 function onClick(event) {
