@@ -727,6 +727,7 @@ function onMouseMove(event) {
 }
 
 function onMouseUp(event) {
+  const wasPanning = isPanning;
   if (isPanning) {
     isPanning = false;
   }
@@ -743,10 +744,11 @@ function onMouseUp(event) {
     // Node was dragged - preserve selection
     draggedNode = null;
     isDragging = false;
-  } else if (!draggedNode && !isPanning) {
+  } else if (!draggedNode && !wasPanning) {
     // Click on empty space - deselect
     deselectNode();
   }
+  // If wasPanning, preserve selection (don't deselect)
 }
 
 function onClick(event) {
