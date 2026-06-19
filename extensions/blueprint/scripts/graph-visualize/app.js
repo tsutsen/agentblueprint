@@ -33,12 +33,9 @@ async function initApp() {
         pointerDownPos = { x: e.clientX, y: e.clientY };
       });
       graphContainer.addEventListener('click', (e) => {
-        // Skip if a drag actually occurred (isDragging set by dragged())
+        // Skip if a drag actually occurred
         if (isDragging) return;
-        const isOnNode = e.target.closest('.node') || e.target.closest('circle');
-        if (!isOnNode) {
-          deselectNode();
-        }
+        // Canvas click is handled in onMouseUp
       });
     }
 
@@ -65,7 +62,14 @@ async function initApp() {
       const container = document.getElementById('graph-container');
       width = container.clientWidth;
       height = container.clientHeight;
-      svg.attr('width', width).attr('height', height);
+      if (canvas) {
+        canvas.width = width * window.devicePixelRatio;
+        canvas.height = height * window.devicePixelRatio;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        render();
+      }
     });
 
     // Escape to deselect
