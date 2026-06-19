@@ -256,7 +256,7 @@
     display: inline-block;
   }
   .dropdown-toggle {
-    padding: 6px 28px 6px 12px;
+    padding: 6px 36px 6px 12px;
     border-radius: 6px;
     background: var(--surface);
     border: 1px solid var(--border);
