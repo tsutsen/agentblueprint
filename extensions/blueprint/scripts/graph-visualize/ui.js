@@ -218,6 +218,7 @@ function selectNode(event, d) {
   }
 
   // Canvas rendering handles highlighting in render()
+  console.log('selectNode: calling animateDim(0.15)');
   animateDim(0.15); // Animate to dimmed state
 
   showDetail(d);

@@ -397,6 +397,7 @@ window.toggleSimulation = toggleSimulation;
 
 // ─── Dim Animation ───
 function animateDim(target) {
+  console.log('animateDim: from', currentDim, 'to', target);
   if (dimAnimation) cancelAnimationFrame(dimAnimation);
   const start = performance.now();
   const from = currentDim;
@@ -408,6 +409,7 @@ function animateDim(target) {
     // Ease out cubic
     const ease = 1 - Math.pow(1 - progress, 3);
     currentDim = from + (target - from) * ease;
+    console.log('animateDim: progress', progress, 'currentDim', currentDim);
     render();
     if (progress < 1) {
       dimAnimation = requestAnimationFrame(step);
