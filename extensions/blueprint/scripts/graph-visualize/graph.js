@@ -21,11 +21,10 @@ const LABEL_NODE_RADIUS_THRESHOLD = 8;
 const LABEL_CHAR_WIDTH = 0.62; // Inter average, world-space units
 const LABEL_PAD_X = 4; // horizontal padding each side (world-space)
 const LABEL_PAD_Y = 2; // vertical padding above node
-const LABEL_FADE_DURATION = 300; // ms for fade-in animation
 
-// Cache: rebuilt once per render call, read by shouldShowLabel
-let _labelVisibleSet = null;
-let _labelFadeStartTime = 0; // timestamp when labels were last built
+// HTML label elements (replaces canvas text rendering)
+let _labelElements = new Map(); // nodeId -> HTMLDivElement
+let _labelVisibleSet = null; // nodes that should show labels (progressive disclosure)
 
 /**
  * Call once per render(), before drawing any labels.
@@ -36,7 +35,13 @@ function buildLabelSet() {
   // Track previous visible labels to detect changes
   const prevVisible = _labelVisibleSet ? new Set(_labelVisibleSet) : null;
   _labelVisibleSet = new Set();
-  if (!showLabels || zoom.k < LABEL_MIN_ZOOM || !graphData) return;
+  if (!showLabels || zoom.k < LABEL_MIN_ZOOM || !graphData) {
+    // If labels are hidden, clear the set
+    if (prevVisible !== null && prevVisible.size > 0) {
+      _labelFadeStartTime = performance.now();
+    }
+    return;
+  }
 
   const candidates = [];
   for (const n of graphData.nodes) {
@@ -136,11 +141,62 @@ function buildLabelSet() {
 }
 
 function shouldShowLabel(node) {
-  if (_labelVisibleSet === null || !_labelVisibleSet.has(node.id)) return 0;
-  const elapsed = performance.now() - _labelFadeStartTime;
-  const progress = Math.min(elapsed / LABEL_FADE_DURATION, 1);
-  // Cubic ease-out for smooth fade-in
-  return 1 - Math.pow(1 - progress, 3);
+  if (_labelVisibleSet === null || !_labelVisibleSet.has(node.id)) return false;
+  return true;
+}
+
+/**
+ * Update HTML label positions and visibility.
+ * Called every frame to sync labels with node positions.
+ */
+function updateHtmlLabels() {
+  const container = document.getElementById("labels-container");
+  if (!container) return;
+
+  // Get container rect for coordinate conversion
+  const containerRect = container.getBoundingClientRect();
+
+  for (const node of graphData.nodes) {
+    if (!node.visible) continue;
+
+    // Calculate position relative to container (not viewport)
+    // Node positions are in world coords, transform to container coords
+    const labelX = zoom.x + node.x * zoom.k;
+    const r = getNodeRadius(node);
+    const labelY = zoom.y + node.y * zoom.k - r * zoom.k - 8;
+
+    // Get or create label element
+    let labelEl = _labelElements.get(node.id);
+    if (!labelEl) {
+      labelEl = document.createElement("div");
+      labelEl.className = "graph-label";
+      labelEl.textContent = node.term || node.label || node.id;
+      container.appendChild(labelEl);
+      _labelElements.set(node.id, labelEl);
+    }
+
+    // Position label relative to container
+    labelEl.style.left = `${labelX}px`;
+    labelEl.style.top = `${labelY}px`;
+    labelEl.style.fontSize = `${(node.type === "spec" ? 14 : 13) * zoom.k}px`;
+
+    // Show/hide based on progressive disclosure
+    const isVisible = shouldShowLabel(node);
+    if (isVisible) {
+      labelEl.classList.add("visible");
+    } else {
+      labelEl.classList.remove("visible");
+    }
+  }
+
+  // Remove elements for hidden nodes
+  const visibleIds = new Set(graphData.nodes.filter(n => n.visible).map(n => n.id));
+  for (const [id, el] of _labelElements) {
+    if (!visibleIds.has(id)) {
+      el.remove();
+      _labelElements.delete(id);
+    }
+  }
 }
 
 // ─── Zoom/Pan State ───
@@ -463,18 +519,10 @@ function render() {
       ctx.lineWidth = 2 / zoom.k;
       ctx.stroke();
     }
-
-    // Labels (with progressive disclosure)
-    const labelOpacity = shouldShowLabel(n);
-    if (labelOpacity > 0) {
-      ctx.font = `${(n.type === "spec" ? 14 : 13) / zoom.k}px Inter, sans-serif`;
-      const baseColor = d3.color(color).darker(0.8).formatHex();
-      const fadedColor = d3.color(baseColor).copy({opacity: labelOpacity}).formatHex();
-      ctx.fillStyle = fadedColor;
-      ctx.textAlign = "center";
-      ctx.fillText(n.term || n.label || n.id, n.x, n.y - r - 8 / zoom.k);
-    }
   }
+
+  // Position HTML labels (replaces canvas text rendering)
+  updateHtmlLabels();
 
   // Reset alpha
   ctx.globalAlpha = 1;
