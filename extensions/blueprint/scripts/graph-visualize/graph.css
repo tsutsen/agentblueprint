@@ -223,8 +223,8 @@
     position: absolute; top: 14px; left: 14px;
     display: flex; gap: 6px; z-index: 10;
   }
-  #controls button {
-    padding: 6px inherit;
+  #controls button:not(.dropdown-toggle) {
+    padding: 6px 12px;
     border-radius: 6px;
     background: var(--surface); border: 1px solid var(--border);
     color: var(--btn-text, #888888) !important; font-size: 11px; font-family: inherit;
