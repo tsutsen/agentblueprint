@@ -255,7 +255,7 @@ function onMouseDown(event) {
       isDragging = false;
     } else {
       isPanning = false; // Don't start pan yet, wait to see if mouse moves
-      panStart = { x: event.clientX - zoom.x, y: event.clientY - zoom.y };
+      panStart = { x: event.clientX, y: event.clientY }; // Store initial mouse position
     }
   }
 }
@@ -277,8 +277,8 @@ function onMouseMove(event) {
 
   // Start panning if mouse moved significantly
   if (!draggedNode && !isPanning) {
-    const dx = event.clientX - (panStart.x + zoom.x);
-    const dy = event.clientY - (panStart.y + zoom.y);
+    const dx = event.clientX - panStart.x;
+    const dy = event.clientY - panStart.y;
     if (dx * dx + dy * dy > 25) { // 5px threshold
       isPanning = true;
     }
