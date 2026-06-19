@@ -339,6 +339,11 @@
             "description": "Stable constraint identifier, e.g. 'CON-001'.",
             "pattern": "^CON-\\d{3}$"
           },
+          "name": {
+            "type": "string",
+            "description": "Short descriptive name summarizing this constraint (e.g. 'Dynamic Language Stack').",
+            "minLength": 1
+          },
           "description": {
             "type": "string",
             "description": "The constraint in plain language.",

@@ -222,6 +222,11 @@
           "id": {
             "$ref": "#/definitions/testId"
           },
+          "name": {
+            "type": "string",
+            "description": "Short descriptive name for this test case (e.g. 'Export report as PDF').",
+            "minLength": 1
+          },
           "fnRef": {
             "$ref": "#/definitions/fnRef",
             "description": "The function this test exercises. Must match a function ID in ApiSpec."

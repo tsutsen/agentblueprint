@@ -734,6 +734,11 @@
           "id": {
             "$ref": "#/definitions/uxacId"
           },
+          "name": {
+            "type": "string",
+            "description": "Short descriptive name summarizing this UX acceptance criterion (e.g. 'New Research Session').",
+            "minLength": 1
+          },
           "description": {
             "type": "string",
             "description": "A binary pass/fail UX condition. Must not be subjective.",

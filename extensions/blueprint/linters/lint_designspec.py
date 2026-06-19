@@ -125,7 +125,15 @@ def check_project_and_version(spec: dict, goal: Optional[dict], result: LintResu
 def check_design_goals(spec: dict, result: LintResult):
     goals = spec.get("designGoals", [])
     ids = [g["id"] for g in goals]
-    check_duplicates(ids, "DG", result)
+    check_duplicates(ids, "DCON", result)
+
+    # Validate DCON-NNN-name format
+    for g in goals:
+        gid = g.get("id", "")
+        if not re.match(r"^DCON-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", gid):
+            result.add("error", "dcon_id_format",
+                f"Design goal ID '{gid}' does not follow DCON-NNN-name pattern.",
+                hint="Design goal IDs must follow the pattern 'DCON-NNN-name', e.g. 'DCON-001-MinimizeCognitiveLoad'.")
 
     forbidden = ["database", "api", "endpoint", "framework", "library",
                  "class", "function", "sql", "http", "rest", "json"]
@@ -221,7 +229,16 @@ def check_screen_inventory(spec: dict, ia_screen_refs: set[str],
                             goal: Optional[dict], result: LintResult) -> set[str]:
     screens = spec.get("screenInventory", [])
     ids = [s["id"] for s in screens]
-    check_duplicates(ids, "screen", result)
+    check_duplicates(ids, "SCR", result)
+
+    # Validate SCR-NNN-name format
+    for s in screens:
+        sid = s.get("id", "")
+        if not re.match(r"^SCR-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", sid):
+            result.add("error", "scr_id_format",
+                f"Screen ID '{sid}' does not follow SCR-NNN-name pattern.",
+                hint="Screen IDs must follow the pattern 'SCR-NNN-screenName', e.g. 'SCR-001-landingPage'.")
+
     screen_ids = set(ids)
 
     goal_us_ids = {us["id"] for us in goal.get("userStories", [])} if goal else set()

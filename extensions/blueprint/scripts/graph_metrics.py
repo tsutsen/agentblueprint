@@ -37,7 +37,9 @@ def node_type(id_str: str) -> str:
         return "US"
     if re.match(r'^GL-\d+$', id_str):
         return "GL"
-    if re.match(r'^DG-\d+$', id_str):
+    if re.match(r'^DCON-\d{3}-', id_str):
+        return "DCON"
+    if re.match(r'^DG-\d{3}-', id_str):
         return "DG"
     if re.match(r'^UXAC-\d+$', id_str):
         return "UXAC"
@@ -47,7 +49,11 @@ def node_type(id_str: str) -> str:
         return "AR"
     if re.match(r'^UJ-\d+$', id_str):
         return "UJ"
-    if re.match(r'^CON-\d+$', id_str):
+    if re.match(r'^SCR-\d{3}-', id_str):
+        return "SCR"
+    if re.match(r'^FLW-\d{3}-', id_str):
+        return "FLW"
+    if re.match(r'^CON-\d{3}-', id_str):
         return "CON"
     if re.match(r'^FN-', id_str):
         return "FN"
@@ -63,31 +69,43 @@ def node_type(id_str: str) -> str:
 
 
 def _load_entity_enum_lists(dataspec_path: str):
-    """Load entity and enum name lists from dataspec.json."""
+    """Load entity and enum name lists from dataspec.json.
+    Returns (entity_names, enum_names, entity_id_map, enum_id_map)
+    where *_id_map maps name -> id (e.g. 'ResearchSession' -> 'ENT-001-ResearchSession').
+    """
     entities = set()
     enums = set()
+    entity_id_map = {}  # name -> id
+    enum_id_map = {}    # name -> id
     if not os.path.exists(dataspec_path):
-        return entities, enums
+        return entities, enums, entity_id_map, enum_id_map
     try:
         d = json.load(open(dataspec_path))
         for e in d.get("entities", []):
             if isinstance(e, dict) and "name" in e:
                 entities.add(e["name"])
+                if "id" in e:
+                    entity_id_map[e["name"]] = e["id"]
         for e in d.get("enums", []):
             if isinstance(e, dict) and "name" in e:
                 enums.add(e["name"])
+                if "id" in e:
+                    enum_id_map[e["name"]] = e["id"]
     except Exception:
         pass
-    return entities, enums
+    return entities, enums, entity_id_map, enum_id_map
 
 
 _NODE_TYPE_CACHE = {}
-_ENTITY_ENUMS = None
+_ENTITY_NAMES = None
+_ENUM_NAMES = None
+_ENTITY_ID_MAP = None
+_ENUM_ID_MAP = None
 
 
 def resolve_node_type(id_str: str, dataspec_path: str = None) -> str:
     """Resolve node type, handling Entity/Enum for PascalCase."""
-    global _NODE_TYPE_CACHE, _ENTITY_ENUMS
+    global _NODE_TYPE_CACHE, _ENTITY_NAMES, _ENUM_NAMES, _ENTITY_ID_MAP, _ENUM_ID_MAP
     if id_str in _NODE_TYPE_CACHE:
         return _NODE_TYPE_CACHE[id_str]
     t = node_type(id_str)
@@ -95,13 +113,13 @@ def resolve_node_type(id_str: str, dataspec_path: str = None) -> str:
         _NODE_TYPE_CACHE[id_str] = t
         return t
     # PascalCase: check dataspec for Entity vs Enum
-    if dataspec_path and not _ENTITY_ENUMS:
-        _ENTITY_ENUMS = _load_entity_enum_lists(dataspec_path)
-    if _ENTITY_ENUMS:
-        if id_str in _ENTITY_ENUMS[0]:
+    if dataspec_path and not _ENTITY_NAMES:
+        _ENTITY_NAMES, _ENUM_NAMES, _ENTITY_ID_MAP, _ENUM_ID_MAP = _load_entity_enum_lists(dataspec_path)
+    if _ENTITY_NAMES is not None:
+        if id_str in _ENTITY_NAMES:
             _NODE_TYPE_CACHE[id_str] = "Entity"
             return "Entity"
-        if id_str in _ENTITY_ENUMS[1]:
+        if id_str in _ENUM_NAMES:
             _NODE_TYPE_CACHE[id_str] = "Enum"
             return "Enum"
     # Default for unknown PascalCase
@@ -124,13 +142,18 @@ class Graph:
         self.adj = defaultdict(set)  # outgoing
         self.radj = defaultdict(set)  # incoming
 
-    def add_node(self, node_id: str, ntype: str, label: str, source: str):
+    def add_node(self, node_id: str, ntype: str, label: str, source: str, description: str = None):
         if node_id not in self.nodes:
-            self.nodes[node_id] = {"type": ntype, "label": label, "source_artifact": source}
+            node_data = {"type": ntype, "label": label, "source_artifact": source}
+            if description:
+                node_data["description"] = description
+            self.nodes[node_id] = node_data
         else:
             # Update label if more descriptive
             if label and self.nodes[node_id].get("label") != label:
                 self.nodes[node_id]["label"] = label
+            if description and "description" not in self.nodes[node_id]:
+                self.nodes[node_id]["description"] = description
         _NODE_TYPE_CACHE[node_id] = ntype
 
     def add_edge(self, from_id: str, to_id: str):
@@ -209,20 +232,25 @@ def _extract_id_refs_from_value(value, known_ids: set):
 
 def load_graph(artifacts_dir: str):
     """Build a unified graph from all artifact JSON files."""
+    global _ENTITY_NAMES, _ENUM_NAMES, _ENTITY_ID_MAP, _ENUM_ID_MAP
     g = Graph()
     dataspec_path = os.path.join(artifacts_dir, "DataSpec.json")
-    _ENTITY_ENUMS = _load_entity_enum_lists(dataspec_path)
+    _ENTITY_NAMES, _ENUM_NAMES, _ENTITY_ID_MAP, _ENUM_ID_MAP = _load_entity_enum_lists(dataspec_path)
 
     def add_entity_node(name: str):
-        """Add a PascalCase entity node."""
+        """Add a PascalCase entity node, using the entity's id field if available."""
+        global _ENTITY_NAMES, _ENUM_NAMES, _ENTITY_ID_MAP, _ENUM_ID_MAP
+        # Resolve to entity ID if available
+        node_id = _ENTITY_ID_MAP.get(name, name) if _ENTITY_ID_MAP else name
         ntype = "Entity"
-        if name in _ENTITY_ENUMS[1]:
+        if _ENUM_NAMES and name in _ENUM_NAMES:
             ntype = "Enum"
-        elif name in _ENTITY_ENUMS[0]:
+            node_id = _ENUM_ID_MAP.get(name, name) if _ENUM_ID_MAP else name
+        elif _ENTITY_NAMES and name in _ENTITY_NAMES:
             ntype = "Entity"
         elif name and name[0].isupper() and not '-' in name:
             ntype = "Entity"
-        g.add_node(name, ntype, name, "DataSpec.json")
+        g.add_node(node_id, ntype, name, "DataSpec.json")
 
     def ensure_gl_node(gl_id: str):
         """Ensure a GL node exists (create placeholder if referenced but not in glossary)."""
@@ -238,8 +266,8 @@ def load_graph(artifacts_dir: str):
             if not isinstance(fr, dict):
                 continue
             rid = fr.get("id", "")
-            label = fr.get("description", rid)
-            g.add_node(rid, "REQ", label, "GoalSpec.json")
+            label = fr.get("name", fr.get("description", rid))
+            g.add_node(rid, "REQ", label, "GoalSpec.json", fr.get("description", ""))
             _extract_id_refs_from_value(fr.get("glossaryRefs"), set())
             # Collect edges from glossaryRefs
             for gl in (fr.get("glossaryRefs") or []):
@@ -259,7 +287,7 @@ def load_graph(artifacts_dir: str):
             if not isinstance(us, dict):
                 continue
             uid = us.get("id", "")
-            g.add_node(uid, "US", us.get("capability", uid), "GoalSpec.json")
+            g.add_node(uid, "US", us.get("name", us.get("capability", uid)), "GoalSpec.json", us.get("capability", ""))
             for gl in (us.get("glossaryRefs") or []):
                 if isinstance(gl, str):
                     g.add_edge(uid, gl)
@@ -271,7 +299,7 @@ def load_graph(artifacts_dir: str):
             if not isinstance(sc, dict):
                 continue
             sid = sc.get("id", "")
-            g.add_node(sid, "SC", sc.get("description", sid), "GoalSpec.json")
+            g.add_node(sid, "SC", sc.get("name", sc.get("description", sid)), "GoalSpec.json", sc.get("description", ""))
             for gl in (sc.get("glossaryRefs") or []):
                 if isinstance(gl, str):
                     g.add_edge(sid, gl)
@@ -327,7 +355,7 @@ def load_graph(artifacts_dir: str):
             if not isinstance(con, dict):
                 continue
             cid = con.get("id", "")
-            g.add_node(cid, "CON", con.get("description", cid), "ArchitectureSpec.json")
+            g.add_node(cid, "CON", con.get("name", con.get("description", cid)), "ArchitectureSpec.json", con.get("description", ""))
             for nr in (con.get("nfrRefs") or []):
                 if isinstance(nr, str):
                     g.add_edge(cid, nr)
@@ -348,8 +376,9 @@ def load_graph(artifacts_dir: str):
             # entity (singular string)
             entity = fn.get("entity")
             if isinstance(entity, str) and entity:
+                eid = _ENTITY_ID_MAP.get(entity, entity)
                 add_entity_node(entity)
-                g.add_edge(fid, entity)
+                g.add_edge(fid, eid)
             for gl in (fn.get("glossaryRefs") or []):
                 if isinstance(gl, str):
                     g.add_edge(fid, gl)
@@ -367,7 +396,7 @@ def load_graph(artifacts_dir: str):
             if not isinstance(test, dict):
                 continue
             tid = test.get("id", "")
-            g.add_node(tid, "TST", test.get("description", tid), "TestSpec.json")
+            g.add_node(tid, "TST", test.get("name", test.get("description", tid)), "TestSpec.json", test.get("description", ""))
             fn_ref = test.get("fnRef")
             if isinstance(fn_ref, str) and fn_ref:
                 g.add_edge(tid, fn_ref)
@@ -411,7 +440,7 @@ def load_graph(artifacts_dir: str):
             if not isinstance(uxac, dict):
                 continue
             uid = uxac.get("id", "")
-            g.add_node(uid, "UXAC", uxac.get("description", uid), "DesignSpec.json")
+            g.add_node(uid, "UXAC", uxac.get("name", uxac.get("description", uid)), "DesignSpec.json", uxac.get("description", ""))
             refs = uxac.get("refs")
             if isinstance(refs, dict):
                 for us in (refs.get("usRefs") or []):
@@ -420,12 +449,27 @@ def load_graph(artifacts_dir: str):
             for gl in (uxac.get("glossaryRefs") or []):
                 if isinstance(gl, str):
                     g.add_edge(uid, gl)
+        # designGoals
+        for dg in d.get("designGoals", []):
+            if not isinstance(dg, dict):
+                continue
+            did = dg.get("id", "")
+            g.add_node(did, "DG", dg.get("goal", did), "DesignSpec.json")
+        # designSystem.components
+        for comp in d.get("designSystem", {}).get("components", []):
+            if not isinstance(comp, dict):
+                continue
+            cid = comp.get("id", "")
+            g.add_node(cid, "DCON", comp.get("name", cid), "DesignSpec.json")
+            for gl in (dg.get("glossaryRefs") or []):
+                if isinstance(gl, str):
+                    g.add_edge(did, gl)
         # screenInventory
         for si in d.get("screenInventory", []):
             if not isinstance(si, dict):
                 continue
             sid = si.get("id", "")
-            g.add_node(sid, "DG", si.get("name", sid), "DesignSpec.json")
+            g.add_node(sid, "SCR", si.get("name", sid), "DesignSpec.json")
             for us in (si.get("usRefs") or []):
                 if isinstance(us, str):
                     g.add_edge(sid, us)
@@ -446,19 +490,21 @@ def load_graph(artifacts_dir: str):
             if not isinstance(ent, dict):
                 continue
             name = ent.get("name", "")
+            eid = ent.get("id", name)
             add_entity_node(name)
             for gl in (ent.get("glossaryRefs") or []):
                 if isinstance(gl, str):
-                    g.add_edge(name, gl)
+                    g.add_edge(eid, gl)
         # enums
         for en in d.get("enums", []):
             if not isinstance(en, dict):
                 continue
             name = en.get("name", "")
+            eid = en.get("id", name)
             add_entity_node(name)
             for gl in (en.get("glossaryRefs") or []):
                 if isinstance(gl, str):
-                    g.add_edge(name, gl)
+                    g.add_edge(eid, gl)
         # relationships (Entity → Entity)
         for rel in d.get("relationships", []):
             if not isinstance(rel, dict):
@@ -466,9 +512,11 @@ def load_graph(artifacts_dir: str):
             from_e = rel.get("from", "")
             to_e = rel.get("to", "")
             if isinstance(from_e, str) and from_e and isinstance(to_e, str) and to_e:
+                from_eid = _ENTITY_ID_MAP.get(from_e, from_e)
+                to_eid = _ENTITY_ID_MAP.get(to_e, to_e)
                 add_entity_node(from_e)
                 add_entity_node(to_e)
-                g.add_edge(from_e, to_e)
+                g.add_edge(from_eid, to_eid)
         # top-level glossaryRefs
         for gl in (d.get("glossaryRefs") or []):
             if isinstance(gl, str):
@@ -838,7 +886,7 @@ ALLOWED_EDGES = {
     ("UXAC", "FN"), ("UXAC", "CON"),
     ("UXAC", "Entity"), ("UXAC", "TST"),
     ("UXAC", "US"), ("UXAC", "SC"),
-    ("UXAC", "DG"), ("UXAC", "VDR"), ("UXAC", "AR"),
+    ("UXAC", "DCON"), ("UXAC", "VDR"), ("UXAC", "AR"),
     # Data
     ("Entity", "Entity"), ("Entity", "GL"),
     ("Entity", "FN"),
@@ -846,7 +894,7 @@ ALLOWED_EDGES = {
     ("GL", "GL"),
     # Misc
     ("SC", "REQ"), ("SC", "GL"), ("SC", "SC"),
-    ("DG", "US"), ("DG", "GL"), ("DG", "NFR"),
+    ("DCON", "US"), ("DCON", "GL"), ("DCON", "NFR"),
     ("VDR", "NFR"), ("VDR", "GL"), ("VDR", "REQ"),
     ("AR", "GL"), ("AR", "CON"), ("AR", "NFR"),
     ("AR", "US"), ("AR", "REQ"),
@@ -1144,7 +1192,7 @@ def main():
     if args.dump_graph:
         graph_dump = {
             "nodes": [
-                {"id": nid, "type": info["type"], "label": info.get("label", nid), "source": info.get("source", "")}
+                {"id": nid, "type": info["type"], "label": info.get("label", nid), "source": info.get("source", ""), "description": info.get("description", "")}
                 for nid, info in g.nodes.items()
             ],
             "edges": [

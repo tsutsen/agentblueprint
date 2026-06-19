@@ -20,6 +20,16 @@
       "type": "string",
       "description": "Glossary term identifier (GL-NNN).",
       "pattern": "^GL-\\d{3}$"
+    },
+    "entityId": {
+      "type": "string",
+      "description": "Entity identifier (ENT-NNN-entityName).",
+      "pattern": "^ENT-\\d{3}-[A-Z][A-Za-z0-9]*$"
+    },
+    "enumId": {
+      "type": "string",
+      "description": "Enum identifier (NUM-NNN-enumName).",
+      "pattern": "^NUM-\\d{3}-[A-Z][A-Za-z0-9]*$"
     }
   },
 
@@ -69,6 +79,9 @@
         ],
         "additionalProperties": false,
         "properties": {
+          "id": {
+            "$ref": "#/definitions/enumId"
+          },
           "name": {
             "type": "string",
             "description": "PascalCase enum name.",
@@ -114,6 +127,9 @@
         ],
         "additionalProperties": false,
         "properties": {
+          "id": {
+            "$ref": "#/definitions/entityId"
+          },
           "name": {
             "type": "string",
             "description": "PascalCase entity name.",

@@ -182,7 +182,7 @@ def build_graph_data(artifacts_dir: str) -> dict:
     # Node type display names and categories
     TYPE_INFO = {
         "REQ": {"label": "Requirement", "cat": "req", "color": "#38bdf8"},
-        "NFR": {"label": "Non-Functional Req", "cat": "req", "color": "#7dd3fc"},
+        "NFR": {"label": "Non-Functional Req", "cat": "nfr", "color": "#7dd3fc"},
         "CON": {"label": "Component", "cat": "con", "color": "#a78bfa"},
         "FN": {"label": "Function", "cat": "fn", "color": "#34d399"},
         "IS": {"label": "Integration Test", "cat": "test", "color": "#fb923c"},
@@ -192,8 +192,10 @@ def build_graph_data(artifacts_dir: str) -> dict:
         "UJ": {"label": "User Journey", "cat": "design", "color": "#c084fc"},
         "US": {"label": "User Story", "cat": "design", "color": "#a78bfa"},
         "UXAC": {"label": "UX Acceptance Criteria", "cat": "design", "color": "#8b5cf6"},
-        "DG": {"label": "Design Goal", "cat": "design", "color": "#60a5fa"},
-        "SC": {"label": "Screen", "cat": "design", "color": "#38bdf8"},
+        "DG": {"label": "Design Guideline", "cat": "design", "color": "#60a5fa"},
+        "DCON": {"label": "Design Component", "cat": "design", "color": "#4ade80"},
+        "SC": {"label": "Success Criteria", "cat": "design", "color": "#38bdf8"},
+        "SCR": {"label": "Screen", "cat": "design", "color": "#38bdf8"},
         "Entity": {"label": "Entity", "cat": "data", "color": "#4ade80"},
         "Enum": {"label": "Enum", "cat": "data", "color": "#22d3ee"},
         "API": {"label": "API Endpoint", "cat": "api", "color": "#f472b6"},
@@ -201,6 +203,66 @@ def build_graph_data(artifacts_dir: str) -> dict:
         "TASK": {"label": "Task", "cat": "plan", "color": "#f59e0b"},
         "ISSUE": {"label": "Issue", "cat": "plan", "color": "#ef4444"},
     }
+
+    # Compute degree and centrality from all edges
+    from collections import Counter
+    degree_map = Counter()
+    for edge in raw_edges:
+        degree_map[edge["source"]] += 1
+        degree_map[edge["target"]] += 1
+
+    # Compute centrality for ALL nodes (degree / (total_nodes - 1))
+    total_nodes = len(raw_nodes)
+    centrality_map = {}
+    if total_nodes > 1:
+        for nid in degree_map:
+            centrality_map[nid] = degree_map[nid] / (total_nodes - 1)
+
+    # Load all metrics from graph_metrics.py
+    metrics_map = {}
+    try:
+        metrics_result = subprocess.run(
+            ["python3", str(GRAPH_METRICS_SCRIPT), "--artifacts", artifacts_dir, "--format", "json"],
+            capture_output=True, text=True, timeout=60,
+        )
+        if metrics_result.returncode in (0, 1):
+            metrics_data = json.loads(metrics_result.stdout.strip())
+
+            # blast_radius: node -> total blast radius
+            blast_map = {}
+            for entry in metrics_data.get("blast_radius", []):
+                blast_map[entry["node"]] = entry.get("total", 0)
+
+            # risk_scores: list of {node, risk, volume, centrality, tests}
+            risk_map = {}
+            for entry in metrics_data.get("risk_scores", []):
+                risk_map[entry["node"]] = {
+                    "risk": entry.get("risk", 0),
+                    "volume": entry.get("volume", 0),
+                    "centrality": entry.get("centrality", 0),
+                    "tests": entry.get("tests", 0),
+                }
+
+            # responsibility_load: per_component -> total load (sum of counts)
+            raw_resp = metrics_data.get("responsibility_load", {}).get("per_component", {})
+            resp_map = {k: sum(v.values()) for k, v in raw_resp.items()}
+
+            # interface_pressure: per_component -> pressure value
+            raw_iface = metrics_data.get("interface_pressure", {}).get("per_component", {})
+            iface_map = {k: v.get("pressure", 0) for k, v in raw_iface.items()}
+
+            # orphans: orphan_gl, orphan_con, etc. -> set of orphan node IDs
+            orphan_set = set()
+            for key, nodes_list in metrics_data.get("orphans", {}).items():
+                if isinstance(nodes_list, list):
+                    orphan_set.update(nodes_list)
+
+            debug(f"Loaded metrics: blast={len(blast_map)}, risk={len(risk_map)}, resp={len(resp_map)}, iface={len(iface_map)}, orphans={len(orphan_set)}")
+        else:
+            blast_map, risk_map, resp_map, iface_map, orphan_set = {}, {}, {}, {}, set()
+    except Exception as e:
+        debug(f"Failed to load metrics: {e}")
+        blast_map, risk_map, resp_map, iface_map, orphan_set = {}, {}, {}, {}, set()
 
     # Build enriched nodes
     nodes = []
@@ -212,6 +274,7 @@ def build_graph_data(artifacts_dir: str) -> dict:
         # Enrich GL nodes with glossary metadata
         if ntype == "GL" and nid in term_map:
             tinfo = term_map[nid]
+            risk = risk_map.get(nid, {})
             nodes.append({
                 "id": nid,
                 "term": tinfo.get("term", nid),
@@ -222,19 +285,38 @@ def build_graph_data(artifacts_dir: str) -> dict:
                 "typeCat": info["cat"],
                 "color": info["color"],
                 "relatedCount": len(related_map.get(nid, [])),
+                "degree": degree_map.get(nid, 0),
+                "blastRadius": blast_map.get(nid, 0),
+                "risk": risk.get("risk", 0),
+                "volume": risk.get("volume", 0),
+                "centrality": centrality_map.get(nid, 0),
+                "tests": risk.get("tests", 0),
+                "responsibility": resp_map.get(nid, 0),
+                "interfacePressure": iface_map.get(nid, 0),
+                "isOrphan": nid in orphan_set,
                 "label": tinfo.get("term", nid),
             })
         else:
+            risk = risk_map.get(nid, {})
             nodes.append({
                 "id": nid,
                 "term": node.get("label", nid),
-                "definition": "",
+                "definition": node.get("description", ""),
                 "category": info["cat"],
                 "type": ntype,
                 "typeLabel": info["label"],
                 "typeCat": info["cat"],
                 "color": info["color"],
                 "relatedCount": 0,
+                "degree": degree_map.get(nid, 0),
+                "blastRadius": blast_map.get(nid, 0),
+                "risk": risk.get("risk", 0),
+                "volume": risk.get("volume", 0),
+                "centrality": centrality_map.get(nid, 0),
+                "tests": risk.get("tests", 0),
+                "responsibility": resp_map.get(nid, 0),
+                "interfacePressure": iface_map.get(nid, 0),
+                "isOrphan": nid in orphan_set,
                 "label": node.get("label", nid),
             })
 

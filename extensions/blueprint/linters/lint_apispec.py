@@ -4,7 +4,7 @@ lint_apispec.py — Validate an ApiSpec JSON against its schema and semantic rul
 
 What this catches that JSON Schema alone cannot:
   - Duplicate function IDs
-  - Function IDs not following FN-<camelCase> pattern
+  - Function IDs not following FN-NNN-<camelCase> pattern
   - Function names not following camelCase
   - Parameter names not following camelCase
   - Error codes not following SCREAMING_SNAKE_CASE
@@ -92,11 +92,11 @@ def check_functions(spec: dict, result: LintResult) -> Set[str]:
         fid = fn["id"]
         fn_ids.add(fid)
 
-        # Function ID must follow FN-<camelCase>
-        if not re.match(r"^FN-[a-z][A-Za-z0-9]*$", fid):
+        # Function ID must follow FN-NNN-<camelCase>
+        if not re.match(r"^FN-\d{3}-[a-z][A-Za-z0-9]*$", fid):
             result.add("error", "fn_id_format",
-                f"Function ID '{fid}' does not follow FN-<camelCase>.",
-                hint="Function IDs must start with 'FN-' followed by a lowercase camelCase word, e.g. 'FN-createUser'.")
+                f"Function ID '{fid}' does not follow FN-NNN-<camelCase>.",
+                hint="Function IDs must follow the pattern 'FN-NNN-functionName', e.g. 'FN-001-createUser'.")
 
         # Function name must be camelCase
         fname = fn.get("name", "")

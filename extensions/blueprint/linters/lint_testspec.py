@@ -5,7 +5,8 @@ Optionally cross-checks against ApiSpec for fnRef and errorCode resolution.
 
 What this catches beyond JSON Schema:
   - Duplicate test IDs
-  - Test ID format inconsistent with fnRef (T-createUser-001 must ref fn_createUser)
+  - Test ID format inconsistent with fnRef (TST-NNN-testName must ref FN-NNN-testName)
+  - Test IDs not following TST-NNN-testName pattern
   - error-path tests missing errorCode
   - happy-path / edge-case tests missing expectedOutput
   - fnRefs that don't exist in ApiSpec
@@ -88,7 +89,12 @@ def has_placeholder(value) -> bool:
 
 
 def fn_name_from_id(fn_id: str) -> str:
-    """FN-createUser → createUser"""
+    """FN-001-createUser → createUser, or FN-createUser → createUser"""
+    # New format: FN-NNN-testName
+    match = re.match(r"^FN-\d{3}-(.+)$", fn_id)
+    if match:
+        return match.group(1)
+    # Legacy format: FN-testName
     if fn_id.startswith("FN-"):
         return fn_id[3:]
     if fn_id.startswith("fn_"):
@@ -97,7 +103,12 @@ def fn_name_from_id(fn_id: str) -> str:
 
 
 def expected_test_prefix(fn_id: str) -> str:
-    """FN-createUser → TST-createUser"""
+    """FN-001-createUser → TST-001-createUser, or FN-createUser → TST-createUser"""
+    # New format: FN-NNN-testName
+    match = re.match(r"^FN-(\d{3})-(.+)$", fn_id)
+    if match:
+        return f"TST-{match.group(1)}-{match.group(2)}"
+    # Legacy format: FN-testName
     return f"TST-{fn_name_from_id(fn_id)}"
 
 
@@ -112,6 +123,20 @@ def check_duplicate_ids(spec: dict, result: LintResult):
                 f"Duplicate test id '{tid}'.",
                 hint="Each test must have a unique ID.")
         seen.add(tid)
+
+
+def check_test_id_format(spec: dict, result: LintResult):
+    """Test IDs must follow TST-NNN-testName pattern."""
+    for t in spec.get("tests", []):
+        tid = t.get("id", "")
+        if not tid:
+            result.add("error", "test_missing_id",
+                f"Test is missing an 'id' field.",
+                hint="Add an ID in the format 'TST-NNN-testName', e.g. 'TST-001-exportReportAsPDF'.")
+        elif not re.match(r"^TST-\d{3}-[a-z][A-Za-z0-9]*$", tid):
+            result.add("error", "test_id_format",
+                f"Test ID '{tid}' does not follow TST-NNN-testName pattern.",
+                hint="Test IDs must follow the pattern 'TST-NNN-testName', e.g. 'TST-001-exportReportAsPDF'.")
 
 
 def check_id_fn_consistency(spec: dict, result: LintResult):
@@ -387,6 +412,7 @@ def run_lint(spec: dict, schema_path: Optional[Path],
             hint="pip install jsonschema")
 
     check_duplicate_ids(spec, result)
+    check_test_id_format(spec, result)
     check_id_fn_consistency(spec, result)
     check_category_rules(spec, result)
     check_placeholder_values(spec, result)

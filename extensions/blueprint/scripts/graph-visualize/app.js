@@ -109,17 +109,5 @@ async function loadGraphData() {
   startTime = performance.now();
   tickCount = 0;
 
-  // Compute actual data ranges for size normalization
-  let maxRelated = 0, maxDegree = 0;
-  for (const n of graphData.nodes) {
-    const rc = n.relatedCount || 0;
-    const deg = n.degree || 0;
-    if (rc > maxRelated) maxRelated = rc;
-    if (deg > maxDegree) maxDegree = deg;
-  }
-  sizeRange.relatedCount = [0, Math.max(1, maxRelated)];
-  sizeRange.degree = [0, Math.max(1, maxDegree)];
-  console.log('Size ranges:', sizeRange);
-
   initGraph();
 }

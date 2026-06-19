@@ -212,7 +212,15 @@ def check_subsystems(spec: dict, component_ids: set[str], result: LintResult):
 def check_data_flows(spec: dict, component_ids: set[str], result: LintResult):
     flows = spec.get("dataFlow", [])
     ids = [f["id"] for f in flows]
-    check_duplicates(ids, "dataFlow", result)
+    check_duplicates(ids, "FLW", result)
+
+    # Validate FLW-NNN-name format
+    for flow in flows:
+        fid = flow.get("id", "")
+        if not re.match(r"^FLW-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", fid):
+            result.add("error", "flw_id_format",
+                f"Flow ID '{fid}' does not follow FLW-NNN-name pattern.",
+                hint="Flow IDs must follow the pattern 'FLW-NNN-flowName', e.g. 'FLW-001-sessionCreationSearchTags'.")
 
     for flow in flows:
         fid = flow["id"]
@@ -235,7 +243,15 @@ def check_data_flows(spec: dict, component_ids: set[str], result: LintResult):
 def check_constraints(spec: dict, result: LintResult):
     constraints = spec.get("constraints", [])
     ids = [c["id"] for c in constraints]
-    check_duplicates(ids, "constraint", result)
+    check_duplicates(ids, "CON", result)
+
+    # Validate CON-NNN-name format
+    for con in constraints:
+        cid = con.get("id", "")
+        if not re.match(r"^CON-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", cid):
+            result.add("error", "con_id_format",
+                f"Constraint ID '{cid}' does not follow CON-NNN-name pattern.",
+                hint="Constraint IDs must follow the pattern 'CON-NNN-name', e.g. 'CON-001-SystemMustBeImplemented'.")
 
     # Implementation smells in constraints
     impl_smells = ["postgres", "mysql", "redis", "sqlite", "mongodb", "fastapi",

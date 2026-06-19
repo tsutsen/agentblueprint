@@ -52,7 +52,7 @@ function initUI() {
     const div = document.createElement('div');
     div.className = 'term-list-item';
     div.dataset.nodeId = n.id;
-    const idDisplay = (n.type === 'spec' || n.category === 'spec') ? 'SPEC' : n.id;
+    const idDisplay = (n.type === 'spec' || n.category === 'spec') ? 'SPEC' : n.id.split('-').slice(0, 2).join('-');
     const catDisplay = n.typeLabel || n.type || n.category || 'unknown';
     div.innerHTML = `
       <div class="item-id">${idDisplay}</div>
@@ -89,6 +89,8 @@ function initUI() {
   sizeSelect.addEventListener('change', (e) => {
     sizeMetric = e.target.value;
     console.log('Size metric changed to:', sizeMetric);
+    if (typeof recalcSizeRange === 'function') recalcSizeRange();
+    if (typeof startScaleAnimation === 'function') startScaleAnimation();
     if (typeof render === 'function') render();
   });
 
@@ -180,8 +182,8 @@ function applyFilters() {
     el.style.display = node && node.visible ? 'block' : 'none';
   });
 
-  // Re-render canvas
-  if (typeof render === 'function') render();
+  // Trigger scale animation (it internally calls recalcSizeRange and computes connectedSet)
+  if (typeof startScaleAnimation === 'function') startScaleAnimation();
 }
 
 // ─── Zoom ───
@@ -220,6 +222,9 @@ function selectNode(event, d) {
   // Canvas rendering handles highlighting in render()
   animateDim(0.15); // Animate to dimmed state
 
+  // Trigger scale animation for node size transitions
+  if (typeof startScaleAnimation === 'function') startScaleAnimation();
+
   showDetail(d);
 
   document.querySelectorAll('.term-list-item').forEach(el => {
@@ -232,12 +237,15 @@ function deselectNode() {
   document.querySelectorAll('.term-list-item').forEach(el => el.classList.remove('active'));
   document.getElementById('detail-panel').classList.remove('visible');
   animateDim(1); // Animate to full opacity
+
+  if (typeof startScaleAnimation === 'function') startScaleAnimation();
 }
 
 function showDetail(d) {
   const panel = document.getElementById('detail-panel');
-  document.getElementById('detail-id').textContent = (d.type === 'spec' || d.category === 'spec') ? 'SPEC' : d.id;
-  document.getElementById('detail-name').textContent = d.term || d.label || d.id;
+  const shortId = (d.type === 'spec' || d.category === 'spec') ? 'SPEC' : d.id.split('-').slice(0, 2).join('-');
+  const displayName = d.term || d.label || d.id;
+  document.getElementById('detail-name').innerHTML = `${displayName} <span class="term-id">[${shortId}]</span>`;
 
   const catBadge = document.getElementById('detail-category');
   // Show typeLabel for new format, category for legacy

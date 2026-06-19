@@ -22,7 +22,9 @@ const MIME_TYPES = {
 };
 
 function serveStatic(req, res) {
-  let filePath = req.url === '/' ? '/index.html' : req.url;
+  // Strip query string for file path resolution
+  const cleanUrl = req.url.split('?')[0];
+  let filePath = cleanUrl === '/' ? '/index.html' : cleanUrl;
   filePath = path.join(STATIC_DIR, filePath);
 
   // Prevent directory traversal

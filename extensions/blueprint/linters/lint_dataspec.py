@@ -90,6 +90,17 @@ def check_entities(spec: dict, enums: list, result: LintResult) -> Set[str]:
     entity_map: dict = {}
 
     for entity in entities:
+        # Entity must have an ID in the format ENT-NNN-entityName
+        eid = entity.get("id", "")
+        if not eid:
+            result.add("error", "entity_missing_id",
+                f"Entity '{entity.get('name', '<unknown>')}'' is missing an 'id' field.",
+                hint="Add an ID in the format 'ENT-NNN-entityName', e.g. 'ENT-001-ResearchSession'.")
+        elif not re.match(r"^ENT-\d{3}-[A-Z][A-Za-z0-9]*$", eid):
+            result.add("error", "entity_id_format",
+                f"Entity '{entity.get('name', '<unknown>')}'' has invalid ID format: '{eid}'.",
+                hint="Entity IDs must follow the pattern 'ENT-NNN-entityName', e.g. 'ENT-001-ResearchSession'.")
+
         name = entity["name"]
         entity_names.add(name)
         entity_map[name] = entity
@@ -162,6 +173,17 @@ def check_enums(spec: dict, result: LintResult) -> Set[str]:
     enum_names: Set[str] = set()
 
     for enum in enums:
+        # Enum must have an ID in the format NUM-NNN-enumName
+        eid = enum.get("id", "")
+        if not eid:
+            result.add("error", "enum_missing_id",
+                f"Enum '{enum.get('name', '<unknown>')}'' is missing an 'id' field.",
+                hint="Add an ID in the format 'NUM-NNN-enumName', e.g. 'NUM-001-EvidenceType'.")
+        elif not re.match(r"^NUM-\d{3}-[A-Z][A-Za-z0-9]*$", eid):
+            result.add("error", "enum_id_format",
+                f"Enum '{enum.get('name', '<unknown>')}'' has invalid ID format: '{eid}'.",
+                hint="Enum IDs must follow the pattern 'NUM-NNN-enumName', e.g. 'NUM-001-EvidenceType'.")
+
         ename = enum["name"]
         enum_names.add(ename)
 
