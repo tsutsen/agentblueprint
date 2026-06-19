@@ -352,19 +352,26 @@ function getNodeRadius(d) {
 
   // Size based on selected metric
   let value = 0;
+  let minVal = 0;
+  let maxVal = 1;
+
   if (sizeMetric === 'relatedCount') {
     value = d.relatedCount || 0;
+    minVal = 0;
+    maxVal = 100;
   } else if (sizeMetric === 'degree') {
     value = d.degree || 0;
+    minVal = 0;
+    maxVal = 50;
   } else if (sizeMetric === 'type') {
-    // Size by type category
-    const typeSizes = { CON: 12, FN: 10, REQ: 9, US: 9, SC: 8, Entity: 8, GL: 7, TST: 6, Enum: 6, API: 8, EP: 10, TASK: 7, ISSUE: 8, DG: 7, UJ: 8, UXAC: 8, NFR: 9, IS: 8, spec: 10 };
-    value = typeSizes[d.type] || 5;
+    // Size by type category - use small fixed range
+    const typeSizes = { CON: 3, FN: 2.5, REQ: 2.2, US: 2.2, SC: 2, Entity: 2, GL: 1.8, TST: 1.5, Enum: 1.5, API: 2, EP: 2.5, TASK: 1.7, ISSUE: 2, DG: 1.7, UJ: 2, UXAC: 2, NFR: 2.2, IS: 2, spec: 2.5 };
+    value = typeSizes[d.type] || 1;
+    minVal = 1;
+    maxVal = 3;
   }
 
   // Normalize: min 5px, max 45px with sqrt scaling
-  const minVal = sizeMetric === 'type' ? 5 : 0;
-  const maxVal = sizeMetric === 'type' ? 12 : (sizeMetric === 'degree' ? 50 : 100);
   const normalized = maxVal === minVal ? 0 : (value - minVal) / (maxVal - minVal);
   const r = Math.max(5, Math.min(45, 5 + Math.sqrt(normalized) * 40));
   return r;
