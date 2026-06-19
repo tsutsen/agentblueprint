@@ -45,6 +45,7 @@ function initGraph() {
   for (const n of graphData.nodes) nodeMap.set(n.id, n);
   validEdges = [];
   for (const e of graphData.edges) {
+    e.visible = true; // Initialize edge visibility
     const srcId = typeof e.source === 'object' ? e.source.id : e.source;
     const tgtId = typeof e.target === 'object' ? e.target.id : e.target;
     const srcNode = nodeMap.get(srcId);
