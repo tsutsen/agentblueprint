@@ -257,7 +257,7 @@ function onMouseDown(event) {
       isDragging = false;
     } else {
       isPanning = false; // Don't start pan yet, wait to see if mouse moves
-      panStart = { x: event.clientX, y: event.clientY }; // Store initial mouse position
+      panStart = { x: event.clientX - zoom.x, y: event.clientY - zoom.y };
     }
   }
 }
