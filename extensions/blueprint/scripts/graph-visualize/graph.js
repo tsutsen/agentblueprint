@@ -112,13 +112,6 @@ function initGraph() {
       .on('drag', dragged)
       .on('end', dragEnded));
 
-  function getNodeColor(d) {
-    // New format: use TYPE_COLORS for node types
-    if (d.type && TYPE_COLORS[d.type]) return TYPE_COLORS[d.type];
-    // Legacy format: use CATEGORY_COLORS
-    return getComputedStyle(document.documentElement).getPropertyValue(`--${d.category || 'other'}`).trim() || '#94a3b8';
-  }
-
   function getNodeRadius(d) {
     if (d.type === 'spec' || d.category === 'spec') return 10;
     const totalConn = (d.specRefCount || 0) + (d.relatedCount || 0);
@@ -170,12 +163,14 @@ function initGraph() {
   }
 
   // Static layout — place nodes in concentric circles by category
-  const categories = [...new Set(graphData.nodes.map(n => n.typeCat || n.category || 'other'))];
   const catMap = {};
-  const catGroups = categories.map(c => []);
-  graphData.nodes.forEach((n, i) => {
+  const catGroups = [];
+  graphData.nodes.forEach(n => {
     const cat = n.typeCat || n.category || 'other';
-    if (!catMap[cat]) catMap[cat] = catGroups.length;
+    if (!catMap[cat]) {
+      catMap[cat] = catGroups.length;
+      catGroups.push([]);
+    }
     catGroups[catMap[cat]].push(n);
   });
 
@@ -268,6 +263,11 @@ function dragEnded(event, d) {
 }
 
 // ─── Theme Update ───
+function getNodeColor(d) {
+  if (d.type && TYPE_COLORS[d.type]) return TYPE_COLORS[d.type];
+  return '#94a3b8';
+}
+
 function updateThemeColors() {
   if (link) {
     link.attr('stroke', EDGE_COLOR);

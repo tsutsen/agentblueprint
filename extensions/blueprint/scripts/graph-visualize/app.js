@@ -66,7 +66,6 @@ async function initApp() {
       width = container.clientWidth;
       height = container.clientHeight;
       svg.attr('width', width).attr('height', height);
-      simulation.force('center', d3.forceCenter(width / 2, height / 2));
     });
 
     // Escape to deselect
