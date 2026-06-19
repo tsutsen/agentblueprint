@@ -218,6 +218,7 @@ function selectNode(event, d) {
   }
 
   // Canvas rendering handles highlighting in render()
+  animateDim(0.15); // Animate to dimmed state
 
   showDetail(d);
 
@@ -230,7 +231,7 @@ function deselectNode() {
   selectedNode = null;
   document.querySelectorAll('.term-list-item').forEach(el => el.classList.remove('active'));
   document.getElementById('detail-panel').classList.remove('visible');
-  if (typeof render === 'function') render();
+  animateDim(1); // Animate to full opacity
 }
 
 function showDetail(d) {

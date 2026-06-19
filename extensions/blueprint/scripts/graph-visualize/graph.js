@@ -141,9 +141,9 @@ function render() {
     ctx.lineWidth = 0.6 / zoom.k;
     // Dim edges if not connected to selected node
     if (connectedEdges && !connectedEdges.has(e)) {
-      ctx.globalAlpha = 0.05;
+      ctx.globalAlpha = 0.05 * currentDim + 0.3 * (1 - currentDim);
     } else {
-      ctx.globalAlpha = 0.5;
+      ctx.globalAlpha = 0.5 * currentDim + 0.3 * (1 - currentDim);
     }
     ctx.stroke();
   }
@@ -162,7 +162,7 @@ function render() {
 
     // Dim non-connected nodes when one is selected
     if (connectedSet && !isConnected) {
-      ctx.globalAlpha = 0.15;
+      ctx.globalAlpha = 0.15 * currentDim + 1 * (1 - currentDim);
     } else {
       ctx.globalAlpha = 1;
     }
@@ -358,6 +358,8 @@ let hoveredNode = null;
 let isSimulating = false;
 let simulation = null;
 let sizeMetric = 'relatedCount'; // Default sizing metric
+let dimAnimation = null; // Animation frame for dimming
+let currentDim = 1; // Current dim opacity (1 = full, 0.15 = dimmed)
 
 // ─── Simulation Control ───
 function toggleSimulation() {
@@ -392,3 +394,24 @@ function updateThemeColors() {
 
 window.updateThemeColors = updateThemeColors;
 window.toggleSimulation = toggleSimulation;
+
+// ─── Dim Animation ───
+function animateDim(target) {
+  if (dimAnimation) cancelAnimationFrame(dimAnimation);
+  const start = performance.now();
+  const from = currentDim;
+  const duration = 400; // ms
+
+  function step(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    // Ease out cubic
+    const ease = 1 - Math.pow(1 - progress, 3);
+    currentDim = from + (target - from) * ease;
+    render();
+    if (progress < 1) {
+      dimAnimation = requestAnimationFrame(step);
+    }
+  }
+  dimAnimation = requestAnimationFrame(step);
+}
