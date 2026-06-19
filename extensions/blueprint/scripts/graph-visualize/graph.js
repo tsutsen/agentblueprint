@@ -1,11 +1,9 @@
-
 // ─── Graph State ───
 let graphData = null;
 let validEdges = null;
-let svg, g, linkGroup, nodeGroup, labelsG;
-let link, node, labelText;
+let canvas, ctx;
 let selectedNode = null;
-let showLabels = true;
+let showLabels = false;
 let showSpecs = true;
 let tickCount = 0;
 let startTime = 0;
@@ -13,28 +11,28 @@ let activeCategories = new Set();
 let searchTerm = '';
 let width, height;
 let draggedNode = null;
-let dragTargetX = 0, dragTargetY = 0;
-let dragStartX = 0, dragStartY = 0;
 let isDragging = false;
 
-// ─── Zoom ───
-let zoom;
+// ─── Zoom/Pan State ───
+let zoom = { x: 0, y: 0, k: 1 };
+let isPanning = false;
+let panStart = { x: 0, y: 0 };
 
 // ─── Init graph ───
 function initGraph() {
-
   const container = document.getElementById('graph-container');
   width = container.clientWidth;
   height = container.clientHeight;
 
+  canvas = document.getElementById('graph-canvas');
+  canvas.width = width * window.devicePixelRatio;
+  canvas.height = height * window.devicePixelRatio;
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
+  ctx = canvas.getContext('2d');
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
-  svg = d3.select('#graph-svg')
-    .attr('width', width)
-    .attr('height', height);
-
-
-
-  // ── Pre-resolve edges: filter dangling refs, resolve string IDs to node objects ──
+  // ── Pre-resolve edges ──
   const nodeMap = new Map();
   for (const n of graphData.nodes) nodeMap.set(n.id, n);
   validEdges = [];
@@ -43,127 +41,13 @@ function initGraph() {
     const tgtId = typeof e.target === 'object' ? e.target.id : e.target;
     const srcNode = nodeMap.get(srcId);
     const tgtNode = nodeMap.get(tgtId);
-    if (!srcNode || !tgtNode) {
-      console.warn(`Skipping edge: ${srcId} -> ${tgtId} (missing node)`);
-      continue;
-    }
+    if (!srcNode || !tgtNode) continue;
     e.source = srcNode;
     e.target = tgtNode;
     validEdges.push(e);
   }
 
-
-  const defs = svg.append('defs');
-
-  // Grid pattern
-  const pattern = defs.append('pattern')
-    .attr('id', 'grid')
-    .attr('width', 40)
-    .attr('height', 40)
-    .attr('patternUnits', 'userSpaceOnUse');
-  pattern.append('path')
-    .attr('d', 'M 40 0 L 0 0 0 40')
-    .attr('fill', 'none')
-    .attr('stroke', 'rgba(255,255,255,0.02)')
-    .attr('stroke-width', 0.5);
-
-  svg.append('rect')
-    .attr('width', width)
-    .attr('height', height)
-    .attr('fill', 'url(#grid)');
-
-  // ── Zoom ──
-  zoom = d3.zoom()
-    .scaleExtent([0.05, 8])
-    .on('zoom', (event) => {
-      g.attr('transform', event.transform);
-      const k = event.transform.k;
-      labelsG.selectAll('text')
-        .attr('font-size', d => {
-          const base = d.category === 'spec' ? 10 : 9;
-          return Math.max(base / Math.sqrt(k), 6);
-        });
-    });
-  svg.call(zoom);
-
-  g = svg.append('g');
-
-  // ── Labels group ──
-  labelsG = g.append('g').attr('class', 'labels');
-
-  // ── Links ──
-  linkGroup = g.append('g').attr('class', 'links');
-  link = linkGroup.selectAll('line')
-    .data(validEdges)
-    .join('line')
-    .attr('stroke', EDGE_COLOR)
-    .attr('stroke-width', 0.8)
-    .attr('opacity', 0.5);
-
-  // ── Nodes ──
-  nodeGroup = g.append('g').attr('class', 'nodes');
-  node = nodeGroup.selectAll('g')
-    .data(graphData.nodes)
-    .join('g')
-    .attr('class', 'node')
-    .call(d3.drag()
-      .clickDistance(20)
-      .on('start', dragStart)
-      .on('drag', dragged)
-      .on('end', dragEnded));
-
-  function getNodeRadius(d) {
-    if (d.type === 'spec' || d.category === 'spec') return 10;
-    const totalConn = (d.specRefCount || 0) + (d.relatedCount || 0);
-    return Math.max(4, Math.min(12, 3 + totalConn * 0.6));
-  }
-
-  node.append('circle')
-    .attr('r', d => getNodeRadius(d))
-    .attr('fill', d => getNodeColor(d))
-    .attr('stroke', d => d3.color(getNodeColor(d)).darker(0.8).formatHex())
-    .attr('stroke-width', 1)
-    .on('click', (event, d) => { event.stopPropagation(); selectNode(event, d); });
-
-  node.on('mouseenter', function(event, d) {
-    if (selectedNode && selectedNode.id === d.id) return;
-    d3.select(this).select('circle')
-      .transition().duration(100)
-      .attr('stroke', '#fff').attr('stroke-width', 2);
-  }).on('mouseleave', function(event, d) {
-    if (selectedNode && selectedNode.id === d.id) return;
-    d3.select(this).select('circle')
-      .transition().duration(100)
-      .attr('stroke', d3.color(getNodeColor(d)).darker(0.8).formatHex())
-      .attr('stroke-width', 1);
-  });
-
-  // ── Labels ──
-  labelsG.selectAll('text')
-    .data(graphData.nodes)
-    .join('text')
-    .text(d => d.term || d.label || d.id)
-    .attr('font-size', d => (d.type === 'spec' || d.category === 'spec') ? 10 : 9)
-    .attr('fill', d => d3.color(getNodeColor(d)).darker(0.8).formatHex())
-    .attr('dy', d => (d.type === 'spec' || d.category === 'spec') ? -14 : -12)
-    .attr('text-anchor', 'middle')
-    .style('opacity', showLabels ? 0.7 : 0)
-    .style('font-weight', d => (d.type === 'spec' || d.category === 'spec') ? 600 : 400)
-    .attr('class', 'node-label');
-
-  // ─── Force Simulation ───
-  // Compute degree for collision radius
-  const degreeMap = new Map();
-  for (const n of graphData.nodes) degreeMap.set(n.id, 0);
-  for (const e of validEdges) {
-    const srcId = e.source.id;
-    const tgtId = e.target.id;
-    degreeMap.set(srcId, (degreeMap.get(srcId) || 0) + 1);
-    degreeMap.set(tgtId, (degreeMap.get(tgtId) || 0) + 1);
-  }
-
-  // Static layout — simple force-directed layout that runs once
-  const nodeMap = new Map();
+  // ── Static layout — force-directed once ──
   graphData.nodes.forEach((n, i) => {
     const angle = (2 * Math.PI * i) / graphData.nodes.length;
     const radius = 200 + Math.random() * 200;
@@ -171,13 +55,9 @@ function initGraph() {
     n.y = height / 2 + radius * Math.sin(angle);
     n.vx = 0;
     n.vy = 0;
-    nodeMap.set(n.id, n);
   });
 
-  // Run a few ticks of force simulation for natural layout
-  const linkForce = d3.forceLink(validEdges)
-    .distance(80)
-    .strength(0.1);
+  const linkForce = d3.forceLink(validEdges).distance(80).strength(0.1);
   const chargeForce = d3.forceManyBody().strength(-50);
   const centerForce = d3.forceCenter(width / 2, height / 2).strength(0.05);
   const collisionForce = d3.forceCollide().radius(15);
@@ -191,106 +71,228 @@ function initGraph() {
     .alphaDecay(0.1)
     .velocityDecay(0.4);
 
-  // Run fixed number of ticks
-  for (let i = 0; i < 100; i++) {
-    simulation.tick();
-  }
+  for (let i = 0; i < 100; i++) simulation.tick();
   simulation.stop();
 
+  // ── Event listeners ──
+  canvas.addEventListener('mousedown', onMouseDown);
+  canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('mouseup', onMouseUp);
+  canvas.addEventListener('wheel', onWheel, { passive: false });
+  canvas.addEventListener('click', onClick);
 
+  // ── Render ──
+  render();
 
-  // Run enough ticks synchronously for a stable initial layout.
-  // With alphaDecay(0.06), alpha halves roughly every 12 ticks.
-  // Render the initial layout
-  ticked();
-
-  // Hide overlay — layout is complete
   document.getElementById('loading-overlay').classList.add('hidden');
-
-
 }
 
-function ticked() {
-  // Update positions (only called during drag now)
-  link
-    .attr('x1', d => d.source.x)
-    .attr('y1', d => d.source.y)
-    .attr('x2', d => d.target.x)
-    .attr('y2', d => d.target.y);
+// ─── Render ───
+function render() {
+  ctx.clearRect(0, 0, width, height);
+  ctx.save();
+  ctx.translate(zoom.x, zoom.y);
+  ctx.scale(zoom.k, zoom.k);
 
-  node.attr('transform', d => `translate(${d.x},${d.y})`);
+  // Grid background
+  drawGrid();
 
-  labelsG.selectAll('text')
-    .attr('x', d => d.x)
-    .attr('y', d => d.y);
+  // Edges
+  for (const e of validEdges) {
+    if (!e.visible) continue;
+    ctx.beginPath();
+    ctx.moveTo(e.source.x, e.source.y);
+    ctx.lineTo(e.target.x, e.target.y);
+    ctx.strokeStyle = EDGE_COLOR;
+    ctx.lineWidth = 0.8 / zoom.k;
+    ctx.globalAlpha = 0.5;
+    ctx.stroke();
+  }
+
+  // Nodes
+  for (const n of graphData.nodes) {
+    if (!n.visible) continue;
+    const r = getNodeRadius(n);
+    const color = getNodeColor(n);
+    const isSelected = selectedNode && selectedNode.id === n.id;
+    const isHovered = hoveredNode && hoveredNode.id === n.id;
+
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Stroke
+    ctx.strokeStyle = isSelected ? '#fff' : d3.color(color).darker(0.8).formatHex();
+    ctx.lineWidth = (isSelected ? 2 : 1) / zoom.k;
+    ctx.stroke();
+
+    // Hover highlight
+    if (isHovered && !isSelected) {
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2 / zoom.k;
+      ctx.stroke();
+    }
+
+    // Labels
+    if (showLabels) {
+      ctx.font = `${(n.type === 'spec' ? 10 : 9) / zoom.k}px Inter, sans-serif`;
+      ctx.fillStyle = d3.color(color).darker(0.8).formatHex();
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = 0.7;
+      ctx.fillText(n.term || n.label || n.id, n.x, n.y - r - 4 / zoom.k);
+    }
+  }
+
+  ctx.restore();
+  ctx.globalAlpha = 1;
 }
 
-// ─── Drag handlers ───
-// clickDistance(20) on the drag behavior suppresses click only if pointer
-// moves >= 20px between mousedown and mouseup. Pure clicks pass through.
+// ─── Draw Grid ───
+function drawGrid() {
+  const gridSize = 40 * zoom.k;
+  const offsetX = zoom.x % gridSize;
+  const offsetY = zoom.y % gridSize;
 
-function dragStart(event, d) {
-  draggedNode = d;
-  dragStartX = event.x;
-  dragStartY = event.y;
+  ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+  ctx.lineWidth = 0.5 / zoom.k;
+
+  for (let x = offsetX; x < width; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+  for (let y = offsetY; y < height; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+}
+
+// ─── Mouse Events ───
+function getMousePos(event) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (event.clientX - rect.left - zoom.x) / zoom.k,
+    y: (event.clientY - rect.top - zoom.y) / zoom.k
+  };
+}
+
+function findNodeAt(pos) {
+  // Search in reverse (top-most first)
+  for (let i = graphData.nodes.length - 1; i >= 0; i--) {
+    const n = graphData.nodes[i];
+    if (!n.visible) continue;
+    const dx = pos.x - n.x;
+    const dy = pos.y - n.y;
+    const r = getNodeRadius(n) + 5; // Hit area
+    if (dx * dx + dy * dy < r * r) return n;
+  }
+  return null;
+}
+
+function onMouseDown(event) {
+  if (event.button === 0) {
+    const pos = getMousePos(event);
+    const node = findNodeAt(pos);
+    if (node) {
+      draggedNode = node;
+      panStart = { x: event.clientX, y: event.clientY };
+      isDragging = false;
+    } else {
+      isPanning = true;
+      panStart = { x: event.clientX - zoom.x, y: event.clientY - zoom.y };
+    }
+  }
+}
+
+function onMouseMove(event) {
+  const pos = getMousePos(event);
+
+  if (draggedNode) {
+    const dx = event.clientX - panStart.x;
+    const dy = event.clientY - panStart.y;
+    if (dx * dx + dy * dy < 100) return; // Click threshold
+
+    isDragging = true;
+    draggedNode.x = pos.x;
+    draggedNode.y = pos.y;
+    render();
+    return;
+  }
+
+  if (isPanning) {
+    zoom.x = event.clientX - panStart.x;
+    zoom.y = event.clientY - panStart.y;
+    render();
+    return;
+  }
+
+  // Hover detection
+  const node = findNodeAt(pos);
+  if (node !== hoveredNode) {
+    hoveredNode = node;
+    canvas.style.cursor = node ? 'pointer' : 'grab';
+    render();
+  }
+}
+
+function onMouseUp(event) {
+  if (isPanning) {
+    isPanning = false;
+    canvas.style.cursor = 'grab';
+  }
+  if (draggedNode && !isDragging) {
+    // It was a click, not a drag
+    const pos = getMousePos(event);
+    const node = findNodeAt(pos);
+    if (node) selectNode(event, node);
+    else deselectNode();
+  }
+  draggedNode = null;
   isDragging = false;
 }
 
-function dragged(event, d) {
-  if (!draggedNode) return;
-
-  // Only treat as drag if movement exceeds threshold (ignore clicks)
-  const dx = event.x - dragStartX;
-  const dy = event.y - dragStartY;
-  if (dx * dx + dy * dy < 100) return; // < 10px threshold
-
-  isDragging = true;
-
-  // Move the dragged node
-  d.x = event.x;
-  d.y = event.y;
-
-  // Update links connected to this node
-  link
-    .attr('x1', e => e.source === d ? d.x : e.source.x)
-    .attr('y1', e => e.source === d ? d.y : e.source.y)
-    .attr('x2', e => e.target === d ? d.x : e.target.x)
-    .attr('y2', e => e.target === d ? d.y : e.target.y);
-
-  // Update node position
-  node.filter(n => n === d).attr('transform', `translate(${d.x},${d.y})`);
-
-  // Update label position
-  labelsG.selectAll('text').filter(n => n === d)
-    .attr('x', d.x)
-    .attr('y', d.y);
+function onClick(event) {
+  // Handled in onMouseUp
 }
 
-function dragEnded(event, d) {
-  draggedNode = null;
-  delete d._dragStartX;
-  delete d._dragStartY;
+function onWheel(event) {
+  event.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
+
+  const delta = event.deltaY > 0 ? 0.9 : 1.1;
+  const newK = Math.max(0.05, Math.min(8, zoom.k * delta));
+
+  // Zoom toward mouse position
+  zoom.x = mouseX - (mouseX - zoom.x) * (newK / zoom.k);
+  zoom.y = mouseY - (mouseY - zoom.y) * (newK / zoom.k);
+  zoom.k = newK;
+
+  render();
 }
 
-// ─── Theme Update ───
+// ─── Helper Functions ───
+function getNodeRadius(d) {
+  if (d.type === 'spec' || d.category === 'spec') return 10;
+  const totalConn = (d.specRefCount || 0) + (d.relatedCount || 0);
+  return Math.max(4, Math.min(12, 3 + totalConn * 0.6));
+}
+
 function getNodeColor(d) {
   if (d.type && TYPE_COLORS[d.type]) return TYPE_COLORS[d.type];
   return '#94a3b8';
 }
 
+let hoveredNode = null;
+
+// ─── Theme Update ───
 function updateThemeColors() {
-  if (link) {
-    link.attr('stroke', EDGE_COLOR);
-  }
-  if (node) {
-    node.select('circle').attr('fill', d => getNodeColor(d)).attr('stroke', d => d3.color(getNodeColor(d)).darker(0.8).formatHex());
-  }
-  if (labelsG) {
-    labelsG.selectAll('text').attr('fill', d => d3.color(getNodeColor(d)).darker(0.8).formatHex());
-  }
+  render();
 }
 
 window.updateThemeColors = updateThemeColors;
-
-
-

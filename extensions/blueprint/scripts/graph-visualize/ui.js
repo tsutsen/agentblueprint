@@ -160,46 +160,28 @@ function applyFilters() {
     e.visible = srcVisible && tgtVisible;
   }
 
-  // Update node visibility
-  for (const n of graphData.nodes) {
-    const nodeEl = nodeGroup.selectAll('g').filter(d => d.id === n.id);
-    nodeEl.classed('dimmed', !n.visible).classed('visible', n.visible);
-  }
-
-  // Update link visibility
-  for (const e of validEdges) {
-    const linkEl = linkGroup.selectAll('line').filter(d => d === e);
-    linkEl.classed('dimmed', !e.visible).classed('visible', e.visible);
-  }
-
-  // Update label opacity
-  labelsG.selectAll('text')
-    .transition().duration(200)
-    .style('opacity', n => {
-      if (!showLabels) return 0;
-      return n.visible ? 0.7 : 0.02;
-    });
-
   // Update term list
   document.querySelectorAll('.term-list-item').forEach(el => {
     const nodeId = el.dataset.nodeId;
     const node = graphData.nodes.find(n => n.id === nodeId);
     el.style.display = node && node.visible ? 'block' : 'none';
   });
+
+  // Re-render canvas
+  if (typeof render === 'function') render();
 }
 
 // ─── Zoom ───
 function resetZoom() {
-  svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+  zoom = { x: 0, y: 0, k: 1 };
+  if (typeof render === 'function') render();
 }
 
 // ─── Controls ───
 function toggleLabels() {
   showLabels = !showLabels;
   document.getElementById('btn-labels').classList.toggle('active', showLabels);
-  labelsG.selectAll('text')
-    .transition().duration(200)
-    .style('opacity', showLabels ? 0.7 : 0);
+  if (typeof render === 'function') render();
 }
 
 // ─── Node selection ───
@@ -222,18 +204,7 @@ function selectNode(event, d) {
     }
   }
 
-  node.classed('highlighted', n => connectedIds.has(n.id))
-      .classed('dimmed', n => !connectedIds.has(n.id));
-
-  link.classed('highlighted', e => connectedEdgeSet.has(e))
-      .classed('dimmed', e => !connectedEdgeSet.has(e));
-
-  labelsG.selectAll('text')
-    .transition().duration(200)
-    .style('opacity', n => {
-      if (!showLabels) return 0;
-      return connectedIds.has(n.id) ? 0.9 : 0.02;
-    });
+  // Canvas rendering handles highlighting in render()
 
   showDetail(d);
 
@@ -244,13 +215,9 @@ function selectNode(event, d) {
 
 function deselectNode() {
   selectedNode = null;
-  node.classed('highlighted', false).classed('dimmed', false);
-  link.classed('highlighted', false).classed('dimmed', false);
-  labelsG.selectAll('text')
-    .transition().duration(200)
-    .style('opacity', showLabels ? 0.7 : 0);
   document.querySelectorAll('.term-list-item').forEach(el => el.classList.remove('active'));
   document.getElementById('detail-panel').classList.remove('visible');
+  if (typeof render === 'function') render();
 }
 
 function showDetail(d) {
