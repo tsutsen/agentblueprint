@@ -362,8 +362,11 @@ function getNodeRadius(d) {
     value = typeSizes[d.type] || 5;
   }
 
-  // Scale: min 5px, max 45px with exponential curve
-  const r = Math.max(5, Math.min(45, 5 + Math.sqrt(value) * 8));
+  // Normalize: min 5px, max 45px with sqrt scaling
+  const minVal = sizeMetric === 'type' ? 5 : 0;
+  const maxVal = sizeMetric === 'type' ? 12 : (sizeMetric === 'degree' ? 50 : 100);
+  const normalized = maxVal === minVal ? 0 : (value - minVal) / (maxVal - minVal);
+  const r = Math.max(5, Math.min(45, 5 + Math.sqrt(normalized) * 40));
   return r;
 }
 
