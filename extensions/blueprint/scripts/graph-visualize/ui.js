@@ -84,6 +84,13 @@ function initUI() {
   document.getElementById('btn-simulate').addEventListener('click', toggleSimulation);
   document.getElementById('btn-labels').addEventListener('click', toggleLabels);
 
+  // Size metric dropdown
+  const sizeSelect = document.getElementById('size-metric');
+  sizeSelect.addEventListener('change', (e) => {
+    sizeMetric = e.target.value;
+    if (typeof render === 'function') render();
+  });
+
   // Theme dropdown
   const btnTheme = document.getElementById('btn-theme');
   const themeMenu = document.getElementById('theme-menu');

@@ -297,9 +297,22 @@ function onWheel(event) {
 
 // ─── Helper Functions ───
 function getNodeRadius(d) {
-  if (d.type === 'spec' || d.category === 'spec') return 10;
-  const totalConn = (d.specRefCount || 0) + (d.relatedCount || 0);
-  return Math.max(4, Math.min(12, 3 + totalConn * 0.6));
+  if (d.type === 'spec' || d.category === 'spec') return 15;
+
+  // Size based on selected metric
+  let value = 0;
+  if (sizeMetric === 'relatedCount') {
+    value = d.relatedCount || 0;
+  } else if (sizeMetric === 'degree') {
+    value = d.degree || 0;
+  } else if (sizeMetric === 'type') {
+    // Size by type category
+    const typeSizes = { CON: 12, FN: 10, REQ: 9, US: 9, SC: 8, Entity: 8, GL: 7, TST: 6, Enum: 6, API: 8, EP: 10, TASK: 7, ISSUE: 8, DG: 7, UJ: 8, UXAC: 8, NFR: 9, IS: 8, spec: 10 };
+    value = typeSizes[d.type] || 5;
+  }
+
+  // Scale: min 6px, max 35px
+  return Math.max(6, Math.min(35, 6 + value * 1.5));
 }
 
 function getNodeColor(d) {
@@ -310,6 +323,7 @@ function getNodeColor(d) {
 let hoveredNode = null;
 let isSimulating = false;
 let simulation = null;
+let sizeMetric = 'relatedCount'; // Default sizing metric
 
 // ─── Simulation Control ───
 function toggleSimulation() {
