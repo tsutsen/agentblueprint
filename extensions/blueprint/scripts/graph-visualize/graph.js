@@ -21,7 +21,7 @@ const LABEL_NODE_RADIUS_THRESHOLD = 8;
 const LABEL_CHAR_WIDTH = 0.62; // Inter average, world-space units
 const LABEL_PAD_X = 4; // horizontal padding each side (world-space)
 const LABEL_PAD_Y = 2; // vertical padding above node
-const LABEL_HYSTERESIS = 0.15; // Zoom change needed before rebuilding label set
+const LABEL_HYSTERESIS = 0.2; // Zoom change needed before rebuilding label set
 
 // HTML label elements (replaces canvas text rendering)
 let _labelElements = new Map(); // nodeId -> HTMLDivElement
