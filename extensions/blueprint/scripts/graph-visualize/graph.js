@@ -162,30 +162,40 @@ function initGraph() {
     degreeMap.set(tgtId, (degreeMap.get(tgtId) || 0) + 1);
   }
 
-  // Static layout — place nodes in concentric circles by category
-  const catMap = {};
-  const catGroups = [];
-  graphData.nodes.forEach(n => {
-    const cat = n.typeCat || n.category || 'other';
-    if (!catMap[cat]) {
-      catMap[cat] = catGroups.length;
-      catGroups.push([]);
-    }
-    catGroups[catMap[cat]].push(n);
+  // Static layout — simple force-directed layout that runs once
+  const nodeMap = new Map();
+  graphData.nodes.forEach((n, i) => {
+    const angle = (2 * Math.PI * i) / graphData.nodes.length;
+    const radius = 200 + Math.random() * 200;
+    n.x = width / 2 + radius * Math.cos(angle);
+    n.y = height / 2 + radius * Math.sin(angle);
+    n.vx = 0;
+    n.vy = 0;
+    nodeMap.set(n.id, n);
   });
 
-  const cx = width / 2;
-  const cy = height / 2;
-  const maxRadius = Math.min(width, height) * 0.4;
-  catGroups.forEach((group, ci) => {
-    const radius = group.length > 50 ? maxRadius * 0.7 : maxRadius * 0.4;
-    const angleStep = (2 * Math.PI) / group.length;
-    group.forEach((n, ni) => {
-      const angle = ci * angleStep * 0.5 + ni * angleStep;
-      n.x = cx + radius * Math.cos(angle);
-      n.y = cy + radius * Math.sin(angle);
-    });
-  });
+  // Run a few ticks of force simulation for natural layout
+  const linkForce = d3.forceLink(validEdges)
+    .distance(80)
+    .strength(0.1);
+  const chargeForce = d3.forceManyBody().strength(-50);
+  const centerForce = d3.forceCenter(width / 2, height / 2).strength(0.05);
+  const collisionForce = d3.forceCollide().radius(15);
+
+  const simulation = d3.forceSimulation(graphData.nodes)
+    .force('link', linkForce)
+    .force('charge', chargeForce)
+    .force('center', centerForce)
+    .force('collision', collisionForce)
+    .alpha(0.3)
+    .alphaDecay(0.1)
+    .velocityDecay(0.4);
+
+  // Run fixed number of ticks
+  for (let i = 0; i < 100; i++) {
+    simulation.tick();
+  }
+  simulation.stop();
 
 
 
