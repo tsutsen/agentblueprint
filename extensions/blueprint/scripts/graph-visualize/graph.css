@@ -249,8 +249,9 @@
   #controls select:hover { background-color: var(--surface2); }
   #controls select:focus { outline: none; border-color: var(--accent); }
 
-  /* ── Dropdown ── */
-  .theme-dropdown {
+  /* ── Dropdowns ── */
+  .theme-dropdown,
+  .size-dropdown {
     position: relative;
     display: inline-block;
   }

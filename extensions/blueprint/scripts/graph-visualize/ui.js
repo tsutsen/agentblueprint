@@ -84,25 +84,38 @@ function initUI() {
   document.getElementById('btn-simulate').addEventListener('click', toggleSimulation);
   document.getElementById('btn-labels').addEventListener('click', toggleLabels);
 
-  // Size metric button - cycles through options
+  // Size metric dropdown
   const sizeMetricBtn = document.getElementById('btn-size-metric');
-  const sizeMetrics = ['degree', 'blast', 'risk', 'centrality', 'type'];
-  const sizeLabels = {
-    degree: 'Size: Degree',
-    blast: 'Size: Blast Radius',
-    risk: 'Size: Risk Score',
-    centrality: 'Size: Centrality',
-    type: 'Size: Type',
-  };
-  let currentMetricIndex = sizeMetrics.indexOf(sizeMetric);
-  sizeMetricBtn.addEventListener('click', () => {
-    currentMetricIndex = (currentMetricIndex + 1) % sizeMetrics.length;
-    sizeMetric = sizeMetrics[currentMetricIndex];
-    sizeMetricBtn.textContent = sizeLabels[sizeMetric];
-    console.log('Size metric changed to:', sizeMetric);
-    if (typeof recalcSizeRange === 'function') recalcSizeRange();
-    if (typeof startScaleAnimation === 'function') startScaleAnimation();
-    if (typeof render === 'function') render();
+  const sizeMetricMenu = document.getElementById('size-metric-menu');
+  const sizeMetricItems = sizeMetricMenu.querySelectorAll('.dropdown-item');
+  
+  // Toggle dropdown
+  sizeMetricBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    sizeMetricMenu.classList.toggle('open');
+  });
+  
+  // Handle item selection
+  sizeMetricItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sizeMetric = item.dataset.metric;
+      const labels = {
+        degree: 'Size: Degree',
+        blast: 'Size: Blast Radius',
+        risk: 'Size: Risk Score',
+        centrality: 'Size: Centrality',
+        type: 'Size: Type',
+      };
+      sizeMetricBtn.textContent = labels[sizeMetric];
+      sizeMetricItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      sizeMetricMenu.classList.remove('open');
+      console.log('Size metric changed to:', sizeMetric);
+      if (typeof recalcSizeRange === 'function') recalcSizeRange();
+      if (typeof startScaleAnimation === 'function') startScaleAnimation();
+      if (typeof render === 'function') render();
+    });
   });
 
   // Theme dropdown
@@ -143,6 +156,7 @@ function initUI() {
 
   document.addEventListener('click', () => {
     themeMenu.classList.remove('open');
+    sizeMetricMenu.classList.remove('open');
   });
 
   function updateThemeMenu() {
