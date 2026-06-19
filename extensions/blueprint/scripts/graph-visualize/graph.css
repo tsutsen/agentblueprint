@@ -275,8 +275,7 @@
     content: '';
     position: absolute;
     right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 40%;
     width: 0;
     height: 0;
     border-left: 4px solid transparent;
