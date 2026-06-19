@@ -26,6 +26,7 @@ import threading
 import http.server
 import socketserver
 import argparse
+import signal
 from pathlib import Path
 import re
 import time
@@ -276,6 +277,40 @@ def write_graph_data(graph_data: dict) -> str:
     return str(output_path)
 
 
+def kill_port(port: int):
+    """Kill any process running on the given port."""
+    try:
+        # Use lsof to find processes on the port
+        result = subprocess.run(
+            ["lsof", "-ti", f":{port}"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        pids = result.stdout.strip().split('\n')
+        pids = [p.strip() for p in pids if p.strip()]
+        if pids:
+            for pid in pids:
+                try:
+                    os.kill(int(pid), signal.SIGTERM)
+                    debug(f"Killed process {pid} on port {port}")
+                except ProcessLookupError:
+                    pass  # Process already gone
+            # Wait a moment for port to be released
+            time.sleep(0.5)
+            return True
+    except FileNotFoundError:
+        # lsof not available, try fuser
+        try:
+            subprocess.run(["fuser", "-k", f"{port}/tcp"], timeout=5)
+            debug(f"Killed process on port {port} via fuser")
+            time.sleep(0.5)
+            return True
+        except FileNotFoundError:
+            pass  # Neither lsof nor fuser available
+    return False
+
+
 def serve_graph(artifacts_dir: str, port: int, no_server: bool = False, open_browser: bool = False) -> bool:
     """Generate graph data and optionally serve the visualization."""
     print(f"Building glossary graph from {artifacts_dir}...", file=sys.stderr, flush=True)
@@ -294,6 +329,11 @@ def serve_graph(artifacts_dir: str, port: int, no_server: bool = False, open_bro
 
     if no_server:
         return True
+
+    # Kill any existing process on the port
+    if not no_server:
+        debug(f"Checking port {port}...")
+        kill_port(port)
 
     # Start server in a detached subprocess so the main process can exit
     def start_server():
