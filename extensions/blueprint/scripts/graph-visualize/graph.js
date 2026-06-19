@@ -352,34 +352,10 @@ function initGraph() {
 // ─── Render ───
 let _lastVisibleCount = -1;
 
-/**
- * Recalculate relatedCount for visible nodes based on visible edges.
- * This ensures relatedCount reflects the filtered state, not the original graph.
- */
-function recalcRelatedCount(visibleNodeIds) {
-  for (const n of graphData.nodes) {
-    if (!visibleNodeIds.has(n.id)) {
-      n._visibleRelatedCount = 0;
-      continue;
-    }
-    let count = 0;
-    for (const e of validEdges) {
-      if (e.visible && (e.source.id === n.id || e.target.id === n.id)) {
-        count++;
-      }
-    }
-    n._visibleRelatedCount = count;
-  }
-}
-
 function recalcSizeRange() {
   // Get currently visible nodes (sidebar filter)
   const visibleNodes = graphData.nodes.filter((n) => n.visible !== false);
   if (visibleNodes.length === 0) return;
-
-  // Recalculate relatedCount based on visible edges
-  const visibleNodeIds = new Set(visibleNodes.map(n => n.id));
-  recalcRelatedCount(visibleNodeIds);
 
   // Store the full visible set range
   const fullRanges = {};
@@ -392,9 +368,8 @@ function recalcSizeRange() {
   ];
 
   for (const m of _metrics) {
-    const nodeKey = m.nodeKey === "relatedCount" ? "_visibleRelatedCount" : m.nodeKey;
     const values = visibleNodes
-      .map((n) => n[nodeKey] || 0)
+      .map((n) => n[m.nodeKey] || 0)
       .filter((v) => v > 0);
     if (values.length > 0) {
       fullRanges[m.rangeKey] = [0, Math.max(...values)];
@@ -886,7 +861,7 @@ function getNodeRadius(d) {
   }
 
   let value = 0;
-  if (sizeMetric === "relatedCount") value = d._visibleRelatedCount || 0;
+  if (sizeMetric === "relatedCount") value = d.relatedCount || 0;
   else if (sizeMetric === "degree") value = d.degree || 0;
   else if (sizeMetric === "blast") value = d.blastRadius || 0;
   else if (sizeMetric === "risk") value = d.risk || 0;
