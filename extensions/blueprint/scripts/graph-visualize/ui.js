@@ -224,6 +224,9 @@ function selectNode(event, d) {
   // Canvas rendering handles highlighting in render()
   animateDim(0.15); // Animate to dimmed state
 
+  // Update label opacity immediately (not waiting for node animation)
+  if (typeof updateHtmlLabels === 'function') updateHtmlLabels();
+
   // Trigger scale animation for node size transitions
   if (typeof startScaleAnimation === 'function') startScaleAnimation();
 
@@ -239,6 +242,9 @@ function deselectNode() {
   document.querySelectorAll('.term-list-item').forEach(el => el.classList.remove('active'));
   document.getElementById('detail-panel').classList.remove('visible');
   animateDim(1); // Animate to full opacity
+
+  // Update label opacity immediately (not waiting for node animation)
+  if (typeof updateHtmlLabels === 'function') updateHtmlLabels();
 
   if (typeof startScaleAnimation === 'function') startScaleAnimation();
 }
