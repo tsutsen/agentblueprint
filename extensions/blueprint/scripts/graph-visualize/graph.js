@@ -40,6 +40,8 @@ function initGraph() {
 
   // ── Pre-resolve edges ──
   const nodeMap = new Map();
+  // Initialize visible for all nodes
+  for (const n of graphData.nodes) n.visible = true;
   for (const n of graphData.nodes) nodeMap.set(n.id, n);
   validEdges = [];
   for (const e of graphData.edges) {

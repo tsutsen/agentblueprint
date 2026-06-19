@@ -144,6 +144,8 @@ function applyFilters() {
   const filteredIds = new Set();
   console.log('applyFilters: activeCategories =', activeCategories, 'size =', activeCategories.size);
   for (const n of graphData.nodes) {
+    // Initialize visible if not set
+    if (n.visible === undefined) n.visible = true;
     // New format: use typeCat or category
     const cat = n.typeCat || n.category || 'other';
     const catVisible = activeCategories.size === 0 || activeCategories.has(cat);
