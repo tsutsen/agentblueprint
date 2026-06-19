@@ -116,17 +116,20 @@ function render() {
   // Grid background
   drawGrid();
 
-  // Edges
+  // Edges (drawn first, under nodes)
+  ctx.globalAlpha = 0.3;
   for (const e of validEdges) {
     if (!e.visible) continue;
     ctx.beginPath();
     ctx.moveTo(e.source.x, e.source.y);
     ctx.lineTo(e.target.x, e.target.y);
     ctx.strokeStyle = EDGE_COLOR;
-    ctx.lineWidth = 0.8 / zoom.k;
-    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 0.6 / zoom.k;
     ctx.stroke();
   }
+
+  // Reset alpha for nodes
+  ctx.globalAlpha = 1;
 
   // Nodes
   for (const n of graphData.nodes) {
