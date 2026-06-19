@@ -105,9 +105,9 @@ function initGraph() {
     .data(validEdges)
     .join('line')
     .attr('stroke', d => getEdgeColor(d.type))
-    .attr('stroke-width', d => d.type === 'crossSpec' ? 1.5 : d.type === 'relatedTerms' ? 1 : 0.5)
+    .attr('stroke-width', d => d.type === 'crossSpec' ? 2 : d.type === 'relatedTerms' ? 1.2 : 0.8)
     .attr('stroke-dasharray', d => d.type === 'specRef' ? '3,4' : d.type === 'crossSpec' ? '5,4' : 'none')
-    .attr('opacity', 1);
+    .attr('opacity', 0.6);
 
   // ── Nodes ──
   nodeGroup = g.append('g').attr('class', 'nodes');
