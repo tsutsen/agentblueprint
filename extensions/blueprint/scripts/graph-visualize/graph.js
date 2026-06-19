@@ -312,7 +312,9 @@ function getNodeRadius(d) {
   }
 
   // Scale: min 6px, max 35px
-  return Math.max(6, Math.min(35, 6 + value * 1.5));
+  const r = Math.max(6, Math.min(35, 6 + value * 1.5));
+  console.log('getNodeRadius:', d.id, 'metric:', sizeMetric, 'value:', value, 'radius:', r);
+  return r;
 }
 
 function getNodeColor(d) {

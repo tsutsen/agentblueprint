@@ -88,6 +88,7 @@ function initUI() {
   const sizeSelect = document.getElementById('size-metric');
   sizeSelect.addEventListener('change', (e) => {
     sizeMetric = e.target.value;
+    console.log('Size metric changed to:', sizeMetric);
     if (typeof render === 'function') render();
   });
 
