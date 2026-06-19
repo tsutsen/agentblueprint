@@ -313,26 +313,28 @@ let simulation = null;
 
 // ─── Simulation Control ───
 function toggleSimulation() {
-  isSimulating = !isSimulating;
-  document.getElementById('btn-simulate').classList.toggle('active', isSimulating);
+  // Stop any running simulation first
+  if (simulation) {
+    simulation.stop();
+  }
 
-  if (isSimulating) {
-    // Start simulation
-    simulation = d3.forceSimulation(graphData.nodes.filter(n => n.visible))
-      .force('link', d3.forceLink(validEdges.filter(e => e.visible)).distance(120).strength(0.05))
-      .force('charge', d3.forceManyBody().strength(-150))
-      .force('center', d3.forceCenter(width / 2, height / 2).strength(0.02))
-      .force('collision', d3.forceCollide().radius(25))
-      .alpha(0.3)
-      .alphaDecay(0.01)
-      .on('tick', () => { render(); });
-  } else {
-    // Stop simulation
+  // Start fresh simulation
+  simulation = d3.forceSimulation(graphData.nodes.filter(n => n.visible))
+    .force('link', d3.forceLink(validEdges.filter(e => e.visible)).distance(120).strength(0.05))
+    .force('charge', d3.forceManyBody().strength(-150))
+    .force('center', d3.forceCenter(width / 2, height / 2).strength(0.02))
+    .force('collision', d3.forceCollide().radius(25))
+    .alpha(0.5)
+    .alphaDecay(0.01)
+    .on('tick', () => { render(); });
+
+  // Auto-stop after 3 seconds
+  setTimeout(() => {
     if (simulation) {
       simulation.stop();
       simulation = null;
     }
-  }
+  }, 3000);
 }
 
 // ─── Theme Update ───
