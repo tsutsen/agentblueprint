@@ -1,0 +1,9 @@
+{
+  "name": "glossary-graph",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node extract-graph-data.js",
+    "start": "node server.js"
+  }
+}

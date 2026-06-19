@@ -1,0 +1,32 @@
+/* Default Light Theme (Black/White/Gray) */
+
+:root {
+  --bg: #ffffff;
+  --surface: #f5f5f5;
+  --btn-text: #1a1a1a;
+  --surface2: #e8e8e8;
+  --border: #d0d0d0;
+  --text: #1a1a1a;
+  --text-dim: #666666;
+  --text-bright: #000000;
+  --accent: #000000;
+  --accent-text: #ffffff;
+  --accent-glow: rgba(0, 0, 0, 0.1);
+  --domain: #c62828;
+  --technical: #1565c0;
+  --security: #e65100;
+  --ui: #6a1b9a;
+  --spec: #00695c;
+  --edge-related: rgba(25, 118, 210, 0.3);
+  --edge-spec: rgba(0, 121, 107, 0.3);
+  --edge-cross: rgba(216, 67, 21, 0.3);
+}
+
+#detail-panel {
+  background: #f5f5f5 !important;
+}
+
+.node-label {
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 2px;
+}

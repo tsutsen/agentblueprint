@@ -1,0 +1,2868 @@
+{
+  "summary": {
+    "totalTerms": 86,
+    "totalEdges": 307,
+    "totalSpecs": 6,
+    "categories": {
+      "domain": 39,
+      "technical": 46,
+      "security": 1
+    }
+  },
+  "nodes": [
+    {
+      "id": "GL-001",
+      "term": "ResearchSession",
+      "definition": "A named research investigation, identified by `session_id`. Contains a motivation brief, search tags, queries, papers, catalog entries, and report. Persisted as a set of JSON artifacts on disk.",
+      "category": "domain",
+      "relatedCount": 3,
+      "specRefCount": 6,
+      "specs": [
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "DesignSpec",
+        "GoalSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-002",
+      "term": "KeyConcept",
+      "definition": "A term extracted from the research brief, carrying a context-specific `definition`, `synonyms` (feeds search tag generation), and `role` (construct, variable, method, outcome, or context).",
+      "category": "domain",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-003",
+      "term": "SearchTag",
+      "definition": "A classification of terms derived from KeyConcepts. Three categories: primary_terms (strong relevance signal), supporting_terms (secondary signal), exclusion_terms (out-of-scope indicator). Also includes domain_tags, methodology_tags, and key_authors.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 2,
+      "specs": [
+        "ArchitectureSpec",
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-004",
+      "term": "Query",
+      "definition": "A search string variant generated from SearchTags, carrying a formatted string, target endpoint, filters, execution order, and variant type classification (broad, narrow, methodological, author-focused, venue-focused, or temporal).",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 6,
+      "specs": [
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "DesignSpec",
+        "GoalSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-005",
+      "term": "Search",
+      "definition": "A campaign within a research session, grouping queries and their collected scholarly documents. Manages the lifecycle of query execution, result collection, and document acquisition.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 4,
+      "specs": [
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "DesignSpec"
+      ]
+    },
+    {
+      "id": "GL-006",
+      "term": "CatalogEntry",
+      "definition": "Structured findings extracted from an approved scholarly work. Contains bibliographic data, relevance score, extraction confidence, research alignment (hypothesis support/contradiction + evidence type), findings (main claim, key results, conclusions, limitations, future work), methodology (study design, sample size, dataset, methods/tools), evidence (key metrics with values, direct quotes), and related DOIs.",
+      "category": "domain",
+      "relatedCount": 3,
+      "specRefCount": 3,
+      "specs": [
+        "ArchitectureSpec",
+        "DataSpec",
+        "GoalSpec"
+      ]
+    },
+    {
+      "id": "GL-007",
+      "term": "EvidenceType",
+      "definition": "Classification of a scholarly work's contribution type: empirical quantitative, empirical qualitative, systematic review, meta-analysis, theoretical, case study, or mixed. Used for filtering, tagging, and thematic grouping.",
+      "category": "domain",
+      "relatedCount": 3,
+      "specRefCount": 4,
+      "specs": [
+        "ArchitectureSpec",
+        "DataSpec",
+        "DesignSpec",
+        "GoalSpec"
+      ]
+    },
+    {
+      "id": "GL-008",
+      "term": "Report",
+      "definition": "The final synthesised output (defined by the output schema). Contains summary, hypothesis verdicts, and supporting evidence from catalog entries.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 6,
+      "specs": [
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "DesignSpec",
+        "GoalSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-009",
+      "term": "HypothesisVerdict",
+      "definition": "The report's assessment of the stated hypothesis: `supported`, `contradicted`, `mixed`, `insufficient_evidence`, or null (no hypothesis). Includes confidence score and supporting/contradicting DOI lists.",
+      "category": "domain",
+      "relatedCount": 1,
+      "specRefCount": 5,
+      "specs": [
+        "ApiSpec",
+        "DataSpec",
+        "DesignSpec",
+        "GoalSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-010",
+      "term": "ExtractionFlag",
+      "definition": "Quality indicators on a structured finding when extraction is imperfect. Examples: short source, OCR noise, missing methods, paywall partial.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 3,
+      "specs": [
+        "ArchitectureSpec",
+        "DataSpec",
+        "GoalSpec"
+      ]
+    },
+    {
+      "id": "GL-011",
+      "term": "User",
+      "definition": "The human actor operating the Research Distillery system. Includes researchers, scholars, and graduate students conducting academic research.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 6,
+      "specs": [
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "DesignSpec",
+        "GoalSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-012",
+      "term": "System",
+      "definition": "The automated Research Distillery application that processes research queries, manages pipelines, and produces reports.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 6,
+      "specs": [
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "DesignSpec",
+        "GoalSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-013",
+      "term": "Session Manager",
+      "definition": "The system component responsible for creating, tracking, and persisting research sessions throughout their lifecycle.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 1,
+      "specs": [
+        "ArchitectureSpec"
+      ]
+    },
+    {
+      "id": "GL-014",
+      "term": "Search Engine",
+      "definition": "The system component that executes queries against scholarly search APIs and retrieves paper metadata.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 1,
+      "specs": [
+        "ArchitectureSpec"
+      ]
+    },
+    {
+      "id": "GL-015",
+      "term": "Ranking Engine",
+      "definition": "The system component that scores retrieved papers across multiple relevance dimensions and produces ranked lists with accept/reject decisions.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 2,
+      "specs": [
+        "ArchitectureSpec",
+        "GoalSpec"
+      ]
+    },
+    {
+      "id": "GL-016",
+      "term": "Downloader",
+      "definition": "The system component responsible for fetching full-text PDFs from open-access sources and Sci-Hub for accepted papers.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 2,
+      "specs": [
+        "ArchitectureSpec",
+        "GoalSpec"
+      ]
+    },
+    {
+      "id": "GL-017",
+      "term": "Document Processor",
+      "definition": "The system component that parses downloaded PDFs and extracts structured content for catalog entry generation.",
+      "category": "technical",
+      "relatedCount": 3,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-018",
+      "term": "Report Synthesiser",
+      "definition": "The system component that assembles the research catalog into a structured report with hypothesis verdicts and sufficiency assessments.",
+      "category": "technical",
+      "relatedCount": 3,
+      "specRefCount": 1,
+      "specs": [
+        "ArchitectureSpec"
+      ]
+    },
+    {
+      "id": "GL-019",
+      "term": "Persistence Layer",
+      "definition": "The system component that stores and retrieves all research session artifacts (briefs, queries, papers, catalogs, reports) on disk.",
+      "category": "technical",
+      "relatedCount": 3,
+      "specRefCount": 2,
+      "specs": [
+        "ArchitectureSpec",
+        "GoalSpec"
+      ]
+    },
+    {
+      "id": "GL-020",
+      "term": "Citation Network Builder",
+      "definition": "The system component that generates co-citation and citation link data from the paper set for visualisation in the catalog view.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 1,
+      "specs": [
+        "ArchitectureSpec"
+      ]
+    },
+    {
+      "id": "GL-021",
+      "term": "Citation Export",
+      "definition": "The system component that generates citation files in standard formats (BibTeX, APA, MLA, Chicago) for selected papers.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 2,
+      "specs": [
+        "ArchitectureSpec",
+        "GoalSpec"
+      ]
+    },
+    {
+      "id": "GL-022",
+      "term": "Error Handling Middleware (Shared)",
+      "definition": "The shared system component that intercepts failures across pipeline stages and presents actionable remediation options to the user.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 1,
+      "specs": [
+        "ArchitectureSpec"
+      ]
+    },
+    {
+      "id": "GL-023",
+      "term": "ResearchBrief",
+      "definition": "Structured research brief derived from the user's free-text research question, containing hypotheses, scope constraints, and key concepts.",
+      "category": "domain",
+      "relatedCount": 3,
+      "specRefCount": 5,
+      "specs": [
+        "ApiSpec",
+        "DataSpec",
+        "DesignSpec",
+        "GoalSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-024",
+      "term": "Finding",
+      "definition": "A structured piece of information extracted from a paper, containing a statement, supporting evidence, and optional confidence score.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 6,
+      "specs": [
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "DesignSpec",
+        "GoalSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-025",
+      "term": "Claim",
+      "definition": "An extracted assertion from a paper with supporting and contradicting evidence.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 5,
+      "specs": [
+        "ApiSpec",
+        "DataSpec",
+        "DesignSpec",
+        "GoalSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-026",
+      "term": "FindingCluster",
+      "definition": "A thematic grouping of catalog entries with a consensus summary showing supporting and contradicting source counts.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 4,
+      "specs": [
+        "ApiSpec",
+        "DataSpec",
+        "GoalSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-027",
+      "term": "CitationNetwork",
+      "definition": "Citation network data containing co-citation links between authors and citation links between papers.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 5,
+      "specs": [
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "GoalSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-028",
+      "term": "AuthorCoCitation",
+      "definition": "A co-citation link between two authors, recording how many times they are cited together.",
+      "category": "domain",
+      "relatedCount": 1,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-030",
+      "term": "ExportArchive",
+      "definition": "Metadata for an exported research session archive, including format, path, and included papers.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 2,
+      "specs": [
+        "DataSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-031",
+      "term": "ClarificationTurn",
+      "definition": "A single clarification Q&A turn between user and system during research brief refinement.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-032",
+      "term": "UserEdit",
+      "definition": "A user edit or redaction to a catalog entry, recording the original and replaced values with timestamp.",
+      "category": "domain",
+      "relatedCount": 1,
+      "specRefCount": 2,
+      "specs": [
+        "DataSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-033",
+      "term": "VerdictOutcome",
+      "definition": "Possible outcomes for a hypothesis verdict: supported, contradicted, inconclusive, or not applicable.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-034",
+      "term": "SufficiencyVerdict",
+      "definition": "Assessment of whether collected sources constitute an adequate review.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 2,
+      "specs": [
+        "DataSpec",
+        "GoalSpec"
+      ]
+    },
+    {
+      "id": "GL-035",
+      "term": "Source",
+      "definition": "A scholarly document such as a paper, conference proceeding, preprint, or technical report. Identified by a unique identifier. May be retrieved via scholarly search APIs or imported from citation managers.",
+      "category": "domain",
+      "relatedCount": 4,
+      "specRefCount": 6,
+      "specs": [
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "DesignSpec",
+        "GoalSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-036",
+      "term": "Error",
+      "definition": "A logged system event recording a failure with context (session, source, failure code) and suggested recovery actions.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 5,
+      "specs": [
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "DesignSpec",
+        "TestSpec"
+      ]
+    },
+    {
+      "id": "GL-037",
+      "term": "SourceStatus",
+      "definition": "Lifecycle status of a source within a research session, from ranked through extracted or rejected.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-038",
+      "term": "CASE_CONTROL",
+      "definition": "An observational study where two groups are compared — one with the outcome of interest (cases) and one without (controls).",
+      "category": "domain",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-039",
+      "term": "CASE_SERIES",
+      "definition": "A descriptive study tracking patients with a known exposure or treatment, without a control group.",
+      "category": "domain",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-040",
+      "term": "SYSTEMATIC_REVIEW",
+      "definition": "A high-level study that identifies, appraises, and synthesizes all relevant studies on a research question.",
+      "category": "domain",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-041",
+      "term": "CROSS_SECTIONAL",
+      "definition": "A study that observes a population at a single point in time to assess prevalence.",
+      "category": "domain",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-042",
+      "term": "MIXED_METHODS",
+      "definition": "A study design that combines quantitative and qualitative research methods.",
+      "category": "domain",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-043",
+      "term": "IN_VITRO",
+      "definition": "Research conducted in a controlled environment outside a living organism (e.g., cell culture).",
+      "category": "domain",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-044",
+      "term": "IN_VIVO",
+      "definition": "Research conducted within a living organism (e.g., animal studies).",
+      "category": "domain",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-045",
+      "term": "FORMULA_HEAVY",
+      "definition": "A PDF source that contains many mathematical formulas, which may have extraction errors.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-046",
+      "term": "SCANNED_PDF",
+      "definition": "A PDF that is a scanned image rather than text, potentially with poor OCR quality.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-047",
+      "term": "NON_ENGLISH",
+      "definition": "A source written in a language other than English, which may have translation gaps.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-048",
+      "term": "NOT_APPLICABLE",
+      "definition": "A verdict outcome indicating the hypothesis is not applicable to the collected evidence.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-049",
+      "term": "NEEDS_MORE",
+      "definition": "A sufficiency verdict indicating more sources are needed to reach adequate coverage.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-050",
+      "term": "AuthorCitation",
+      "definition": "A citation link between two authors, recording how many times they are cited together in the literature.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-051",
+      "term": "SourceCitation",
+      "definition": "A citation link between two scholarly sources, recording that one source cites another.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-052",
+      "term": "SessionSummary",
+      "definition": "A lightweight metadata snapshot of a research session, including title, status, and references to its queries, papers, catalog entries, and report.",
+      "category": "technical",
+      "relatedCount": 3,
+      "specRefCount": 3,
+      "specs": [
+        "ApiSpec",
+        "DataSpec",
+        "GoalSpec"
+      ]
+    },
+    {
+      "id": "GL-053",
+      "term": "Message",
+      "definition": "A single chat communication exchanged between the user and the system within a research session, carrying role (user/system), content, and timestamp.",
+      "category": "technical",
+      "relatedCount": 3,
+      "specRefCount": 3,
+      "specs": [
+        "ApiSpec",
+        "DataSpec",
+        "DesignSpec"
+      ]
+    },
+    {
+      "id": "GL-054",
+      "term": "Library",
+      "definition": "A curated collection of scholarly sources organized by the user, containing multiple research sessions and their associated papers, findings, and reports.",
+      "category": "technical",
+      "relatedCount": 3,
+      "specRefCount": 3,
+      "specs": [
+        "ApiSpec",
+        "DataSpec",
+        "DesignSpec"
+      ]
+    },
+    {
+      "id": "GL-055",
+      "term": "ErrorCode",
+      "definition": "Machine-readable error codes used to classify system failures, including network errors, parsing errors, download failures, rate limits, authentication failures, storage errors, validation errors, and unknown errors.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-056",
+      "term": "ErrorSeverity",
+      "definition": "Error severity levels used to prioritise error handling and user notification.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-057",
+      "term": "QueryStatus",
+      "definition": "Query execution lifecycle status, tracking a query from creation through execution to completion or failure.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 2,
+      "specs": [
+        "ApiSpec",
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-058",
+      "term": "QuerySource",
+      "definition": "Origin of a query: whether it was manually entered by the user, automatically generated from search tags, or derived from a similar source.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-059",
+      "term": "SearchStatus",
+      "definition": "Search campaign lifecycle status, tracking whether a search is currently running, has completed, or was cancelled.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-060",
+      "term": "ErrorRecovery",
+      "definition": "Suggested recovery actions for a logged error event, providing actionable remediation options to the user.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 2,
+      "specs": [
+        "ApiSpec",
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-061",
+      "term": "SessionFilter",
+      "definition": "Optional filter criteria used when querying research sessions, including status, text search, and library scope.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-062",
+      "term": "Hypothesis",
+      "definition": "A testable statement about the expected relationship between variables, derived from the research question and refined through the clarification process.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 3,
+      "specs": [
+        "ApiSpec",
+        "DataSpec",
+        "DesignSpec"
+      ]
+    },
+    {
+      "id": "GL-063",
+      "term": "ResearchQuestion",
+      "definition": "The free-text question provided by the user that defines the scope and objective of the research session.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 2,
+      "specs": [
+        "ArchitectureSpec",
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-065",
+      "term": "RelevanceScore",
+      "definition": "A numerical score computed by the ranking engine that indicates how well a paper matches the research question, used for accept/reject decisions.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-066",
+      "term": "Bibliography",
+      "definition": "A formatted list of citations for selected papers, exported in standard academic formats such as BibTeX, APA, MLA, or Chicago.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 2,
+      "specs": [
+        "ApiSpec",
+        "DesignSpec"
+      ]
+    },
+    {
+      "id": "GL-067",
+      "term": "SessionState",
+      "definition": "The complete persisted state of a research session including all artifacts, ensuring zero data loss after transient failures.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-068",
+      "term": "CitationManager",
+      "definition": "A citation management tool (e.g., Zotero, Mendeley) from which users can import paper lists into a research session.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 1,
+      "specs": [
+        "ArchitectureSpec"
+      ]
+    },
+    {
+      "id": "GL-069",
+      "term": "TransientFailure",
+      "definition": "A temporary failure in the pipeline (e.g., network timeout, API rate limit) that may resolve on retry without user intervention.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-070",
+      "term": "Consensus",
+      "definition": "The degree of agreement among catalog entries on a finding, measured by supporting versus contradicting source counts within a thematic cluster.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DesignSpec"
+      ]
+    },
+    {
+      "id": "GL-071",
+      "term": "SourceMetadata",
+      "definition": "Bibliographic information about a scholarly source including title, authors, abstract, publication year, journal, and DOI, retrieved from search APIs.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 1,
+      "specs": [
+        "ApiSpec"
+      ]
+    },
+    {
+      "id": "GL-072",
+      "term": "AcceptRejectDecision",
+      "definition": "The user's explicit decision to include or exclude a borderline-scored paper from further processing.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-073",
+      "term": "Archive",
+      "definition": "A packaged export of a complete research session including report, catalog, and metadata, suitable for sharing or backup.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 3,
+      "specs": [
+        "ApiSpec",
+        "DataSpec",
+        "DesignSpec"
+      ]
+    },
+    {
+      "id": "GL-074",
+      "term": "Authentication",
+      "definition": "The process of verifying the identity of a user or system component before granting access to resources.",
+      "category": "security",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "ArchitectureSpec"
+      ]
+    },
+    {
+      "id": "GL-075",
+      "term": "Classification",
+      "definition": "The process of categorizing papers or findings into predefined categories or taxonomies.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-076",
+      "term": "Clustering",
+      "definition": "The unsupervised grouping of papers or findings based on similarity, used for thematic analysis.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-077",
+      "term": "Database",
+      "definition": "A structured data store (relational or document-based) used for persistent storage of application data.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 1,
+      "specs": [
+        "DesignSpec"
+      ]
+    },
+    {
+      "id": "GL-078",
+      "term": "Extraction",
+      "definition": "The process of extracting structured information (findings, claims, metadata) from unstructured PDF documents.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 3,
+      "specs": [
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DesignSpec"
+      ]
+    },
+    {
+      "id": "GL-079",
+      "term": "Filtering",
+      "definition": "The process of selecting a subset of items based on specified criteria.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 1,
+      "specs": [
+        "ApiSpec"
+      ]
+    },
+    {
+      "id": "GL-080",
+      "term": "Keyword",
+      "definition": "A significant word or phrase extracted from text, used for indexing and search.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-081",
+      "term": "Migration",
+      "definition": "The process of transferring data between storage systems, formats, or databases.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-082",
+      "term": "PDF",
+      "definition": "Portable Document Format, a file format used for distributing documents, commonly used for scholarly papers.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 3,
+      "specs": [
+        "ApiSpec",
+        "DataSpec",
+        "DesignSpec"
+      ]
+    },
+    {
+      "id": "GL-083",
+      "term": "Parsing",
+      "definition": "The process of analyzing a string of symbols (text or structured data) to determine its grammatical structure.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
+    },
+    {
+      "id": "GL-084",
+      "term": "Ranking",
+      "definition": "The process of ordering papers or results by relevance score or other criteria.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 2,
+      "specs": [
+        "ApiSpec",
+        "DesignSpec"
+      ]
+    },
+    {
+      "id": "GL-085",
+      "term": "Retry",
+      "definition": "The act of attempting an operation again after a failure, often with exponential backoff.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DesignSpec"
+      ]
+    },
+    {
+      "id": "GL-086",
+      "term": "Scoring",
+      "definition": "The process of assigning a numerical value to indicate quality, relevance, or confidence.",
+      "category": "domain",
+      "relatedCount": 2,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-087",
+      "term": "Schema",
+      "definition": "A blueprint or definition of the structure of data, including field names, types, and constraints.",
+      "category": "technical",
+      "relatedCount": 1,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "GL-089",
+      "term": "Version",
+      "definition": "A specific release or iteration of a software component, document, or data model.",
+      "category": "technical",
+      "relatedCount": 2,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "SPEc:GoalSpec",
+      "term": "GoalSpec",
+      "definition": "Specification: GoalSpec.json",
+      "category": "spec",
+      "relatedCount": 21,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "SPEc:DesignSpec",
+      "term": "DesignSpec",
+      "definition": "Specification: DesignSpec.json",
+      "category": "spec",
+      "relatedCount": 24,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "SPEc:ApiSpec",
+      "term": "ApiSpec",
+      "definition": "Specification: ApiSpec.json",
+      "category": "spec",
+      "relatedCount": 27,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "SPEc:ArchitectureSpec",
+      "term": "ArchitectureSpec",
+      "definition": "Specification: ArchitectureSpec.json",
+      "category": "spec",
+      "relatedCount": 27,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "SPEc:DataSpec",
+      "term": "DataSpec",
+      "definition": "Specification: DataSpec.json",
+      "category": "spec",
+      "relatedCount": 48,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "SPEc:TestSpec",
+      "term": "TestSpec",
+      "definition": "Specification: TestSpec.json",
+      "category": "spec",
+      "relatedCount": 17,
+      "specRefCount": 0,
+      "specs": []
+    }
+  ],
+  "edges": [
+    {
+      "source": "GL-001",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-001",
+      "target": "GL-006",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-001",
+      "target": "GL-008",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-002",
+      "target": "GL-003",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-003",
+      "target": "GL-004",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-004",
+      "target": "GL-005",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-005",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-006",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-006",
+      "target": "GL-010",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-006",
+      "target": "GL-007",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-007",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-007",
+      "target": "GL-010",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-008",
+      "target": "GL-009",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-008",
+      "target": "GL-006",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-011",
+      "target": "GL-012",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-013",
+      "target": "GL-014",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-013",
+      "target": "GL-019",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-014",
+      "target": "GL-015",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-015",
+      "target": "GL-017",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-016",
+      "target": "GL-017",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-016",
+      "target": "GL-022",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-017",
+      "target": "GL-019",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-017",
+      "target": "GL-018",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-018",
+      "target": "GL-019",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-018",
+      "target": "GL-020",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-019",
+      "target": "GL-022",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-020",
+      "target": "GL-021",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-023",
+      "target": "GL-001",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-023",
+      "target": "GL-002",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-023",
+      "target": "GL-003",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-024",
+      "target": "GL-006",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-024",
+      "target": "GL-025",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-025",
+      "target": "GL-006",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-026",
+      "target": "GL-006",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-026",
+      "target": "GL-008",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-027",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-027",
+      "target": "GL-028",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-030",
+      "target": "GL-001",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-031",
+      "target": "GL-023",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-031",
+      "target": "GL-001",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-032",
+      "target": "GL-006",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-033",
+      "target": "GL-009",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-034",
+      "target": "GL-008",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-035",
+      "target": "GL-037",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-035",
+      "target": "GL-024",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-035",
+      "target": "GL-025",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-036",
+      "target": "GL-001",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-036",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-038",
+      "target": "GL-007",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-039",
+      "target": "GL-007",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-040",
+      "target": "GL-007",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-041",
+      "target": "GL-007",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-042",
+      "target": "GL-007",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-043",
+      "target": "GL-007",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-044",
+      "target": "GL-007",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-045",
+      "target": "GL-010",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-046",
+      "target": "GL-010",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-047",
+      "target": "GL-010",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-048",
+      "target": "GL-033",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-049",
+      "target": "GL-034",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-050",
+      "target": "GL-027",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-050",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-051",
+      "target": "GL-027",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-051",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-052",
+      "target": "GL-001",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-052",
+      "target": "GL-004",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-052",
+      "target": "GL-008",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-053",
+      "target": "GL-001",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-053",
+      "target": "GL-011",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-053",
+      "target": "GL-012",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-054",
+      "target": "GL-001",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-054",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-054",
+      "target": "GL-011",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-055",
+      "target": "GL-036",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-056",
+      "target": "GL-036",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-057",
+      "target": "GL-004",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-058",
+      "target": "GL-004",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-058",
+      "target": "GL-003",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-059",
+      "target": "GL-005",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-060",
+      "target": "GL-036",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-061",
+      "target": "GL-001",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-062",
+      "target": "GL-009",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-062",
+      "target": "GL-023",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-063",
+      "target": "GL-023",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-063",
+      "target": "GL-001",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-065",
+      "target": "GL-015",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-065",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-066",
+      "target": "GL-021",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-066",
+      "target": "GL-006",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-067",
+      "target": "GL-001",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-067",
+      "target": "GL-019",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-068",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-068",
+      "target": "GL-001",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-069",
+      "target": "GL-036",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-070",
+      "target": "GL-026",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-070",
+      "target": "GL-006",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-071",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-071",
+      "target": "GL-005",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-072",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-072",
+      "target": "GL-015",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-073",
+      "target": "GL-030",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-073",
+      "target": "GL-001",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-074",
+      "target": "GL-018",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-075",
+      "target": "GL-006",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-075",
+      "target": "GL-026",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-076",
+      "target": "GL-026",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-076",
+      "target": "GL-008",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-077",
+      "target": "GL-001",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-078",
+      "target": "GL-010",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-078",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-079",
+      "target": "GL-004",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-079",
+      "target": "GL-005",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-080",
+      "target": "GL-003",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-080",
+      "target": "GL-005",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-081",
+      "target": "GL-001",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-082",
+      "target": "GL-035",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-082",
+      "target": "GL-016",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-083",
+      "target": "GL-016",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-083",
+      "target": "GL-010",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-084",
+      "target": "GL-015",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-084",
+      "target": "GL-067",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-085",
+      "target": "GL-036",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-085",
+      "target": "GL-073",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-086",
+      "target": "GL-015",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-086",
+      "target": "GL-067",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-087",
+      "target": "GL-049",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-089",
+      "target": "GL-087",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "GL-089",
+      "target": "GL-081",
+      "type": "relatedTerms"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-052",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-024",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-026",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-025",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-009",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-011",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-007",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-012",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-021",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-019",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-015",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-008",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-006",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-010",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-023",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-016",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-034",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-027",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-035",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-001",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "GL-004",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-053",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-024",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-073",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-070",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-066",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-025",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-009",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-011",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-084",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-007",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-062",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-012",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-085",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-008",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-077",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-054",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-023",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-036",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-005",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-035",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-082",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-078",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-001",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "GL-004",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-053",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-052",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-060",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-024",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-073",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-026",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-025",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-066",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-009",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-011",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-079",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-084",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-062",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-012",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-057",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-008",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-054",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-023",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-005",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-036",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-027",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-035",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-082",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-078",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-001",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-004",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "GL-071",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-024",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-013",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-068",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-022",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-011",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-020",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-003",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-007",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-012",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-063",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-021",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-074",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-015",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-019",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-006",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-008",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-010",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-005",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-036",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-016",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-014",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-027",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-035",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-018",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-078",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-001",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "GL-004",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-053",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-052",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-083",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-060",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-024",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-041",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-073",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-026",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-038",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-046",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-042",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-045",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-025",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-039",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-009",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-011",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-032",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-003",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-007",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-062",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-012",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-043",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-063",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-030",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-057",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-058",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-008",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-006",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-010",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-054",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-023",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-005",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-036",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-047",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-033",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-051",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-037",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-061",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-034",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-027",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-035",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-082",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-050",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-040",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-001",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-059",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-004",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "GL-044",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-036",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-002",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-009",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-029",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-024",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-011",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-032",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-030",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-026",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-027",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-035",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-008",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-012",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-001",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-004",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-023",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:TestSpec",
+      "target": "GL-025",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "SPEc:ArchitectureSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-005",
+        "GL-008",
+        "GL-011",
+        "GL-012",
+        "GL-024",
+        "GL-027",
+        "GL-035",
+        "GL-036",
+        "GL-078"
+      ],
+      "sharedCount": 11
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "SPEc:DataSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-005",
+        "GL-008",
+        "GL-009",
+        "GL-011",
+        "GL-012",
+        "GL-023",
+        "GL-024",
+        "GL-025",
+        "GL-026",
+        "GL-027",
+        "GL-035",
+        "GL-036",
+        "GL-052",
+        "GL-053",
+        "GL-054",
+        "GL-057",
+        "GL-060",
+        "GL-062",
+        "GL-073",
+        "GL-082"
+      ],
+      "sharedCount": 22
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "SPEc:DesignSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-005",
+        "GL-008",
+        "GL-009",
+        "GL-011",
+        "GL-012",
+        "GL-023",
+        "GL-024",
+        "GL-025",
+        "GL-035",
+        "GL-036",
+        "GL-053",
+        "GL-054",
+        "GL-062",
+        "GL-066",
+        "GL-073",
+        "GL-078",
+        "GL-082",
+        "GL-084"
+      ],
+      "sharedCount": 20
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "SPEc:GoalSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-008",
+        "GL-009",
+        "GL-011",
+        "GL-012",
+        "GL-023",
+        "GL-024",
+        "GL-025",
+        "GL-026",
+        "GL-027",
+        "GL-035",
+        "GL-052"
+      ],
+      "sharedCount": 13
+    },
+    {
+      "source": "SPEc:ApiSpec",
+      "target": "SPEc:TestSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-008",
+        "GL-009",
+        "GL-011",
+        "GL-012",
+        "GL-023",
+        "GL-024",
+        "GL-025",
+        "GL-026",
+        "GL-027",
+        "GL-035",
+        "GL-036"
+      ],
+      "sharedCount": 13
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "SPEc:DataSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-003",
+        "GL-004",
+        "GL-005",
+        "GL-006",
+        "GL-007",
+        "GL-008",
+        "GL-010",
+        "GL-011",
+        "GL-012",
+        "GL-024",
+        "GL-027",
+        "GL-035",
+        "GL-036",
+        "GL-063"
+      ],
+      "sharedCount": 15
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "SPEc:DesignSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-005",
+        "GL-007",
+        "GL-008",
+        "GL-011",
+        "GL-012",
+        "GL-024",
+        "GL-035",
+        "GL-036",
+        "GL-078"
+      ],
+      "sharedCount": 11
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "SPEc:GoalSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-006",
+        "GL-007",
+        "GL-008",
+        "GL-010",
+        "GL-011",
+        "GL-012",
+        "GL-015",
+        "GL-016",
+        "GL-019",
+        "GL-021",
+        "GL-024",
+        "GL-027",
+        "GL-035"
+      ],
+      "sharedCount": 15
+    },
+    {
+      "source": "SPEc:ArchitectureSpec",
+      "target": "SPEc:TestSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-008",
+        "GL-011",
+        "GL-012",
+        "GL-024",
+        "GL-027",
+        "GL-035",
+        "GL-036"
+      ],
+      "sharedCount": 9
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "SPEc:DesignSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-005",
+        "GL-007",
+        "GL-008",
+        "GL-009",
+        "GL-011",
+        "GL-012",
+        "GL-023",
+        "GL-024",
+        "GL-025",
+        "GL-035",
+        "GL-036",
+        "GL-053",
+        "GL-054",
+        "GL-062",
+        "GL-073",
+        "GL-082"
+      ],
+      "sharedCount": 18
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "SPEc:GoalSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-006",
+        "GL-007",
+        "GL-008",
+        "GL-009",
+        "GL-010",
+        "GL-011",
+        "GL-012",
+        "GL-023",
+        "GL-024",
+        "GL-025",
+        "GL-026",
+        "GL-027",
+        "GL-034",
+        "GL-035",
+        "GL-052"
+      ],
+      "sharedCount": 17
+    },
+    {
+      "source": "SPEc:DataSpec",
+      "target": "SPEc:TestSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-008",
+        "GL-009",
+        "GL-011",
+        "GL-012",
+        "GL-023",
+        "GL-024",
+        "GL-025",
+        "GL-026",
+        "GL-027",
+        "GL-030",
+        "GL-032",
+        "GL-035",
+        "GL-036"
+      ],
+      "sharedCount": 15
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "SPEc:GoalSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-007",
+        "GL-008",
+        "GL-009",
+        "GL-011",
+        "GL-012",
+        "GL-023",
+        "GL-024",
+        "GL-025",
+        "GL-035"
+      ],
+      "sharedCount": 11
+    },
+    {
+      "source": "SPEc:DesignSpec",
+      "target": "SPEc:TestSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-008",
+        "GL-009",
+        "GL-011",
+        "GL-012",
+        "GL-023",
+        "GL-024",
+        "GL-025",
+        "GL-035",
+        "GL-036"
+      ],
+      "sharedCount": 11
+    },
+    {
+      "source": "SPEc:GoalSpec",
+      "target": "SPEc:TestSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-004",
+        "GL-008",
+        "GL-009",
+        "GL-011",
+        "GL-012",
+        "GL-023",
+        "GL-024",
+        "GL-025",
+        "GL-026",
+        "GL-027",
+        "GL-035"
+      ],
+      "sharedCount": 12
+    }
+  ]
+}

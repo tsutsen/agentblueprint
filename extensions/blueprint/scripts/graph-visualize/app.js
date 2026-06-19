@@ -1,0 +1,109 @@
+// ─── Component Loader ───
+async function loadComponent(id, path) {
+  const container = document.getElementById(id);
+  const response = await fetch(path);
+  const html = await response.text();
+  container.insertAdjacentHTML('beforeend', html);
+}
+
+// ─── App Initialization ───
+async function initApp() {
+  try {
+    await Promise.all([
+      loadComponent('sidebar-container', 'components/sidebar.html'),
+      loadComponent('canvas-container', 'components/canvas.html'),
+    ]);
+
+    // Detail and debug panels are inside canvas-container now
+
+    // Start the app — wait for styles to apply
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        loadGraphData();
+      });
+    });
+
+    // ─── Event listeners (need DOM elements to exist) ───
+    // Click background to deselect (same as pressing × close button)
+    // Distinguish click from drag by tracking mouse movement distance
+    let pointerDownPos = null;
+    const graphContainer = document.getElementById('graph-container');
+    if (graphContainer) {
+      graphContainer.addEventListener('pointerdown', (e) => {
+        pointerDownPos = { x: e.clientX, y: e.clientY };
+      });
+      graphContainer.addEventListener('click', (e) => {
+        // Skip if a drag actually occurred (isDragging set by dragged())
+        if (isDragging) return;
+        const isOnNode = e.target.closest('.node') || e.target.closest('circle');
+        if (!isOnNode) {
+          deselectNode();
+        }
+      });
+    }
+
+    // Global error handler
+    window.addEventListener('error', (e) => {
+      console.error('Global error:', e.message, 'at', e.filename, ':', e.lineno);
+      const overlay = document.getElementById('loading-overlay');
+      if (overlay) {
+        overlay.innerHTML = `<div style="color:#f44;font-size:14px;padding:20px;text-align:center;">
+          <strong>JavaScript Error</strong><br><br>
+          <code style="font-size:11px;word-break:break-all;">${e.message}</code><br><br>
+          <span style="font-size:11px;color:#888;">${e.filename}:${e.lineno}</span><br><br>
+          <span style="font-size:11px;color:#f80;">Check browser console (F12) for details</span>
+        </div>`;
+      }
+    });
+
+    window.addEventListener('unhandledrejection', (e) => {
+      console.error('Unhandled promise rejection:', e.reason);
+    });
+
+    // Resize handler
+    window.addEventListener('resize', () => {
+      const container = document.getElementById('graph-container');
+      width = container.clientWidth;
+      height = container.clientHeight;
+      svg.attr('width', width).attr('height', height);
+      simulation.force('center', d3.forceCenter(width / 2, height / 2));
+    });
+
+    // Escape to deselect
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && selectedNode) {
+        deselectNode();
+      }
+    });
+  } catch (e) {
+    console.error('Failed to load components:', e);
+  }
+}
+
+// ─── Start ───
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+
+// ─── Load Graph Data ───
+async function loadGraphData() {
+  try {
+    const resp = await fetch('graph-data.json');
+    graphData = await resp.json();
+  } catch (e) {
+    try {
+      const resp = await fetch('./graph-data.json');
+      graphData = await resp.json();
+    } catch (e2) {
+      document.getElementById('loading-text').textContent =
+        'Could not load graph-data.json. Run `node extract-graph-data.js` first.';
+      return;
+    }
+  }
+  initUI();
+  startTime = performance.now();
+  tickCount = 0;
+  initGraph();
+}

@@ -1,0 +1,39 @@
+/* Retro Light Theme (Psychedelic) */
+
+:root {
+  --bg: #fff0f5;
+  --surface: #ffe4e1;
+  --btn-text: #4b0082;
+  --surface2: #ffdab9;
+  --border: #dda0dd;
+  --text: #4b0082;
+  --text-dim: #9b1b9b;
+  --text-bright: #1a0030;
+  --accent: #d6357f;
+  --accent-text: #1a1a1a;
+  --accent-glow: rgba(255, 105, 180, 0.2);
+  --domain: #c62828;
+  --technical: #1565c0;
+  --security: #bf360c;
+  --ui: #6a1b9a;
+  --spec: #00695c;
+  --edge-related: rgba(25, 118, 210, 0.3);
+  --edge-spec: rgba(0, 121, 107, 0.3);
+  --edge-cross: rgba(216, 67, 21, 0.3);
+}
+
+#detail-panel {
+  background: #ffe4e1 !important;
+}
+
+.node-label {
+  stroke: rgba(255, 240, 245, 0.9);
+  stroke-width: 2px;
+}
+
+.category-badge-domain { background: rgba(255, 0, 0, 0.13) !important; }
+.category-badge-technical { background: rgba(0, 255, 0, 0.13) !important; }
+.category-badge-security { background: rgba(255, 165, 0, 0.13) !important; }
+.category-badge-ui { background: rgba(0, 0, 255, 0.13) !important; }
+.category-badge-spec { background: rgba(139, 0, 255, 0.13) !important; }
+
