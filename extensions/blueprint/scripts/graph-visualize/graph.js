@@ -17,6 +17,7 @@ let isDragging = false;
 let zoom = { x: 0, y: 0, k: 1 };
 let isPanning = false;
 let panStart = { x: 0, y: 0 };
+let zoomStart = { x: 0, y: 0 };
 let isMouseDown = false;
 
 // ─── Init graph ───
@@ -257,7 +258,8 @@ function onMouseDown(event) {
       isDragging = false;
     } else {
       isPanning = false; // Don't start pan yet, wait to see if mouse moves
-      panStart = { x: event.clientX - zoom.x, y: event.clientY - zoom.y };
+      panStart = { x: event.clientX, y: event.clientY };
+      zoomStart = { x: zoom.x, y: zoom.y };
     }
   }
 }
@@ -287,8 +289,8 @@ function onMouseMove(event) {
   }
 
   if (isPanning) {
-    zoom.x = event.clientX - panStart.x;
-    zoom.y = event.clientY - panStart.y;
+    zoom.x = zoomStart.x + (event.clientX - panStart.x);
+    zoom.y = zoomStart.y + (event.clientY - panStart.y);
     render();
     return;
   }
