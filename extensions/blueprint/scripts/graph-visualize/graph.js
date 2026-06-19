@@ -194,8 +194,16 @@ function updateHtmlLabels() {
     const isVisible = shouldShowLabel(node);
     if (isVisible) {
       labelEl.classList.add("visible");
+      // Apply dimming for non-connected nodes when a node is selected
+      const isConnected = !connectedSet || connectedSet.has(node.id);
+      if (connectedSet && !isConnected) {
+        labelEl.style.opacity = `${currentDim}`;
+      } else {
+        labelEl.style.opacity = "";
+      }
     } else {
       labelEl.classList.remove("visible");
+      labelEl.style.opacity = "";
     }
   }
 
