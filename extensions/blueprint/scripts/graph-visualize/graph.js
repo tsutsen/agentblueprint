@@ -311,9 +311,8 @@ function getNodeRadius(d) {
     value = typeSizes[d.type] || 5;
   }
 
-  // Scale: min 6px, max 35px
-  const r = Math.max(6, Math.min(35, 6 + value * 1.5));
-  console.log('getNodeRadius:', d.id, 'metric:', sizeMetric, 'value:', value, 'radius:', r);
+  // Scale: min 5px, max 45px with exponential curve
+  const r = Math.max(5, Math.min(45, 5 + Math.sqrt(value) * 8));
   return r;
 }
 
