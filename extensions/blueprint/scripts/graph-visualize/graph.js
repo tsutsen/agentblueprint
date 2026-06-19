@@ -19,6 +19,7 @@ let isPanning = false;
 let panStart = { x: 0, y: 0 };
 let zoomStart = { x: 0, y: 0 };
 let isMouseDown = false;
+let sizeRange = { relatedCount: [0, 1], degree: [0, 1], type: [1, 3] };
 
 // ─── Init graph ───
 function initGraph() {
@@ -352,19 +353,18 @@ function getNodeRadius(d) {
 
   // Size based on selected metric
   let value = 0;
-  let minVal = 0;
-  let maxVal = 1;
+  let minVal, maxVal;
 
   if (sizeMetric === 'relatedCount') {
     value = d.relatedCount || 0;
-    minVal = 0;
-    maxVal = 100;
+    minVal = sizeRange.relatedCount[0];
+    maxVal = sizeRange.relatedCount[1];
   } else if (sizeMetric === 'degree') {
     value = d.degree || 0;
-    minVal = 0;
-    maxVal = 50;
+    minVal = sizeRange.degree[0];
+    maxVal = sizeRange.degree[1];
   } else if (sizeMetric === 'type') {
-    // Size by type category - use small fixed range
+    // Size by type category - use fixed small range
     const typeSizes = { CON: 3, FN: 2.5, REQ: 2.2, US: 2.2, SC: 2, Entity: 2, GL: 1.8, TST: 1.5, Enum: 1.5, API: 2, EP: 2.5, TASK: 1.7, ISSUE: 2, DG: 1.7, UJ: 2, UXAC: 2, NFR: 2.2, IS: 2, spec: 2.5 };
     value = typeSizes[d.type] || 1;
     minVal = 1;
