@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "summary": {
     "totalTerms": 86,
-    "totalEdges": 128,
-    "totalSpecs": 0,
+    "totalEdges": 292,
+    "totalSpecs": 6,
     "categories": {
       "domain": 39,
       "technical": 46,
@@ -21,9 +21,16 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 3,
-      "degree": 17,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 23,
+      "specRefCount": 6,
+      "specs": [
+        "GoalSpec",
+        "DesignSpec",
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-002",
@@ -34,9 +41,11 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 1,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-003",
@@ -47,9 +56,12 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 5,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 7,
+      "specRefCount": 2,
+      "specs": [
+        "ArchitectureSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-004",
@@ -60,9 +72,16 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 6,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 12,
+      "specRefCount": 6,
+      "specs": [
+        "GoalSpec",
+        "DesignSpec",
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-005",
@@ -73,9 +92,14 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 6,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 10,
+      "specRefCount": 4,
+      "specs": [
+        "DesignSpec",
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-006",
@@ -86,9 +110,13 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 3,
-      "degree": 12,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 15,
+      "specRefCount": 3,
+      "specs": [
+        "GoalSpec",
+        "ArchitectureSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-007",
@@ -99,9 +127,14 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 3,
-      "degree": 10,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 14,
+      "specRefCount": 4,
+      "specs": [
+        "GoalSpec",
+        "DesignSpec",
+        "ArchitectureSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-008",
@@ -112,9 +145,16 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 7,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 13,
+      "specRefCount": 6,
+      "specs": [
+        "GoalSpec",
+        "DesignSpec",
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-009",
@@ -125,9 +165,15 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 1,
-      "degree": 3,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 8,
+      "specRefCount": 5,
+      "specs": [
+        "GoalSpec",
+        "DesignSpec",
+        "ApiSpec",
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-010",
@@ -138,9 +184,13 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 7,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 10,
+      "specRefCount": 3,
+      "specs": [
+        "GoalSpec",
+        "ArchitectureSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-011",
@@ -151,9 +201,16 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 3,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 9,
+      "specRefCount": 6,
+      "specs": [
+        "GoalSpec",
+        "DesignSpec",
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-012",
@@ -164,9 +221,16 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 8,
+      "specRefCount": 6,
+      "specs": [
+        "GoalSpec",
+        "DesignSpec",
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-013",
@@ -177,9 +241,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "ArchitectureSpec"
+      ]
     },
     {
       "id": "GL-014",
@@ -190,9 +256,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "ArchitectureSpec"
+      ]
     },
     {
       "id": "GL-015",
@@ -203,9 +271,12 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 6,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 8,
+      "specRefCount": 2,
+      "specs": [
+        "GoalSpec",
+        "ArchitectureSpec"
+      ]
     },
     {
       "id": "GL-016",
@@ -216,9 +287,12 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 4,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 6,
+      "specRefCount": 2,
+      "specs": [
+        "GoalSpec",
+        "ArchitectureSpec"
+      ]
     },
     {
       "id": "GL-017",
@@ -242,9 +316,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 3,
-      "degree": 4,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 5,
+      "specRefCount": 1,
+      "specs": [
+        "ArchitectureSpec"
+      ]
     },
     {
       "id": "GL-019",
@@ -255,9 +331,12 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 3,
-      "degree": 5,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 7,
+      "specRefCount": 2,
+      "specs": [
+        "GoalSpec",
+        "ArchitectureSpec"
+      ]
     },
     {
       "id": "GL-020",
@@ -268,9 +347,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "ArchitectureSpec"
+      ]
     },
     {
       "id": "GL-021",
@@ -281,9 +362,12 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 4,
+      "specRefCount": 2,
+      "specs": [
+        "GoalSpec",
+        "ArchitectureSpec"
+      ]
     },
     {
       "id": "GL-022",
@@ -294,9 +378,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "ArchitectureSpec"
+      ]
     },
     {
       "id": "GL-023",
@@ -307,9 +393,15 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 3,
-      "degree": 6,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 11,
+      "specRefCount": 5,
+      "specs": [
+        "GoalSpec",
+        "DesignSpec",
+        "ApiSpec",
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-024",
@@ -320,9 +412,16 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 3,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 9,
+      "specRefCount": 6,
+      "specs": [
+        "GoalSpec",
+        "DesignSpec",
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-025",
@@ -333,9 +432,15 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 3,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 8,
+      "specRefCount": 5,
+      "specs": [
+        "GoalSpec",
+        "DesignSpec",
+        "ApiSpec",
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-026",
@@ -346,9 +451,14 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 5,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 9,
+      "specRefCount": 4,
+      "specs": [
+        "GoalSpec",
+        "ApiSpec",
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-027",
@@ -359,9 +469,15 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 4,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 9,
+      "specRefCount": 5,
+      "specs": [
+        "GoalSpec",
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-028",
@@ -385,9 +501,12 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 4,
+      "specRefCount": 2,
+      "specs": [
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-031",
@@ -411,9 +530,12 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 2,
+      "specs": [
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-033",
@@ -424,9 +546,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-034",
@@ -437,9 +561,12 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 4,
+      "specRefCount": 2,
+      "specs": [
+        "GoalSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-035",
@@ -450,9 +577,16 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 4,
-      "degree": 18,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 24,
+      "specRefCount": 6,
+      "specs": [
+        "GoalSpec",
+        "DesignSpec",
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-036",
@@ -463,9 +597,15 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 7,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 12,
+      "specRefCount": 5,
+      "specs": [
+        "DesignSpec",
+        "ApiSpec",
+        "ArchitectureSpec",
+        "DataSpec",
+        "TestSpec"
+      ]
     },
     {
       "id": "GL-037",
@@ -476,9 +616,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-038",
@@ -489,9 +631,11 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-039",
@@ -502,9 +646,11 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-040",
@@ -515,9 +661,11 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-041",
@@ -528,9 +676,11 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-042",
@@ -541,9 +691,11 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-043",
@@ -554,9 +706,11 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-044",
@@ -567,9 +721,11 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-045",
@@ -580,9 +736,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-046",
@@ -593,9 +751,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-047",
@@ -606,9 +766,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-048",
@@ -645,9 +807,11 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-051",
@@ -658,9 +822,11 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-052",
@@ -671,9 +837,13 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 3,
-      "degree": 3,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 6,
+      "specRefCount": 3,
+      "specs": [
+        "GoalSpec",
+        "ApiSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-053",
@@ -684,9 +854,13 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 3,
-      "degree": 3,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 6,
+      "specRefCount": 3,
+      "specs": [
+        "DesignSpec",
+        "ApiSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-054",
@@ -697,9 +871,13 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 3,
-      "degree": 3,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 6,
+      "specRefCount": 3,
+      "specs": [
+        "DesignSpec",
+        "ApiSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-055",
@@ -736,9 +914,12 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 2,
+      "specs": [
+        "ApiSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-058",
@@ -749,9 +930,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-059",
@@ -762,9 +945,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-060",
@@ -775,9 +960,12 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 2,
+      "specs": [
+        "ApiSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-061",
@@ -788,9 +976,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-062",
@@ -801,9 +991,13 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 5,
+      "specRefCount": 3,
+      "specs": [
+        "DesignSpec",
+        "ApiSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-063",
@@ -814,9 +1008,12 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 4,
+      "specRefCount": 2,
+      "specs": [
+        "ArchitectureSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-065",
@@ -840,9 +1037,12 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 4,
+      "specRefCount": 2,
+      "specs": [
+        "DesignSpec",
+        "ApiSpec"
+      ]
     },
     {
       "id": "GL-067",
@@ -866,9 +1066,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "ArchitectureSpec"
+      ]
     },
     {
       "id": "GL-069",
@@ -892,9 +1094,11 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "DesignSpec"
+      ]
     },
     {
       "id": "GL-071",
@@ -905,9 +1109,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "ApiSpec"
+      ]
     },
     {
       "id": "GL-072",
@@ -931,9 +1137,13 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 3,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 6,
+      "specRefCount": 3,
+      "specs": [
+        "DesignSpec",
+        "ApiSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-074",
@@ -944,9 +1154,11 @@
       "typeLabel": "UXAC",
       "typeCat": "security",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "ArchitectureSpec"
+      ]
     },
     {
       "id": "GL-075",
@@ -983,9 +1195,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 1,
-      "degree": 1,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 2,
+      "specRefCount": 1,
+      "specs": [
+        "DesignSpec"
+      ]
     },
     {
       "id": "GL-078",
@@ -996,9 +1210,13 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 5,
+      "specRefCount": 3,
+      "specs": [
+        "DesignSpec",
+        "ApiSpec",
+        "ArchitectureSpec"
+      ]
     },
     {
       "id": "GL-079",
@@ -1009,9 +1227,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "ApiSpec"
+      ]
     },
     {
       "id": "GL-080",
@@ -1048,9 +1268,13 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 5,
+      "specRefCount": 3,
+      "specs": [
+        "DesignSpec",
+        "ApiSpec",
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-083",
@@ -1061,9 +1285,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "DataSpec"
+      ]
     },
     {
       "id": "GL-084",
@@ -1074,9 +1300,12 @@
       "typeLabel": "GL",
       "typeCat": "domain",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 4,
+      "specRefCount": 2,
+      "specs": [
+        "DesignSpec",
+        "ApiSpec"
+      ]
     },
     {
       "id": "GL-085",
@@ -1087,9 +1316,11 @@
       "typeLabel": "CON",
       "typeCat": "technical",
       "relatedCount": 2,
-      "degree": 2,
-      "specRefCount": 0,
-      "specs": []
+      "degree": 3,
+      "specRefCount": 1,
+      "specs": [
+        "DesignSpec"
+      ]
     },
     {
       "id": "GL-086",
@@ -1127,6 +1358,84 @@
       "typeCat": "technical",
       "relatedCount": 2,
       "degree": 2,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "SPEC:GoalSpec",
+      "term": "GoalSpec",
+      "definition": "Specification file: GoalSpec.json",
+      "category": "spec",
+      "type": "spec",
+      "typeLabel": "Specification",
+      "typeCat": "spec",
+      "relatedCount": 21,
+      "degree": 26,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "SPEC:DesignSpec",
+      "term": "DesignSpec",
+      "definition": "Specification file: DesignSpec.json",
+      "category": "spec",
+      "type": "spec",
+      "typeLabel": "Specification",
+      "typeCat": "spec",
+      "relatedCount": 24,
+      "degree": 29,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "SPEC:ApiSpec",
+      "term": "ApiSpec",
+      "definition": "Specification file: ApiSpec.json",
+      "category": "spec",
+      "type": "spec",
+      "typeLabel": "Specification",
+      "typeCat": "spec",
+      "relatedCount": 27,
+      "degree": 32,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "SPEC:ArchitectureSpec",
+      "term": "ArchitectureSpec",
+      "definition": "Specification file: ArchitectureSpec.json",
+      "category": "spec",
+      "type": "spec",
+      "typeLabel": "Specification",
+      "typeCat": "spec",
+      "relatedCount": 27,
+      "degree": 32,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "SPEC:DataSpec",
+      "term": "DataSpec",
+      "definition": "Specification file: DataSpec.json",
+      "category": "spec",
+      "type": "spec",
+      "typeLabel": "Specification",
+      "typeCat": "spec",
+      "relatedCount": 48,
+      "degree": 53,
+      "specRefCount": 0,
+      "specs": []
+    },
+    {
+      "id": "SPEC:TestSpec",
+      "term": "TestSpec",
+      "definition": "Specification file: TestSpec.json",
+      "category": "spec",
+      "type": "spec",
+      "typeLabel": "Specification",
+      "typeCat": "spec",
+      "relatedCount": 17,
+      "degree": 22,
       "specRefCount": 0,
       "specs": []
     }
@@ -1771,6 +2080,1159 @@
       "source": "GL-089",
       "target": "GL-081",
       "type": "relatedTerms"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-008",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-009",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-024",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-001",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-011",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-004",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-012",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-023",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-035",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-007",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-006",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-025",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-034",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-027",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-026",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-010",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-019",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-015",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-016",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-052",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "GL-021",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-005",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-025",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-053",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-054",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-062",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-066",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-070",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-073",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-077",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-078",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-082",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-084",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-085",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-011",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-001",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-008",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-012",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-024",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-023",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-004",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-007",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-009",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-035",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "GL-036",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-012",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-036",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-005",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-052",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-053",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-011",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-023",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-004",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-057",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-035",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-084",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-082",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-024",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-025",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-071",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-078",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-054",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-026",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-008",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-062",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-009",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-079",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-066",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-073",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-060",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-001",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "GL-027",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-004",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-013",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-014",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-001",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-063",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-005",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-003",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-015",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-007",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-016",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-035",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-006",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-010",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-008",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-018",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-024",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-078",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-074",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-019",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-020",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-027",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-021",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-068",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-022",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-036",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-012",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "GL-011",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-001",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-005",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-052",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-054",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-073",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-035",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-011",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-023",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-062",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-063",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-003",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-004",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-057",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-058",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-082",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-083",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-024",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-025",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-008",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-009",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-026",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-027",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-050",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-051",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-030",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-006",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-032",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-012",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-036",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-053",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-060",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-061",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-007",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-038",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-039",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-040",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-041",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-042",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-043",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-044",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-045",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-046",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-047",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-059",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-037",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-010",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-034",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "GL-033",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-023",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-004",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-035",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-024",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-026",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-008",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-009",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-036",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-001",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-011",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-002",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-025",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-032",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-027",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-029",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-030",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:TestSpec",
+      "target": "GL-012",
+      "type": "specRef"
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "SPEC:DesignSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-008",
+        "GL-009",
+        "GL-024",
+        "GL-001",
+        "GL-011",
+        "GL-004",
+        "GL-012",
+        "GL-023",
+        "GL-035",
+        "GL-007",
+        "GL-025"
+      ],
+      "sharedCount": 11
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "SPEC:ApiSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-008",
+        "GL-009",
+        "GL-024",
+        "GL-001",
+        "GL-011",
+        "GL-004",
+        "GL-012",
+        "GL-023",
+        "GL-035",
+        "GL-025",
+        "GL-027",
+        "GL-026",
+        "GL-052"
+      ],
+      "sharedCount": 13
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "SPEC:ArchitectureSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-008",
+        "GL-024",
+        "GL-001",
+        "GL-011",
+        "GL-004",
+        "GL-012",
+        "GL-035",
+        "GL-007",
+        "GL-006",
+        "GL-027",
+        "GL-010",
+        "GL-019",
+        "GL-015",
+        "GL-016",
+        "GL-021"
+      ],
+      "sharedCount": 15
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "SPEC:DataSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-008",
+        "GL-009",
+        "GL-024",
+        "GL-001",
+        "GL-011",
+        "GL-004",
+        "GL-012",
+        "GL-023",
+        "GL-035",
+        "GL-007",
+        "GL-006",
+        "GL-025",
+        "GL-034",
+        "GL-027",
+        "GL-026",
+        "GL-010",
+        "GL-052"
+      ],
+      "sharedCount": 17
+    },
+    {
+      "source": "SPEC:GoalSpec",
+      "target": "SPEC:TestSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-008",
+        "GL-009",
+        "GL-024",
+        "GL-001",
+        "GL-011",
+        "GL-004",
+        "GL-012",
+        "GL-023",
+        "GL-035",
+        "GL-025",
+        "GL-027",
+        "GL-026"
+      ],
+      "sharedCount": 12
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "SPEC:ApiSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-005",
+        "GL-025",
+        "GL-053",
+        "GL-054",
+        "GL-062",
+        "GL-066",
+        "GL-073",
+        "GL-078",
+        "GL-082",
+        "GL-084",
+        "GL-011",
+        "GL-001",
+        "GL-008",
+        "GL-012",
+        "GL-024",
+        "GL-023",
+        "GL-004",
+        "GL-009",
+        "GL-035",
+        "GL-036"
+      ],
+      "sharedCount": 20
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "SPEC:ArchitectureSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-005",
+        "GL-078",
+        "GL-011",
+        "GL-001",
+        "GL-008",
+        "GL-012",
+        "GL-024",
+        "GL-004",
+        "GL-007",
+        "GL-035",
+        "GL-036"
+      ],
+      "sharedCount": 11
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "SPEC:DataSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-005",
+        "GL-025",
+        "GL-053",
+        "GL-054",
+        "GL-062",
+        "GL-073",
+        "GL-082",
+        "GL-011",
+        "GL-001",
+        "GL-008",
+        "GL-012",
+        "GL-024",
+        "GL-023",
+        "GL-004",
+        "GL-007",
+        "GL-009",
+        "GL-035",
+        "GL-036"
+      ],
+      "sharedCount": 18
+    },
+    {
+      "source": "SPEC:DesignSpec",
+      "target": "SPEC:TestSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-025",
+        "GL-011",
+        "GL-001",
+        "GL-008",
+        "GL-012",
+        "GL-024",
+        "GL-023",
+        "GL-004",
+        "GL-009",
+        "GL-035",
+        "GL-036"
+      ],
+      "sharedCount": 11
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "SPEC:ArchitectureSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-012",
+        "GL-036",
+        "GL-005",
+        "GL-011",
+        "GL-004",
+        "GL-035",
+        "GL-024",
+        "GL-078",
+        "GL-008",
+        "GL-001",
+        "GL-027"
+      ],
+      "sharedCount": 11
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "SPEC:DataSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-012",
+        "GL-036",
+        "GL-005",
+        "GL-052",
+        "GL-053",
+        "GL-011",
+        "GL-023",
+        "GL-004",
+        "GL-057",
+        "GL-035",
+        "GL-082",
+        "GL-024",
+        "GL-025",
+        "GL-054",
+        "GL-026",
+        "GL-008",
+        "GL-062",
+        "GL-009",
+        "GL-073",
+        "GL-060",
+        "GL-001",
+        "GL-027"
+      ],
+      "sharedCount": 22
+    },
+    {
+      "source": "SPEC:ApiSpec",
+      "target": "SPEC:TestSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-012",
+        "GL-036",
+        "GL-011",
+        "GL-023",
+        "GL-004",
+        "GL-035",
+        "GL-024",
+        "GL-025",
+        "GL-026",
+        "GL-008",
+        "GL-009",
+        "GL-001",
+        "GL-027"
+      ],
+      "sharedCount": 13
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "SPEC:DataSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-004",
+        "GL-001",
+        "GL-063",
+        "GL-005",
+        "GL-003",
+        "GL-007",
+        "GL-035",
+        "GL-006",
+        "GL-010",
+        "GL-008",
+        "GL-024",
+        "GL-027",
+        "GL-036",
+        "GL-012",
+        "GL-011"
+      ],
+      "sharedCount": 15
+    },
+    {
+      "source": "SPEC:ArchitectureSpec",
+      "target": "SPEC:TestSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-004",
+        "GL-001",
+        "GL-035",
+        "GL-008",
+        "GL-024",
+        "GL-027",
+        "GL-036",
+        "GL-012",
+        "GL-011"
+      ],
+      "sharedCount": 9
+    },
+    {
+      "source": "SPEC:DataSpec",
+      "target": "SPEC:TestSpec",
+      "type": "crossSpec",
+      "sharedTerms": [
+        "GL-001",
+        "GL-035",
+        "GL-011",
+        "GL-023",
+        "GL-004",
+        "GL-024",
+        "GL-025",
+        "GL-008",
+        "GL-009",
+        "GL-026",
+        "GL-027",
+        "GL-030",
+        "GL-032",
+        "GL-012",
+        "GL-036"
+      ],
+      "sharedCount": 15
     }
   ]
 }
