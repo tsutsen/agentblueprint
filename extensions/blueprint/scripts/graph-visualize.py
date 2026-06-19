@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Glossary Graph Visualization Tool
+Graph Visualization Tool
 
 Generates an interactive force-directed graph of glossary term relationships
 and cross-specification references from artifact JSON files.
@@ -9,7 +9,7 @@ Uses graph_metrics.py as the primary data source for the unified graph,
 then enriches it with glossary metadata for visualization.
 
 Usage:
-    python3 glossary_graph.py [artifacts-dir] [--port PORT] [--no-server]
+    python3 graph-visualize.py [artifacts-dir] [--port PORT] [--no-server]
 
 Arguments:
     artifacts-dir    Path to artifacts directory (default: artifacts/)
@@ -28,11 +28,17 @@ import socketserver
 import argparse
 from pathlib import Path
 import re
+import time
 
 # Try to find the extension directory
 SCRIPT_DIR = Path(__file__).parent
 VISUALIZE_DIR = SCRIPT_DIR / "graph-visualize"
 GRAPH_METRICS_SCRIPT = SCRIPT_DIR / "graph_metrics.py"
+
+
+def debug(msg: str):
+    """Print debug message to stderr."""
+    print(f"[DEBUG] {msg}", file=sys.stderr, flush=True)
 
 
 def run_graph_metrics(artifacts_dir: str) -> dict | None:
@@ -41,6 +47,7 @@ def run_graph_metrics(artifacts_dir: str) -> dict | None:
         print(f"WARNING: graph_metrics.py not found at {GRAPH_METRICS_SCRIPT}", file=sys.stderr)
         return None
 
+    debug(f"Running graph_metrics.py with artifacts={artifacts_dir}")
     try:
         result = subprocess.run(
             ["python3", str(GRAPH_METRICS_SCRIPT), "--artifacts", artifacts_dir, "--format", "json"],
@@ -49,7 +56,7 @@ def run_graph_metrics(artifacts_dir: str) -> dict | None:
             timeout=60,
         )
         if result.returncode != 0 and result.returncode != 1:
-            print(f"WARNING: graph_metrics.py failed: {result.stderr.strip()}", file=sys.stderr)
+            print(f"WARNING: graph_metrics.py failed (exit {result.returncode}): {result.stderr.strip()}", file=sys.stderr)
             return None
 
         output = result.stdout.strip()
@@ -57,10 +64,12 @@ def run_graph_metrics(artifacts_dir: str) -> dict | None:
             print("WARNING: graph_metrics.py produced no output", file=sys.stderr)
             return None
 
-        return json.loads(output)
+        data = json.loads(output)
+        debug(f"graph_metrics.py returned: {data.get('graph_stats', {}).get('nodes', 0)} nodes, {data.get('graph_stats', {}).get('edges', 0)} edges")
+        return data
     except subprocess.TimeoutExpired:
         print("WARNING: graph_metrics.py timed out", file=sys.stderr)
-        return False
+        return None
     except json.JSONDecodeError as e:
         print(f"WARNING: graph_metrics.py output is not valid JSON: {e}", file=sys.stderr)
         return None
@@ -86,6 +95,7 @@ def load_glossary(artifacts_dir: str) -> tuple[dict, dict]:
         term_map[tid] = t
         related_map[tid] = t.get("relatedTerms", [])
 
+    debug(f"Loaded {len(term_map)} glossary terms")
     return term_map, related_map
 
 
@@ -113,6 +123,7 @@ def collect_spec_refs(artifacts_dir: str) -> dict:
         if refs:
             spec_term_refs[spec_file.replace(".json", "")] = refs
 
+    debug(f"Found glossary refs in {len(spec_term_refs)} specs")
     return spec_term_refs
 
 
@@ -136,14 +147,8 @@ def _extract_glossary_refs(obj, refs: set):
 def build_graph_data(artifacts_dir: str) -> dict:
     """
     Build the visualization graph data from graph_metrics.py output + glossary metadata.
-
-    This is the main function that:
-    1. Runs graph_metrics.py to get the unified graph
-    2. Loads Glossary.json for term metadata
-    3. Scans specs for GL references
-    4. Builds the D3-compatible graph-data.json format
     """
-    # Step 1: Get graph from metrics
+    debug(f"Step 1: Getting graph from metrics...")
     metrics = run_graph_metrics(artifacts_dir)
     if not metrics:
         print("ERROR: Could not get graph data from graph_metrics.py", file=sys.stderr)
@@ -151,23 +156,18 @@ def build_graph_data(artifacts_dir: str) -> dict:
 
     graph_stats = metrics.get("graph_stats", {})
     node_types = graph_stats.get("node_types", {})
-
-    # Count nodes by type
     gl_count = node_types.get("GL", 0)
     total_nodes = graph_stats.get("nodes", 0)
     total_edges = graph_stats.get("edges", 0)
+    debug(f"Metrics: {total_nodes} nodes, {total_edges} edges, {gl_count} GL terms")
 
-    print(f"Graph from metrics: {total_nodes} nodes, {total_edges} edges, {gl_count} GL terms")
-
-    # Step 2: Load glossary metadata
+    debug(f"Step 2: Loading glossary...")
     term_map, related_map = load_glossary(artifacts_dir)
-    print(f"Glossary loaded: {len(term_map)} terms")
 
-    # Step 3: Collect spec references
+    debug(f"Step 3: Collecting spec references...")
     spec_term_refs = collect_spec_refs(artifacts_dir)
-    print(f"Spec references found in {len(spec_term_refs)} specs")
 
-    # Step 4: Build termSpecRefs (GL ID -> Set of spec names)
+    # Build termSpecRefs (GL ID -> Set of spec names)
     term_spec_refs = {}
     for spec_name, gl_ids in spec_term_refs.items():
         for gl_id in gl_ids:
@@ -175,10 +175,8 @@ def build_graph_data(artifacts_dir: str) -> dict:
                 term_spec_refs[gl_id] = set()
             term_spec_refs[gl_id].add(spec_name)
 
-    # Step 5: Build nodes
+    # Build nodes
     nodes = []
-
-    # Glossary term nodes
     for tid, tinfo in term_map.items():
         specs = term_spec_refs.get(tid, set())
         nodes.append({
@@ -191,7 +189,7 @@ def build_graph_data(artifacts_dir: str) -> dict:
             "specs": sorted(specs),
         })
 
-    # Spec nodes (only those that reference glossary terms)
+    # Spec nodes
     spec_nodes = []
     for spec_name, gl_ids in spec_term_refs.items():
         spec_nodes.append({
@@ -204,38 +202,29 @@ def build_graph_data(artifacts_dir: str) -> dict:
             "specs": [],
         })
 
-    # Step 6: Build edges
+    # Build edges
     edges = []
     edge_set = set()
 
-    # relatedTerms edges (between glossary terms)
+    # relatedTerms edges
     for tid, related in related_map.items():
         for related_id in related:
             key = tuple(sorted([tid, related_id]))
             edge_key = f"{key[0]}→{key[1]}"
             if edge_key not in edge_set:
                 edge_set.add(edge_key)
-                edges.append({
-                    "source": tid,
-                    "target": related_id,
-                    "type": "relatedTerms",
-                })
+                edges.append({"source": tid, "target": related_id, "type": "relatedTerms"})
 
-    # specRef edges (spec -> term)
+    # specRef edges
     for sn in spec_nodes:
         spec_id = sn["id"]
-        spec_name = sn["term"]
-        for gl_id in spec_term_refs.get(spec_name, set()):
+        for gl_id in spec_term_refs.get(sn["term"], set()):
             edge_key = f"{spec_id}→{gl_id}"
             if edge_key not in edge_set:
                 edge_set.add(edge_key)
-                edges.append({
-                    "source": spec_id,
-                    "target": gl_id,
-                    "type": "specRef",
-                })
+                edges.append({"source": spec_id, "target": gl_id, "type": "specRef"})
 
-    # crossSpec edges (specs that share glossary references)
+    # crossSpec edges
     spec_names = sorted(spec_term_refs.keys())
     for i in range(len(spec_names)):
         for j in range(i + 1, len(spec_names)):
@@ -251,13 +240,11 @@ def build_graph_data(artifacts_dir: str) -> dict:
                     "sharedCount": len(shared),
                 })
 
-    # Build categories summary
     categories = {}
     for node in nodes:
         cat = node["category"]
         categories[cat] = categories.get(cat, 0) + 1
 
-    # Step 7: Output
     output = {
         "summary": {
             "totalTerms": len(term_map),
@@ -269,6 +256,7 @@ def build_graph_data(artifacts_dir: str) -> dict:
         "edges": edges,
     }
 
+    debug(f"Built graph: {len(nodes)} term nodes + {len(spec_nodes)} spec nodes, {len(edges)} edges")
     return output
 
 
@@ -277,33 +265,32 @@ def write_graph_data(graph_data: dict) -> str:
     output_path = VISUALIZE_DIR / "graph-data.json"
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(graph_data, f, indent=2, ensure_ascii=False)
+    debug(f"Wrote graph data to {output_path}")
     return str(output_path)
 
 
 def serve_graph(artifacts_dir: str, port: int, no_server: bool = False) -> bool:
     """Generate graph data and optionally serve the visualization."""
-    # Step 1: Build graph data from graph_metrics.py output
-    print(f"Building glossary graph from {artifacts_dir}...")
-    graph_data = build_graph_data(artifacts_dir)
+    print(f"Building glossary graph from {artifacts_dir}...", file=sys.stderr, flush=True)
 
+    graph_data = build_graph_data(artifacts_dir)
     if graph_data is None:
         print("ERROR: Failed to build glossary graph.", file=sys.stderr)
         return False
 
-    # Step 2: Write graph-data.json
     output_path = write_graph_data(graph_data)
-    print(f"\nGraph data written to: {output_path}")
-
-    # Show summary
     summary = graph_data["summary"]
-    print(f"  {summary['totalTerms']} terms, {summary['totalEdges']} edges, {summary['totalSpecs']} specs")
-    print(f"  Categories: {json.dumps(summary['categories'])}")
+
+    print(f"\nGraph data written to: {output_path}", file=sys.stderr, flush=True)
+    print(f"  {summary['totalTerms']} terms, {summary['totalEdges']} edges, {summary['totalSpecs']} specs", file=sys.stderr, flush=True)
+    print(f"  Categories: {json.dumps(summary['categories'])}", file=sys.stderr, flush=True)
 
     if no_server:
         return True
 
-    # Step 3: Serve the visualization
-    def run_server():
+    # Start server in a detached subprocess so the main process can exit
+    def start_server():
+        debug(f"Starting HTTP server on port {port}...")
         os.chdir(str(VISUALIZE_DIR))
 
         class QuietHandler(http.server.SimpleHTTPRequestHandler):
@@ -311,32 +298,52 @@ def serve_graph(artifacts_dir: str, port: int, no_server: bool = False) -> bool:
                 super().__init__(*args, directory=str(VISUALIZE_DIR), **kwargs)
 
             def log_message(self, format, *args):
-                pass  # Suppress request logs
+                pass
 
-        with socketserver.TCPServer(("", port), QuietHandler) as httpd:
+        try:
+            httpd = socketserver.TCPServer(("", port), QuietHandler)
+            debug(f"Server listening on port {port}")
             httpd.serve_forever()
+        except OSError as e:
+            print(f"WARNING: Could not start server on port {port}: {e}", file=sys.stderr)
 
-    server_thread = threading.Thread(target=run_server, daemon=True)
-    server_thread.start()
+    # Start server as a background process
+    server_proc = subprocess.Popen(
+        [sys.executable, "-c", """
+import http.server, socketserver, os, sys
+os.chdir(sys.argv[1])
+class H(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *a, **k):
+        super().__init__(*a, directory=sys.argv[1], **k)
+    def log_message(self, *a): pass
+socketserver.TCPServer(("", int(sys.argv[2])), H).serve_forever()
+""", str(VISUALIZE_DIR), str(port)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,  # Detach from parent process
+    )
 
-    url = f"http://localhost:{port}"
-    print(f"\n✓ Glossary Graph visualization ready!")
-    print(f"  Open: {url}")
-    print(f"  (Server running in background)")
+    # Wait a moment for server to start
+    time.sleep(0.5)
 
-    # Keep alive
+    # Verify server is running
+    import urllib.request
     try:
-        while True:
-            import time
-            time.sleep(1)
-    except (KeyboardInterrupt, SystemExit):
-        print("\nServer stopped.")
+        urllib.request.urlopen(f"http://localhost:{port}/", timeout=2)
+        debug("Server verified running")
+    except Exception as e:
+        print(f"WARNING: Server may not have started: {e}", file=sys.stderr)
 
+    print(f"\n✓ Graph visualization ready!", file=sys.stderr, flush=True)
+    print(f"  Open: http://localhost:{port}", file=sys.stderr, flush=True)
+    print(f"  Server running in background (PID: {server_proc.pid})", file=sys.stderr, flush=True)
+
+    # Exit immediately - server keeps running in background
     return True
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Glossary Graph Visualization Tool")
+    parser = argparse.ArgumentParser(description="Graph Visualization Tool")
     parser.add_argument("artifacts_dir", nargs="?", default="artifacts",
                         help="Path to artifacts directory (default: artifacts)")
     parser.add_argument("--port", type=int, default=3001,
