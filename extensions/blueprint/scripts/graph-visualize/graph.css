@@ -214,6 +214,9 @@
   .graph-label.visible {
     opacity: 1;
   }
+  .graph-label.dimmed {
+    opacity: 0.15 !important;
+  }
 
   /* ── Controls ── */
   #controls {
