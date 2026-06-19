@@ -25,11 +25,17 @@ function initGraph() {
   height = container.clientHeight;
 
   canvas = document.getElementById('graph-canvas');
+  console.log('Canvas element:', canvas);
+  if (!canvas) {
+    console.error('Canvas element not found!');
+    return;
+  }
   canvas.width = width * window.devicePixelRatio;
   canvas.height = height * window.devicePixelRatio;
   canvas.style.width = width + 'px';
   canvas.style.height = height + 'px';
   ctx = canvas.getContext('2d');
+  console.log('Canvas context:', ctx);
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
   // ── Pre-resolve edges ──
@@ -75,6 +81,8 @@ function initGraph() {
   simulation.stop();
 
   // ── Initial render ──
+  console.log('Initial render:', graphData.nodes.length, 'nodes');
+  console.log('First node:', graphData.nodes[0]);
   render();
 
   // ── Event listeners ──
@@ -92,6 +100,11 @@ function initGraph() {
 
 // ─── Render ───
 function render() {
+  if (!ctx) {
+    console.error('Canvas context not initialized!');
+    return;
+  }
+  console.log('Rendering:', graphData.nodes.filter(n => n.visible).length, 'visible nodes');
   ctx.clearRect(0, 0, width, height);
   ctx.save();
   ctx.translate(zoom.x, zoom.y);
