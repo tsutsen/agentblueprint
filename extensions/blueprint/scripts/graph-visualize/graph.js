@@ -107,7 +107,6 @@ function render() {
     console.error('Canvas context not initialized!');
     return;
   }
-  console.log('Rendering:', graphData.nodes.filter(n => n.visible).length, 'visible nodes');
   ctx.clearRect(0, 0, width, height);
   ctx.save();
   ctx.translate(zoom.x, zoom.y);
@@ -115,6 +114,21 @@ function render() {
 
   // Grid background
   drawGrid();
+
+  // Compute connected set if a node is selected
+  let connectedSet = null;
+  let connectedEdges = null;
+  if (selectedNode) {
+    connectedSet = new Set([selectedNode.id]);
+    connectedEdges = new Set();
+    for (const e of validEdges) {
+      if (e.source.id === selectedNode.id || e.target.id === selectedNode.id) {
+        connectedSet.add(e.source.id);
+        connectedSet.add(e.target.id);
+        connectedEdges.add(e);
+      }
+    }
+  }
 
   // Edges (drawn first, under nodes)
   ctx.globalAlpha = 0.3;
@@ -125,6 +139,12 @@ function render() {
     ctx.lineTo(e.target.x, e.target.y);
     ctx.strokeStyle = EDGE_COLOR;
     ctx.lineWidth = 0.6 / zoom.k;
+    // Dim edges if not connected to selected node
+    if (connectedEdges && !connectedEdges.has(e)) {
+      ctx.globalAlpha = 0.05;
+    } else {
+      ctx.globalAlpha = 0.5;
+    }
     ctx.stroke();
   }
 
@@ -138,6 +158,14 @@ function render() {
     const color = getNodeColor(n);
     const isSelected = selectedNode && selectedNode.id === n.id;
     const isHovered = hoveredNode && hoveredNode.id === n.id;
+    const isConnected = !connectedSet || connectedSet.has(n.id);
+
+    // Dim non-connected nodes when one is selected
+    if (connectedSet && !isConnected) {
+      ctx.globalAlpha = 0.15;
+    } else {
+      ctx.globalAlpha = 1;
+    }
 
     ctx.beginPath();
     ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
@@ -161,10 +189,12 @@ function render() {
       ctx.font = `${(n.type === 'spec' ? 10 : 9) / zoom.k}px Inter, sans-serif`;
       ctx.fillStyle = d3.color(color).darker(0.8).formatHex();
       ctx.textAlign = 'center';
-      ctx.globalAlpha = 0.7;
       ctx.fillText(n.term || n.label || n.id, n.x, n.y - r - 4 / zoom.k);
     }
   }
+
+  // Reset alpha
+  ctx.globalAlpha = 1;
 
   ctx.restore();
   ctx.globalAlpha = 1;
