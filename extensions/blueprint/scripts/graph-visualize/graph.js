@@ -178,19 +178,17 @@ function initGraph() {
     degreeMap.set(tgtId, (degreeMap.get(tgtId) || 0) + 1);
   }
 
-  // Create the simulation — pass ALL nodes, NOT filtered
-  simulation = d3.forceSimulation(graphData.nodes)
+  // Filter to visible nodes and edges for simulation
+  const visibleNodes = graphData.nodes.filter(n => n.visible !== false);
+  const visibleEdges = validEdges.filter(e => e.visible !== false);
+
+  // Create the simulation — only visible nodes for performance
+  simulation = d3.forceSimulation(visibleNodes)
     .alpha(1)
     .alphaMin(0.001)
-    // Governs how fast alpha (and therefore every force's strength) falls
-    // back toward 0 once released. 0.0228 is d3's stock default and takes
-    // ~250 ticks (~4s @60fps) to fully settle — that's the "coasts too
-    // long" feeling. 0.06 settles in ~70-90 ticks (~1.2-1.5s): still a
-    // visible, smooth tail, just not a long drift. Raise toward ~0.1 for
-    // an even snappier stop, lower toward ~0.03 for more glide.
     .alphaDecay(0.06)
     .velocityDecay(DRAG_FRICTION)
-    .force('link', d3.forceLink(validEdges)
+    .force('link', d3.forceLink(visibleEdges)
       .distance(d => {
         if (d.type === 'crossSpec') return 350;
         if (d.type === 'specRef') return 200;
@@ -206,7 +204,7 @@ function initGraph() {
       .distanceMax(500))
     .force('collision', d3.forceCollide()
       .radius(d => {
-        if (d.category === 'spec') return 35;
+        if (d.type === 'spec' || d.category === 'spec') return 35;
         const deg = degreeMap.get(d.id) || 0;
         return 18 + Math.min(deg * 1.2, 20);
       })
