@@ -224,7 +224,8 @@
     display: flex; gap: 6px; z-index: 10;
   }
   #controls button {
-    padding: 6px 12px; border-radius: 6px;
+    padding: 6px inherit;
+    border-radius: 6px;
     background: var(--surface); border: 1px solid var(--border);
     color: var(--btn-text, #888888) !important; font-size: 11px; font-family: inherit;
     cursor: pointer; transition: all 0.15s;
