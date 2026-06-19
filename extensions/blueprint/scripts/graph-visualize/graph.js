@@ -141,9 +141,9 @@ function render() {
     ctx.lineWidth = 0.6 / zoom.k;
     // Dim edges if not connected to selected node
     if (connectedEdges && !connectedEdges.has(e)) {
-      ctx.globalAlpha = 0.05 * currentDim + 0.3 * (1 - currentDim);
+      ctx.globalAlpha = currentDim * 0.3;
     } else {
-      ctx.globalAlpha = 0.5 * currentDim + 0.3 * (1 - currentDim);
+      ctx.globalAlpha = currentDim * 0.5 + (1 - currentDim) * 0.3;
     }
     ctx.stroke();
   }
@@ -162,7 +162,7 @@ function render() {
 
     // Dim non-connected nodes when one is selected
     if (connectedSet && !isConnected) {
-      ctx.globalAlpha = 0.15 * currentDim + 1 * (1 - currentDim);
+      ctx.globalAlpha = currentDim;
     } else {
       ctx.globalAlpha = 1;
     }
@@ -397,7 +397,6 @@ window.toggleSimulation = toggleSimulation;
 
 // ─── Dim Animation ───
 function animateDim(target) {
-  console.log('animateDim: from', currentDim, 'to', target);
   if (dimAnimation) cancelAnimationFrame(dimAnimation);
   const start = performance.now();
   const from = currentDim;
@@ -409,7 +408,6 @@ function animateDim(target) {
     // Ease out cubic
     const ease = 1 - Math.pow(1 - progress, 3);
     currentDim = from + (target - from) * ease;
-    console.log('animateDim: progress', progress, 'currentDim', currentDim);
     render();
     if (progress < 1) {
       dimAnimation = requestAnimationFrame(step);
