@@ -371,9 +371,9 @@ function getNodeRadius(d) {
     maxVal = 3;
   }
 
-  // Normalize: min 5px, max 45px with sqrt scaling
+  // Normalize: min 3px, max 20px with sqrt scaling
   const normalized = maxVal === minVal ? 0 : (value - minVal) / (maxVal - minVal);
-  const r = Math.max(5, Math.min(45, 5 + Math.sqrt(normalized) * 40));
+  const r = Math.max(3, Math.min(20, 3 + Math.sqrt(normalized) * 17));
   return r;
 }
 
