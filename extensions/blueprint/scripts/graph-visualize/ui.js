@@ -38,31 +38,6 @@ function initUI() {
     catContainer.appendChild(div);
   }
 
-  // Edge type filters
-  const edgeContainer = document.getElementById('edge-type-filters');
-  const edgeLabels = { relatedTerms: 'Related', specRef: 'Spec refs', crossSpec: 'Cross-spec', architecture: 'Architecture' };
-  for (const [type, color] of Object.entries(EDGE_COLORS)) {
-    const div = document.createElement('div');
-    div.className = 'edge-filter-item';
-    div.innerHTML = `
-      <input type="checkbox" checked data-edgetype="${type}">
-      <div class="edge-line edge-line-${type}"></div>
-      <span>${edgeLabels[type] || type}</span>`;
-    div.querySelector('input').addEventListener('change', (e) => {
-      e.target.checked ? activeEdgeTypes.add(type) : activeEdgeTypes.delete(type);
-      applyFilters();
-    });
-    div.addEventListener('click', (e) => {
-      if (e.target.tagName !== 'INPUT') {
-        const cb = div.querySelector('input');
-        cb.checked = !cb.checked;
-        cb.dispatchEvent(new Event('change'));
-      }
-    });
-    activeEdgeTypes.add(type);
-    edgeContainer.appendChild(div);
-  }
-
   // ── Node List ──
   const termList = document.getElementById('term-list');
   const sortedNodes = [...graphData.nodes]
@@ -178,12 +153,11 @@ function applyFilters() {
     if (n.visible) filteredIds.add(n.id);
   }
 
-  // Apply edge type filter
+  // Apply edge filter (only source/target visibility matters now)
   for (const e of validEdges) {
-    const typeVisible = activeEdgeTypes.has(e.type);
     const srcVisible = filteredIds.has(e.source.id);
     const tgtVisible = filteredIds.has(e.target.id);
-    e.visible = typeVisible && srcVisible && tgtVisible;
+    e.visible = srcVisible && tgtVisible;
   }
 
   // Update node visibility

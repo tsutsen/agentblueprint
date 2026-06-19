@@ -11,7 +11,6 @@ let showSpecs = true;
 let tickCount = 0;
 let startTime = 0;
 let activeCategories = new Set();
-let activeEdgeTypes = new Set();
 let searchTerm = '';
 let width, height;
 let draggedNode = null;
@@ -94,20 +93,13 @@ function initGraph() {
   labelsG = g.append('g').attr('class', 'labels');
 
   // ── Links ──
-  function getEdgeColor(type) {
-    const map = { relatedTerms: '--edge-related', specRef: '--edge-spec', crossSpec: '--edge-cross' };
-    const val = getComputedStyle(document.documentElement).getPropertyValue(map[type]).trim();
-    if (!val) console.warn('Missing CSS var:', map[type]);
-    return val;
-  }
   linkGroup = g.append('g').attr('class', 'links');
   link = linkGroup.selectAll('line')
     .data(validEdges)
     .join('line')
-    .attr('stroke', d => getEdgeColor(d.type))
-    .attr('stroke-width', d => d.type === 'crossSpec' ? 2 : d.type === 'relatedTerms' ? 1.2 : 0.8)
-    .attr('stroke-dasharray', d => d.type === 'specRef' ? '3,4' : d.type === 'crossSpec' ? '5,4' : 'none')
-    .attr('opacity', 0.6);
+    .attr('stroke', EDGE_COLOR)
+    .attr('stroke-width', 0.8)
+    .attr('opacity', 0.5);
 
   // ── Nodes ──
   nodeGroup = g.append('g').attr('class', 'nodes');
@@ -343,11 +335,7 @@ function dragEnded(event, d) {
 // ─── Theme Update ───
 function updateThemeColors() {
   if (link) {
-    link.attr('stroke', d => {
-      const map = { relatedTerms: '--edge-related', specRef: '--edge-spec', crossSpec: '--edge-cross', architecture: '--edge-architecture' };
-      const cssVar = map[d.type] || '--edge-architecture';
-      return getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim();
-    });
+    link.attr('stroke', EDGE_COLOR);
   }
   if (node) {
     node.select('circle').attr('fill', d => getNodeColor(d)).attr('stroke', d => d3.color(getNodeColor(d)).darker(0.8).formatHex());

@@ -29,12 +29,7 @@ const CATEGORY_COLORS = {
   other: '#94a3b8',
 };
 
-const EDGE_COLORS = {
-  relatedTerms: 'rgba(100, 110, 160, 0.4)',
-  specRef: 'rgba(56, 189, 248, 0.35)',
-  crossSpec: 'rgba(251, 191, 36, 0.35)',
-  architecture: 'rgba(148, 163, 184, 0.45)',
-};
+const EDGE_COLOR = 'rgba(148, 163, 184, 0.4)';
 
 // Drag physics constants
 const DRAG_FRICTION = 0.6;
