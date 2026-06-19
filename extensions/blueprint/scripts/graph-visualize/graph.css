@@ -354,6 +354,8 @@
     opacity: 0.5;
     font-family: 'SF Mono', 'JetBrains Mono', monospace;
     margin-left: 6px;
+    position: relative;
+    top: -1px;
   }
   .category-badge {
     font-size: 10px; padding: 0; border-radius: 0;
