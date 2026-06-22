@@ -156,6 +156,7 @@ function buildLabelSet() {
 }
 
 function shouldShowLabel(node) {
+  if (hoverLabelNode && hoverLabelNode.id === node.id) return true;
   if (_labelVisibleSet === null || !_labelVisibleSet.has(node.id)) return false;
   return true;
 }
@@ -726,8 +727,26 @@ function onMouseMove(event) {
   // Hover detection
   const node = findNodeAt(pos);
   if (node !== hoveredNode) {
+    // Clear any pending label timer on hover change
+    if (hoverLabelTimeout) {
+      clearTimeout(hoverLabelTimeout);
+      hoverLabelTimeout = null;
+    }
+    // Hide previously forced label
+    if (hoverLabelNode && hoverLabelNode !== node) {
+      hoverLabelNode = null;
+      render();
+    }
     hoveredNode = node;
     canvas.style.cursor = node ? "pointer" : "grab";
+    // Start timer to show label after holding hover
+    if (node) {
+      hoverLabelTimeout = setTimeout(() => {
+        hoverLabelTimeout = null;
+        hoverLabelNode = node;
+        render();
+      }, HOVER_LABEL_DELAY);
+    }
     render();
   }
 }
@@ -876,6 +895,9 @@ function getNodeColor(d) {
 }
 
 let hoveredNode = null;
+let hoverLabelNode = null; // Node whose label is forced visible by hover
+let hoverLabelTimeout = null; // Timer for delayed label show
+const HOVER_LABEL_DELAY = 600; // ms to hold hover before label appears
 let isSimulating = false;
 let simulation = null;
 export let sizeMetric = "degree"; // Default sizing metric
