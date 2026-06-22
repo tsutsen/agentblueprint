@@ -3,6 +3,9 @@
 
 let _pendingNodeId = null;
 
+// Double-click detection: require clicks within 300ms of each other, per element
+const DOUBLE_CLICK_TIMEOUT = 300;
+
 // ─── URL State Sync ───
 function updateURL() {
   const params = new URLSearchParams();
@@ -83,8 +86,15 @@ function initUI() {
     div.addEventListener('click', (e) => {
       if (e.target.tagName !== 'INPUT') {
         const cb = div.querySelector('input');
-        // Double click: select only this category
-        if (e.detail === 2) {
+        const now = Date.now();
+        const lastClick = div._lastClick || 0;
+        const elapsed = now - lastClick;
+        div._lastClick = now;
+
+        if (elapsed < DOUBLE_CLICK_TIMEOUT) {
+          // Double click: select only this category
+          clearTimeout(div._clickTimer);
+          delete div._clickTimer;
           document.querySelectorAll('#category-filters .filter-item input').forEach(inp => {
             inp.checked = false;
           });
@@ -94,8 +104,13 @@ function initUI() {
           applyFilters();
           updateURL();
         } else {
-          cb.checked = !cb.checked;
-          cb.dispatchEvent(new Event('change'));
+          // Single click: toggle this category (delayed to avoid conflict with double-click)
+          div._clickTimer = setTimeout(() => {
+            delete div._lastClick;
+            delete div._clickTimer;
+            cb.checked = !cb.checked;
+            cb.dispatchEvent(new Event('change'));
+          }, DOUBLE_CLICK_TIMEOUT);
         }
       }
     });
