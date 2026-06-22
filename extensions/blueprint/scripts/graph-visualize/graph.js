@@ -355,22 +355,19 @@ export function initGraph() {
   render();
 
   // ── Event listeners ──
-  // Use d3.zoom() for drag-to-pan only; handle wheel zoom manually
   // (d3-zoom v7 produces NaN transform on div elements for wheel zoom)
-  currentTransform = d3.zoomIdentity;
+  currentTransform = { k: 1, x: 0, y: 0 };
 
+  // d3.zoom() for drag-to-pan only — disable its wheel handler entirely
   zoomBehavior = d3.zoom()
     .scaleExtent(0.05, 8)
     .on("zoom", (event) => {
-      // Only use event.transform for pan (drag), not for wheel zoom
-      if (event.sourceEvent && event.sourceEvent.type === 'wheel') return;
-      currentTransform = {
-        k: event.transform.k,
-        x: event.transform.x,
-        y: event.transform.y
-      };
+      const t = event.transform;
+      currentTransform = { k: t.k, x: t.x, y: t.y };
       render();
     });
+  // Remove d3's wheel listener so it doesn't corrupt the transform
+  zoomBehavior.wheel = function() {};
 
   d3.select(container).call(zoomBehavior);
   container.style.overflow = "hidden";
