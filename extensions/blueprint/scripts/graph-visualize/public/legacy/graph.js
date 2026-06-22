@@ -246,7 +246,7 @@ let sizeRange = {
 // ── Common scaling function ──
 // Scales a value from [minVal, maxVal] to [minRadius, maxRadius] using quadratic scaling
 // (power 2 curve: small values stay small, high values climb steeply)
-function scaleValue(value, minVal, maxVal, minRadius = 4, maxRadius = 30) {
+function scaleValue(value, minVal, maxVal, minRadius = 8, maxRadius = 40) {
   if (maxVal === minVal) {
     if (minVal === 0 && maxVal === 0) {
       // When range is [0,0] (all zeros), return max radius to highlight the node
@@ -810,7 +810,7 @@ function getNodeRadius(d) {
       UXAC: 4, IS: 4, spec: 5,
     };
     const value = typeSizes[d.type] || 1;
-    return scaleValue(value, 1, 6, 4, 30);
+    return scaleValue(value, 1, 6, 8, 40);
   }
 
   // Use sizeMetric itself as the range key ("blast", "degree", etc.)
@@ -860,7 +860,7 @@ function getNodeRadius(d) {
   const nodeKey = SIZE_METRIC_KEYS[sizeMetric] ?? "degree";
   let value = d[nodeKey] ?? 0;
 
-  const radius = scaleValue(value, minVal, maxVal, 4, 30);
+  const radius = scaleValue(value, minVal, maxVal, 8, 40);
   if (
     selectedNode &&
     selectedNode.id === d.id &&
