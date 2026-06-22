@@ -93,6 +93,11 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
             n.visible = visibleIds.has(n.id)
           }
           wrapper.startScaleAnimation()
+          // Restart simulation so newly visible nodes are included
+          if (wrapper.hasSimulation()) {
+            wrapper.stopSimulation()
+            wrapper.startSimulation()
+          }
         },
         setSizeMetric: (metric: string) => {
           wrapper.setSizeMetric(metric)

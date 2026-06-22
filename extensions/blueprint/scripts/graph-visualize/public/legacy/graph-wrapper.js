@@ -16,6 +16,7 @@ window.__GRAPH_WRAPPER__ = {
   startScaleAnimation: graph.startScaleAnimation,
   startSimulation: graph.startSimulation,
   stopSimulation: graph.stopSimulation,
+  hasSimulation: graph.hasSimulation,
   updateThemeColors: graph.updateThemeColors,
   animateDim: graph.animateDim,
   updateHtmlLabels: graph.updateHtmlLabels,

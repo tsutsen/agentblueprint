@@ -1061,6 +1061,10 @@ export function stopSimulation() {
   }
 }
 
+export function hasSimulation() {
+  return simulation !== null;
+}
+
 // ─── Theme Update ───
 export function updateThemeColors() {
   resetEdgeColorCache();
