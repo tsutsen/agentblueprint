@@ -38,17 +38,18 @@ let _labelFadeStartTime = null;
  */
 function buildLabelSet() {
   // Check if zoom changed significantly (hysteresis to prevent flickering)
-  const zoomDelta = Math.abs(zoom.k - _lastLabelZoom);
+  const transform = d3.zoomTransform(canvas);
+  const zoomDelta = Math.abs(transform.k - _lastLabelZoom);
   if (zoomDelta < LABEL_HYSTERESIS && _labelVisibleSet !== null) {
     // Zoom hasn't changed enough, skip rebuilding
     return;
   }
-  _lastLabelZoom = zoom.k;
+  _lastLabelZoom = transform.k;
 
   // Track previous visible labels to detect changes
   const prevVisible = _labelVisibleSet ? new Set(_labelVisibleSet) : null;
   _labelVisibleSet = new Set();
-  if (!showLabels || zoom.k < LABEL_MIN_ZOOM || !graphData) {
+  if (!showLabels || transform.k < LABEL_MIN_ZOOM || !graphData) {
     // If labels are hidden, clear the set
     if (prevVisible !== null && prevVisible.size > 0) {
       _labelFadeStartTime = performance.now();
@@ -61,9 +62,9 @@ function buildLabelSet() {
     if (!n.visible) continue;
 
     // Gate 1: at max zoom show everything
-    if (zoom.k < LABEL_MAX_ZOOM) {
+    if (transform.k < LABEL_MAX_ZOOM) {
       // Gate 2: node must be large enough on screen
-      const screenRadius = getNodeRadius(n) * zoom.k;
+      const screenRadius = getNodeRadius(n) * transform.k;
       if (screenRadius < LABEL_NODE_RADIUS_THRESHOLD) continue;
     }
 
@@ -72,7 +73,7 @@ function buildLabelSet() {
 
   console.log(
     "[LABELS] zoom:",
-    zoom.k.toFixed(2),
+    transform.k.toFixed(2),
     "candidates:",
     candidates.length,
     "showLabels:",
@@ -86,7 +87,7 @@ function buildLabelSet() {
 
   // 3. Greedy placement with a cell grid spatial index
   //    Cell size = typical label bbox half-height in world coords
-  const fontSize = 13 / zoom.k;
+  const fontSize = 13 / transform.k;
   const cellSize = fontSize * 2;
   const occupied = new Map(); // "cx,cy" → true
 
@@ -96,14 +97,14 @@ function buildLabelSet() {
 
   function labelBBox(n) {
     const r = getNodeRadius(n);
-    const fs = (n.type === "spec" ? 14 : 13) / zoom.k;
+    const fs = (n.type === "spec" ? 14 : 13) / transform.k;
     const text = n.term || n.label || n.id || "";
     const tw = text.length * fs * LABEL_CHAR_WIDTH + LABEL_PAD_X * 2;
     const th = fs;
-    // Label baseline is at (n.y - r - 4/zoom.k), box extends upward by th
+    // Label baseline is at (n.y - r - 4/transform.k), box extends upward by th
     return {
       x: n.x - tw / 2,
-      y: n.y - getNodeRadius(n) - 4 / zoom.k - th,
+      y: n.y - getNodeRadius(n) - 4 / transform.k - th,
       w: tw,
       h: th,
     };
@@ -174,9 +175,7 @@ export function updateHtmlLabels() {
 
     // Calculate position relative to container (not viewport)
     // Node positions are in world coords, transform to container coords
-    const labelX = zoom.x + node.x * zoom.k;
     const r = getNodeRadius(node);
-    const labelY = zoom.y + node.y * zoom.k - r * zoom.k - 8;
 
     // Get or create label element
     let labelEl = _labelElements.get(node.id);
@@ -189,6 +188,9 @@ export function updateHtmlLabels() {
     }
 
     // Position label relative to container
+    const transform = d3.zoomTransform(canvas);
+    const labelX = transform.x + node.x * transform.k;
+    const labelY = transform.y + node.y * transform.k - r * transform.k - 8;
     labelEl.style.left = `${labelX}px`;
     labelEl.style.top = `${labelY}px`;
     labelEl.style.fontSize = `${node.type === "spec" ? 14 : 13}px`;
@@ -220,11 +222,7 @@ export function updateHtmlLabels() {
 }
 
 // ─── Zoom/Pan State ───
-export let zoom = { x: 0, y: 0, k: 1 };
-let isPanning = false;
-let panStart = { x: 0, y: 0 };
-let zoomStart = { x: 0, y: 0 };
-let isMouseDown = false;
+let zoomBehavior = null; // d3.zoom behavior instance
 let sizeRange = {
   degree: [0, 1],
   blast: [0, 1],
@@ -354,11 +352,55 @@ export function initGraph() {
   render();
 
   // ── Event listeners ──
-  canvas.addEventListener("mousedown", onMouseDown);
-  canvas.addEventListener("mousemove", onMouseMove);
-  canvas.addEventListener("mouseup", onMouseUp);
-  canvas.addEventListener("wheel", onWheel, { passive: false });
-  canvas.addEventListener("click", onClick);
+  // D3 zoom: handles wheel zoom, pinch-zoom, and drag-to-pan
+  zoomBehavior = d3.zoom()
+    .scaleExtent(0.05, 8)
+    .wheelDelta(delta => -delta.y * 0.001) // Match previous zoom speed
+    .on("zoom", (event) => {
+      render();
+    });
+
+  zoomBehavior(canvas);
+
+  // D3 drag: handles node dragging
+  const drag = d3.drag()
+    .on("start", (event, d) => {
+      if (!event.active) simulation?.stop();
+      d.fx = d.x;
+      d.fy = d.y;
+    })
+    .on("drag", (event, d) => {
+      d.fx = event.x;
+      d.fy = event.y;
+      d.x = event.x;
+      d.y = event.y;
+      render();
+    })
+    .on("end", (event, d) => {
+      d.fx = null;
+      d.fy = null;
+    });
+
+  // Click: node selection on canvas (after zoom gesture ends)
+  canvas.addEventListener("click", (event) => {
+    const pos = screenToWorld(event);
+    const node = findNodeAt(pos);
+    if (node) {
+      selectNode(event, node);
+    } else {
+      deselectNode();
+    }
+  });
+
+  // Hover cursor
+  canvas.addEventListener("mousemove", (event) => {
+    const pos = screenToWorld(event);
+    const node = findNodeAt(pos);
+    if (node !== hoveredNode) {
+      hoveredNode = node;
+      canvas.style.cursor = node ? "pointer" : "grab";
+    }
+  });
 
   // ── Render ──
   render();
@@ -459,9 +501,10 @@ function render() {
   }
 
   ctx.clearRect(0, 0, width, height);
+  const transform = d3.zoomTransform(canvas);
   ctx.save();
-  ctx.translate(zoom.x, zoom.y);
-  ctx.scale(zoom.k, zoom.k);
+  ctx.translate(transform.x, transform.y);
+  ctx.scale(transform.k, transform.k);
 
   // Grid background is now handled by CSS (background-image on #graph-container)
 
@@ -495,7 +538,7 @@ function render() {
     ctx.moveTo(e.source.x, e.source.y);
     ctx.lineTo(e.target.x, e.target.y);
     ctx.strokeStyle = edgeColor;
-    ctx.lineWidth = 0.6 / zoom.k;
+    ctx.lineWidth = 0.6 / transform.k;
     // Dim edges if not connected to selected node
     if (connectedEdges && !connectedEdges.has(e)) {
       ctx.globalAlpha = currentDim * 0.3;
@@ -533,13 +576,13 @@ function render() {
     ctx.strokeStyle = isSelected
       ? "#fff"
       : d3.color(color).darker(0.8).formatHex();
-    ctx.lineWidth = (isSelected ? 2 : 1) / zoom.k;
+    ctx.lineWidth = (isSelected ? 2 : 1) / transform.k;
     ctx.stroke();
 
     // Hover highlight
     if (isHovered && !isSelected) {
       ctx.strokeStyle = "#fff";
-      ctx.lineWidth = 2 / zoom.k;
+      ctx.lineWidth = 2 / transform.k;
       ctx.stroke();
     }
   }
@@ -647,12 +690,13 @@ function getNodeAnimatedRadius(n) {
   return getNodeRadius(n);
 }
 
-// ─── Mouse Events ───
-function getMousePos(event) {
+// ─── Coordinate Helpers ───
+function screenToWorld(event) {
   const rect = canvas.getBoundingClientRect();
+  const transform = d3.zoomTransform(canvas);
   return {
-    x: (event.clientX - rect.left - zoom.x) / zoom.k,
-    y: (event.clientY - rect.top - zoom.y) / zoom.k,
+    x: (event.clientX - rect.left - transform.x) / transform.k,
+    y: (event.clientY - rect.top - transform.y) / transform.k,
   };
 }
 
@@ -667,110 +711,6 @@ function findNodeAt(pos) {
     if (dx * dx + dy * dy < r * r) return n;
   }
   return null;
-}
-
-function onMouseDown(event) {
-  if (event.button === 0) {
-    isMouseDown = true;
-    const pos = getMousePos(event);
-    const node = findNodeAt(pos);
-    if (node) {
-      draggedNode = node;
-      panStart = { x: event.clientX, y: event.clientY };
-      isDragging = false;
-    } else {
-      isPanning = false; // Don't start pan yet, wait to see if mouse moves
-      panStart = { x: event.clientX, y: event.clientY };
-      zoomStart = { x: zoom.x, y: zoom.y };
-    }
-  }
-}
-
-function onMouseMove(event) {
-  const pos = getMousePos(event);
-
-  if (draggedNode) {
-    const dx = event.clientX - panStart.x;
-    const dy = event.clientY - panStart.y;
-    if (dx * dx + dy * dy < 100) return; // Click threshold
-
-    isDragging = true;
-    draggedNode.x = pos.x;
-    draggedNode.y = pos.y;
-    render();
-    return;
-  }
-
-  // Start panning if mouse moved significantly (only when mouse is held down)
-  if (!draggedNode && !isPanning && isMouseDown) {
-    const dx = event.clientX - panStart.x;
-    const dy = event.clientY - panStart.y;
-    if (dx * dx + dy * dy > 25) {
-      // 5px threshold
-      isPanning = true;
-    }
-  }
-
-  if (isPanning) {
-    zoom.x = zoomStart.x + (event.clientX - panStart.x);
-    zoom.y = zoomStart.y + (event.clientY - panStart.y);
-    render();
-    return;
-  }
-
-  // Hover detection
-  const node = findNodeAt(pos);
-  if (node !== hoveredNode) {
-    hoveredNode = node;
-    canvas.style.cursor = node ? "pointer" : "grab";
-    render();
-  }
-}
-
-function onMouseUp(event) {
-  const wasPanning = isPanning;
-  if (isPanning) {
-    isPanning = false;
-  }
-  isMouseDown = false;
-  if (draggedNode && !isDragging) {
-    // It was a click on a node
-    const pos = getMousePos(event);
-    const node = findNodeAt(pos);
-    if (node) selectNode(event, node);
-    else deselectNode();
-    draggedNode = null;
-    isDragging = false;
-  } else if (draggedNode && isDragging) {
-    // Node was dragged - preserve selection
-    draggedNode = null;
-    isDragging = false;
-  } else if (!draggedNode && !wasPanning) {
-    // Click on empty space - deselect
-    deselectNode();
-  }
-  // If wasPanning, preserve selection (don't deselect)
-}
-
-function onClick(event) {
-  // Handled in onMouseUp
-}
-
-function onWheel(event) {
-  event.preventDefault();
-  const rect = canvas.getBoundingClientRect();
-  const mouseX = event.clientX - rect.left;
-  const mouseY = event.clientY - rect.top;
-
-  const delta = event.deltaY > 0 ? 0.9 : 1.1;
-  const newK = Math.max(0.05, Math.min(8, zoom.k * delta));
-
-  // Zoom toward mouse position
-  zoom.x = mouseX - (mouseX - zoom.x) * (newK / zoom.k);
-  zoom.y = mouseY - (mouseY - zoom.y) * (newK / zoom.k);
-  zoom.k = newK;
-
-  render();
 }
 
 // ─── Helper Functions ───
@@ -945,6 +885,13 @@ export function toggleSimulation() {
 export function updateThemeColors() {
   resetEdgeColorCache();
   render();
+}
+
+// ─── Zoom Reset ───
+export function resetZoom() {
+  zoomBehavior.transition(canvas)
+    .duration(500)
+    .call(zoomBehavior.transform, d3.zoomIdentity);
 }
 
 // ─── Dim Animation ───
