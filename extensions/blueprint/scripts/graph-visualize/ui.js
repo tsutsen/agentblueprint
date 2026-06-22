@@ -159,7 +159,6 @@ export function initUI() {
   // Controls
   document.getElementById('btn-zoom-reset').addEventListener('click', resetZoom);
   document.getElementById('btn-simulate').addEventListener('click', toggleSimulation);
-  document.getElementById('btn-labels').addEventListener('click', toggleLabels);
 
   // Size metric dropdown (native <details>)
   const sizeMetricDropdown = document.getElementById('size-metric-dropdown');
@@ -279,12 +278,6 @@ function resetZoom() {
 }
 
 // ─── Controls ───
-function toggleLabels() {
-  showLabels = !showLabels;
-  document.getElementById('btn-labels').classList.toggle('active', showLabels);
-  renderGraph();
-}
-
 // ─── Node selection callbacks (registered with graph.js) ───
 function handleNodeSelected(event, d) {
   showDetail(d);
