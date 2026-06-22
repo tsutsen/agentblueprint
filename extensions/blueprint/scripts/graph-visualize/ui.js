@@ -1,8 +1,57 @@
 // ─── UI Logic ───
 // This file contains all UI-related code: search, filters, sidebar, detail panel, controls
 
+let _pendingNodeId = null;
+
+// ─── URL State Sync ───
+function updateURL() {
+  const params = new URLSearchParams();
+  params.set('cats', [...activeCategories].sort().join(','));
+  if (searchTerm) {
+    params.set('q', searchTerm);
+  }
+  const newURL = `?${params.toString()}`;
+  history.replaceState(null, '', newURL);
+}
+
+function getCategoryCounts() {
+  const counts = {};
+  for (const n of graphData.nodes) {
+    const cat = n.typeCat || n.category || 'other';
+    counts[cat] = (counts[cat] || 0) + 1;
+  }
+  return counts;
+}
+
+function loadURLState() {
+  const params = new URLSearchParams(window.location.search);
+  const catsParam = params.get('cats');
+  if (catsParam) {
+    activeCategories.clear();
+    catsParam.split(',').forEach(c => {
+      const trimmed = c.trim();
+      if (trimmed) activeCategories.add(trimmed);
+    });
+  }
+  const qParam = params.get('q');
+  if (qParam) {
+    searchTerm = qParam;
+  }
+  return params.get('node');
+}
+
+function clearURLState() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.toString()) {
+    history.replaceState(null, '', window.location.pathname);
+  }
+}
+
 // ─── Init UI ───
 function initUI() {
+  // Load state from URL before building filters
+  _pendingNodeId = loadURLState();
+
   document.getElementById('project-name').textContent =
     `${graphData.project} · v${graphData.version}`;
 
@@ -19,22 +68,37 @@ function initUI() {
     div.className = 'filter-item';
     const label = cat.charAt(0).toUpperCase() + cat.slice(1);
     div.innerHTML = `
-      <input type="checkbox" checked data-category="${cat}">
+      <input type="checkbox" data-category="${cat}">
       <div class="filter-dot filter-dot-${cat}"></div>
       <span>${label}</span>
       <span class="filter-count">${count}</span>`;
+    const cb = div.querySelector('input');
+    cb.checked = activeCategories.has(cat);
+    if (cb.checked) activeCategories.add(cat);
     div.querySelector('input').addEventListener('change', (e) => {
       e.target.checked ? activeCategories.add(cat) : activeCategories.delete(cat);
       applyFilters();
+      updateURL();
     });
     div.addEventListener('click', (e) => {
       if (e.target.tagName !== 'INPUT') {
         const cb = div.querySelector('input');
-        cb.checked = !cb.checked;
-        cb.dispatchEvent(new Event('change'));
+        // Double click: select only this category
+        if (e.detail === 2) {
+          document.querySelectorAll('#category-filters .filter-item input').forEach(inp => {
+            inp.checked = false;
+          });
+          activeCategories.clear();
+          activeCategories.add(cat);
+          cb.checked = true;
+          applyFilters();
+          updateURL();
+        } else {
+          cb.checked = !cb.checked;
+          cb.dispatchEvent(new Event('change'));
+        }
       }
     });
-    activeCategories.add(cat);
     catContainer.appendChild(div);
   }
 
@@ -76,6 +140,7 @@ function initUI() {
     searchTimeout = setTimeout(() => {
       searchTerm = e.target.value.toLowerCase().trim();
       applyFilters();
+      updateURL();
     }, 200);
   });
 
@@ -278,7 +343,9 @@ function showDetail(d) {
   const panel = document.getElementById('detail-panel');
   const shortId = (d.type === 'spec' || d.category === 'spec') ? 'SPEC' : d.id.split('-').slice(0, 2).join('-');
   const displayName = d.term || d.label || d.id;
-  document.getElementById('detail-name').innerHTML = `${displayName}&nbsp;<span class="term-id">[${shortId}]</span>`;
+  document.getElementById('detail-name').textContent = displayName;
+  document.getElementById('detail-id').textContent = `\u00a0[${shortId}]`;
+  document.getElementById('detail-id').style.display = 'inline';
 
   const catBadge = document.getElementById('detail-category');
   // Show typeLabel for new format, category for legacy
@@ -303,4 +370,20 @@ function showDetail(d) {
   stats.innerHTML = html;
 
   panel.classList.add('visible');
+
+  // Sync selected node to URL
+  const params = new URLSearchParams(window.location.search);
+  params.set('node', d.id);
+  const newURL = `?${params.toString()}`;
+  history.replaceState(null, '', newURL);
+}
+
+function restoreNodeFromURL() {
+  if (!_pendingNodeId) return;
+  const node = graphData.nodes.find(n => n.id === _pendingNodeId);
+  if (!node) return;
+  // Create a minimal event object
+  const fakeEvent = { stopPropagation: () => {}, clientX: 0, clientY: 0 };
+  selectNode(fakeEvent, node);
+  _pendingNodeId = null;
 }

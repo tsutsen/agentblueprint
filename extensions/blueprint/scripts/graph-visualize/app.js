@@ -110,4 +110,6 @@ async function loadGraphData() {
   tickCount = 0;
 
   initGraph();
+  applyFilters();
+  restoreNodeFromURL();
 }
