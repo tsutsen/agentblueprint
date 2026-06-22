@@ -77,8 +77,8 @@ export function initUI() {
     const label = cat.charAt(0).toUpperCase() + cat.slice(1);
     div.innerHTML = `
       <input type="checkbox" data-category="${cat}">
-      <div class="filter-dot filter-dot-${cat}"></div>
       <span>${label}</span>
+      <div class="filter-dot filter-dot-${cat}"></div>
       <span class="filter-count">${count}</span>`;
     const cb = div.querySelector('input');
     cb.checked = activeCategories.has(cat);
