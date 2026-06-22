@@ -712,6 +712,11 @@ function onMouseMove(event) {
     draggedNode.y = pos.y;
     draggedNode.vx = 0;
     draggedNode.vy = 0;
+    // Pin node so simulation ticks don't override drag position
+    if (simulation) {
+      draggedNode.fx = pos.x;
+      draggedNode.fy = pos.y;
+    }
     render();
     return;
   }
@@ -775,12 +780,19 @@ function onMouseUp(event) {
     draggedNode = null;
     isDragging = false;
   } else if (draggedNode && isDragging) {
-    draggedNode = null;
     isDragging = false;
-    // Only run post-drag settlement when simulation is off.
-    // When simulation is running, let the force layout handle it naturally.
-    if (!simulation) {
-      settleAfterDrag(draggedNode);
+    if (simulation) {
+      // Unpin node so simulation takes over
+      draggedNode.fx = null;
+      draggedNode.fy = null;
+      draggedNode = null;
+    } else {
+      // Pin and run settlement for non-simulation mode
+      draggedNode.fx = draggedNode.x;
+      draggedNode.fy = draggedNode.y;
+      const nodeRef = draggedNode;
+      draggedNode = null;
+      settleAfterDrag(nodeRef);
     }
   } else if (!draggedNode && !wasPanning) {
     // Click on empty space - deselect
