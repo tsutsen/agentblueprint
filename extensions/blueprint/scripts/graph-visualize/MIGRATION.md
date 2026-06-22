@@ -159,6 +159,40 @@ shadcn/ui uses CSS variables on `:root` mapped to Tailwind semantic tokens:
 
 ---
 
+## Current Progress
+
+### Phase 1: Scaffold ✅ DONE
+- Vite + React + TypeScript + Tailwind CSS v3 scaffolded
+- 12 shadcn/ui components created manually (Badge, Button, Checkbox, DropdownMenu, Input, Label, Popover, ScrollArea, Separator, Sheet, Skeleton, Toast)
+- TypeScript path aliases configured (`@/*` → `src/*`)
+- App.tsx layout skeleton with Sidebar, Canvas, Controls, Detail Panel, Search
+- Legacy files preserved in `legacy/` directory
+- Build passes cleanly
+
+### Phase 2: Canvas Bridge ✅ DONE
+- **Strategy**: Native browser ES modules via `public/legacy/`
+  - `graph.js`, `config.js`, `graph-wrapper.js` moved to `public/legacy/`
+  - `bootstrap.js` loads D3 from CDN + graph modules before React mounts
+  - `window.__GRAPH_WRAPPER__` exposes getter/setter functions for mutable state
+- **Why this approach**: Both Vite 8 (rolldown) and Vite 7 dev server (esbuild) enforce strict ESM immutability on `let` exports. By loading graph.js as a native browser ES module, the `let` reassignments work naturally.
+- GraphCanvas.tsx uses `window.__GRAPH_WRAPPER__` via `useEffect` + `ResizeObserver`
+- `IGraphBridge` interface provides typed bridge to React shell
+- Critical canvas CSS extracted from `legacy/graph.css` into `src/index.css`
+- Build and dev server both pass cleanly
+
+**Key decisions:**
+- Downgraded Vite 8 → Vite 7 (rollup bundler) — Vite 8 uses rolldown which has no escape hatch for ESM immutability
+- Native browser ES modules for legacy code — avoids bundler analysis entirely
+- `graph.js` remains completely untouched — no modifications needed
+
+### Phase 3: Sidebar & Controls 🔄 NEXT
+- [ ] Test graph rendering in dev server
+- [ ] Verify node click selection works end-to-end
+- [ ] Refine sidebar: search, category filters, node list
+- [ ] Wire controls: zoom reset, simulate toggle, size metric dropdown
+
+---
+
 ## Implementation Phases
 
 ### Phase 1: Scaffold (1-2 hours)
