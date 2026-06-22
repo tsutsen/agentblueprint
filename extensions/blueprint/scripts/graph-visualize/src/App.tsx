@@ -342,14 +342,16 @@ function App() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs bg-background/90 backdrop-blur" title="Switch theme">
-                <Settings className="h-3.5 w-3.5 mr-1" />
-                Theme
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 text-xs bg-background/90 backdrop-blur">
+                    <Settings className="h-3.5 w-3.5 mr-1" />
+                    Theme
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
               {themes.map((t) => (
                 <DropdownMenuItem
                   key={t.key}
@@ -362,7 +364,10 @@ function App() {
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenu>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Switch theme</TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Zoom Controls — bottom left */}
