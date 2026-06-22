@@ -244,8 +244,8 @@ let sizeRange = {
 };
 
 // ── Common scaling function ──
-// Scales a value from [minVal, maxVal] to [minRadius, maxRadius] using quadratic scaling
-// (power 2 curve: small values stay small, high values climb steeply)
+// Scales a value from [minVal, maxVal] to [minRadius, maxRadius] using power-1.5 scaling
+// (steeper than linear: small values stay small, high values climb noticeably)
 function scaleValue(value, minVal, maxVal, minRadius = 8, maxRadius = 40) {
   if (maxVal === minVal) {
     if (minVal === 0 && maxVal === 0) {
@@ -258,7 +258,7 @@ function scaleValue(value, minVal, maxVal, minRadius = 8, maxRadius = 40) {
     0,
     Math.min(1, (value - minVal) / (maxVal - minVal)),
   );
-  return minRadius + normalized * normalized * (maxRadius - minRadius);
+  return minRadius + Math.pow(normalized, 1.5) * (maxRadius - minRadius);
 }
 
 // ─── Size Metric Lookup ───
