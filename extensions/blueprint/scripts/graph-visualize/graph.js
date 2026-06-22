@@ -359,7 +359,7 @@ export function initGraph() {
   zoomBehavior = d3.zoom()
     .scaleExtent(0.05, 8)
     .on("zoom", (event) => {
-      // Store transform from the event directly (avoid NaN from d3.zoomTransform)
+      console.log("[ZOOM] event.transform:", event.transform, "k:", event.transform?.k, "type:", typeof event.transform?.k);
       currentTransform = event.transform;
       render();
     });
