@@ -357,17 +357,9 @@ export function initGraph() {
   // D3 zoom: handles wheel zoom, pinch-zoom, and drag-to-pan
   zoomBehavior = d3.zoom()
     .scaleExtent(0.05, 8)
-    .filter(event => {
-      // Don't start zoom/pan if left-button mousedown is on a node
-      if (event.type === 'mousedown' && event.button === 0) {
-        const pos = screenToWorld(event);
-        return !findNodeAt(pos);
-      }
-      return true;
-    })
     .on("zoom", () => render());
 
-  zoomBehavior(canvas);
+  d3.select(canvas).call(zoomBehavior);
 
   // Node dragging (native events, separate from zoom/pan)
   canvas.addEventListener("mousedown", (event) => {
