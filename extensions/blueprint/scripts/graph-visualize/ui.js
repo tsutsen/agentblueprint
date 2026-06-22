@@ -185,8 +185,6 @@ function initUI() {
         degree: 'Size: Degree',
         blast: 'Size: Blast Radius',
         risk: 'Size: Risk Score',
-        centrality: 'Size: Centrality',
-        type: 'Size: Type',
       };
       sizeMetricBtn.textContent = labels[sizeMetric];
       sizeMetricItems.forEach(i => i.classList.remove('active'));
@@ -372,8 +370,34 @@ function showDetail(d) {
   document.getElementById('detail-def').textContent = d.definition || 'No definition available.';
 
   const stats = document.getElementById('detail-stats');
-  let html = `<div><strong>Connections:</strong> ${d.relatedCount || 0}</div>`;
+
+  // Build connection list from edges
+  const connections = [];
+  for (const e of graphData.edges) {
+    const srcId = typeof e.source === 'object' ? e.source.id : e.source;
+    const tgtId = typeof e.target === 'object' ? e.target.id : e.target;
+    if (srcId === d.id) {
+      const targetNode = graphData.nodes.find(n => n.id === tgtId);
+      connections.push({
+        id: tgtId,
+        label: targetNode ? (targetNode.term || targetNode.label || targetNode.id) : tgtId,
+        type: targetNode ? (targetNode.type || targetNode.category || 'unknown') : 'unknown',
+        edgeType: e.type,
+      });
+    } else if (tgtId === d.id) {
+      const sourceNode = graphData.nodes.find(n => n.id === srcId);
+      connections.push({
+        id: srcId,
+        label: sourceNode ? (sourceNode.term || sourceNode.label || sourceNode.id) : srcId,
+        type: sourceNode ? (sourceNode.type || sourceNode.category || 'unknown') : 'unknown',
+        edgeType: e.type,
+      });
+    }
+  }
+
+  let html = `<div><strong>Connections:</strong> ${connections.length}</div>`;
   html += `<div><strong>Type:</strong> ${d.type || d.category || 'unknown'}</div>`;
+  html += `<div><strong>Centrality:</strong> ${d.centrality != null ? d.centrality.toFixed(4) : 'N/A'}</div>`;
 
   if (d.specs && d.specs.length > 0) {
     html += `<div><strong>In specs:</strong></div>`;
@@ -383,6 +407,27 @@ function showDetail(d) {
     }
     html += '</ul>';
   }
+
+  // Connections spoiler
+  if (connections.length > 0) {
+    html += `<div style="margin-top: 8px; cursor: pointer; user-select: none;" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.querySelector('.spoiler-toggle').textContent = this.querySelector('.spoiler-toggle').textContent.includes('▼') ? '▶' : '▼';">`;
+    html += `<strong>Connections:</strong> <span class="spoiler-toggle">▼</span></div>`;
+    html += `<ul style="list-style: none; padding: 4px 0 0 0; margin: 0; display: none;">`;
+    // Sort by type then by label
+    connections.sort((a, b) => {
+      if (a.type !== b.type) return a.type.localeCompare(b.type);
+      return a.label.localeCompare(b.label);
+    });
+    for (const conn of connections) {
+      html += `<li style="padding: 2px 0; font-size: 11px; cursor: pointer;" onclick="const node = graphData.nodes.find(n => n.id === '${conn.id}'); if (node) selectNode({stopPropagation: () => {}}, node);">
+        <span style="color: var(--text-secondary);">[${conn.type}]</span>
+        <span style="color: var(--text);">${conn.label}</span>
+        <span style="color: var(--text-secondary); font-size: 10px;"> (${conn.edgeType})</span>
+      </li>`;
+    }
+    html += '</ul>';
+  }
+
   stats.innerHTML = html;
 
   panel.classList.add('visible');
