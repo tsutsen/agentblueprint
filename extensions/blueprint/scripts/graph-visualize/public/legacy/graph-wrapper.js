@@ -23,43 +23,36 @@ window.__GRAPH_WRAPPER__ = {
   deselectNode: graph.deselectNode,
   settleAfterDrag: graph.settleAfterDrag,
 
-  // Mutable state accessors
-  getGraphData: () => graph.graphData,
-  setGraphData: (data) => { graph.graphData = data },
+  // Mutable state accessors — use setter functions to avoid ESM read-only bindings
+  getGraphData: graph.getGraphData,
+  setGraphData: graph.setGraphData,
 
   getSelectedNode: () => graph.selectedNode,
-  setSelectedNode: (node) => { graph.selectedNode = node },
+  setSelectedNode: graph.setSelectedNode,
 
   getShowLabels: () => graph.showLabels,
-  setShowLabels: (v) => { graph.showLabels = v },
-
-  getShowSpecs: () => graph.showSpecs,
-  setShowSpecs: (v) => { graph.showSpecs = v },
+  setShowLabels: graph.setShowLabels,
 
   getActiveCategories: () => graph.activeCategories,
-  setActiveCategories: (v) => { graph.activeCategories = v },
+  setActiveCategories: graph.setActiveCategories,
 
   getSearchTerm: () => graph.searchTerm,
-  setSearchTerm: (v) => { graph.searchTerm = v },
+  setSearchTerm: graph.setSearchTerm,
 
   getSizeMetric: () => graph.sizeMetric,
-  setSizeMetric: (v) => { graph.sizeMetric = v },
+  setSizeMetric: graph.setSizeMetric,
 
   getZoom: () => graph.zoom,
-  setZoom: (x, y, k) => {
-    if (x !== undefined) graph.zoom.x = x
-    if (y !== undefined) graph.zoom.y = y
-    if (k !== undefined) graph.zoom.k = k
-  },
+  setZoom: graph.setZoom,
 
   getWidth: () => graph.width,
-  setWidth: (v) => { graph.width = v },
+  setWidth: graph.setWidth,
 
   getHeight: () => graph.height,
-  setHeight: (v) => { graph.height = v },
+  setHeight: graph.setHeight,
 
   getValidEdges: () => graph.validEdges,
-  setValidEdges: (v) => { graph.validEdges = v },
+  setValidEdges: graph.setValidEdges,
 
   getTickCount: () => graph.tickCount,
 }

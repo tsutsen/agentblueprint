@@ -5,16 +5,23 @@ export let graphData = null;
 export function getGraphData() { return graphData; }
 export function setGraphData(data) { graphData = data; }
 export let validEdges = null;
+export function setValidEdges(v) { validEdges = v; }
 let canvas, ctx;
 export let selectedNode = null;
+export function setSelectedNode(n) { selectedNode = n; }
 let connectedSet = null;
 export let showLabels = true;
-export let showSpecs = true;
+export function setShowLabels(v) { showLabels = v; }
 export let tickCount = 0;
+export function setTickCount(v) { tickCount = v; }
 export let startTime = 0;
 export let activeCategories = new Set();
+export function setActiveCategories(v) { activeCategories = v; }
 export let searchTerm = "";
+export function setSearchTerm(v) { searchTerm = v; }
 export let width, height;
+export function setWidth(v) { width = v; }
+export function setHeight(v) { height = v; }
 let draggedNode = null;
 export let isDragging = false;
 
@@ -223,6 +230,7 @@ export function updateHtmlLabels() {
 
 // ─── Zoom/Pan State ───
 export let zoom = { x: 0, y: 0, k: 1 };
+export function setZoom(x, y, k) { if (x !== undefined) zoom.x = x; if (y !== undefined) zoom.y = y; if (k !== undefined) zoom.k = k; }
 let isPanning = false;
 let panStart = { x: 0, y: 0 };
 let zoomStart = { x: 0, y: 0 };
@@ -365,7 +373,8 @@ export function initGraph() {
   // ── Render ──
   render();
 
-  document.getElementById("loading-overlay").classList.add("hidden");
+  const overlay = document.getElementById("loading-overlay");
+  if (overlay) overlay.classList.add("hidden");
 }
 
 // ─── Render ───
@@ -876,6 +885,7 @@ let hoveredNode = null;
 let isSimulating = false;
 let simulation = null;
 export let sizeMetric = "degree"; // Default sizing metric
+export function setSizeMetric(v) { sizeMetric = v; }
 let dimAnimation = null; // Animation frame for dimming
 let currentDim = 1; // Current dim opacity (1 = full, 0.15 = dimmed)
 

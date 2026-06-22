@@ -6,4 +6,4 @@ import * as d3 from 'https://cdn.jsdelivr.net/npm/d3@7/+esm'
 window.d3 = d3
 
 // Load the wrapper (which loads graph.js and config.js)
-import { default as wrapperModule } from './graph-wrapper.js'
+import './graph-wrapper.js'

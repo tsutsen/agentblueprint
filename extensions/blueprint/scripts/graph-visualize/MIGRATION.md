@@ -185,11 +185,27 @@ shadcn/ui uses CSS variables on `:root` mapped to Tailwind semantic tokens:
 - Native browser ES modules for legacy code — avoids bundler analysis entirely
 - `graph.js` remains completely untouched — no modifications needed
 
-### Phase 3: Sidebar & Controls 🔄 NEXT
-- [ ] Test graph rendering in dev server
-- [ ] Verify node click selection works end-to-end
-- [ ] Refine sidebar: search, category filters, node list
-- [ ] Wire controls: zoom reset, simulate toggle, size metric dropdown
+### Phase 3: Sidebar & Controls ✅ DONE
+- [x] Graph renders correctly via blob URL loader + bridge
+- [x] Debounced search (250ms) → `setVisibility()`
+- [x] Category filters → `activeCategories` → `setVisibility()`
+- [x] Node list (click → `selectNodeById()` → detail panel)
+- [x] Controls wired: zoom reset, simulate toggle, size metric dropdown
+- [x] Labels toggle fixed (stale closure) + Specs toggle added
+- [x] `selectNodeById` fires `onNodeSelect` callback for detail panel
+- [x] `deselectNode` fires `onNodeDeselect` callback to close detail panel
+- [x] End-to-end tested: canvas click, sidebar click, search, filters
+
+### Phase 4: Detail Panel & Controls Polish ✅ DONE
+- [x] Detail panel replaced `Sheet` → non-modal fixed panel (canvas remains interactive)
+- [x] Close button (X) on detail panel
+- [x] Keyboard shortcut: Escape to deselect
+- [x] Keyboard shortcut: K to focus search
+- [x] Zoom in/out buttons (+/−) added
+- [x] Simulation state indicator ("Running" vs "Simulate")
+- [x] Theme switcher wired — 5 themes (Default Light, Dark, Gruvbox, Neon, Retro)
+- [x] `src/lib/themes.ts` — theme definitions with hex→HSL conversion
+- [x] `applyTheme()` sets shadcn CSS variables + canvas-specific edge colors
 
 ---
 

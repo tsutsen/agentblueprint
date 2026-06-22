@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
+import { X } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Label } from '@/components/ui/label'
 import { Search, RotateCcw, Play, Settings, ChevronDown, Eye, EyeOff } from 'lucide-react'
+import { themes, applyTheme } from '@/lib/themes'
 
 // ─── Size Metrics ───
 const SIZE_METRICS = [
@@ -27,10 +28,12 @@ function App() {
   const [categories, setCategories] = useState<Record<string, { count: number; color: string }>>({})
   const [sizeMetric, setSizeMetric] = useState('degree')
   const [showLabels, setShowLabels] = useState(true)
-  const [showDetail, setShowDetail] = useState(false)
   const [sortBy, setSortBy] = useState<'name' | 'degree'>('name')
+  const [bridgeReady, setBridgeReady] = useState(false)
+  const [simulating, setSimulating] = useState(false)
 
   const bridgeRef = useRef<IGraphBridge | null>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Load graph data
   useEffect(() => {
@@ -63,25 +66,30 @@ function App() {
       .catch((err) => console.error('Failed to load graph data:', err))
   }, [])
 
-  // Apply filters when search/categories change
+  // Debounced search term
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 250)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
+  // Apply filters when search/categories change (only after bridge is ready)
   const applyFilters = useCallback(() => {
-    if (!graphData || !bridgeRef.current) return
+    if (!graphData || !bridgeRef.current || !bridgeReady) return
 
     const visibleIds = new Set<string>()
     for (const node of graphData.nodes) {
       const cat = node.typeCat || node.category || 'other'
       const catVisible = activeCategories.size === 0 || activeCategories.has(cat)
-      const searchMatch = !searchTerm ||
-        (node.term || node.label || node.id).toLowerCase().includes(searchTerm.toLowerCase()) ||
-        node.id.toLowerCase().includes(searchTerm.toLowerCase())
+      const searchMatch = !debouncedSearch ||
+        (node.term || node.label || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
       if (catVisible && searchMatch) {
         visibleIds.add(node.id)
       }
     }
     bridgeRef.current.setVisibility(visibleIds)
-  }, [graphData, activeCategories, searchTerm])
+  }, [graphData, activeCategories, debouncedSearch, bridgeReady])
 
-  // Re-apply filters when dependencies change
   useEffect(() => {
     applyFilters()
   }, [applyFilters])
@@ -95,17 +103,52 @@ function App() {
   // Handle node selection
   const handleNodeSelect = useCallback((node: any) => {
     setSelectedNode(node)
-    setShowDetail(true)
   }, [])
 
   const handleNodeDeselect = useCallback(() => {
     setSelectedNode(null)
-    setShowDetail(false)
   }, [])
 
-  // Compute sorted nodes
+  // Keyboard shortcuts: Escape to deselect/clear search, K to focus search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (selectedNode) {
+          bridgeRef.current?.deselectNode()
+        } else if (searchTerm) {
+          setSearchTerm('')
+          searchInputRef.current?.blur()
+        }
+      }
+      if ((e.key === 'k' || e.key === 'K') && !selectedNode) {
+        const target = e.target as HTMLElement
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+          e.preventDefault()
+          searchInputRef.current?.focus()
+        }
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [selectedNode, searchTerm])
+
+  // Mark bridge as ready once data is loaded
+  useEffect(() => {
+    if (graphData) setBridgeReady(true)
+  }, [graphData])
+
+  // Compute visible node IDs (same logic as applyFilters)
+  const visibleIds = new Set(graphData?.nodes.filter((node: any) => {
+    const cat = node.typeCat || node.category || 'other'
+    const catVisible = activeCategories.size === 0 || activeCategories.has(cat)
+    const searchMatch = !debouncedSearch ||
+      (node.term || node.label || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
+    return catVisible && searchMatch
+  }).map((n: any) => n.id) || [])
+
+  // Compute sorted + filtered nodes (sidebar)
   const sortedNodes = graphData?.nodes
-    .filter((n: any) => n.visible !== false)
+    .filter((n: any) => visibleIds.has(n.id))
     .sort((a: any, b: any) => {
       if (sortBy === 'degree') return (b.degree || 0) - (a.degree || 0)
       return (a.term || a.label || a.id).localeCompare(b.term || b.label || b.id)
@@ -146,10 +189,11 @@ function App() {
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search nodes..."
+              placeholder="Search nodes... (K)"
               className="pl-9 h-8 text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              ref={searchInputRef}
             />
           </div>
         </div>
@@ -183,7 +227,7 @@ function App() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <ScrollArea className="h-[120px]">
+          <div>
             <div className="space-y-0.5">
               {Object.entries(categories)
                 .sort((a, b) => b[1].count - a[1].count)
@@ -209,7 +253,7 @@ function App() {
                   </label>
                 ))}
             </div>
-          </ScrollArea>
+          </div>
         </div>
 
         {/* Node List */}
@@ -228,26 +272,32 @@ function App() {
           </DropdownMenu>
         </div>
         <ScrollArea className="flex-1 p-1">
-          <div className="space-y-0.5">
-            {sortedNodes.map((node: any) => (
-              <button
-                key={node.id}
-                onClick={() => bridgeRef.current?.selectNodeById(node.id)}
-                className={`w-full flex items-center gap-2 px-2 py-1 rounded text-sm text-left transition-colors ${
-                  selectedNode?.id === node.id
-                    ? 'bg-primary/10 text-primary'
-                    : 'hover:bg-muted/50'
-                }`}
-              >
-                <span className="truncate font-medium text-foreground flex-1">
-                  {node.term || node.label || node.id}
-                </span>
-                <Badge variant="secondary" className="text-[10px] flex-shrink-0 font-mono">
-                  {node.degree ?? 0}
-                </Badge>
-              </button>
-            ))}
-          </div>
+          {sortedNodes.length === 0 && debouncedSearch ? (
+            <p className="px-3 py-4 text-sm text-muted-foreground text-center">No matches for "{debouncedSearch}"</p>
+          ) : sortedNodes.length === 0 && activeCategories.size > 0 ? (
+            <p className="px-3 py-4 text-sm text-muted-foreground text-center">All categories hidden</p>
+          ) : (
+            <div className="space-y-0.5">
+              {sortedNodes.map((node: any) => (
+                <button
+                  key={node.id}
+                  onClick={() => bridgeRef.current?.selectNodeById(node.id)}
+                  className={`w-full flex items-center gap-2 px-2 py-1 rounded text-sm text-left transition-colors ${
+                    selectedNode?.id === node.id
+                      ? 'bg-primary/10 text-primary'
+                      : 'hover:bg-muted/50'
+                  }`}
+                >
+                  <span className="truncate font-medium text-foreground flex-1">
+                    {node.term || node.label || node.id}
+                  </span>
+                  <Badge variant="secondary" className="text-[10px] flex-shrink-0 font-mono">
+                    {node.degree ?? 0}
+                  </Badge>
+                </button>
+              ))}
+            </div>
+          )}
         </ScrollArea>
       </aside>
 
@@ -267,11 +317,30 @@ function App() {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 text-xs bg-background/90 backdrop-blur"
-            onClick={() => bridgeRef.current?.toggleSimulation()}
+            className={`h-8 text-xs bg-background/90 backdrop-blur ${simulating ? 'text-primary font-semibold' : ''}`}
+            onClick={() => {
+              setSimulating((prev) => !prev)
+              bridgeRef.current?.toggleSimulation()
+            }}
           >
             <Play className="h-3.5 w-3.5 mr-1" />
-            Simulate
+            {simulating ? 'Running' : 'Simulate'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs bg-background/90 backdrop-blur"
+            onClick={() => bridgeRef.current?.zoomIn()}
+          >
+            +
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs bg-background/90 backdrop-blur"
+            onClick={() => bridgeRef.current?.zoomOut()}
+          >
+            −
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -296,8 +365,10 @@ function App() {
             size="sm"
             className="h-8 text-xs bg-background/90 backdrop-blur"
             onClick={() => {
-              setShowLabels((prev) => !prev)
-              bridgeRef.current?.setLabels(!showLabels)
+              setShowLabels((prev) => {
+                bridgeRef.current?.setLabels(!prev)
+                return !prev
+              })
             }}
           >
             {showLabels ? <EyeOff className="h-3.5 w-3.5 mr-1" /> : <Eye className="h-3.5 w-3.5 mr-1" />}
@@ -311,11 +382,17 @@ function App() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              <DropdownMenuItem>Dark</DropdownMenuItem>
-              <DropdownMenuItem>Light</DropdownMenuItem>
-              <DropdownMenuItem>Gruvbox</DropdownMenuItem>
-              <DropdownMenuItem>Neon</DropdownMenuItem>
-              <DropdownMenuItem>Retro</DropdownMenuItem>
+              {themes.map((t) => (
+                <DropdownMenuItem
+                  key={t.key}
+                  onClick={() => {
+                    applyTheme(t.key)
+                    bridgeRef.current?.updateTheme()
+                  }}
+                >
+                  {t.label}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -331,112 +408,98 @@ function App() {
         )}
       </main>
 
-      {/* Detail Panel (Sheet) */}
-      <Sheet open={showDetail} onOpenChange={(open) => {
-        if (!open) {
-          bridgeRef.current?.deselectNode()
-        }
-      }}>
-        <SheetContent side="right" className="w-[380px] sm:w-[380px]">
-          {selectedNode && (
-            <>
-              <SheetHeader>
-                <SheetTitle className="text-base">
-                  <div className="flex flex-col gap-1.5">
-                    <span className="text-lg">{selectedNode.term || selectedNode.label || selectedNode.id}</span>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-[10px] uppercase">
-                        {selectedNode.typeLabel || selectedNode.type || selectedNode.category || 'unknown'}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground font-mono">
-                        {selectedNode.id.split('-').slice(0, 2).join('-')}
-                      </span>
-                    </div>
-                  </div>
-                </SheetTitle>
-                <SheetDescription className="text-sm leading-relaxed mt-2">
-                  {selectedNode.description || 'No description available.'}
-                </SheetDescription>
-              </SheetHeader>
+      {/* Detail Panel — floating card, auto-height with max-height scroll */}
+      {selectedNode && (
+        <div data-testid="detail-panel" className="absolute top-4 right-4 w-[360px] max-h-[calc(100%-2rem)] bg-card border border-border rounded-xl shadow-lg z-40 flex flex-col overflow-hidden">
+          {/* Header */}
+          <div data-testid="detail-header" className="flex items-start justify-between p-4 border-b border-border">
+            <div data-testid="detail-header-text" className="flex flex-col gap-1 pr-2 min-w-0 flex-1">
+              <span data-testid="detail-node-name" className="text-base font-semibold break-words overflow-wrap-anywhere">{selectedNode.term || selectedNode.label || selectedNode.id}</span>
+              <div className="flex items-center gap-2">
+                <Badge data-testid="detail-type-badge" variant="secondary" className="text-[10px] uppercase">
+                  {selectedNode.typeLabel || selectedNode.type || selectedNode.category || 'unknown'}
+                </Badge>
+                <span data-testid="detail-node-id" className="text-xs text-muted-foreground font-mono">
+                  {selectedNode.id.split('-').slice(0, 2).join('-')}
+                </span>
+              </div>
+            </div>
+            <Button
+              data-testid="detail-close-btn"
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 shrink-0"
+              onClick={() => bridgeRef.current?.deselectNode()}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Scrollable content */}
+          <div data-testid="detail-scroll" className="flex-1 overflow-y-auto overflow-x-hidden">
+            <div data-testid="detail-body" className="p-4 w-full">
+              <p data-testid="detail-description" className="text-sm leading-relaxed text-muted-foreground break-words overflow-wrap-anywhere max-w-full">
+                {selectedNode.definition || 'No description available.'}
+              </p>
+
               <Separator className="my-3" />
 
               {/* Stats */}
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
+              <div data-testid="detail-stats" className="space-y-1.5 text-sm">
+                <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
                   <Label className="text-muted-foreground">Connections</Label>
-                  <span className="font-mono">{selectedNode.degree ?? 0}</span>
+                  <span data-testid="detail-stat-degree" className="font-mono text-right">{selectedNode.degree ?? 0}</span>
                 </div>
                 {selectedNode.blastRadius !== undefined && (
-                  <div className="flex justify-between">
+                  <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
                     <Label className="text-muted-foreground">Blast Radius</Label>
-                    <span className="font-mono">{selectedNode.blastRadius}</span>
+                    <span data-testid="detail-stat-blast-radius" className="font-mono text-right">{selectedNode.blastRadius}</span>
                   </div>
                 )}
                 {selectedNode.risk !== undefined && (
-                  <div className="flex justify-between">
+                  <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
                     <Label className="text-muted-foreground">Risk Score</Label>
-                    <span className="font-mono">{selectedNode.risk}</span>
+                    <span data-testid="detail-stat-risk" className="font-mono text-right">{selectedNode.risk}</span>
                   </div>
                 )}
                 {selectedNode.centrality !== undefined && (
-                  <div className="flex justify-between">
+                  <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
                     <Label className="text-muted-foreground">Centrality</Label>
-                    <span className="font-mono">{selectedNode.centrality?.toFixed(4)}</span>
+                    <span data-testid="detail-stat-centrality" className="font-mono text-right">{selectedNode.centrality?.toFixed(4)}</span>
                   </div>
                 )}
               </div>
-
-              {/* Specs */}
-              {selectedNode.specs && selectedNode.specs.length > 0 && (
-                <>
-                  <Separator className="my-3" />
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1.5 block">Specs</Label>
-                    <div className="space-y-1">
-                      {selectedNode.specs.map((spec: string, i: number) => (
-                        <Badge key={i} variant="outline" className="text-xs">
-                          {spec}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
 
               {/* Connections */}
               {connections.length > 0 && (
                 <>
                   <Separator className="my-3" />
-                  <div>
+                  <div data-testid="detail-connections" className="w-full">
                     <Label className="text-xs text-muted-foreground mb-1.5 block">
                       Connections ({connections.length})
                     </Label>
-                    <ScrollArea className="max-h-[300px]">
-                      <div className="space-y-0.5">
+                    <div className="space-y-0.5">
                         {connections.map((conn: any) => (
                           <button
+                            data-testid={`detail-connection-${conn.id}`}
                             key={conn.id}
                             onClick={() => bridgeRef.current?.selectNodeById(conn.id)}
                             className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-muted/50 text-left"
                           >
+                            <span data-testid={`detail-conn-label-${conn.id}`} className="truncate flex-1 min-w-0">{conn.label}</span>
                             <Badge variant="secondary" className="text-[10px] flex-shrink-0">
                               {conn.type}
                             </Badge>
-                            <span className="truncate flex-1">{conn.label}</span>
-                            <span className="text-[10px] text-muted-foreground flex-shrink-0">
-                              ({conn.edgeType})
-                            </span>
                           </button>
                         ))}
-                      </div>
-                    </ScrollArea>
+                    </div>
                   </div>
                 </>
               )}
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

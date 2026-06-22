@@ -8,9 +8,10 @@ export interface IGraphBridge {
   deselectNode: () => void
   resetZoom: () => void
   toggleSimulation: () => void
+  zoomIn: () => void
+  zoomOut: () => void
   updateTheme: () => void
   setLabels: (show: boolean) => void
-  setSpecs: (show: boolean) => void
   getSelectedNode: () => any | null
   getZoom: () => { x: number; y: number; k: number }
   triggerRender: () => void
@@ -19,6 +20,7 @@ export interface IGraphBridge {
 declare global {
   interface Window {
     __GRAPH_WRAPPER__: any
+    __GRAPH_READY__: Promise<any>
   }
 }
 
@@ -43,93 +45,111 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
   useEffect(() => {
     if (!data) return
 
-    const wrapper = window.__GRAPH_WRAPPER__
-    if (!wrapper) {
-      setError('Graph wrapper not loaded. Check /legacy/bootstrap.js')
-      return
-    }
-
     let cancelled = false
     setReady(false)
 
-    // Set data and callbacks
-    wrapper.setGraphData(data)
-    wrapper.setNodeSelectCallbacks(
-      (_event: any, node: any) => onNodeSelect?.(node),
-      () => onNodeDeselect?.()
-    )
+    // Wait for the legacy modules to be ready, then initialize
+    ;(async () => {
+      const wrapper = await window.__GRAPH_READY__
+      if (cancelled || !wrapper) {
+        if (!cancelled) setError('Graph wrapper failed to load. Check console.')
+        return
+      }
 
-    // Initialize the graph
-    wrapper.initGraph()
+      // Set data and callbacks
+      wrapper.setGraphData(data)
+      wrapper.setNodeSelectCallbacks(
+        (_event: any, node: any) => onNodeSelect?.(node),
+        () => onNodeDeselect?.()
+      )
 
-    if (cancelled) return
-
-    // Handle container resize
-    const container = containerRef.current
-    if (!container) return
-
-    const resizeObserver = new ResizeObserver(() => {
+      // Initialize the graph
+      wrapper.initGraph()
       if (cancelled) return
-      const { clientWidth: w, clientHeight: h } = container
-      wrapper.setWidth(w)
-      wrapper.setHeight(h)
-      wrapper.renderGraph()
-    })
-    resizeObserver.observe(container)
 
-    // Create and expose the bridge
-    bridge.current = {
-      setVisibility: (visibleIds: Set<string>) => {
-        for (const n of data.nodes) {
-          n.visible = visibleIds.has(n.id)
-        }
-        wrapper.startScaleAnimation()
-      },
-      setSizeMetric: (metric: string) => {
-        wrapper.setSizeMetric(metric)
-        wrapper.recalcSizeRange()
-        wrapper.startScaleAnimation()
+      // Handle container resize
+      const container = containerRef.current
+      if (!container) return
+
+      const resizeObserver = new ResizeObserver(() => {
+        if (cancelled) return
+        const { clientWidth: w, clientHeight: h } = container
+        wrapper.setWidth(w)
+        wrapper.setHeight(h)
         wrapper.renderGraph()
-      },
-      selectNodeById: (id: string) => {
-        const node = data.nodes.find((n: any) => n.id === id)
-        if (node) {
-          wrapper.setSelectedNode(node)
-          wrapper.animateDim(0.15)
+      })
+      resizeObserver.observe(container)
+
+      // Create and expose the bridge
+      bridge.current = {
+        setVisibility: (visibleIds: Set<string>) => {
+          for (const n of data.nodes) {
+            n.visible = visibleIds.has(n.id)
+          }
           wrapper.startScaleAnimation()
-        }
-      },
-      deselectNode: () => {
-        wrapper.deselectNode()
-      },
-      resetZoom: () => {
-        wrapper.setZoom(0, 0, 1)
-        wrapper.renderGraph()
-      },
-      toggleSimulation: () => {
-        wrapper.toggleSimulation()
-      },
-      updateTheme: () => {
-        wrapper.updateThemeColors()
-      },
-      setLabels: (show: boolean) => {
-        wrapper.setShowLabels(show)
-        wrapper.renderGraph()
-      },
-      setSpecs: (show: boolean) => {
-        wrapper.setShowSpecs(show)
-        wrapper.renderGraph()
-      },
-      getSelectedNode: () => wrapper.getSelectedNode(),
-      getZoom: () => wrapper.getZoom(),
-      triggerRender: () => wrapper.renderGraph(),
-    }
+        },
+        setSizeMetric: (metric: string) => {
+          wrapper.setSizeMetric(metric)
+          wrapper.recalcSizeRange()
+          wrapper.startScaleAnimation()
+          wrapper.renderGraph()
+        },
+        selectNodeById: (id: string) => {
+          const node = data.nodes.find((n: any) => n.id === id)
+          if (node) {
+            wrapper.setSelectedNode(node)
+            wrapper.animateDim(0.15)
+            wrapper.startScaleAnimation()
+            // Trigger the selection callback so React detail panel updates
+            onNodeSelect?.(node)
+          }
+        },
+        deselectNode: () => {
+          wrapper.deselectNode()
+        },
+        resetZoom: () => {
+          wrapper.setZoom(0, 0, 1)
+          wrapper.renderGraph()
+        },
+        toggleSimulation: () => {
+          wrapper.toggleSimulation()
+        },
+        zoomIn: () => {
+          const z = wrapper.getZoom()
+          const newK = Math.min(z.k * 1.3, 10)
+          wrapper.setZoom(z.x, z.y, newK)
+          wrapper.renderGraph()
+        },
+        zoomOut: () => {
+          const z = wrapper.getZoom()
+          const newK = Math.max(z.k / 1.3, 0.1)
+          wrapper.setZoom(z.x, z.y, newK)
+          wrapper.renderGraph()
+        },
+        updateTheme: () => {
+          wrapper.updateThemeColors()
+        },
+        setLabels: (show: boolean) => {
+          wrapper.setShowLabels(show)
+          wrapper.renderGraph()
+        },
+        getSelectedNode: () => wrapper.getSelectedNode(),
+        getZoom: () => wrapper.getZoom(),
+        triggerRender: () => wrapper.renderGraph(),
+      }
 
-    setReady(true)
+      setReady(true)
+
+      // Cleanup on unmount
+      return () => {
+        resizeObserver.disconnect()
+        bridge.current = null
+      }
+    })()
 
     // Cleanup
     return () => {
-      resizeObserver.disconnect()
+      cancelled = true
       bridge.current = null
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
