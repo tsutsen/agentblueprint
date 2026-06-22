@@ -274,13 +274,13 @@ function App() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <ScrollArea className="flex-1 p-1">
+        <ScrollArea className="flex-1 p-1 overflow-hidden">
           {sortedNodes.length === 0 && debouncedSearch ? (
             <p className="px-3 py-4 text-sm text-muted-foreground text-center">No matches for "{debouncedSearch}"</p>
           ) : sortedNodes.length === 0 && activeCategories.size > 0 ? (
             <p className="px-3 py-4 text-sm text-muted-foreground text-center">All categories hidden</p>
           ) : (
-            <div className="space-y-0.5">
+            <div className="space-y-0.5 overflow-hidden">
               {sortedNodes.map((node: any) => {
                 const idShort = (node.type === 'spec' || node.category === 'spec')
                   ? 'SPEC'
