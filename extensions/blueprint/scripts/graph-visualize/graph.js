@@ -355,17 +355,45 @@ export function initGraph() {
   render();
 
   // ── Event listeners ──
-  // D3 zoom attached to container (not canvas) for proper event handling
+  // Use d3.zoom() for drag-to-pan only; handle wheel zoom manually
+  // (d3-zoom v7 produces NaN transform on div elements for wheel zoom)
+  currentTransform = d3.zoomIdentity;
+
   zoomBehavior = d3.zoom()
     .scaleExtent(0.05, 8)
     .on("zoom", (event) => {
-      console.log("[ZOOM] event.transform:", event.transform, "k:", event.transform?.k, "type:", typeof event.transform?.k);
-      currentTransform = event.transform;
+      // Only use event.transform for pan (drag), not for wheel zoom
+      if (event.sourceEvent && event.sourceEvent.type === 'wheel') return;
+      currentTransform = {
+        k: event.transform.k,
+        x: event.transform.x,
+        y: event.transform.y
+      };
       render();
     });
 
   d3.select(container).call(zoomBehavior);
   container.style.overflow = "hidden";
+
+  // Manual wheel zoom (d3-zoom v7 produces NaN on non-SVG elements)
+  container.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    const delta = -event.deltaY * 0.002;
+    const factor = Math.pow(2, delta);
+    const t = currentTransform;
+    const rect = container.getBoundingClientRect();
+    const mx = event.clientX - rect.left;
+    const my = event.clientY - rect.top;
+
+    let newK = t.k * factor;
+    newK = Math.max(0.05, Math.min(8, newK));
+
+    const newX = mx - (mx - t.x) * (newK / t.k);
+    const newY = my - (my - t.y) * (newK / t.k);
+
+    currentTransform = { k: newK, x: newX, y: newY };
+    render();
+  }, { passive: false });
 
   // Node dragging (native events, separate from zoom/pan)
   canvas.addEventListener("mousedown", (event) => {
@@ -908,9 +936,21 @@ export function updateThemeColors() {
 
 // ─── Zoom Reset ───
 export function resetZoom() {
-  zoomBehavior.transition(container)
+  // Animate transform back to identity using d3.transition on a dummy selection
+  const startT = { ...currentTransform };
+  const endT = d3.zoomIdentity;
+  d3.select(container)
+    .transition()
     .duration(500)
-    .call(zoomBehavior.transform, d3.zoomIdentity);
+    .tween("zoomReset", () => {
+      const ik = d3.interpolateNumber(startT.k, endT.k);
+      const ix = d3.interpolateNumber(startT.x, endT.x);
+      const iy = d3.interpolateNumber(startT.y, endT.y);
+      return (t) => {
+        currentTransform = { k: ik(t), x: ix(t), y: iy(t) };
+        render();
+      };
+    });
 }
 
 // ─── Dim Animation ───
