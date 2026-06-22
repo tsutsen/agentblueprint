@@ -9,12 +9,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Label } from '@/components/ui/label'
-import { Search, RotateCcw, Play, Settings, ChevronDown, Eye, EyeOff } from 'lucide-react'
+import { Search, RotateCcw, Play, Settings, ChevronDown, ZoomIn, ZoomOut } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { themes, applyTheme } from '@/lib/themes'
 
 // ─── Size Metrics ───
 const SIZE_METRICS = [
   { key: 'degree', label: 'Degree' },
+  { key: 'type', label: 'Type' },
   { key: 'blast', label: 'Blast Radius' },
   { key: 'risk', label: 'Risk Score' },
   { key: 'centrality', label: 'Centrality' },
@@ -27,7 +29,6 @@ function App() {
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set())
   const [categories, setCategories] = useState<Record<string, { count: number; color: string }>>({})
   const [sizeMetric, setSizeMetric] = useState('degree')
-  const [showLabels, setShowLabels] = useState(true)
   const [sortBy, setSortBy] = useState<'name' | 'degree'>('name')
   const [bridgeReady, setBridgeReady] = useState(false)
   const [simulating, setSimulating] = useState(false)
@@ -171,7 +172,8 @@ function App() {
     : []
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+    <TooltipProvider delayDuration={200}>
+      <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       {/* Sidebar */}
       <aside className="w-[300px] min-w-[300px] flex flex-col border-r border-border bg-muted/30">
         {/* Header */}
@@ -305,43 +307,23 @@ function App() {
       <main className="flex-1 relative overflow-hidden">
         {/* Controls */}
         <div className="absolute top-3 left-3 flex items-start gap-1.5 z-10">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs bg-background/90 backdrop-blur"
-            onClick={() => bridgeRef.current?.resetZoom()}
-          >
-            <RotateCcw className="h-3.5 w-3.5 mr-1" />
-            Reset Zoom
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className={`h-8 text-xs bg-background/90 backdrop-blur ${simulating ? 'text-primary font-semibold' : ''}`}
-            onClick={() => {
-              setSimulating((prev) => !prev)
-              bridgeRef.current?.toggleSimulation()
-            }}
-          >
-            <Play className="h-3.5 w-3.5 mr-1" />
-            {simulating ? 'Running' : 'Simulate'}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs bg-background/90 backdrop-blur"
-            onClick={() => bridgeRef.current?.zoomIn()}
-          >
-            +
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs bg-background/90 backdrop-blur"
-            onClick={() => bridgeRef.current?.zoomOut()}
-          >
-            −
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={`h-8 text-xs bg-background/90 backdrop-blur ${simulating ? 'text-primary font-semibold' : ''}`}
+                onClick={() => {
+                  setSimulating((prev) => !prev)
+                  bridgeRef.current?.toggleSimulation()
+                }}
+              >
+                <Play className="h-3.5 w-3.5 mr-1" />
+                {simulating ? 'Running' : 'Simulate'}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{simulating ? 'Stop simulation' : 'Start simulation'}</TooltipContent>
+          </Tooltip>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 text-xs bg-background/90 backdrop-blur">
@@ -360,26 +342,17 @@ function App() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs bg-background/90 backdrop-blur"
-            onClick={() => {
-              setShowLabels((prev) => {
-                bridgeRef.current?.setLabels(!prev)
-                return !prev
-              })
-            }}
-          >
-            {showLabels ? <EyeOff className="h-3.5 w-3.5 mr-1" /> : <Eye className="h-3.5 w-3.5 mr-1" />}
-            Labels
-          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs bg-background/90 backdrop-blur">
-                <Settings className="h-3.5 w-3.5 mr-1" />
-                Theme
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 text-xs bg-background/90 backdrop-blur">
+                    <Settings className="h-3.5 w-3.5 mr-1" />
+                    Theme
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Switch theme</TooltipContent>
+              </Tooltip>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
               {themes.map((t) => (
@@ -395,6 +368,49 @@ function App() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+
+        {/* Zoom Controls — bottom left */}
+        <div className="absolute bottom-3 left-3 flex items-center gap-1 z-10">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0 bg-background/90 backdrop-blur"
+                onClick={() => bridgeRef.current?.zoomIn()}
+              >
+                <ZoomIn className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Zoom in</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0 bg-background/90 backdrop-blur"
+                onClick={() => bridgeRef.current?.zoomOut()}
+              >
+                <ZoomOut className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Zoom out</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0 bg-background/90 backdrop-blur"
+                onClick={() => bridgeRef.current?.resetZoom()}
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Reset zoom</TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Graph Canvas */}
@@ -501,6 +517,7 @@ function App() {
         </div>
       )}
     </div>
+    </TooltipProvider>
   )
 }
 

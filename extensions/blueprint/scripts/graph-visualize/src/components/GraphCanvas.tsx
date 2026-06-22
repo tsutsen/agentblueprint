@@ -67,16 +67,21 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
       wrapper.initGraph()
       if (cancelled) return
 
-      // Handle container resize
+      // Handle container resize (throttled via rAF)
       const container = containerRef.current
       if (!container) return
 
+      let resizeRAF: number | null = null
       const resizeObserver = new ResizeObserver(() => {
-        if (cancelled) return
-        const { clientWidth: w, clientHeight: h } = container
-        wrapper.setWidth(w)
-        wrapper.setHeight(h)
-        wrapper.renderGraph()
+        if (cancelled || resizeRAF !== null) return
+        resizeRAF = requestAnimationFrame(() => {
+          resizeRAF = null
+          if (cancelled) return
+          const { clientWidth: w, clientHeight: h } = container!
+          wrapper.setWidth(w)
+          wrapper.setHeight(h)
+          wrapper.renderGraph()
+        })
       })
       resizeObserver.observe(container)
 
@@ -143,6 +148,7 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
       // Cleanup on unmount
       return () => {
         resizeObserver.disconnect()
+        if (resizeRAF !== null) cancelAnimationFrame(resizeRAF)
         bridge.current = null
       }
     })()
