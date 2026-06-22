@@ -1013,10 +1013,10 @@ export function settleAfterDrag(pinnedNode) {
 }
 
 /**
- * Full graph re-layout ("Simulate" button).
- * Runs a longer simulation on all visible nodes from their current positions.
+ * Start continuous simulation.
+ * Runs the force simulation indefinitely until stopSimulation() is called.
  */
-export function toggleSimulation() {
+export function startSimulation() {
   if (simulation) simulation.stop();
 
   simulation = d3
@@ -1031,19 +1031,22 @@ export function toggleSimulation() {
     .force("charge", d3.forceManyBody().strength(-150))
     .force("center", d3.forceCenter(width / 2, height / 2).strength(0.02))
     .force("collision", d3.forceCollide().radius(25))
-    .alpha(0.5)
-    .alphaDecay(0.01)
+    .alpha(1)
+    .alphaDecay(0.02)
+    .alphaMin(0.3)
     .on("tick", () => {
       render();
     });
+}
 
-  // Auto-stop after 3 seconds
-  setTimeout(() => {
-    if (simulation) {
-      simulation.stop();
-      simulation = null;
-    }
-  }, 3000);
+/**
+ * Stop the continuous simulation.
+ */
+export function stopSimulation() {
+  if (simulation) {
+    simulation.stop();
+    simulation = null;
+  }
 }
 
 // ─── Theme Update ───

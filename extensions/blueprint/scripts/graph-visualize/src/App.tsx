@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Label } from '@/components/ui/label'
-import { Search, RotateCcw, Play, Settings, ChevronDown, ZoomIn, ZoomOut } from 'lucide-react'
+import { Search, RotateCcw, Play, Pause, Settings, ChevronDown, ZoomIn, ZoomOut } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { themes, applyTheme } from '@/lib/themes'
 
@@ -312,17 +312,21 @@ function App() {
               <Button
                 variant="outline"
                 size="sm"
-                className={`h-8 text-xs bg-background/90 backdrop-blur ${simulating ? 'text-primary font-semibold' : ''}`}
+                className={`h-8 text-xs bg-background/90 backdrop-blur ${simulating ? 'bg-primary/10 text-primary border-primary/30' : ''}`}
                 onClick={() => {
+                  if (simulating) {
+                    bridgeRef.current?.stopSimulation()
+                  } else {
+                    bridgeRef.current?.startSimulation()
+                  }
                   setSimulating((prev) => !prev)
-                  bridgeRef.current?.toggleSimulation()
                 }}
               >
-                <Play className="h-3.5 w-3.5 mr-1" />
+                {simulating ? <Pause className="h-3.5 w-3.5 mr-1" /> : <Play className="h-3.5 w-3.5 mr-1" />}
                 {simulating ? 'Running' : 'Simulate'}
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">{simulating ? 'Stop simulation' : 'Start simulation'}</TooltipContent>
+            <TooltipContent side="bottom">{simulating ? 'Pause simulation' : 'Run simulation continuously'}</TooltipContent>
           </Tooltip>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

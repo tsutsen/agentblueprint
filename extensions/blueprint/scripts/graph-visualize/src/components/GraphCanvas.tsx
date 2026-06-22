@@ -7,7 +7,8 @@ export interface IGraphBridge {
   selectNodeById: (id: string) => void
   deselectNode: () => void
   resetZoom: () => void
-  toggleSimulation: () => void
+  startSimulation: () => void
+  stopSimulation: () => void
   zoomIn: () => void
   zoomOut: () => void
   updateTheme: () => void
@@ -116,8 +117,11 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
           wrapper.setZoom(0, 0, 1)
           wrapper.renderGraph()
         },
-        toggleSimulation: () => {
-          wrapper.toggleSimulation()
+        startSimulation: () => {
+          wrapper.startSimulation()
+        },
+        stopSimulation: () => {
+          wrapper.stopSimulation()
         },
         zoomIn: () => {
           const z = wrapper.getZoom()
