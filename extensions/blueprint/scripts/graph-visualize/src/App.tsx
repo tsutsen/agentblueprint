@@ -344,15 +344,10 @@ function App() {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 text-xs bg-background/90 backdrop-blur">
-                    <Settings className="h-3.5 w-3.5 mr-1" />
-                    Theme
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">Switch theme</TooltipContent>
-              </Tooltip>
+              <Button variant="outline" size="sm" className="h-8 text-xs bg-background/90 backdrop-blur">
+                <Settings className="h-3.5 w-3.5 mr-1" />
+                Theme
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
               {themes.map((t) => (
