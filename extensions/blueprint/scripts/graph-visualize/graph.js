@@ -40,7 +40,7 @@ let _labelFadeStartTime = null;
  */
 function buildLabelSet() {
   // Check if zoom changed significantly (hysteresis to prevent flickering)
-  const transform = d3.zoomTransform(container);
+  const transform = currentTransform || d3.zoomIdentity;
   const zoomDelta = Math.abs(transform.k - _lastLabelZoom);
   if (zoomDelta < LABEL_HYSTERESIS && _labelVisibleSet !== null) {
     // Zoom hasn't changed enough, skip rebuilding
@@ -190,7 +190,7 @@ export function updateHtmlLabels() {
     }
 
     // Position label relative to container
-    const transform = d3.zoomTransform(container);
+    const transform = currentTransform || d3.zoomIdentity;
     const labelX = transform.x + node.x * transform.k;
     const labelY = transform.y + node.y * transform.k - r * transform.k - 8;
     labelEl.style.left = `${labelX}px`;
@@ -225,6 +225,7 @@ export function updateHtmlLabels() {
 
 // ─── Zoom/Pan State ───
 let zoomBehavior = null; // d3.zoom behavior instance
+let currentTransform = null; // d3.zoomTransform from the latest zoom event
 let sizeRange = {
   degree: [0, 1],
   blast: [0, 1],
@@ -357,7 +358,11 @@ export function initGraph() {
   // D3 zoom attached to container (not canvas) for proper event handling
   zoomBehavior = d3.zoom()
     .scaleExtent(0.05, 8)
-    .on("zoom", () => render());
+    .on("zoom", (event) => {
+      // Store transform from the event directly (avoid NaN from d3.zoomTransform)
+      currentTransform = event.transform;
+      render();
+    });
 
   d3.select(container).call(zoomBehavior);
   container.style.overflow = "hidden";
@@ -515,7 +520,7 @@ function render() {
   }
 
   ctx.clearRect(0, 0, width, height);
-  const transform = d3.zoomTransform(container);
+  const transform = currentTransform || d3.zoomIdentity;
   ctx.save();
   ctx.translate(transform.x, transform.y);
   ctx.scale(transform.k, transform.k);
@@ -707,7 +712,7 @@ function getNodeAnimatedRadius(n) {
 // ─── Coordinate Helpers ───
 function screenToWorld(event) {
   const rect = canvas.getBoundingClientRect();
-  const transform = d3.zoomTransform(container);
+  const transform = currentTransform || d3.zoomIdentity;
   return {
     x: (event.clientX - rect.left - transform.x) / transform.k,
     y: (event.clientY - rect.top - transform.y) / transform.k,
