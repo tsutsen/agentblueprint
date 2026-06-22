@@ -11,6 +11,8 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Load legacy graph modules (D3 + graph.js) before React mounts -->
+    <script type="module" src="/legacy/bootstrap.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
