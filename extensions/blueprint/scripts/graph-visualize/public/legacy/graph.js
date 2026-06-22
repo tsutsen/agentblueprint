@@ -775,13 +775,13 @@ function onMouseUp(event) {
     draggedNode = null;
     isDragging = false;
   } else if (draggedNode && isDragging) {
-    // Node was dragged - pin it, then let neighbors settle live
-    draggedNode.fx = draggedNode.x;
-    draggedNode.fy = draggedNode.y;
-    const nodeRef = draggedNode;
     draggedNode = null;
     isDragging = false;
-    settleAfterDrag(nodeRef);
+    // Only run post-drag settlement when simulation is off.
+    // When simulation is running, let the force layout handle it naturally.
+    if (!simulation) {
+      settleAfterDrag(draggedNode);
+    }
   } else if (!draggedNode && !wasPanning) {
     // Click on empty space - deselect
     deselectNode();
