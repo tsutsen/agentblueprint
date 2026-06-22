@@ -20,7 +20,7 @@
     --edge-spec: rgba(100, 200, 100, 0.2);
     --edge-cross: rgba(255, 170, 0, 0.2);
     --edge-color: rgba(148, 163, 184, 0.4);
-    --grid-color: rgba(255, 255, 255, 0.02);
+
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -199,10 +199,6 @@
     width: 100%; height: 100%;
     position: relative; overflow: hidden;
     background: var(--bg);
-    background-image:
-      linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
-    background-size: 40px 40px;
   }
   #graph-canvas {
     position: absolute;
