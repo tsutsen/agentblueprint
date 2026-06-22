@@ -897,7 +897,7 @@ function getNodeColor(d) {
 let hoveredNode = null;
 let hoverLabelNode = null; // Node whose label is forced visible by hover
 let hoverLabelTimeout = null; // Timer for delayed label show
-const HOVER_LABEL_DELAY = 600; // ms to hold hover before label appears
+const HOVER_LABEL_DELAY = 300; // ms to hold hover before label appears
 let isSimulating = false;
 let simulation = null;
 export let sizeMetric = "degree"; // Default sizing metric
