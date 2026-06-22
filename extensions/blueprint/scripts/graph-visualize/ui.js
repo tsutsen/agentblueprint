@@ -104,12 +104,13 @@ function initUI() {
           applyFilters();
           updateURL();
         } else {
-          // Single click: toggle this category (delayed to avoid conflict with double-click)
+          // Single click: toggle immediately
+          cb.checked = !cb.checked;
+          cb.dispatchEvent(new Event('change'));
+          // Start a timer: if no second click arrives, we're done
           div._clickTimer = setTimeout(() => {
             delete div._lastClick;
             delete div._clickTimer;
-            cb.checked = !cb.checked;
-            cb.dispatchEvent(new Event('change'));
           }, DOUBLE_CLICK_TIMEOUT);
         }
       }
