@@ -1,5 +1,5 @@
 // ─── Main App ───
-import { initGraph, setGraphData, activeCategories } from './graph.js';
+import { initGraph, setGraphData, getGraphData, activeCategories } from './graph.js';
 import { initUI, applyFilters } from './ui.js';
 
 const DATA_URL = '/graph-data.json';
@@ -34,11 +34,12 @@ function showError(error, url) {
 
 async function init() {
   setGraphData(await loadGraphData());
-  if (!graphData) return;
+  const gd = getGraphData();
+  if (!gd) return;
 
-  console.log('Loaded graph data:', graphData);
-  console.log('Nodes:', graphData.nodes.length);
-  console.log('Edges:', graphData.edges.length);
+  console.log('Loaded graph data:', gd);
+  console.log('Nodes:', gd.nodes.length);
+  console.log('Edges:', gd.edges.length);
 
   initUI();
   initGraph();
