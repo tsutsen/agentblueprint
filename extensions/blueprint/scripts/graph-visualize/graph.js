@@ -5,7 +5,7 @@ export let graphData = null;
 export function getGraphData() { return graphData; }
 export function setGraphData(data) { graphData = data; }
 export let validEdges = null;
-let canvas, ctx, container;
+let canvas, ctx;
 export let selectedNode = null;
 let connectedSet = null;
 export let showLabels = true;
@@ -40,18 +40,17 @@ let _labelFadeStartTime = null;
  */
 function buildLabelSet() {
   // Check if zoom changed significantly (hysteresis to prevent flickering)
-  const transform = currentTransform || d3.zoomIdentity;
-  const zoomDelta = Math.abs(transform.k - _lastLabelZoom);
+  const zoomDelta = Math.abs(zoom.k - _lastLabelZoom);
   if (zoomDelta < LABEL_HYSTERESIS && _labelVisibleSet !== null) {
     // Zoom hasn't changed enough, skip rebuilding
     return;
   }
-  _lastLabelZoom = transform.k;
+  _lastLabelZoom = zoom.k;
 
   // Track previous visible labels to detect changes
   const prevVisible = _labelVisibleSet ? new Set(_labelVisibleSet) : null;
   _labelVisibleSet = new Set();
-  if (!showLabels || transform.k < LABEL_MIN_ZOOM || !graphData) {
+  if (!showLabels || zoom.k < LABEL_MIN_ZOOM || !graphData) {
     // If labels are hidden, clear the set
     if (prevVisible !== null && prevVisible.size > 0) {
       _labelFadeStartTime = performance.now();
@@ -64,9 +63,9 @@ function buildLabelSet() {
     if (!n.visible) continue;
 
     // Gate 1: at max zoom show everything
-    if (transform.k < LABEL_MAX_ZOOM) {
+    if (zoom.k < LABEL_MAX_ZOOM) {
       // Gate 2: node must be large enough on screen
-      const screenRadius = getNodeRadius(n) * transform.k;
+      const screenRadius = getNodeRadius(n) * zoom.k;
       if (screenRadius < LABEL_NODE_RADIUS_THRESHOLD) continue;
     }
 
@@ -75,7 +74,7 @@ function buildLabelSet() {
 
   console.log(
     "[LABELS] zoom:",
-    transform.k.toFixed(2),
+    zoom.k.toFixed(2),
     "candidates:",
     candidates.length,
     "showLabels:",
@@ -89,7 +88,7 @@ function buildLabelSet() {
 
   // 3. Greedy placement with a cell grid spatial index
   //    Cell size = typical label bbox half-height in world coords
-  const fontSize = 13 / transform.k;
+  const fontSize = 13 / zoom.k;
   const cellSize = fontSize * 2;
   const occupied = new Map(); // "cx,cy" → true
 
@@ -99,14 +98,14 @@ function buildLabelSet() {
 
   function labelBBox(n) {
     const r = getNodeRadius(n);
-    const fs = (n.type === "spec" ? 14 : 13) / transform.k;
+    const fs = (n.type === "spec" ? 14 : 13) / zoom.k;
     const text = n.term || n.label || n.id || "";
     const tw = text.length * fs * LABEL_CHAR_WIDTH + LABEL_PAD_X * 2;
     const th = fs;
-    // Label baseline is at (n.y - r - 4/transform.k), box extends upward by th
+    // Label baseline is at (n.y - r - 4/zoom.k), box extends upward by th
     return {
       x: n.x - tw / 2,
-      y: n.y - getNodeRadius(n) - 4 / transform.k - th,
+      y: n.y - getNodeRadius(n) - 4 / zoom.k - th,
       w: tw,
       h: th,
     };
@@ -177,7 +176,9 @@ export function updateHtmlLabels() {
 
     // Calculate position relative to container (not viewport)
     // Node positions are in world coords, transform to container coords
+    const labelX = zoom.x + node.x * zoom.k;
     const r = getNodeRadius(node);
+    const labelY = zoom.y + node.y * zoom.k - r * zoom.k - 8;
 
     // Get or create label element
     let labelEl = _labelElements.get(node.id);
@@ -190,9 +191,6 @@ export function updateHtmlLabels() {
     }
 
     // Position label relative to container
-    const transform = currentTransform || d3.zoomIdentity;
-    const labelX = transform.x + node.x * transform.k;
-    const labelY = transform.y + node.y * transform.k - r * transform.k - 8;
     labelEl.style.left = `${labelX}px`;
     labelEl.style.top = `${labelY}px`;
     labelEl.style.fontSize = `${node.type === "spec" ? 14 : 13}px`;
@@ -224,8 +222,11 @@ export function updateHtmlLabels() {
 }
 
 // ─── Zoom/Pan State ───
-let zoomBehavior = null; // d3.zoom behavior instance
-let currentTransform = null; // d3.zoomTransform from the latest zoom event
+export let zoom = { x: 0, y: 0, k: 1 };
+let isPanning = false;
+let panStart = { x: 0, y: 0 };
+let zoomStart = { x: 0, y: 0 };
+let isMouseDown = false;
 let sizeRange = {
   degree: [0, 1],
   blast: [0, 1],
@@ -263,7 +264,7 @@ const SIZE_METRIC_KEYS = {
 
 // ─── Init graph ───
 export function initGraph() {
-  container = document.getElementById("graph-container");
+  const container = document.getElementById("graph-container");
   width = container.clientWidth;
   height = container.clientHeight;
 
@@ -355,96 +356,11 @@ export function initGraph() {
   render();
 
   // ── Event listeners ──
-  // (d3-zoom v7 produces NaN transform on div elements for wheel zoom)
-  currentTransform = { k: 1, x: 0, y: 0 };
-
-  // d3.zoom() for drag-to-pan only — disable its wheel handler entirely
-  zoomBehavior = d3.zoom()
-    .scaleExtent(0.05, 8)
-    .on("zoom", (event) => {
-      const t = event.transform;
-      currentTransform = { k: t.k, x: t.x, y: t.y };
-      render();
-    });
-  // Remove d3's wheel listener so it doesn't corrupt the transform
-  zoomBehavior.wheel = function() {};
-
-  d3.select(container).call(zoomBehavior);
-  container.style.overflow = "hidden";
-
-  // Manual wheel zoom (d3-zoom v7 produces NaN on non-SVG elements)
-  container.addEventListener("wheel", (event) => {
-    event.preventDefault();
-    const delta = -event.deltaY * 0.002;
-    const factor = Math.pow(2, delta);
-    const t = currentTransform;
-    const rect = container.getBoundingClientRect();
-    const mx = event.clientX - rect.left;
-    const my = event.clientY - rect.top;
-
-    let newK = t.k * factor;
-    newK = Math.max(0.05, Math.min(8, newK));
-
-    const newX = mx - (mx - t.x) * (newK / t.k);
-    const newY = my - (my - t.y) * (newK / t.k);
-
-    currentTransform = { k: newK, x: newX, y: newY };
-    render();
-  }, { passive: false });
-
-  // Node dragging (native events, separate from zoom/pan)
-  canvas.addEventListener("mousedown", (event) => {
-    if (event.button !== 0) return;
-    const pos = screenToWorld(event);
-    const node = findNodeAt(pos);
-    if (node) {
-      event.preventDefault();
-      draggedNode = node;
-      isDragging = false;
-      simulation?.stop();
-    }
-  });
-
-  canvas.addEventListener("mousemove", (event) => {
-    if (draggedNode) {
-      const pos = screenToWorld(event);
-      draggedNode.x = pos.x;
-      draggedNode.y = pos.y;
-      isDragging = true;
-      render();
-      return;
-    }
-    // Hover cursor
-    const pos = screenToWorld(event);
-    const node = findNodeAt(pos);
-    if (node !== hoveredNode) {
-      hoveredNode = node;
-      canvas.style.cursor = node ? "pointer" : "grab";
-    }
-  });
-
-  canvas.addEventListener("mouseup", (event) => {
-    if (draggedNode) {
-      if (!isDragging) {
-        // It was a click, not a drag
-        const pos = screenToWorld(event);
-        const node = findNodeAt(pos);
-        if (node) selectNode(event, node);
-        else deselectNode();
-      }
-      draggedNode = null;
-      isDragging = false;
-    }
-  });
-
-  // Click on empty space (fires after zoom gesture ends)
-  canvas.addEventListener("click", (event) => {
-    if (draggedNode) return; // ignore if this was part of a drag
-    const pos = screenToWorld(event);
-    if (!findNodeAt(pos)) {
-      deselectNode();
-    }
-  });
+  canvas.addEventListener("mousedown", onMouseDown);
+  canvas.addEventListener("mousemove", onMouseMove);
+  canvas.addEventListener("mouseup", onMouseUp);
+  canvas.addEventListener("wheel", onWheel, { passive: false });
+  canvas.addEventListener("click", onClick);
 
   // ── Render ──
   render();
@@ -545,10 +461,9 @@ function render() {
   }
 
   ctx.clearRect(0, 0, width, height);
-  const transform = currentTransform || d3.zoomIdentity;
   ctx.save();
-  ctx.translate(transform.x, transform.y);
-  ctx.scale(transform.k, transform.k);
+  ctx.translate(zoom.x, zoom.y);
+  ctx.scale(zoom.k, zoom.k);
 
   // Grid background is now handled by CSS (background-image on #graph-container)
 
@@ -582,7 +497,7 @@ function render() {
     ctx.moveTo(e.source.x, e.source.y);
     ctx.lineTo(e.target.x, e.target.y);
     ctx.strokeStyle = edgeColor;
-    ctx.lineWidth = 0.6 / transform.k;
+    ctx.lineWidth = 0.6 / zoom.k;
     // Dim edges if not connected to selected node
     if (connectedEdges && !connectedEdges.has(e)) {
       ctx.globalAlpha = currentDim * 0.3;
@@ -620,13 +535,13 @@ function render() {
     ctx.strokeStyle = isSelected
       ? "#fff"
       : d3.color(color).darker(0.8).formatHex();
-    ctx.lineWidth = (isSelected ? 2 : 1) / transform.k;
+    ctx.lineWidth = (isSelected ? 2 : 1) / zoom.k;
     ctx.stroke();
 
     // Hover highlight
     if (isHovered && !isSelected) {
       ctx.strokeStyle = "#fff";
-      ctx.lineWidth = 2 / transform.k;
+      ctx.lineWidth = 2 / zoom.k;
       ctx.stroke();
     }
   }
@@ -734,13 +649,12 @@ function getNodeAnimatedRadius(n) {
   return getNodeRadius(n);
 }
 
-// ─── Coordinate Helpers ───
-function screenToWorld(event) {
+// ─── Mouse Events ───
+function getMousePos(event) {
   const rect = canvas.getBoundingClientRect();
-  const transform = currentTransform || d3.zoomIdentity;
   return {
-    x: (event.clientX - rect.left - transform.x) / transform.k,
-    y: (event.clientY - rect.top - transform.y) / transform.k,
+    x: (event.clientX - rect.left - zoom.x) / zoom.k,
+    y: (event.clientY - rect.top - zoom.y) / zoom.k,
   };
 }
 
@@ -755,6 +669,110 @@ function findNodeAt(pos) {
     if (dx * dx + dy * dy < r * r) return n;
   }
   return null;
+}
+
+function onMouseDown(event) {
+  if (event.button === 0) {
+    isMouseDown = true;
+    const pos = getMousePos(event);
+    const node = findNodeAt(pos);
+    if (node) {
+      draggedNode = node;
+      panStart = { x: event.clientX, y: event.clientY };
+      isDragging = false;
+    } else {
+      isPanning = false; // Don't start pan yet, wait to see if mouse moves
+      panStart = { x: event.clientX, y: event.clientY };
+      zoomStart = { x: zoom.x, y: zoom.y };
+    }
+  }
+}
+
+function onMouseMove(event) {
+  const pos = getMousePos(event);
+
+  if (draggedNode) {
+    const dx = event.clientX - panStart.x;
+    const dy = event.clientY - panStart.y;
+    if (dx * dx + dy * dy < 100) return; // Click threshold
+
+    isDragging = true;
+    draggedNode.x = pos.x;
+    draggedNode.y = pos.y;
+    render();
+    return;
+  }
+
+  // Start panning if mouse moved significantly (only when mouse is held down)
+  if (!draggedNode && !isPanning && isMouseDown) {
+    const dx = event.clientX - panStart.x;
+    const dy = event.clientY - panStart.y;
+    if (dx * dx + dy * dy > 25) {
+      // 5px threshold
+      isPanning = true;
+    }
+  }
+
+  if (isPanning) {
+    zoom.x = zoomStart.x + (event.clientX - panStart.x);
+    zoom.y = zoomStart.y + (event.clientY - panStart.y);
+    render();
+    return;
+  }
+
+  // Hover detection
+  const node = findNodeAt(pos);
+  if (node !== hoveredNode) {
+    hoveredNode = node;
+    canvas.style.cursor = node ? "pointer" : "grab";
+    render();
+  }
+}
+
+function onMouseUp(event) {
+  const wasPanning = isPanning;
+  if (isPanning) {
+    isPanning = false;
+  }
+  isMouseDown = false;
+  if (draggedNode && !isDragging) {
+    // It was a click on a node
+    const pos = getMousePos(event);
+    const node = findNodeAt(pos);
+    if (node) selectNode(event, node);
+    else deselectNode();
+    draggedNode = null;
+    isDragging = false;
+  } else if (draggedNode && isDragging) {
+    // Node was dragged - preserve selection
+    draggedNode = null;
+    isDragging = false;
+  } else if (!draggedNode && !wasPanning) {
+    // Click on empty space - deselect
+    deselectNode();
+  }
+  // If wasPanning, preserve selection (don't deselect)
+}
+
+function onClick(event) {
+  // Handled in onMouseUp
+}
+
+function onWheel(event) {
+  event.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
+
+  const delta = event.deltaY > 0 ? 0.9 : 1.1;
+  const newK = Math.max(0.05, Math.min(8, zoom.k * delta));
+
+  // Zoom toward mouse position
+  zoom.x = mouseX - (mouseX - zoom.x) * (newK / zoom.k);
+  zoom.y = mouseY - (mouseY - zoom.y) * (newK / zoom.k);
+  zoom.k = newK;
+
+  render();
 }
 
 // ─── Helper Functions ───
@@ -929,25 +947,6 @@ export function toggleSimulation() {
 export function updateThemeColors() {
   resetEdgeColorCache();
   render();
-}
-
-// ─── Zoom Reset ───
-export function resetZoom() {
-  // Animate transform back to identity using d3.transition on a dummy selection
-  const startT = { ...currentTransform };
-  const endT = d3.zoomIdentity;
-  d3.select(container)
-    .transition()
-    .duration(500)
-    .tween("zoomReset", () => {
-      const ik = d3.interpolateNumber(startT.k, endT.k);
-      const ix = d3.interpolateNumber(startT.x, endT.x);
-      const iy = d3.interpolateNumber(startT.y, endT.y);
-      return (t) => {
-        currentTransform = { k: ik(t), x: ix(t), y: iy(t) };
-        render();
-      };
-    });
 }
 
 // ─── Dim Animation ───

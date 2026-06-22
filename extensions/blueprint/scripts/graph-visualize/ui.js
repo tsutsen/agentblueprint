@@ -8,6 +8,8 @@ import {
   showLabels,
   activeCategories,
   searchTerm,
+  zoom,
+  isDragging,
   sizeMetric,
   recalcSizeRange,
   startScaleAnimation,
@@ -19,7 +21,6 @@ import {
   setNodeSelectCallbacks,
   selectNode as graphSelectNode,
   deselectNode as graphDeselectNode,
-  resetZoom as graphResetZoom,
 } from './graph.js';
 
 let _pendingNodeId = null;
@@ -270,7 +271,10 @@ export function applyFilters() {
 
 // ─── Zoom ───
 function resetZoom() {
-  graphResetZoom();
+  zoom.x = 0;
+  zoom.y = 0;
+  zoom.k = 1;
+  renderGraph();
 }
 
 // ─── Controls ───
