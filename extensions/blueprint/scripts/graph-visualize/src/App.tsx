@@ -280,7 +280,7 @@ function App() {
           ) : sortedNodes.length === 0 && activeCategories.size > 0 ? (
             <p className="px-3 py-4 text-sm text-muted-foreground text-center">All categories hidden</p>
           ) : (
-            <div className="space-y-0.5 w-full">
+            <div className="space-y-0.5">
               {sortedNodes.map((node: any) => {
                 const idShort = (node.type === 'spec' || node.category === 'spec')
                   ? 'SPEC'
@@ -290,7 +290,7 @@ function App() {
                   <button
                     key={node.id}
                     onClick={() => bridgeRef.current?.selectNodeById(node.id)}
-                    className={`w-full min-w-0 max-w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
+                    className={`w-full min-w-0 flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
                       selectedNode?.id === node.id
                         ? 'bg-primary/10 text-primary'
                         : 'hover:bg-muted/50'
@@ -299,7 +299,7 @@ function App() {
                     <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
                       {idShort}
                     </span>
-                    <span className="font-medium text-foreground flex-1 min-w-0 truncate">
+                    <span className="font-medium text-foreground flex-1 min-w-0 break-words overflow-wrap-anywhere max-w-full">
                       {node.term || node.label || node.id}
                     </span>
                     <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
