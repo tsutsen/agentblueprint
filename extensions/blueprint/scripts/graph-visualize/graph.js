@@ -1,18 +1,20 @@
+import { getEdgeColor, resetEdgeColorCache, TYPE_COLORS } from './config.js';
+
 // ─── Graph State ───
-let graphData = null;
-let validEdges = null;
+export let graphData = null;
+export let validEdges = null;
 let canvas, ctx;
-let selectedNode = null;
+export let selectedNode = null;
 let connectedSet = null;
-let showLabels = true;
-let showSpecs = true;
-let tickCount = 0;
-let startTime = 0;
-let activeCategories = new Set();
-let searchTerm = "";
-let width, height;
+export let showLabels = true;
+export let showSpecs = true;
+export let tickCount = 0;
+export let startTime = 0;
+export let activeCategories = new Set();
+export let searchTerm = "";
+export let width, height;
 let draggedNode = null;
-let isDragging = false;
+export let isDragging = false;
 
 // ─── Progressive Label Disclosure ───
 const LABEL_MIN_ZOOM = 0.5;
@@ -27,6 +29,7 @@ const LABEL_HYSTERESIS = 0.2; // Zoom change needed before rebuilding label set
 let _labelElements = new Map(); // nodeId -> HTMLDivElement
 let _labelVisibleSet = null; // nodes that should show labels (progressive disclosure)
 let _lastLabelZoom = 0; // track last zoom level to detect significant changes
+let _labelFadeStartTime = null;
 
 /**
  * Call once per render(), before drawing any labels.
@@ -159,7 +162,7 @@ function shouldShowLabel(node) {
  * Update HTML label positions and visibility.
  * Called every frame to sync labels with node positions.
  */
-function updateHtmlLabels() {
+export function updateHtmlLabels() {
   const container = document.getElementById("labels-container");
   if (!container) return;
 
@@ -217,7 +220,7 @@ function updateHtmlLabels() {
 }
 
 // ─── Zoom/Pan State ───
-let zoom = { x: 0, y: 0, k: 1 };
+export let zoom = { x: 0, y: 0, k: 1 };
 let isPanning = false;
 let panStart = { x: 0, y: 0 };
 let zoomStart = { x: 0, y: 0 };
@@ -247,8 +250,18 @@ function scaleValue(value, minVal, maxVal, minRadius = 4, maxRadius = 30) {
   return minRadius + Math.sqrt(normalized) * (maxRadius - minRadius);
 }
 
+// ─── Size Metric Lookup ───
+const SIZE_METRIC_KEYS = {
+  degree: 'degree',
+  blast: 'blastRadius',
+  risk: 'risk',
+  centrality: 'centrality',
+  responsibility: 'responsibility',
+  interfacePressure: 'interfacePressure',
+};
+
 // ─── Init graph ───
-function initGraph() {
+export function initGraph() {
   const container = document.getElementById("graph-container");
   width = container.clientWidth;
   height = container.clientHeight;
@@ -356,7 +369,7 @@ function initGraph() {
 // ─── Render ───
 let _lastVisibleCount = -1;
 
-function recalcSizeRange() {
+export function recalcSizeRange() {
   // Get currently visible nodes (sidebar filter)
   const visibleNodes = graphData.nodes.filter((n) => n.visible !== false);
   if (visibleNodes.length === 0) return;
@@ -450,8 +463,7 @@ function render() {
   ctx.translate(zoom.x, zoom.y);
   ctx.scale(zoom.k, zoom.k);
 
-  // Grid background
-  drawGrid();
+  // Grid background is now handled by CSS (background-image on #graph-container)
 
   // Compute connected set if a node is selected
   connectedSet = null;
@@ -476,12 +488,13 @@ function render() {
 
   // Edges (drawn first, under nodes)
   ctx.globalAlpha = 0.3;
+  const edgeColor = getEdgeColor();
   for (const e of validEdges) {
     if (!e.visible) continue;
     ctx.beginPath();
     ctx.moveTo(e.source.x, e.source.y);
     ctx.lineTo(e.target.x, e.target.y);
-    ctx.strokeStyle = EDGE_COLOR;
+    ctx.strokeStyle = edgeColor;
     ctx.lineWidth = 0.6 / zoom.k;
     // Dim edges if not connected to selected node
     if (connectedEdges && !connectedEdges.has(e)) {
@@ -541,11 +554,15 @@ function render() {
   ctx.globalAlpha = 1;
 }
 
+export function renderGraph() {
+  render();
+}
+
 // ─── Scale Animation Engine ───
 // One-shot animation: smoothly transitions node radii over ~350ms when sizes change.
 // Call after selection changes, metric switches, or filter changes.
 // Internally computes connectedSet and recalculates size ranges so targets are correct.
-function startScaleAnimation() {
+export function startScaleAnimation() {
   // Cancel any previous animation
   if (scaleAnimFrame) cancelAnimationFrame(scaleAnimFrame);
 
@@ -628,29 +645,6 @@ function getNodeAnimatedRadius(n) {
     return n._animRadius;
   }
   return getNodeRadius(n);
-}
-
-// ─── Draw Grid ───
-function drawGrid() {
-  const gridSize = 40 * zoom.k;
-  const offsetX = zoom.x % gridSize;
-  const offsetY = zoom.y % gridSize;
-
-  ctx.strokeStyle = "rgba(255,255,255,0.02)";
-  ctx.lineWidth = 0.5 / zoom.k;
-
-  for (let x = offsetX; x < width; x += gridSize) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, height);
-    ctx.stroke();
-  }
-  for (let y = offsetY; y < height; y += gridSize) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
-    ctx.stroke();
-  }
 }
 
 // ─── Mouse Events ───
@@ -790,37 +784,18 @@ function getNodeRadius(d) {
     sizeRange._connected && connectedSet && connectedSet.has(d.id);
   let rangeKey;
 
-  if (sizeMetric === "degree") rangeKey = "degree";
-  else if (sizeMetric === "blast") rangeKey = "blast";
-  else if (sizeMetric === "risk") rangeKey = "risk";
-  else if (sizeMetric === "centrality") rangeKey = "centrality";
-  else if (sizeMetric === "responsibility") rangeKey = "responsibility";
-  else if (sizeMetric === "interfacePressure") rangeKey = "interfacePressure";
-  else if (sizeMetric === "type") {
+  if (sizeMetric === "type") {
     const typeSizes = {
-      CON: 6,
-      FN: 5,
-      REQ: 4.5,
-      NFR: 4.5,
-      US: 4.5,
-      SC: 4,
-      Entity: 4,
-      GL: 3.5,
-      TST: 2.5,
-      Enum: 2.5,
-      API: 4,
-      EP: 5,
-      TASK: 3,
-      ISSUE: 4,
-      DG: 3,
-      UJ: 4,
-      UXAC: 4,
-      IS: 4,
-      spec: 5,
+      CON: 6, FN: 5, REQ: 4.5, NFR: 4.5, US: 4.5,
+      SC: 4, Entity: 4, GL: 3.5, TST: 2.5, Enum: 2.5,
+      API: 4, EP: 5, TASK: 3, ISSUE: 4, DG: 3, UJ: 4,
+      UXAC: 4, IS: 4, spec: 5,
     };
     const value = typeSizes[d.type] || 1;
     return scaleValue(value, 1, 6, 4, 30);
   }
+
+  rangeKey = SIZE_METRIC_KEYS[sizeMetric] ?? "degree";
 
   let minVal, maxVal;
   if (useConnected) {
@@ -862,13 +837,8 @@ function getNodeRadius(d) {
     );
   }
 
-  let value = 0;
-  if (sizeMetric === "degree") value = d.degree || 0;
-  else if (sizeMetric === "blast") value = d.blastRadius || 0;
-  else if (sizeMetric === "risk") value = d.risk || 0;
-  else if (sizeMetric === "centrality") value = d.centrality || 0;
-  else if (sizeMetric === "responsibility") value = d.responsibility || 0;
-  else if (sizeMetric === "interfacePressure") value = d.interfacePressure || 0;
+  const nodeKey = SIZE_METRIC_KEYS[sizeMetric] ?? "degree";
+  let value = d[nodeKey] ?? 0;
 
   const radius = scaleValue(value, minVal, maxVal, 4, 30);
   if (
@@ -897,9 +867,37 @@ function getNodeColor(d) {
 let hoveredNode = null;
 let isSimulating = false;
 let simulation = null;
-let sizeMetric = "degree"; // Default sizing metric
+export let sizeMetric = "degree"; // Default sizing metric
 let dimAnimation = null; // Animation frame for dimming
 let currentDim = 1; // Current dim opacity (1 = full, 0.15 = dimmed)
+
+// Callbacks set by ui.js to avoid circular imports
+let _onSelectNode = null;
+let _onDeselectNode = null;
+export function setNodeSelectCallbacks(onSelect, onDeselect) {
+  _onSelectNode = onSelect;
+  _onDeselectNode = onDeselect;
+}
+
+// ─── Node selection ───
+export function selectNode(event, node) {
+  event.stopPropagation();
+  if (selectedNode && selectedNode.id === node.id) {
+    deselectNode();
+    return;
+  }
+  selectedNode = node;
+  animateDim(0.15);
+  startScaleAnimation();
+  if (_onSelectNode) _onSelectNode(event, node);
+}
+
+export function deselectNode() {
+  selectedNode = null;
+  animateDim(1);
+  startScaleAnimation();
+  if (_onDeselectNode) _onDeselectNode();
+}
 
 // ─── Node Scale Animation ───
 let scaleAnimFrame = null; // requestAnimationFrame id for scale animation loop
@@ -909,7 +907,7 @@ let scaleAnimStartRadii = null; // Map<nodeId, startRadius>
 const SCALE_ANIM_DURATION = 350; // ms — how long a scale transition takes
 
 // ─── Simulation Control ───
-function toggleSimulation() {
+export function toggleSimulation() {
   // Stop any running simulation first
   if (simulation) {
     simulation.stop();
@@ -944,15 +942,13 @@ function toggleSimulation() {
 }
 
 // ─── Theme Update ───
-function updateThemeColors() {
+export function updateThemeColors() {
+  resetEdgeColorCache();
   render();
 }
 
-window.updateThemeColors = updateThemeColors;
-window.toggleSimulation = toggleSimulation;
-
 // ─── Dim Animation ───
-function animateDim(target) {
+export function animateDim(target) {
   if (dimAnimation) cancelAnimationFrame(dimAnimation);
   const start = performance.now();
   const from = currentDim;

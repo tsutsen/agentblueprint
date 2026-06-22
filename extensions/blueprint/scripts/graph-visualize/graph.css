@@ -1,5 +1,4 @@
-
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
   :root {
     --bg: #0a0a0a;
@@ -9,6 +8,7 @@
     --text: #e0e0e0;
     --text-dim: #888888;
     --text-bright: #ffffff;
+    --text-secondary: var(--text-dim);
     --accent: #ffffff;
     --accent-glow: rgba(255, 255, 255, 0.1);
     --domain: #f472b6;
@@ -19,6 +19,8 @@
     --edge-related: rgba(200, 200, 200, 0.3);
     --edge-spec: rgba(100, 200, 100, 0.2);
     --edge-cross: rgba(255, 170, 0, 0.2);
+    --edge-color: rgba(148, 163, 184, 0.4);
+    --grid-color: rgba(255, 255, 255, 0.02);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -159,6 +161,10 @@
     flex: 1; overflow-y: auto; padding: 4px;
   }
   .term-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     padding: 4px 8px; border-radius: 4px;
     cursor: pointer; transition: background 0.15s;
     font-size: 12px;
@@ -166,7 +172,26 @@
   .term-list-item:hover { background: var(--surface2); }
   .term-list-item.active { background: var(--accent-glow); }
   .term-list-item .item-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-weight: 500; color: var(--text-bright);
+  }
+  .term-list-item .item-id {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .term-list-item .item-cat {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   /* ── Canvas ── */
@@ -174,6 +199,10 @@
     width: 100%; height: 100%;
     position: relative; overflow: hidden;
     background: var(--bg);
+    background-image:
+      linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
   }
   #graph-canvas {
     position: absolute;
@@ -222,6 +251,7 @@
   #controls {
     position: absolute; top: 14px; left: 14px;
     display: flex; gap: 6px; z-index: 10;
+    align-items: flex-start;
   }
   #controls button:not(.dropdown-toggle) {
     padding: 6px 12px;
@@ -232,31 +262,14 @@
   }
   #controls button:hover { background: var(--surface2); }
   #controls button.active { background: var(--accent); border-color: var(--accent); color: var(--accent-text, #1a1a1a) !important; }
-  #controls select {
-    padding: 6px 28px 6px 12px;
-    border-radius: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--btn-text, #888888) !important;
-    font-size: 11px;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.15s;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-  }
-  #controls select:hover { background-color: var(--surface2); }
-  #controls select:focus { outline: none; border-color: var(--accent); }
 
-  /* ── Dropdowns ── */
-  .theme-dropdown,
-  .size-dropdown {
+  /* ── Dropdowns (native <details>) ── */
+  .dropdown {
     position: relative;
     display: inline-block;
   }
-  .dropdown-toggle {
+  .dropdown > summary {
+    list-style: none;
     padding: 6px 36px 6px 12px;
     border-radius: 6px;
     background: var(--surface);
@@ -267,11 +280,13 @@
     cursor: pointer;
     transition: all 0.15s;
     position: relative;
+    user-select: none;
   }
-  .dropdown-toggle:hover {
+  .dropdown > summary:hover {
     background-color: var(--surface2);
   }
-  .dropdown-toggle::after {
+  .dropdown > summary::-webkit-details-marker { display: none; }
+  .dropdown > summary::after {
     content: '';
     position: absolute;
     right: 8px;
@@ -283,7 +298,7 @@
     border-top: 5px solid var(--text-dim);
     transition: transform 0.15s;
   }
-  .theme-dropdown.open .dropdown-toggle::after {
+  .dropdown[open] > summary::after {
     transform: translateY(-50%) rotate(180deg);
   }
   .dropdown-menu {
@@ -295,12 +310,8 @@
     border-radius: 8px;
     min-width: 140px;
     z-index: 100;
-    display: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     overflow: hidden;
-  }
-  .dropdown-menu.open {
-    display: block;
     animation: dropdownFade 0.15s ease;
   }
   @keyframes dropdownFade {
@@ -418,8 +429,65 @@
     font-size: 11px; color: var(--text-dim);
     border-top: 1px solid var(--border); padding-top: 10px;
   }
-  .detail-stats div { padding: 3px 0; }
+  .detail-stats > div { padding: 3px 0; }
   .detail-stats strong { color: var(--text); }
+
+  /* Detail panel — specs list */
+  .detail-stats .specs-list {
+    list-style: none;
+    padding: 4px 0 0 0;
+    margin: 0;
+  }
+  .detail-stats .specs-list li {
+    padding: 2px 0;
+    font-size: 11px;
+  }
+
+  /* Detail panel — connections spoiler (<details>/<summary>) */
+  .detail-stats .connections-toggle {
+    margin-top: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .detail-stats .connections-toggle summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .detail-stats .connections-toggle summary::-webkit-details-marker { display: none; }
+  .detail-stats .connections-toggle summary::before {
+    content: '▼';
+    font-size: 9px;
+    display: inline-block;
+    transition: transform 0.15s;
+  }
+  .detail-stats .connections-toggle[open] summary::before {
+    transform: rotate(180deg);
+  }
+  .detail-stats .connections-list {
+    list-style: none;
+    padding: 4px 0 0 0;
+    margin: 0;
+  }
+  .detail-stats .connections-list li {
+    padding: 2px 0;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .detail-stats .connections-list li:hover {
+    color: var(--text-bright);
+  }
+  .detail-stats .conn-type {
+    color: var(--text-secondary);
+  }
+  .detail-stats .conn-label {
+    color: var(--text);
+  }
+  .detail-stats .conn-edge {
+    color: var(--text-secondary);
+    font-size: 10px;
+  }
 
   /* ── Loading overlay ── */
   #loading-overlay {
@@ -443,6 +511,20 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   #loading-text {
     font-size: 13px; color: var(--text-dim);
+  }
+
+  /* ── Error message ── */
+  .error-message {
+    color: #f44; font-size: 14px; padding: 20px; text-align: center;
+  }
+  .error-message code {
+    font-size: 11px; word-break: break-all;
+  }
+  .error-message .error-location {
+    font-size: 11px; color: #888;
+  }
+  .error-message .error-hint {
+    font-size: 11px; color: #f80;
   }
 
   /* ── Debug panel ── */
@@ -492,4 +574,3 @@
   }
   .dimmed { opacity: 0.04 !important; }
   .highlighted { opacity: 1 !important; }
-

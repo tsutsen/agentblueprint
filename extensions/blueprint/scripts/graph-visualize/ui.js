@@ -1,10 +1,29 @@
 // ─── UI Logic ───
 // This file contains all UI-related code: search, filters, sidebar, detail panel, controls
 
-let _pendingNodeId = null;
+import {
+  graphData,
+  validEdges,
+  selectedNode,
+  showLabels,
+  activeCategories,
+  searchTerm,
+  zoom,
+  isDragging,
+  sizeMetric,
+  recalcSizeRange,
+  startScaleAnimation,
+  renderGraph,
+  toggleSimulation,
+  updateThemeColors,
+  animateDim,
+  updateHtmlLabels,
+  setNodeSelectCallbacks,
+  selectNode as graphSelectNode,
+  deselectNode as graphDeselectNode,
+} from './graph.js';
 
-// Double-click detection: require clicks within 300ms of each other, per element
-const DOUBLE_CLICK_TIMEOUT = 300;
+let _pendingNodeId = null;
 
 // ─── URL State Sync ───
 function updateURL() {
@@ -15,15 +34,6 @@ function updateURL() {
   }
   const newURL = `?${params.toString()}`;
   history.replaceState(null, '', newURL);
-}
-
-function getCategoryCounts() {
-  const counts = {};
-  for (const n of graphData.nodes) {
-    const cat = n.typeCat || n.category || 'other';
-    counts[cat] = (counts[cat] || 0) + 1;
-  }
-  return counts;
 }
 
 function loadURLState() {
@@ -38,20 +48,16 @@ function loadURLState() {
   }
   const qParam = params.get('q');
   if (qParam) {
-    searchTerm = qParam;
+    window.searchTerm = qParam;
   }
   return params.get('node');
 }
 
-function clearURLState() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.toString()) {
-    history.replaceState(null, '', window.location.pathname);
-  }
-}
-
 // ─── Init UI ───
-function initUI() {
+export function initUI() {
+  // Register node select/deselect callbacks with graph.js
+  setNodeSelectCallbacks(handleNodeSelected, handleNodeDeselected);
+
   // Load state from URL before building filters
   _pendingNodeId = loadURLState();
 
@@ -62,7 +68,6 @@ function initUI() {
   const catContainer = document.getElementById('category-filters');
   const categoryCounts = {};
   for (const n of graphData.nodes) {
-    // New format: use typeCat, legacy: use category
     const cat = n.typeCat || n.category || 'other';
     categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
   }
@@ -83,38 +88,28 @@ function initUI() {
       applyFilters();
       updateURL();
     });
+
+    // Single click: toggle checkbox
     div.addEventListener('click', (e) => {
       if (e.target.tagName !== 'INPUT') {
-        const cb = div.querySelector('input');
-        const now = Date.now();
-        const lastClick = div._lastClick || 0;
-        const elapsed = now - lastClick;
-        div._lastClick = now;
-
-        if (elapsed < DOUBLE_CLICK_TIMEOUT) {
-          // Double click: select only this category
-          clearTimeout(div._clickTimer);
-          delete div._clickTimer;
-          document.querySelectorAll('#category-filters .filter-item input').forEach(inp => {
-            inp.checked = false;
-          });
-          activeCategories.clear();
-          activeCategories.add(cat);
-          cb.checked = true;
-          applyFilters();
-          updateURL();
-        } else {
-          // Single click: toggle immediately
-          cb.checked = !cb.checked;
-          cb.dispatchEvent(new Event('change'));
-          // Start a timer: if no second click arrives, we're done
-          div._clickTimer = setTimeout(() => {
-            delete div._lastClick;
-            delete div._clickTimer;
-          }, DOUBLE_CLICK_TIMEOUT);
-        }
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event('change'));
       }
     });
+
+    // Double click: select only this category
+    div.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('#category-filters .filter-item input').forEach(inp => {
+        inp.checked = false;
+      });
+      activeCategories.clear();
+      activeCategories.add(cat);
+      cb.checked = true;
+      applyFilters();
+      updateURL();
+    });
+
     catContainer.appendChild(div);
   }
 
@@ -141,7 +136,7 @@ function initUI() {
     div.addEventListener('click', (e) => {
       e.stopPropagation();
       const node = graphData.nodes.find(nd => nd.id === n.id);
-      if (node) selectNode(e, node);
+      if (node) graphSelectNode(e, node);
       document.querySelectorAll('.term-list-item').forEach(el => el.classList.remove('active'));
       div.classList.add('active');
     });
@@ -165,18 +160,11 @@ function initUI() {
   document.getElementById('btn-simulate').addEventListener('click', toggleSimulation);
   document.getElementById('btn-labels').addEventListener('click', toggleLabels);
 
-  // Size metric dropdown
-  const sizeMetricBtn = document.getElementById('btn-size-metric');
+  // Size metric dropdown (native <details>)
+  const sizeMetricDropdown = document.getElementById('size-metric-dropdown');
   const sizeMetricMenu = document.getElementById('size-metric-menu');
   const sizeMetricItems = sizeMetricMenu.querySelectorAll('.dropdown-item');
-  
-  // Toggle dropdown
-  sizeMetricBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    sizeMetricMenu.classList.toggle('open');
-  });
-  
-  // Handle item selection
+
   sizeMetricItems.forEach(item => {
     item.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -186,29 +174,24 @@ function initUI() {
         blast: 'Size: Blast Radius',
         risk: 'Size: Risk Score',
       };
-      sizeMetricBtn.textContent = labels[sizeMetric];
+      sizeMetricDropdown.querySelector('summary').textContent = labels[sizeMetric];
       sizeMetricItems.forEach(i => i.classList.remove('active'));
       item.classList.add('active');
-      sizeMetricMenu.classList.remove('open');
+      sizeMetricDropdown.open = false;
       console.log('Size metric changed to:', sizeMetric);
-      if (typeof recalcSizeRange === 'function') recalcSizeRange();
-      if (typeof startScaleAnimation === 'function') startScaleAnimation();
-      if (typeof render === 'function') render();
+      recalcSizeRange();
+      startScaleAnimation();
+      renderGraph();
     });
   });
 
-  // Theme dropdown
-  const btnTheme = document.getElementById('btn-theme');
+  // Theme dropdown (native <details>)
+  const themeDropdown = document.getElementById('theme-dropdown');
   const themeMenu = document.getElementById('theme-menu');
   const themeSheets = document.querySelectorAll('[id^="theme-"]');
   let currentTheme = localStorage.getItem('glossary-theme') || 'default';
   applyTheme(currentTheme);
   updateThemeMenu();
-
-  btnTheme.addEventListener('click', (e) => {
-    e.stopPropagation();
-    themeMenu.classList.toggle('open');
-  });
 
   themeMenu.addEventListener('click', (e) => {
     const item = e.target.closest('.dropdown-item');
@@ -216,36 +199,30 @@ function initUI() {
     currentTheme = item.dataset.theme;
     applyTheme(currentTheme);
     localStorage.setItem('glossary-theme', currentTheme);
-    themeMenu.classList.remove('open');
+    themeDropdown.open = false;
     updateThemeMenu();
   });
 
   function applyTheme(theme) {
     themeSheets.forEach(sheet => {
       sheet.disabled = sheet.id !== `theme-${theme}`;
-      console.log('Theme sheet:', sheet.id, 'disabled:', sheet.disabled);
     });
     // Wait for stylesheet to apply before updating colors
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        if (window.updateThemeColors) window.updateThemeColors();
+        updateThemeColors();
       });
     });
   }
 
-  document.addEventListener('click', () => {
-    themeMenu.classList.remove('open');
-    sizeMetricMenu.classList.remove('open');
-  });
-
   function updateThemeMenu() {
-    document.querySelectorAll('.dropdown-item').forEach(el => {
+    themeMenu.querySelectorAll('.dropdown-item').forEach(el => {
       el.classList.toggle('active', el.dataset.theme === currentTheme);
     });
   }
 
   // Close detail panel
-  document.getElementById('close-detail').addEventListener('click', deselectNode);
+  document.getElementById('close-detail').addEventListener('click', graphDeselectNode);
 
   // Prevent clicks on detail panel from deselecting node
   document.getElementById('detail-panel').addEventListener('click', (e) => {
@@ -254,7 +231,7 @@ function initUI() {
 }
 
 // ─── Filters ───
-function applyFilters() {
+export function applyFilters() {
   // Apply category/type filter
   const filteredIds = new Set();
   console.log('applyFilters: activeCategories =', activeCategories, 'size =', activeCategories.size);
@@ -287,73 +264,38 @@ function applyFilters() {
   });
 
   // Trigger scale animation (it internally calls recalcSizeRange and computes connectedSet)
-  if (typeof startScaleAnimation === 'function') startScaleAnimation();
+  startScaleAnimation();
   // Ensure immediate render after filters
-  if (typeof render === 'function') render();
+  renderGraph();
 }
 
 // ─── Zoom ───
 function resetZoom() {
   zoom = { x: 0, y: 0, k: 1 };
-  if (typeof render === 'function') render();
+  renderGraph();
 }
 
 // ─── Controls ───
 function toggleLabels() {
   showLabels = !showLabels;
   document.getElementById('btn-labels').classList.toggle('active', showLabels);
-  if (typeof render === 'function') render();
+  renderGraph();
 }
 
-// ─── Node selection ───
-function selectNode(event, d) {
-  event.stopPropagation();
-  if (selectedNode && selectedNode.id === d.id) {
-    deselectNode();
-    return;
-  }
-  selectedNode = d;
-
-  const connectedIds = new Set([d.id]);
-  const connectedEdgeSet = new Set();
-
-  for (const e of validEdges) {
-    if (e.source.id === d.id || e.target.id === d.id) {
-      connectedIds.add(e.source.id);
-      connectedIds.add(e.target.id);
-      connectedEdgeSet.add(e);
-    }
-  }
-
-  // Canvas rendering handles highlighting in render()
-  animateDim(0.15); // Animate to dimmed state
-
-  // Update label opacity immediately (not waiting for node animation)
-  if (typeof updateHtmlLabels === 'function') updateHtmlLabels();
-
-  // Trigger scale animation for node size transitions
-  if (typeof startScaleAnimation === 'function') startScaleAnimation();
-
+// ─── Node selection callbacks (registered with graph.js) ───
+function handleNodeSelected(event, d) {
   showDetail(d);
-
   document.querySelectorAll('.term-list-item').forEach(el => {
     el.classList.toggle('active', el.dataset.nodeId === d.id);
   });
 }
 
-function deselectNode() {
-  selectedNode = null;
+function handleNodeDeselected() {
   document.querySelectorAll('.term-list-item').forEach(el => el.classList.remove('active'));
   document.getElementById('detail-panel').classList.remove('visible');
-  animateDim(1); // Animate to full opacity
-
-  // Update label opacity immediately (not waiting for node animation)
-  if (typeof updateHtmlLabels === 'function') updateHtmlLabels();
-
-  if (typeof startScaleAnimation === 'function') startScaleAnimation();
 }
 
-function showDetail(d) {
+export function showDetail(d) {
   const panel = document.getElementById('detail-panel');
   const shortId = (d.type === 'spec' || d.category === 'spec') ? 'SPEC' : d.id.split('-').slice(0, 2).join('-');
   const displayName = d.term || d.label || d.id;
@@ -362,89 +304,85 @@ function showDetail(d) {
   document.getElementById('detail-id').style.display = 'inline';
 
   const catBadge = document.getElementById('detail-category');
-  // Show typeLabel for new format, category for legacy
   const displayType = d.typeLabel || d.type || d.category || 'unknown';
-  catBadge.textContent = displayType;
-  catBadge.className = `category-badge category-badge-${d.type || d.category || 'other'}`;
+  catBadge.textContent = displayType.charAt(0).toUpperCase() + displayType.slice(1);
+  catBadge.className = `category-badge category-badge-${d.typeCat || d.category || 'other'}`;
 
-  document.getElementById('detail-def').textContent = d.definition || 'No definition available.';
+  // Build stats section using <details>/<summary> for connections
+  const statsDiv = document.getElementById('detail-stats');
+  statsDiv.innerHTML = '';
 
-  const stats = document.getElementById('detail-stats');
+  // Basic info
+  const infoDiv = document.createElement('div');
+  infoDiv.innerHTML = `<strong>Connections:</strong> ${d.degree || 0}`;
+  statsDiv.appendChild(infoDiv);
 
-  // Build connection list from edges
-  const connections = [];
-  for (const e of graphData.edges) {
-    const srcId = typeof e.source === 'object' ? e.source.id : e.source;
-    const tgtId = typeof e.target === 'object' ? e.target.id : e.target;
-    if (srcId === d.id) {
-      const targetNode = graphData.nodes.find(n => n.id === tgtId);
-      connections.push({
-        id: tgtId,
-        label: targetNode ? (targetNode.term || targetNode.label || targetNode.id) : tgtId,
-        type: targetNode ? (targetNode.type || targetNode.category || 'unknown') : 'unknown',
-        edgeType: e.type,
-      });
-    } else if (tgtId === d.id) {
-      const sourceNode = graphData.nodes.find(n => n.id === srcId);
-      connections.push({
-        id: srcId,
-        label: sourceNode ? (sourceNode.term || sourceNode.label || sourceNode.id) : srcId,
-        type: sourceNode ? (sourceNode.type || sourceNode.category || 'unknown') : 'unknown',
-        edgeType: e.type,
-      });
-    }
+  if (d.blastRadius) {
+    const blastDiv = document.createElement('div');
+    blastDiv.innerHTML = `<strong>Blast Radius:</strong> ${d.blastRadius}`;
+    statsDiv.appendChild(blastDiv);
+  }
+  if (d.risk) {
+    const riskDiv = document.createElement('div');
+    riskDiv.innerHTML = `<strong>Risk Score:</strong> ${d.risk}`;
+    statsDiv.appendChild(riskDiv);
+  }
+  if (d.centrality) {
+    const centDiv = document.createElement('div');
+    centDiv.innerHTML = `<strong>Centrality:</strong> ${d.centrality.toFixed(4)}`;
+    statsDiv.appendChild(centDiv);
   }
 
-  let html = `<div><strong>Connections:</strong> ${connections.length}</div>`;
-  html += `<div><strong>Type:</strong> ${d.type || d.category || 'unknown'}</div>`;
-  html += `<div><strong>Centrality:</strong> ${d.centrality != null ? d.centrality.toFixed(4) : 'N/A'}</div>`;
-
+  // Specs list (if any)
   if (d.specs && d.specs.length > 0) {
-    html += `<div><strong>In specs:</strong></div>`;
-    html += `<ul style="list-style: none; padding: 4px 0 0 0; margin: 0;">`;
-    for (const spec of d.specs) {
-      html += `<li style="padding: 2px 0; font-size: 11px;">${spec}</li>`;
-    }
-    html += '</ul>';
-  }
-
-  // Connections spoiler
-  if (connections.length > 0) {
-    html += `<div style="margin-top: 8px; cursor: pointer; user-select: none;" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.querySelector('.spoiler-toggle').textContent = this.querySelector('.spoiler-toggle').textContent.includes('▼') ? '▶' : '▼';">`;
-    html += `<strong>Connections:</strong> <span class="spoiler-toggle">▼</span></div>`;
-    html += `<ul style="list-style: none; padding: 4px 0 0 0; margin: 0; display: none;">`;
-    // Sort by type then by label
-    connections.sort((a, b) => {
-      if (a.type !== b.type) return a.type.localeCompare(b.type);
-      return a.label.localeCompare(b.label);
+    const specsDiv = document.createElement('div');
+    specsDiv.style.marginTop = '8px';
+    specsDiv.innerHTML = `<strong>Specs:</strong>`;
+    const specsList = document.createElement('ul');
+    specsList.className = 'specs-list';
+    d.specs.forEach(spec => {
+      const li = document.createElement('li');
+      li.textContent = spec;
+      specsList.appendChild(li);
     });
-    for (const conn of connections) {
-      html += `<li style="padding: 2px 0; font-size: 11px; cursor: pointer;" onclick="const node = graphData.nodes.find(n => n.id === '${conn.id}'); if (node) selectNode({stopPropagation: () => {}}, node);">
-        <span style="color: var(--text-secondary);">[${conn.type}]</span>
-        <span style="color: var(--text);">${conn.label}</span>
-        <span style="color: var(--text-secondary); font-size: 10px;"> (${conn.edgeType})</span>
-      </li>`;
-    }
-    html += '</ul>';
+    specsDiv.appendChild(specsList);
+    statsDiv.appendChild(specsDiv);
   }
 
-  stats.innerHTML = html;
+  // Connections section (collapsible via <details>/<summary>)
+  const connections = [];
+  for (const e of validEdges) {
+    const neighbor = e.source.id === d.id ? e.target : e.source;
+    connections.push({
+      id: neighbor.id,
+      type: neighbor.typeLabel || neighbor.type || neighbor.category || 'unknown',
+      edgeType: e.type || 'related',
+      label: neighbor.term || neighbor.label || neighbor.id,
+    });
+  }
+  connections.sort((a, b) => a.type.localeCompare(b.type));
+
+  if (connections.length > 0) {
+    const details = document.createElement('details');
+    details.className = 'connections-toggle';
+    const summary = document.createElement('summary');
+    summary.textContent = `Connections (${connections.length})`;
+    details.appendChild(summary);
+
+    const list = document.createElement('ul');
+    list.className = 'connections-list';
+    connections.forEach(conn => {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="conn-type">[${conn.type}]</span> <span class="conn-label">${conn.label}</span> <span class="conn-edge">(${conn.edgeType})</span>`;
+      li.addEventListener('click', () => {
+        const targetNode = graphData.nodes.find(n => n.id === conn.id);
+        if (targetNode) graphSelectNode(new Event('click'), targetNode);
+      });
+      list.appendChild(li);
+    });
+    details.appendChild(list);
+    statsDiv.appendChild(details);
+  }
 
   panel.classList.add('visible');
-
-  // Sync selected node to URL
-  const params = new URLSearchParams(window.location.search);
-  params.set('node', d.id);
-  const newURL = `?${params.toString()}`;
-  history.replaceState(null, '', newURL);
-}
-
-function restoreNodeFromURL() {
-  if (!_pendingNodeId) return;
-  const node = graphData.nodes.find(n => n.id === _pendingNodeId);
-  if (!node) return;
-  // Create a minimal event object
-  const fakeEvent = { stopPropagation: () => {}, clientX: 0, clientY: 0 };
-  selectNode(fakeEvent, node);
-  _pendingNodeId = null;
 }

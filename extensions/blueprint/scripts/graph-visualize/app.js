@@ -1,115 +1,48 @@
-// ─── Component Loader ───
-async function loadComponent(id, path) {
-  const container = document.getElementById(id);
-  const response = await fetch(path);
-  const html = await response.text();
-  container.insertAdjacentHTML('beforeend', html);
-}
+// ─── Main App ───
+import { initGraph, graphData, activeCategories } from './graph.js';
+import { initUI, applyFilters } from './ui.js';
 
-// ─── App Initialization ───
-async function initApp() {
-  try {
-    await Promise.all([
-      loadComponent('sidebar-container', 'components/sidebar.html'),
-      loadComponent('canvas-container', 'components/canvas.html'),
-    ]);
+const DATA_URL = '/graph-data.json';
 
-    // Detail and debug panels are inside canvas-container now
-
-    // Start the app — wait for styles to apply
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        loadGraphData();
-      });
-    });
-
-    // ─── Event listeners (need DOM elements to exist) ───
-    // Click background to deselect (same as pressing × close button)
-    // Distinguish click from drag by tracking mouse movement distance
-    let pointerDownPos = null;
-    const graphContainer = document.getElementById('graph-container');
-    if (graphContainer) {
-      graphContainer.addEventListener('pointerdown', (e) => {
-        pointerDownPos = { x: e.clientX, y: e.clientY };
-      });
-      graphContainer.addEventListener('click', (e) => {
-        // Skip if a drag actually occurred
-        if (isDragging) return;
-        // Canvas click is handled in onMouseUp
-      });
-    }
-
-    // Global error handler
-    window.addEventListener('error', (e) => {
-      console.error('Global error:', e.message, 'at', e.filename, ':', e.lineno);
-      const overlay = document.getElementById('loading-overlay');
-      if (overlay) {
-        overlay.innerHTML = `<div style="color:#f44;font-size:14px;padding:20px;text-align:center;">
-          <strong>JavaScript Error</strong><br><br>
-          <code style="font-size:11px;word-break:break-all;">${e.message}</code><br><br>
-          <span style="font-size:11px;color:#888;">${e.filename}:${e.lineno}</span><br><br>
-          <span style="font-size:11px;color:#f80;">Check browser console (F12) for details</span>
-        </div>`;
-      }
-    });
-
-    window.addEventListener('unhandledrejection', (e) => {
-      console.error('Unhandled promise rejection:', e.reason);
-    });
-
-    // Resize handler
-    window.addEventListener('resize', () => {
-      const container = document.getElementById('graph-container');
-      width = container.clientWidth;
-      height = container.clientHeight;
-      if (canvas) {
-        canvas.width = width * window.devicePixelRatio;
-        canvas.height = height * window.devicePixelRatio;
-        canvas.style.width = width + 'px';
-        canvas.style.height = height + 'px';
-        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-        render();
-      }
-    });
-
-    // Escape to deselect
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && selectedNode) {
-        deselectNode();
-      }
-    });
-  } catch (e) {
-    console.error('Failed to load components:', e);
-  }
-}
-
-// ─── Start ───
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
-} else {
-  initApp();
-}
-
-// ─── Load Graph Data ───
 async function loadGraphData() {
   try {
-    const resp = await fetch('graph-data.json');
-    graphData = await resp.json();
-  } catch (e) {
-    try {
-      const resp = await fetch('./graph-data.json');
-      graphData = await resp.json();
-    } catch (e2) {
-      document.getElementById('loading-text').textContent =
-        'Could not load graph-data.json. Run `node extract-graph-data.js` first.';
-      return;
+    const response = await fetch(DATA_URL);
+    if (!response.ok) {
+      throw new Error(`Failed to load data: ${response.status} ${response.statusText}`);
     }
+    return await response.json();
+  } catch (error) {
+    showError(error, DATA_URL);
+    return null;
   }
-  initUI();
-  startTime = performance.now();
-  tickCount = 0;
+}
 
+function showError(error, url) {
+  const overlay = document.getElementById('loading-overlay');
+  if (!overlay) {
+    console.error('Loading overlay not found:', error);
+    return;
+  }
+  overlay.innerHTML = `
+    <div class="error-message">
+      <p><strong>Error loading graph data</strong></p>
+      <p class="error-location">URL: ${url}</p>
+      <p class="error-hint">${error.message}</p>
+      <p><code>${error.stack}</code></p>
+    </div>`;
+}
+
+async function init() {
+  graphData = await loadGraphData();
+  if (!graphData) return;
+
+  console.log('Loaded graph data:', graphData);
+  console.log('Nodes:', graphData.nodes.length);
+  console.log('Edges:', graphData.edges.length);
+
+  initUI();
   initGraph();
   applyFilters();
-  restoreNodeFromURL();
 }
+
+init();
