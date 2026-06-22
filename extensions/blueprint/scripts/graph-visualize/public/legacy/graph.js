@@ -1031,9 +1031,9 @@ export function startSimulation() {
     .force("charge", d3.forceManyBody().strength(-150))
     .force("center", d3.forceCenter(width / 2, height / 2).strength(0.02))
     .force("collision", d3.forceCollide().radius(25))
-    .alpha(1)
-    .alphaDecay(0.02)
-    .alphaMin(0.3)
+    .alpha(0.3)
+    .alphaDecay(0)
+    .alphaMin(0)
     .on("tick", () => {
       render();
     });

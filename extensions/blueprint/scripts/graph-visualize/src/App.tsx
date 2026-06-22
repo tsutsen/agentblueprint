@@ -9,8 +9,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Label } from '@/components/ui/label'
-import { Search, RotateCcw, Play, Pause, Settings, ChevronDown, ZoomIn, ZoomOut } from 'lucide-react'
+import { Search, RotateCcw, Play, Settings, ChevronDown, ZoomIn, ZoomOut } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Switch } from '@/components/ui/switch'
 import { themes, applyTheme } from '@/lib/themes'
 
 // ─── Size Metrics ───
@@ -309,24 +310,22 @@ function App() {
         <div className="absolute top-3 left-3 flex items-start gap-1.5 z-10">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className={`h-8 text-xs bg-background/90 backdrop-blur ${simulating ? 'bg-primary/10 text-primary border-primary/30' : ''}`}
-                onClick={() => {
-                  if (simulating) {
-                    bridgeRef.current?.stopSimulation()
-                  } else {
-                    bridgeRef.current?.startSimulation()
-                  }
-                  setSimulating((prev) => !prev)
-                }}
-              >
-                {simulating ? <Pause className="h-3.5 w-3.5 mr-1" /> : <Play className="h-3.5 w-3.5 mr-1" />}
-                {simulating ? 'Running' : 'Simulate'}
-              </Button>
+              <label className="flex items-center gap-1 bg-background/90 backdrop-blur rounded-md px-1.5 h-7 text-xs cursor-pointer">
+                <Play className="h-3.5 w-3.5" />
+                <Switch
+                  checked={simulating}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      bridgeRef.current?.startSimulation()
+                    } else {
+                      bridgeRef.current?.stopSimulation()
+                    }
+                    setSimulating(checked)
+                  }}
+                />
+              </label>
             </TooltipTrigger>
-            <TooltipContent side="bottom">{simulating ? 'Pause simulation' : 'Run simulation continuously'}</TooltipContent>
+            <TooltipContent side="bottom">Simulation</TooltipContent>
           </Tooltip>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
