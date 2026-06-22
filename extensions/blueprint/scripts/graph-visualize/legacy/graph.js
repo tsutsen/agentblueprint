@@ -803,7 +803,9 @@ function getNodeRadius(d) {
     return scaleValue(value, 1, 6, 4, 30);
   }
 
-  rangeKey = SIZE_METRIC_KEYS[sizeMetric] ?? "degree";
+  // Use sizeMetric itself as the range key ("blast", "degree", etc.)
+  // SIZE_METRIC_KEYS maps to the NODE property ("blastRadius") — not the range storage key.
+  rangeKey = sizeMetric ?? "degree";
 
   let minVal, maxVal;
   if (useConnected) {
