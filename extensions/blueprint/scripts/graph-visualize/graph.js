@@ -5,7 +5,7 @@ export let graphData = null;
 export function getGraphData() { return graphData; }
 export function setGraphData(data) { graphData = data; }
 export let validEdges = null;
-let canvas, ctx;
+let canvas, ctx, container;
 export let selectedNode = null;
 let connectedSet = null;
 export let showLabels = true;
@@ -40,7 +40,7 @@ let _labelFadeStartTime = null;
  */
 function buildLabelSet() {
   // Check if zoom changed significantly (hysteresis to prevent flickering)
-  const transform = d3.zoomTransform(canvas);
+  const transform = d3.zoomTransform(container);
   const zoomDelta = Math.abs(transform.k - _lastLabelZoom);
   if (zoomDelta < LABEL_HYSTERESIS && _labelVisibleSet !== null) {
     // Zoom hasn't changed enough, skip rebuilding
@@ -190,7 +190,7 @@ export function updateHtmlLabels() {
     }
 
     // Position label relative to container
-    const transform = d3.zoomTransform(canvas);
+    const transform = d3.zoomTransform(container);
     const labelX = transform.x + node.x * transform.k;
     const labelY = transform.y + node.y * transform.k - r * transform.k - 8;
     labelEl.style.left = `${labelX}px`;
@@ -262,7 +262,7 @@ const SIZE_METRIC_KEYS = {
 
 // ─── Init graph ───
 export function initGraph() {
-  const container = document.getElementById("graph-container");
+  container = document.getElementById("graph-container");
   width = container.clientWidth;
   height = container.clientHeight;
 
@@ -354,12 +354,13 @@ export function initGraph() {
   render();
 
   // ── Event listeners ──
-  // D3 zoom: handles wheel zoom, pinch-zoom, and drag-to-pan
+  // D3 zoom attached to container (not canvas) for proper event handling
   zoomBehavior = d3.zoom()
     .scaleExtent(0.05, 8)
     .on("zoom", () => render());
 
-  d3.select(canvas).call(zoomBehavior);
+  d3.select(container).call(zoomBehavior);
+  container.style.overflow = "hidden";
 
   // Node dragging (native events, separate from zoom/pan)
   canvas.addEventListener("mousedown", (event) => {
@@ -514,7 +515,7 @@ function render() {
   }
 
   ctx.clearRect(0, 0, width, height);
-  const transform = d3.zoomTransform(canvas);
+  const transform = d3.zoomTransform(container);
   ctx.save();
   ctx.translate(transform.x, transform.y);
   ctx.scale(transform.k, transform.k);
@@ -706,7 +707,7 @@ function getNodeAnimatedRadius(n) {
 // ─── Coordinate Helpers ───
 function screenToWorld(event) {
   const rect = canvas.getBoundingClientRect();
-  const transform = d3.zoomTransform(canvas);
+  const transform = d3.zoomTransform(container);
   return {
     x: (event.clientX - rect.left - transform.x) / transform.k,
     y: (event.clientY - rect.top - transform.y) / transform.k,
@@ -902,7 +903,7 @@ export function updateThemeColors() {
 
 // ─── Zoom Reset ───
 export function resetZoom() {
-  zoomBehavior.transition(canvas)
+  zoomBehavior.transition(container)
     .duration(500)
     .call(zoomBehavior.transform, d3.zoomIdentity);
 }
