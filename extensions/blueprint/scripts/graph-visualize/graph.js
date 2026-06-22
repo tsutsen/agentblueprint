@@ -699,6 +699,8 @@ function onMouseMove(event) {
     isDragging = true;
     draggedNode.x = pos.x;
     draggedNode.y = pos.y;
+    draggedNode.vx = 0;
+    draggedNode.vy = 0;
     render();
     return;
   }
@@ -744,9 +746,13 @@ function onMouseUp(event) {
     draggedNode = null;
     isDragging = false;
   } else if (draggedNode && isDragging) {
-    // Node was dragged - preserve selection
+    // Node was dragged - pin it, then let neighbors settle live
+    draggedNode.fx = draggedNode.x;
+    draggedNode.fy = draggedNode.y;
+    const nodeRef = draggedNode;
     draggedNode = null;
     isDragging = false;
+    settleAfterDrag(nodeRef);
   } else if (!draggedNode && !wasPanning) {
     // Click on empty space - deselect
     deselectNode();
@@ -909,13 +915,75 @@ let scaleAnimStartRadii = null; // Map<nodeId, startRadius>
 const SCALE_ANIM_DURATION = 350; // ms — how long a scale transition takes
 
 // ─── Simulation Control ───
-export function toggleSimulation() {
-  // Stop any running simulation first
-  if (simulation) {
-    simulation.stop();
-  }
 
-  // Start fresh simulation
+/**
+ * Lightweight post-drag settlement.
+ * Pins the dragged node so it stays put, runs a short heavily-damped
+ * simulation so neighbors relax around the new position, then unpins.
+ *
+ * Parameters tuned for stability + low cost:
+ *   No center force — only local relaxation, no global drift
+ *   alpha 0.15 + decay 0.12 → energy localized to dragged node's neighborhood
+ *   velocityDecay 0.7 → strong damping, no jitter/oscillation
+ *   tick cap 60        → hard upper bound regardless of alpha
+ */
+export function settleAfterDrag(pinnedNode) {
+  if (simulation) simulation.stop();
+
+  const visibleNodes = graphData.nodes.filter((n) => n.visible);
+  const visibleEdges = validEdges.filter((e) => e.visible);
+
+  // No center force — we only want local relaxation, not global drift.
+  simulation = d3
+    .forceSimulation(visibleNodes)
+    .force(
+      "link",
+      d3.forceLink(visibleEdges).distance(120).strength(0.08),
+    )
+    .force(
+      "charge",
+      d3.forceManyBody().strength(-350).distanceMax(300),
+    )
+    .force(
+      "collision",
+      d3.forceCollide().radius(25).strength(0.7),
+    )
+    .alpha(0.15)
+    .alphaDecay(0.12)
+    .velocityDecay(0.7)
+    .on("tick", () => {
+      render();
+    })
+    .on("end", () => {
+      pinnedNode.fx = null;
+      pinnedNode.fy = null;
+      simulation = null;
+    });
+
+  // Hard tick cap: stop after 60 ticks even if alpha hasn't cooled
+  const maxTicks = 60;
+  let ticks = 0;
+  const originalTick = simulation.tick.bind(simulation);
+  simulation.tick = function () {
+    if (++ticks >= maxTicks) {
+      pinnedNode.fx = null;
+      pinnedNode.fy = null;
+      simulation.stop();
+      simulation = null;
+      render();
+      return false;
+    }
+    return originalTick();
+  };
+}
+
+/**
+ * Full graph re-layout ("Simulate" button).
+ * Runs a longer simulation on all visible nodes from their current positions.
+ */
+export function toggleSimulation() {
+  if (simulation) simulation.stop();
+
   simulation = d3
     .forceSimulation(graphData.nodes.filter((n) => n.visible))
     .force(
