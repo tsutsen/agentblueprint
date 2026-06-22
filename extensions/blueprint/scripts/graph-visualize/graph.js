@@ -357,50 +357,69 @@ export function initGraph() {
   // D3 zoom: handles wheel zoom, pinch-zoom, and drag-to-pan
   zoomBehavior = d3.zoom()
     .scaleExtent(0.05, 8)
-    .wheelDelta(delta => -delta.y * 0.001) // Match previous zoom speed
-    .on("zoom", (event) => {
-      render();
-    });
+    .filter(event => {
+      // Don't start zoom/pan if left-button mousedown is on a node
+      if (event.type === 'mousedown' && event.button === 0) {
+        const pos = screenToWorld(event);
+        return !findNodeAt(pos);
+      }
+      return true;
+    })
+    .on("zoom", () => render());
 
   zoomBehavior(canvas);
 
-  // D3 drag: handles node dragging
-  const drag = d3.drag()
-    .on("start", (event, d) => {
-      if (!event.active) simulation?.stop();
-      d.fx = d.x;
-      d.fy = d.y;
-    })
-    .on("drag", (event, d) => {
-      d.fx = event.x;
-      d.fy = event.y;
-      d.x = event.x;
-      d.y = event.y;
-      render();
-    })
-    .on("end", (event, d) => {
-      d.fx = null;
-      d.fy = null;
-    });
-
-  // Click: node selection on canvas (after zoom gesture ends)
-  canvas.addEventListener("click", (event) => {
+  // Node dragging (native events, separate from zoom/pan)
+  canvas.addEventListener("mousedown", (event) => {
+    if (event.button !== 0) return;
     const pos = screenToWorld(event);
     const node = findNodeAt(pos);
     if (node) {
-      selectNode(event, node);
-    } else {
-      deselectNode();
+      event.preventDefault();
+      draggedNode = node;
+      isDragging = false;
+      simulation?.stop();
     }
   });
 
-  // Hover cursor
   canvas.addEventListener("mousemove", (event) => {
+    if (draggedNode) {
+      const pos = screenToWorld(event);
+      draggedNode.x = pos.x;
+      draggedNode.y = pos.y;
+      isDragging = true;
+      render();
+      return;
+    }
+    // Hover cursor
     const pos = screenToWorld(event);
     const node = findNodeAt(pos);
     if (node !== hoveredNode) {
       hoveredNode = node;
       canvas.style.cursor = node ? "pointer" : "grab";
+    }
+  });
+
+  canvas.addEventListener("mouseup", (event) => {
+    if (draggedNode) {
+      if (!isDragging) {
+        // It was a click, not a drag
+        const pos = screenToWorld(event);
+        const node = findNodeAt(pos);
+        if (node) selectNode(event, node);
+        else deselectNode();
+      }
+      draggedNode = null;
+      isDragging = false;
+    }
+  });
+
+  // Click on empty space (fires after zoom gesture ends)
+  canvas.addEventListener("click", (event) => {
+    if (draggedNode) return; // ignore if this was part of a drag
+    const pos = screenToWorld(event);
+    if (!findNodeAt(pos)) {
+      deselectNode();
     }
   });
 
