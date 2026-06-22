@@ -503,7 +503,7 @@ function render() {
   ctx.globalAlpha = 0.3;
   const edgeColor = getEdgeColor();
   for (const e of validEdges) {
-    if (!e.visible) continue;
+    if (!e.visible || !e.source.visible || !e.target.visible) continue;
     ctx.beginPath();
     ctx.moveTo(e.source.x, e.source.y);
     ctx.lineTo(e.target.x, e.target.y);
