@@ -1,5 +1,5 @@
 // ─── Main App ───
-import { initGraph, graphData, activeCategories } from './graph.js';
+import { initGraph, setGraphData, activeCategories } from './graph.js';
 import { initUI, applyFilters } from './ui.js';
 
 const DATA_URL = '/graph-data.json';
@@ -33,7 +33,7 @@ function showError(error, url) {
 }
 
 async function init() {
-  graphData = await loadGraphData();
+  setGraphData(await loadGraphData());
   if (!graphData) return;
 
   console.log('Loaded graph data:', graphData);

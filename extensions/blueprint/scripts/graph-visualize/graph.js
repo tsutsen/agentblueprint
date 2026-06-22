@@ -2,6 +2,7 @@ import { getEdgeColor, resetEdgeColorCache, TYPE_COLORS } from './config.js';
 
 // ─── Graph State ───
 export let graphData = null;
+export function setGraphData(data) { graphData = data; }
 export let validEdges = null;
 let canvas, ctx;
 export let selectedNode = null;
