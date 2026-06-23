@@ -208,6 +208,7 @@ function App() {
   // Uses searchTerm (not debounced) so it works on initial load
   useEffect(() => {
     if (!graphData || !bridgeReady) return
+    console.log('[App] Applying filters, bridge:', !!bridgeRef.current)
     const visibleIds = new Set<string>()
     const search = searchTerm.toLowerCase().trim()
     for (const node of graphData.nodes) {
@@ -219,6 +220,7 @@ function App() {
         visibleIds.add(node.id)
       }
     }
+    console.log('[App] visibleIds:', visibleIds.size, 'cats:', [...activeCategories])
     bridgeRef.current?.setVisibility(visibleIds)
   }, [graphData, bridgeReady, activeCategories, searchTerm])
 
