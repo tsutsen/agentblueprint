@@ -92,7 +92,7 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
           for (const n of data.nodes) {
             n.visible = visibleIds.has(n.id)
           }
-          wrapper.startScaleAnimation()
+          wrapper.startAnimation(null)
           // Restart simulation so newly visible nodes are included
           if (wrapper.hasSimulation()) {
             wrapper.stopSimulation()
@@ -102,15 +102,14 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
         setSizeMetric: (metric: string) => {
           wrapper.setSizeMetric(metric)
           wrapper.recalcSizeRange()
-          wrapper.startScaleAnimation()
+          wrapper.startAnimation(null)
           wrapper.renderGraph()
         },
         selectNodeById: (id: string) => {
           const node = data.nodes.find((n: any) => n.id === id)
           if (node) {
             wrapper.setSelectedNode(node)
-            wrapper.animateDim(0.15)
-            wrapper.startScaleAnimation()
+            wrapper.startAnimation(0.15)
             // Trigger the selection callback so React detail panel updates
             onNodeSelect?.(node)
           }

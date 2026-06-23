@@ -12,11 +12,10 @@ import {
   isDragging,
   sizeMetric,
   recalcSizeRange,
-  startScaleAnimation,
+  startAnimation,
   renderGraph,
   toggleSimulation,
   updateThemeColors,
-  animateDim,
   updateHtmlLabels,
   setNodeSelectCallbacks,
   selectNode as graphSelectNode,
@@ -178,7 +177,7 @@ export function initUI() {
       sizeMetricDropdown.open = false;
       console.log('Size metric changed to:', sizeMetric);
       recalcSizeRange();
-      startScaleAnimation();
+      startAnimation(null);
       renderGraph();
     });
   });
@@ -261,8 +260,8 @@ export function applyFilters() {
     el.style.display = node && node.visible ? 'block' : 'none';
   });
 
-  // Trigger scale animation (it internally calls recalcSizeRange and computes connectedSet)
-  startScaleAnimation();
+  // Trigger animation (it internally calls recalcSizeRange and computes connectedSet)
+  startAnimation(null);
   // Ensure immediate render after filters
   renderGraph();
 }

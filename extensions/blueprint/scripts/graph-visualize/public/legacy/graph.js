@@ -570,25 +570,28 @@ export function renderGraph() {
   render();
 }
 
-// ─── Scale Animation Engine ───
-// One-shot animation: smoothly transitions node radii over ~350ms when sizes change.
-// Call after selection changes, metric switches, or filter changes.
-// Internally computes connectedSet and recalculates size ranges so targets are correct.
-export function startScaleAnimation() {
+// ─── Unified Animation System ───
+// Drives both dim and scale animations in a single rAF loop.
+let animFrame = null;
+let animStart = null;
+let animDimFrom = 1;
+let animDimTarget = null; // null = no dimming
+let animScaleStartRadii = null;
+let animScaleTargets = null;
+const ANIM_DURATION = 400; // ms — duration for both animations
+
+// ─── Unified Animation ───
+// Starts a single animation loop that drives both dim and scale transitions.
+// dimTarget: null = no dimming (scale-only), otherwise target opacity value.
+export function startAnimation(dimTarget) {
   // Cancel any previous animation
-  if (scaleAnimFrame) cancelAnimationFrame(scaleAnimFrame);
+  if (animFrame) cancelAnimationFrame(animFrame);
 
-  // Capture the currently displayed radius for each node BEFORE any state changes.
-  // This is the "from" value for the animation. If a previous animation is in-flight,
-  // its _animRadius holds the current interpolated value. Otherwise, getNodeRadius()
-  // returns the last rendered size.
-  const prevRadii = new Map();
-  for (const n of graphData.nodes) {
-    if (!n.visible) continue;
-    prevRadii.set(n.id, n._animRadius ?? getNodeRadius(n));
-  }
+  animStart = performance.now();
+  animDimFrom = currentDim;
+  animDimTarget = dimTarget;
 
-  // Compute connected set (needed for correct target radii)
+  // Compute connected set and size ranges (needed for target radii)
   connectedSet = null;
   if (selectedNode) {
     connectedSet = new Set([selectedNode.id]);
@@ -599,55 +602,66 @@ export function startScaleAnimation() {
       }
     }
   }
-
-  // Recalculate size ranges so getNodeRadius() returns correct targets
   recalcSizeRange();
-
-  // Build label placement set (progressive disclosure)
   buildLabelSet();
 
-  // Capture target radii and start the animation
-  scaleAnimStartRadii = new Map();
-  scaleAnimTargets = new Map();
-  scaleAnimStartTime = performance.now();
+  // Capture scale animation state
+  const prevRadii = new Map();
+  for (const n of graphData.nodes) {
+    if (!n.visible) continue;
+    prevRadii.set(n.id, n._animRadius ?? getNodeRadius(n));
+  }
 
+  animScaleStartRadii = new Map();
+  animScaleTargets = new Map();
   for (const n of graphData.nodes) {
     if (!n.visible) continue;
     const startRadius = prevRadii.get(n.id);
     const targetRadius = getNodeRadius(n);
-    scaleAnimStartRadii.set(n.id, startRadius);
-    scaleAnimTargets.set(n.id, targetRadius);
+    animScaleStartRadii.set(n.id, startRadius);
+    animScaleTargets.set(n.id, targetRadius);
     n._animRadius = startRadius;
   }
 
-  scaleAnimFrame = requestAnimationFrame(scaleAnimStep);
+  animFrame = requestAnimationFrame(animStep);
 }
 
-function scaleAnimStep(now) {
-  const elapsed = now - scaleAnimStartTime;
-  const progress = Math.min(elapsed / SCALE_ANIM_DURATION, 1);
-
-  // Ease out cubic (same curve as dim animation for consistency)
+function animStep(now) {
+  const elapsed = now - animStart;
+  const progress = Math.min(elapsed / ANIM_DURATION, 1);
   const ease = 1 - Math.pow(1 - progress, 3);
 
-  for (const n of graphData.nodes) {
-    if (!n.visible) continue;
-    const start = scaleAnimStartRadii.get(n.id) ?? 0;
-    const target = scaleAnimTargets.get(n.id) ?? 0;
-    n._animRadius = start + (target - start) * ease;
+  // Animate dim
+  if (animDimTarget !== null) {
+    currentDim = animDimFrom + (animDimTarget - animDimFrom) * ease;
+  }
+
+  // Animate scale
+  if (animScaleStartRadii) {
+    for (const n of graphData.nodes) {
+      if (!n.visible) continue;
+      const start = animScaleStartRadii.get(n.id) ?? 0;
+      const target = animScaleTargets.get(n.id) ?? 0;
+      n._animRadius = start + (target - start) * ease;
+    }
   }
 
   render();
 
   if (progress < 1) {
-    scaleAnimFrame = requestAnimationFrame(scaleAnimStep);
+    animFrame = requestAnimationFrame(animStep);
   } else {
-    // Animation complete — flush any remaining animated radii to final values
-    for (const n of graphData.nodes) {
-      if (!n.visible) continue;
-      n._animRadius = undefined; // will use getNodeRadius() next time
+    // Cleanup
+    if (animScaleStartRadii) {
+      for (const n of graphData.nodes) {
+        if (!n.visible) continue;
+        n._animRadius = undefined;
+      }
     }
-    scaleAnimFrame = null;
+    if (animDimTarget !== null) {
+      currentDim = animDimTarget;
+    }
+    animFrame = null;
   }
 }
 
@@ -917,7 +931,6 @@ const HOVER_LABEL_DELAY = 300; // ms to hold hover before label appears
 let simulation = null;
 export let sizeMetric = "degree"; // Default sizing metric
 export function setSizeMetric(v) { sizeMetric = v; }
-let dimAnimation = null; // Animation frame for dimming
 let currentDim = 1; // Current dim opacity (1 = full, 0.15 = dimmed)
 
 // Callbacks set by ui.js to avoid circular imports
@@ -936,15 +949,13 @@ export function selectNode(event, node) {
     return;
   }
   selectedNode = node;
-  animateDim(0.15);
-  startScaleAnimation();
+  startAnimation(0.15);
   if (_onSelectNode) _onSelectNode(event, node);
 }
 
 export function deselectNode() {
   selectedNode = null;
-  animateDim(1);
-  startScaleAnimation();
+  startAnimation(1);
   if (_onDeselectNode) _onDeselectNode();
 }
 
@@ -1065,23 +1076,4 @@ export function updateThemeColors() {
   render();
 }
 
-// ─── Dim Animation ───
-export function animateDim(target) {
-  if (dimAnimation) cancelAnimationFrame(dimAnimation);
-  const start = performance.now();
-  const from = currentDim;
-  const duration = 400; // ms
 
-  function step(now) {
-    const elapsed = now - start;
-    const progress = Math.min(elapsed / duration, 1);
-    // Ease out cubic
-    const ease = 1 - Math.pow(1 - progress, 3);
-    currentDim = from + (target - from) * ease;
-    render();
-    if (progress < 1) {
-      dimAnimation = requestAnimationFrame(step);
-    }
-  }
-  dimAnimation = requestAnimationFrame(step);
-}
