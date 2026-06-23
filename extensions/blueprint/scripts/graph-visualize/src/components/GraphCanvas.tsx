@@ -30,6 +30,7 @@ export interface GraphCanvasProps {
   bridge: React.MutableRefObject<IGraphBridge | null>
   onNodeSelect?: (node: any) => void
   onNodeDeselect?: () => void
+  onBridgeReady?: () => void
   className?: string
 }
 
@@ -38,20 +39,16 @@ export interface GraphCanvasProps {
  * The bootstrap.js script loads D3 + graph.js + config.js as native ES modules
  * before the React app mounts, so the wrapper is ready synchronously.
  */
-export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, className }: GraphCanvasProps) {
+export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, onBridgeReady, className }: GraphCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // Store data in a ref so bridge functions always reference current data
   const dataRef = useRef(data)
   useEffect(() => { dataRef.current = data }, [data])
-  // Mark as ready once data is available (no re-run on data changes)
   useEffect(() => {
-    if (data) setReady(true)
-  }, [data])
-
-  useEffect(() => {
-    if (!data) return
+    // Run once on mount — uses dataRef.current which updates via separate effect
+    console.log('[GraphCanvas] Effect running')
 
     let cancelled = false
     setReady(false)
@@ -158,7 +155,29 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
         triggerRender: () => wrapper.renderGraph(),
       }
 
+      console.log('[GraphCanvas] Bridge set')
       setReady(true)
+      onBridgeReady?.()
+
+      // Apply initial filters from URL state
+      const params = new URLSearchParams(window.location.search)
+      const catsParam = params.get('cats')
+      console.log('[GraphCanvas] URL search:', window.location.search, 'catsParam:', catsParam)
+      if (catsParam) {
+        const cats = new Set(catsParam.split(',').map(c => c.trim()).filter(Boolean))
+        console.log('[GraphCanvas] Parsed cats:', [...cats])
+        const visibleIds = new Set<string>()
+        for (const node of dataRef.current.nodes) {
+          const cat = node.typeCat || node.category || 'other'
+          if (cats.has(cat)) visibleIds.add(node.id)
+        }
+        bridge.current?.setVisibility(visibleIds)
+        console.log('[GraphCanvas] Applied initial filters:', visibleIds.size, 'nodes')
+      } else {
+        console.log('[GraphCanvas] No cats param, applying all')
+        const allIds = new Set<string>(dataRef.current.nodes.map((n: any) => n.id))
+        bridge.current?.setVisibility(allIds)
+      }
 
       // Cleanup on unmount (don't null bridge.current — App.tsx needs it)
       return () => {

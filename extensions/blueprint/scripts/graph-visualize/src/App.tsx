@@ -132,26 +132,33 @@ function App() {
     return () => clearTimeout(timer)
   }, [searchTerm])
 
-  // Sync URL on state changes (after initial load)
+  // Sync URL on user interaction
+  const handleCategoryChange = (cat: string, checked: boolean) => {
+    setActiveCategories((prev) => {
+      const next = new Set(prev)
+      checked ? next.add(cat) : next.delete(cat)
+      return next
+    })
+  }
+  const handleSearchChange = (val: string) => {
+    setSearchTerm(val)
+  }
+
+  // Sync URL on user interaction (categories/search)
   useEffect(() => {
     if (!graphData) return
     const params = new URLSearchParams(window.location.search)
-    // cats
     if (activeCategories.size > 0 && activeCategories.size < Object.keys(categories).length) {
       params.set('cats', [...activeCategories].sort().join(','))
     } else {
       params.delete('cats')
     }
-    // q
     if (searchTerm) {
       params.set('q', searchTerm)
     } else {
       params.delete('q')
     }
-    // node (only if different from current)
-    // (node param is handled in handleNodeSelect/handleNodeDeselect)
-    const newURL = `?${params.toString()}`
-    history.replaceState(null, '', newURL)
+    history.replaceState(null, '', `?${params.toString()}`)
   }, [activeCategories, searchTerm, categories, graphData])
 
   // Handle size metric change
@@ -199,11 +206,6 @@ function App() {
     return () => window.removeEventListener('keydown', handler)
   }, [selectedNode, searchTerm])
 
-  // Mark bridge as ready once data is loaded
-  useEffect(() => {
-    if (graphData) setBridgeReady(true)
-  }, [graphData])
-
   // Apply filters once bridge is ready (handles URL state restoration)
   // Uses searchTerm (not debounced) so it works on initial load
   useEffect(() => {
@@ -229,10 +231,16 @@ function App() {
     if (!graphData || !bridgeReady) return
     const params = new URLSearchParams(window.location.search)
     const nodeId = params.get('node')
-    if (!nodeId) return
+    if (!nodeId) {
+      console.log('[App] No node in URL')
+      return
+    }
     const node = graphData.nodes.find((n: any) => n.id === nodeId)
-    if (!node) return
-    console.log('[App] Restoring node from URL:', nodeId)
+    if (!node) {
+      console.log('[App] Node not found:', nodeId, 'total nodes:', graphData.nodes.length)
+      return
+    }
+    console.log('[App] Restoring node from URL:', nodeId, 'found:', !!node)
     // Select the node
     bridgeRef.current?.selectNodeById(nodeId)
   }, [graphData, bridgeReady])
@@ -299,7 +307,7 @@ function App() {
               placeholder="Search nodes... (K)"
               className="pl-9 h-8 text-sm"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               ref={searchInputRef}
             />
           </div>
@@ -336,13 +344,7 @@ function App() {
                     <Checkbox
                       id={`cat-${cat}`}
                       checked={activeCategories.has(cat)}
-                      onCheckedChange={(checked) => {
-                        setActiveCategories((prev) => {
-                          const next = new Set(prev)
-                          checked ? next.add(cat) : next.delete(cat)
-                          return next
-                        })
-                      }}
+                      onCheckedChange={(checked) => handleCategoryChange(cat, checked === true)}
                     />
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
                     <span className="flex-1 truncate">{cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
@@ -528,6 +530,7 @@ function App() {
             bridge={bridgeRef}
             onNodeSelect={handleNodeSelect}
             onNodeDeselect={handleNodeDeselect}
+            onBridgeReady={() => setBridgeReady(true)}
           />
         )}
       </main>
