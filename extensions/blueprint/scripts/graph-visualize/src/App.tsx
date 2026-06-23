@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Label } from '@/components/ui/label'
-import { Search, RotateCcw, Settings, ChevronDown, ZoomIn, ZoomOut } from 'lucide-react'
+import { Search, RotateCcw, Play, Settings, ChevronDown, ZoomIn, ZoomOut } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Switch } from '@/components/ui/switch'
 import { themes, applyTheme } from '@/lib/themes'
@@ -361,6 +361,7 @@ function App() {
         {/* Controls */}
         <div className="absolute top-3 left-3 flex items-start gap-1.5 z-10">
           <label className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 h-8 text-xs font-medium bg-background/90 backdrop-blur border border-input cursor-pointer hover:bg-accent hover:text-accent-foreground">
+            <Play className="h-3.5 w-3.5" />
             Simulation
             <Switch
               checked={simulating}
