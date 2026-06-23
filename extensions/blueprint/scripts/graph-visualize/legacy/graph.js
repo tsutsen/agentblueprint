@@ -921,21 +921,16 @@ export function settleAfterDrag(pinnedNode) {
       simulation = null;
     });
 
-  // Hard tick cap: stop after 60 ticks even if alpha hasn't cooled
-  const maxTicks = 60;
-  let ticks = 0;
-  const originalTick = simulation.tick.bind(simulation);
-  simulation.tick = function () {
-    if (++ticks >= maxTicks) {
+  // Stop after 1s so it doesn't run forever
+  setTimeout(() => {
+    if (simulation) {
       pinnedNode.fx = null;
       pinnedNode.fy = null;
       simulation.stop();
       simulation = null;
       render();
-      return false;
     }
-    return originalTick();
-  };
+  }, 1000);
 }
 
 /**
