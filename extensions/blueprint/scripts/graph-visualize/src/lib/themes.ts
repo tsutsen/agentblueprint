@@ -424,70 +424,70 @@ export const themes: Theme[] = [
     label: "⌘ Netrunner Light",
 
     vars: {
-      "--background": hexToHsl("#eef0f8"),
-      "--foreground": hexToHsl("#101827"),
+      "--background": hexToHsl("#f4f6fc"),
+      "--foreground": hexToHsl("#0a0e1a"),
 
-      "--card": hexToHsl("#f7faff"),
-      "--card-foreground": hexToHsl("#101827"),
+      "--card": hexToHsl("#ffffff"),
+      "--card-foreground": hexToHsl("#0a0e1a"),
 
-      "--popover": hexToHsl("#f7faff"),
-      "--popover-foreground": hexToHsl("#101827"),
+      "--popover": hexToHsl("#ffffff"),
+      "--popover-foreground": hexToHsl("#0a0e1a"),
 
-      "--primary": hexToHsl("#006fa6"),
-      "--primary-foreground": hexToHsl("#eef0f8"),
+      "--primary": hexToHsl("#0088cc"),
+      "--primary-foreground": hexToHsl("#f4f6fc"),
 
-      "--secondary": hexToHsl("#dce6f5"),
-      "--secondary-foreground": hexToHsl("#1a2332"),
+      "--secondary": hexToHsl("#e2eaf5"),
+      "--secondary-foreground": hexToHsl("#0a0e1a"),
 
-      "--muted": hexToHsl("#dce6f5"),
-      "--muted-foreground": hexToHsl("#5f6f86"),
+      "--muted": hexToHsl("#e2eaf5"),
+      "--muted-foreground": hexToHsl("#4a5568"),
 
-      "--accent": hexToHsl("#006fa6"),
-      "--accent-foreground": hexToHsl("#eef0f8"),
+      "--accent": hexToHsl("#0088cc"),
+      "--accent-foreground": hexToHsl("#f4f6fc"),
 
-      "--destructive": hexToHsl("#c0003a"),
+      "--destructive": hexToHsl("#e01535"),
       "--destructive-foreground": hexToHsl("#ffffff"),
 
-      "--border": hexToHsl("#b9c9df"),
+      "--border": hexToHsl("#c8d4e8"),
       "--input": hexToHsl("#c8d4e8"),
 
-      "--ring": hexToHsl("#006fa6"),
+      "--ring": hexToHsl("#0088cc"),
     },
 
     legacyVars: {
-      "--bg": "#eef0f8",
-      "--surface": "#f7faff",
-      "--surface2": "#dce6f5",
+      "--bg": "#f4f6fc",
+      "--surface": "#ffffff",
+      "--surface2": "#e2eaf5",
 
-      "--btn-text": "#101827",
+      "--btn-text": "#0a0e1a",
 
-      "--text": "#101827",
-      "--text-dim": "#5f6f86",
-      "--text-bright": "#050a14",
-      "--text-secondary": "#5f6f86",
+      "--text": "#0a0e1a",
+      "--text-dim": "#4a5568",
+      "--text-bright": "#000000",
+      "--text-secondary": "#4a5568",
 
-      "--accent": "#006fa6",
-      "--accent-text": "#eef0f8",
+      "--accent": "#0088cc",
+      "--accent-text": "#f4f6fc",
 
-      "--accent-glow": "rgba(0,120,160,0.22)",
+      "--accent-glow": "rgba(0,136,204,0.25)",
     },
 
     nodeColors: [
-      "#006fa6",
-      "#c0003a",
-      "#5a7a00",
-      "#b84400",
-      "#6200b3",
-      "#007a4d",
-      "#8c0070",
-      "#7a5c00",
-      "#004f8c",
-      "#a8000a",
-      "#005e8a",
-      "#6b2fa0",
+      "#0088cc",  // electric blue
+      "#e01535",  // vivid red
+      "#22c55e",  // bright green
+      "#f59e0b",  // amber
+      "#8b5cf6",  // violet
+      "#10b981",  // emerald
+      "#ec4899",  // pink
+      "#f97316",  // orange
+      "#06b6d4",  // cyan
+      "#ef4444",  // red
+      "#3b82f6",  // blue
+      "#a855f7",  // purple
     ],
 
-    edgeColor: "rgba(0, 120, 160, 0.35)",
+    edgeColor: "rgba(0, 136, 204, 0.4)",
   },
 ];
 

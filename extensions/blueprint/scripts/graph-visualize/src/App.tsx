@@ -40,16 +40,23 @@ function App() {
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set())
   const [categories, setCategories] = useState<Record<string, { count: number; color: string }>>({})
   const [sizeMetric, setSizeMetric] = useState('degree')
-  const [currentTheme, setCurrentTheme] = useState('default')
+  const [currentTheme, setCurrentTheme] = useState(
+    () => (localStorage.getItem('graph-theme') as any) || 'default'
+  )
   const [sortBy, setSortBy] = useState<'name' | 'degree'>('name')
   const [bridgeReady, setBridgeReady] = useState(false)
   const [simulating, setSimulating] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(300)
 
-  // Apply initial theme
+  // Apply initial theme from localStorage
   useEffect(() => {
     applyTheme(currentTheme)
   }, [])
+
+  // Save theme to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('graph-theme', currentTheme)
+  }, [currentTheme])
 
   const bridgeRef = useRef<IGraphBridge | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
