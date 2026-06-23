@@ -322,7 +322,7 @@ function App() {
                   : extractShortId(node.id, node.type);
                 const catDisplay = node.typeLabel || node.type || node.category || 'unknown';
                 return (
-                  <Tooltip key={node.id} delayDuration={200}>
+                  <Tooltip key={node.id}>
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => bridgeRef.current?.selectNodeById(node.id)}
