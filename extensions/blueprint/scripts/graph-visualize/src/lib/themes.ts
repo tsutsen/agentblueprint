@@ -2,8 +2,9 @@
  * Theme definitions — single source of truth for all theming.
  * Each theme sets:
  *   - shadcn UI variables (--background, --foreground, etc.)
- *   - legacy graph variables (--bg, --surface, --text, --domain, etc.)
- *   - canvas edge variables (--edge-color, --edge-related, etc.)
+ *   - legacy graph variables (--bg, --surface, --text, etc.)
+ *   - 12 node colors that cycle for node fill
+ *   - single edge color (rgba)
  */
 
 export interface Theme {
@@ -13,8 +14,10 @@ export interface Theme {
   vars: Record<string, string>
   // Legacy graph CSS variables (hex/rgba) — used by graph.css
   legacyVars: Record<string, string>
-  // Canvas edge variables (rgba)
-  canvasVars: Record<string, string>
+  // 12 node colors that cycle
+  nodeColors: string[]
+  // Single edge color (rgba)
+  edgeColor: string
 }
 
 function hexToHsl(hex: string): string {
@@ -72,18 +75,13 @@ export const themes: Theme[] = [
       '--accent': '#000000',
       '--accent-text': '#ffffff',
       '--accent-glow': 'rgba(0, 0, 0, 0.1)',
-      '--domain': '#c62828',
-      '--technical': '#1565c0',
-      '--security': '#e65100',
-      '--ui': '#6a1b9a',
-      '--spec': '#00695c',
     },
-    canvasVars: {
-      '--edge-color': 'rgba(148, 163, 184, 0.4)',
-      '--edge-related': 'rgba(148, 163, 184, 0.4)',
-      '--edge-spec': 'rgba(52, 211, 153, 0.4)',
-      '--edge-cross': 'rgba(255, 170, 0, 0.3)',
-    },
+    nodeColors: [
+      '#3b82f6', '#ef4444', '#10b981', '#f59e0b',
+      '#8b5cf6', '#ec4899', '#06b6d4', '#f97316',
+      '#6366f1', '#14b8a6', '#e11d48', '#84cc16',
+    ],
+    edgeColor: 'rgba(148, 163, 184, 0.4)',
   },
   {
     key: 'dark',
@@ -121,18 +119,13 @@ export const themes: Theme[] = [
       '--accent': '#ffffff',
       '--accent-text': '#0a0a0a',
       '--accent-glow': 'rgba(255, 255, 255, 0.1)',
-      '--domain': '#f472b6',
-      '--technical': '#38bdf8',
-      '--security': '#fbbf24',
-      '--ui': '#a78bfa',
-      '--spec': '#34d399',
     },
-    canvasVars: {
-      '--edge-color': 'rgba(148, 163, 184, 0.4)',
-      '--edge-related': 'rgba(200, 200, 200, 0.3)',
-      '--edge-spec': 'rgba(100, 200, 100, 0.2)',
-      '--edge-cross': 'rgba(255, 170, 0, 0.2)',
-    },
+    nodeColors: [
+      '#60a5fa', '#f87171', '#34d399', '#fbbf24',
+      '#a78bfa', '#f472b6', '#22d3ee', '#fb923c',
+      '#818cf8', '#2dd4bf', '#fb7185', '#a3e635',
+    ],
+    edgeColor: 'rgba(148, 163, 184, 0.4)',
   },
   {
     key: 'gruvbox',
@@ -170,18 +163,13 @@ export const themes: Theme[] = [
       '--accent': '#fabd2f',
       '--accent-text': '#1a1a1a',
       '--accent-glow': 'rgba(250, 189, 47, 0.15)',
-      '--domain': '#ff6b6b',
-      '--technical': '#5c93d6',
-      '--security': '#d4943a',
-      '--ui': '#d3869b',
-      '--spec': '#ce93d8',
     },
-    canvasVars: {
-      '--edge-color': 'rgba(121, 134, 203, 0.3)',
-      '--edge-related': 'rgba(121, 134, 203, 0.3)',
-      '--edge-spec': 'rgba(77, 182, 172, 0.3)',
-      '--edge-cross': 'rgba(255, 183, 77, 0.3)',
-    },
+    nodeColors: [
+      '#83a598', '#fb4934', '#b8bb26', '#fabd2f',
+      '#d3869b', '#fe8019', '#8ec07c', '#ebdbb2',
+      '#7cafc2', '#d65d0e', '#cc241d', '#98971a',
+    ],
+    edgeColor: 'rgba(121, 134, 203, 0.3)',
   },
   {
     key: 'gruvbox-light',
@@ -219,18 +207,13 @@ export const themes: Theme[] = [
       '--accent': '#d79921',
       '--accent-text': '#1a1a1a',
       '--accent-glow': 'rgba(215, 153, 33, 0.15)',
-      '--domain': '#9d0006',
-      '--technical': '#0d47a1',
-      '--security': '#bf360c',
-      '--ui': '#4a148c',
-      '--spec': '#01579b',
     },
-    canvasVars: {
-      '--edge-color': 'rgba(121, 134, 203, 0.3)',
-      '--edge-related': 'rgba(21, 101, 192, 0.3)',
-      '--edge-spec': 'rgba(0, 77, 64, 0.3)',
-      '--edge-cross': 'rgba(216, 67, 21, 0.3)',
-    },
+    nodeColors: [
+      '#047587', '#b91c1c', '#15803d', '#a16207',
+      '#6d28d9', '#be185d', '#0e7490', '#c2410c',
+      '#4f46e5', '#0f766e', '#9f1239', '#4d7c0f',
+    ],
+    edgeColor: 'rgba(121, 134, 203, 0.3)',
   },
   {
     key: 'neon',
@@ -268,18 +251,13 @@ export const themes: Theme[] = [
       '--accent': '#00ffcc',
       '--accent-text': '#0d0221',
       '--accent-glow': 'rgba(0, 255, 204, 0.2)',
-      '--domain': '#ff4081',
-      '--technical': '#00bcd4',
-      '--security': '#ff8a50',
-      '--ui': '#7c4dff',
-      '--spec': '#9fa8da',
     },
-    canvasVars: {
-      '--edge-color': 'rgba(68, 138, 255, 0.3)',
-      '--edge-related': 'rgba(68, 138, 255, 0.3)',
-      '--edge-spec': 'rgba(0, 229, 255, 0.3)',
-      '--edge-cross': 'rgba(255, 193, 7, 0.3)',
-    },
+    nodeColors: [
+      '#00ffcc', '#ff4081', '#00e676', '#ffea00',
+      '#7c4dff', '#ff6e40', '#00b0ff', '#ff9100',
+      '#651fff', '#1de9b6', '#f50057', '#76ff03',
+    ],
+    edgeColor: 'rgba(68, 138, 255, 0.3)',
   },
   {
     key: 'retro',
@@ -317,18 +295,13 @@ export const themes: Theme[] = [
       '--accent': '#d6357f',
       '--accent-text': '#1a1a1a',
       '--accent-glow': 'rgba(255, 105, 180, 0.2)',
-      '--domain': '#c62828',
-      '--technical': '#1565c0',
-      '--security': '#bf360c',
-      '--ui': '#6a1b9a',
-      '--spec': '#00695c',
     },
-    canvasVars: {
-      '--edge-color': 'rgba(155, 89, 182, 0.3)',
-      '--edge-related': 'rgba(155, 89, 182, 0.3)',
-      '--edge-spec': 'rgba(52, 211, 153, 0.3)',
-      '--edge-cross': 'rgba(255, 105, 180, 0.3)',
-    },
+    nodeColors: [
+      '#6a0dad', '#c62828', '#2e7d32', '#f57f17',
+      '#4a148c', '#ad1457', '#006064', '#e65100',
+      '#1a237e', '#004d40', '#880e4f', '#33691e',
+    ],
+    edgeColor: 'rgba(155, 89, 182, 0.3)',
   },
   {
     key: 'netrunner',
@@ -366,18 +339,13 @@ export const themes: Theme[] = [
       '--accent': '#fcee0a',
       '--accent-text': '#0a0a12',
       '--accent-glow': 'rgba(252, 238, 10, 0.2)',
-      '--domain': '#ff003c',
-      '--technical': '#00f0ff',
-      '--security': '#ff6600',
-      '--ui': '#b026ff',
-      '--spec': '#00ff9d',
     },
-    canvasVars: {
-      '--edge-color': 'rgba(0, 240, 255, 0.4)',
-      '--edge-related': 'rgba(0, 240, 255, 0.3)',
-      '--edge-spec': 'rgba(0, 255, 157, 0.3)',
-      '--edge-cross': 'rgba(255, 0, 60, 0.3)',
-    },
+    nodeColors: [
+      '#fcee0a', '#ff003c', '#00f0ff', '#ff6600',
+      '#b026ff', '#00ff9d', '#ff4081', '#00e676',
+      '#ffea00', '#7c4dff', '#ff9100', '#651fff',
+    ],
+    edgeColor: 'rgba(0, 240, 255, 0.4)',
   },
   {
     key: 'netrunner-light',
@@ -415,18 +383,13 @@ export const themes: Theme[] = [
       '--accent': '#fcee0a',
       '--accent-text': '#0a0a12',
       '--accent-glow': 'rgba(252, 238, 10, 0.15)',
-      '--domain': '#cc0030',
-      '--technical': '#0099aa',
-      '--security': '#cc5500',
-      '--ui': '#7a1acc',
-      '--spec': '#00aa66',
     },
-    canvasVars: {
-      '--edge-color': 'rgba(0, 153, 170, 0.4)',
-      '--edge-related': 'rgba(0, 153, 170, 0.3)',
-      '--edge-spec': 'rgba(0, 170, 102, 0.3)',
-      '--edge-cross': 'rgba(204, 0, 48, 0.3)',
-    },
+    nodeColors: [
+      '#0099aa', '#cc0030', '#006688', '#cc5500',
+      '#7a1acc', '#00aa66', '#990033', '#008844',
+      '#8800aa', '#006644', '#cc0066', '#004488',
+    ],
+    edgeColor: 'rgba(0, 153, 170, 0.4)',
   },
 ]
 
@@ -447,9 +410,11 @@ export function applyTheme(themeKey: string): void {
   for (const [key, value] of Object.entries(theme.legacyVars)) {
     root.style.setProperty(key, value)
   }
-  // Apply canvas edge variables
-  for (const [key, value] of Object.entries(theme.canvasVars)) {
-    root.style.setProperty(key, value)
+  // Apply edge color
+  root.style.setProperty('--edge-color', theme.edgeColor)
+  // Apply 12 node colors
+  for (let i = 0; i < 12; i++) {
+    root.style.setProperty(`--node-color-${i}`, theme.nodeColors[i])
   }
   // Toggle dark class for compatibility
   const darkKeys = ['dark', 'gruvbox', 'neon', 'netrunner']

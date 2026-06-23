@@ -1,4 +1,4 @@
-import { getEdgeColor, resetEdgeColorCache, getTypeColor, resetTypeColorCache } from './config.js';
+import { getEdgeColor, resetEdgeColorCache } from './config.js';
 
 // ─── Graph State ───
 export let graphData = null;
@@ -333,6 +333,7 @@ export function initGraph() {
     const radius = 200 + Math.random() * 200;
     n.x = width / 2 + radius * Math.cos(angle);
     n.y = height / 2 + radius * Math.sin(angle);
+    n._nodeIndex = i;
     n.vx = 0;
     n.vy = 0;
   });
@@ -826,7 +827,13 @@ function getNodeRadius(d) {
 }
 
 function getNodeColor(d) {
-  if (d.type) return getTypeColor(d.type);
+  const idx = d._nodeIndex ?? 0;
+  const cssVar = `--node-color-${idx % 12}`;
+  try {
+    const color = getComputedStyle(document.documentElement)
+      .getPropertyValue(cssVar).trim();
+    if (color) return color;
+  } catch { /* fallback */ }
   return "#94a3b8";
 }
 
@@ -977,7 +984,6 @@ export function hasSimulation() {
 // ─── Theme Update ───
 export function updateThemeColors() {
   resetEdgeColorCache();
-  resetTypeColorCache();
   render();
 }
 
