@@ -370,7 +370,6 @@ export function initGraph() {
   canvas.addEventListener("mousemove", onMouseMove);
   canvas.addEventListener("mouseup", onMouseUp);
   canvas.addEventListener("wheel", onWheel, { passive: false });
-  canvas.addEventListener("click", onClick);
 
   // ── Render ──
   render();
@@ -801,10 +800,6 @@ function onMouseUp(event) {
   // If wasPanning, preserve selection (don't deselect)
 }
 
-function onClick(event) {
-  // Handled in onMouseUp
-}
-
 function onWheel(event) {
   event.preventDefault();
   const rect = canvas.getBoundingClientRect();
@@ -919,7 +914,6 @@ let hoveredNode = null;
 let hoverLabelNode = null; // Node whose label is forced visible by hover
 let hoverLabelTimeout = null; // Timer for delayed label show
 const HOVER_LABEL_DELAY = 300; // ms to hold hover before label appears
-let isSimulating = false;
 let simulation = null;
 export let sizeMetric = "degree"; // Default sizing metric
 export function setSizeMetric(v) { sizeMetric = v; }

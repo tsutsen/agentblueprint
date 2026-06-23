@@ -46,7 +46,4 @@ export function resetEdgeColorCache() {
   _edgeColorCache = null;
 }
 
-// Drag physics constants
-export const DRAG_FRICTION = 0.6;
-export const DRAG_SMOOTHING = 0.3;
-export const SETTLE_FRICTION = 0.8;
+

@@ -24,8 +24,6 @@ import {
 } from './graph.js';
 import { CATEGORY_COLORS } from './config.js';
 
-let _pendingNodeId = null;
-
 // ─── URL State Sync ───
 function updateURL() {
   const params = new URLSearchParams();
@@ -60,7 +58,7 @@ export function initUI() {
   setNodeSelectCallbacks(handleNodeSelected, handleNodeDeselected);
 
   // Load state from URL before building filters
-  _pendingNodeId = loadURLState();
+  loadURLState();
 
   document.getElementById('project-name').textContent =
     `${graphData.project} · v${graphData.version}`;
