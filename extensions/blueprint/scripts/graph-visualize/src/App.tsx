@@ -189,6 +189,11 @@ function App() {
               return `${graphData.nodes.length} nodes, ${graphData.edges.length} edges, ${orphans} orphans`;
             })() : 'Loading...'}
           </p>
+          {graphData && (() => {
+            const connectedIds = new Set(graphData.edges.flatMap(e => [e.source, e.target]));
+            const orphans = graphData.nodes.filter(n => !connectedIds.has(n.id)).length;
+            return <p className="text-xs text-muted-foreground mt-0.5">{orphans} orphans</p>;
+          })()}
         </div>
 
         {/* Search */}
