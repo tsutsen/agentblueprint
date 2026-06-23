@@ -263,33 +263,47 @@ const SIZE_METRIC_KEYS = {
   interfacePressure: 'interfacePressure',
 };
 
-// ─── Init graph ───
-export function initGraph() {
+// ─── Configuration ───
+const DEFAULT_STATIC_LAYOUT_TICKS = 100;
+
+// ─── Canvas Initialization ───
+/**
+ * Sets up the canvas element: sizing, DPI scaling, and context.
+ */
+function initCanvas() {
   const container = document.getElementById("graph-container");
   width = container.clientWidth;
   height = container.clientHeight;
 
   canvas = document.getElementById("graph-canvas");
-
   if (!canvas) {
     console.error("Canvas element not found!");
-    return;
+    return false;
   }
   canvas.width = width * window.devicePixelRatio;
   canvas.height = height * window.devicePixelRatio;
   canvas.style.width = width + "px";
   canvas.style.height = height + "px";
   ctx = canvas.getContext("2d");
-
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  return true;
+}
 
-  // ── Pre-resolve edges ──
+// ─── Layout Initialization ───
+/**
+ * Pre-resolves edge references, computes initial size ranges,
+ * and runs a static force-directed layout.
+ * @param {number} [maxStaticTicks] - Number of ticks for static layout (default: 100).
+ */
+function initLayout(maxStaticTicks = DEFAULT_STATIC_LAYOUT_TICKS) {
+  // Pre-resolve edges — convert string IDs to node objects
   const nodeMap = new Map();
-  // Initialize visible for all nodes
-  for (const n of graphData.nodes) n.visible = true;
-  for (const n of graphData.nodes) nodeMap.set(n.id, n);
+  for (const n of graphData.nodes) {
+    n.visible = true;
+    nodeMap.set(n.id, n);
+  }
 
-  // ── Compute dynamic size ranges (initial only) ──
+  // Compute dynamic size ranges (initial only)
   const _initMetrics = [
     "blastRadius",
     "degree",
@@ -307,12 +321,17 @@ export function initGraph() {
   for (let i = 0; i < _initMetrics.length; i++) {
     const key = _initMetrics[i];
     const rkey = rangeKeys[i];
-    const values = graphData.nodes.map((n) => n[key] || 0).filter((v) => v > 0);
-    if (values.length > 0) sizeRange[rkey] = [0, Math.max(...values)];
+    const values = graphData.nodes
+      .map((n) => n[key] || 0)
+      .filter((v) => v > 0);
+    if (values.length > 0) {
+      sizeRange[rkey] = [0, Math.max(...values)];
+    }
   }
+
   validEdges = [];
   for (const e of graphData.edges) {
-    e.visible = true; // Initialize edge visibility
+    e.visible = true;
     const srcId = typeof e.source === "object" ? e.source.id : e.source;
     const tgtId = typeof e.target === "object" ? e.target.id : e.target;
     const srcNode = nodeMap.get(srcId);
@@ -323,7 +342,7 @@ export function initGraph() {
     validEdges.push(e);
   }
 
-  // ── Static layout — force-directed once ──
+  // Initialize node positions in a circle
   graphData.nodes.forEach((n, i) => {
     const angle = (2 * Math.PI * i) / graphData.nodes.length;
     const radius = 200 + Math.random() * 200;
@@ -333,6 +352,7 @@ export function initGraph() {
     n.vy = 0;
   });
 
+  // Static force-directed layout
   const linkForce = d3.forceLink(validEdges).distance(120).strength(0.05);
   const chargeForce = d3.forceManyBody().strength(-150);
   const centerForce = d3.forceCenter(width / 2, height / 2).strength(0.02);
@@ -348,20 +368,34 @@ export function initGraph() {
     .alphaDecay(0.1)
     .velocityDecay(0.4);
 
-  for (let i = 0; i < 200; i++) simulation.tick();
+  for (let i = 0; i < maxStaticTicks; i++) simulation.tick();
   simulation.stop();
+}
 
-  // ── Initial render ──
-
-  render();
-
-  // ── Event listeners ──
+// ─── Event Listener Registration ───
+/**
+ * Registers mouse and wheel event listeners on the canvas.
+ */
+function initEvents() {
   canvas.addEventListener("mousedown", onMouseDown);
   canvas.addEventListener("mousemove", onMouseMove);
   canvas.addEventListener("mouseup", onMouseUp);
   canvas.addEventListener("wheel", onWheel, { passive: false });
+}
 
-  // ── Render ──
+// ─── Public API ───
+/**
+ * Initialize the graph visualization.
+ * Orchestrates canvas setup, layout computation, event binding, and first render.
+ * @param {object} [options] - Optional configuration.
+ * @param {number} [options.staticLayoutTicks] - Ticks for static layout (default: 100).
+ */
+export function initGraph(options = {}) {
+  const maxStaticTicks = options?.staticLayoutTicks ?? DEFAULT_STATIC_LAYOUT_TICKS;
+
+  if (!initCanvas()) return;
+  initLayout(maxStaticTicks);
+  initEvents();
   render();
 
   const overlay = document.getElementById("loading-overlay");
