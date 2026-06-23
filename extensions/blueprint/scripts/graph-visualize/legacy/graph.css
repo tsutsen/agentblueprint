@@ -109,11 +109,6 @@
   .filter-dot {
     width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
   }
-  .filter-dot-domain { background: var(--domain); }
-  .filter-dot-technical { background: var(--technical); }
-  .filter-dot-security { background: var(--security); }
-  .filter-dot-ui { background: var(--ui); }
-  .filter-dot-spec { background: var(--spec); }
   .filter-count {
     margin-left: auto; font-size: 11px; color: var(--text-dim);
     font-family: 'JetBrains Mono', monospace;
