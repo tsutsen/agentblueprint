@@ -21,7 +21,7 @@ import {
   selectNode as graphSelectNode,
   deselectNode as graphDeselectNode,
 } from './graph.js';
-import { CATEGORY_COLORS } from './config.js';
+import { getCategoryColor } from './config.js';
 
 // ─── Init UI ───
 export function initUI() {
@@ -45,7 +45,7 @@ export function initUI() {
     div.innerHTML = `
       <input type="checkbox" data-category="${cat}">
       <span>${label}</span>
-      <div class="filter-dot" style="background: ${CATEGORY_COLORS[cat] || '#94a3b8'}"></div>
+      <div class="filter-dot" style="background: ${getCategoryColor(cat)}"></div>
       <span class="filter-count">${count}</span>`;
     const cb = div.querySelector('input');
     cb.checked = activeCategories.has(cat);

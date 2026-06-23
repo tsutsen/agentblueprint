@@ -1,4 +1,4 @@
-import { getEdgeColor, resetEdgeColorCache, TYPE_COLORS } from './config.js';
+import { getEdgeColor, resetEdgeColorCache, getTypeColor, resetTypeColorCache } from './config.js';
 
 // ─── Graph State ───
 export let graphData = null;
@@ -826,7 +826,7 @@ function getNodeRadius(d) {
 }
 
 function getNodeColor(d) {
-  if (d.type && TYPE_COLORS[d.type]) return TYPE_COLORS[d.type];
+  if (d.type) return getTypeColor(d.type);
   return "#94a3b8";
 }
 
@@ -977,6 +977,7 @@ export function hasSimulation() {
 // ─── Theme Update ───
 export function updateThemeColors() {
   resetEdgeColorCache();
+  resetTypeColorCache();
   render();
 }
 
