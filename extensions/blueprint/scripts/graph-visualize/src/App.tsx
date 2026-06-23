@@ -29,10 +29,8 @@ function extractShortId(id: string, type?: string): string {
 // ─── Size Metrics ───
 const SIZE_METRICS = [
   { key: 'degree', label: 'Degree' },
-  { key: 'type', label: 'Type' },
   { key: 'blast', label: 'Blast Radius' },
   { key: 'risk', label: 'Risk Score' },
-  { key: 'centrality', label: 'Centrality' },
 ]
 
 function App() {
