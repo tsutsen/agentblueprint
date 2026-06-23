@@ -42,13 +42,12 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
   const containerRef = useRef<HTMLDivElement>(null)
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Store data in a ref so bridge functions always reference current data
+  const dataRef = useRef(data)
+  useEffect(() => { dataRef.current = data }, [data])
 
   useEffect(() => {
-    if (!data) {
-      console.log('[GraphCanvas] No data, skipping')
-      return
-    }
-    console.log('[GraphCanvas] Effect running, data:', !!data)
+    if (!data) return
 
     let cancelled = false
     setReady(false)
@@ -62,7 +61,7 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
       }
 
       // Set data and callbacks
-      wrapper.setGraphData(data)
+      wrapper.setGraphData(dataRef.current)
       wrapper.setNodeSelectCallbacks(
         (_event: any, node: any) => onNodeSelect?.(node),
         () => onNodeDeselect?.()
@@ -91,10 +90,9 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
       resizeObserver.observe(container)
 
       // Create and expose the bridge
-      console.log('[GraphCanvas] Creating bridge, current:', bridge.current)
       bridge.current = {
         setVisibility: (visibleIds: Set<string>) => {
-          for (const n of data.nodes) {
+          for (const n of dataRef.current.nodes) {
             n.visible = visibleIds.has(n.id)
           }
           wrapper.startAnimation(null)
@@ -111,7 +109,7 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
           wrapper.renderGraph()
         },
         selectNodeById: (id: string) => {
-          const node = data.nodes.find((n: any) => n.id === id)
+          const node = dataRef.current.nodes.find((n: any) => n.id === id)
           if (node) {
             wrapper.setSelectedNode(node)
             wrapper.startAnimation(0.15)
@@ -157,7 +155,6 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
       }
 
       setReady(true)
-      console.log('[GraphCanvas] Bridge set, bridge.current:', bridge.current, 'ready:', ready)
 
       // Cleanup on unmount (don't null bridge.current — App.tsx needs it)
       return () => {
