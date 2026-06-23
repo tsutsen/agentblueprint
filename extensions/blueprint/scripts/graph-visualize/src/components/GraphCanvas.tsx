@@ -45,6 +45,10 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
   // Store data in a ref so bridge functions always reference current data
   const dataRef = useRef(data)
   useEffect(() => { dataRef.current = data }, [data])
+  // Mark as ready once data is available (no re-run on data changes)
+  useEffect(() => {
+    if (data) setReady(true)
+  }, [data])
 
   useEffect(() => {
     if (!data) return
@@ -168,7 +172,7 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
       cancelled = true
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data])
+  }, [])
 
   if (error) {
     return (
