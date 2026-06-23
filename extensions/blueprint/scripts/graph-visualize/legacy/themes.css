@@ -183,3 +183,58 @@ body.theme-retro-light .category-badge-technical { background: rgba(0, 255, 0, 0
 body.theme-retro-light .category-badge-security { background: rgba(255, 165, 0, 0.13) !important; }
 body.theme-retro-light .category-badge-ui { background: rgba(0, 0, 255, 0.13) !important; }
 body.theme-retro-light .category-badge-spec { background: rgba(139, 0, 255, 0.13) !important; }
+
+/* ─── Netrunner Theme (Cyberpunk 2077) ─── */
+body.theme-netrunner :root {
+  --bg: #0a0a12;
+  --surface: #12121f;
+  --surface2: #1a1a2e;
+  --btn-text: #fcee0a;
+  --border: #2a2a4a;
+  --text: #e0e0ff;
+  --text-dim: #8888aa;
+  --text-bright: #ffffff;
+  --text-secondary: var(--text-dim);
+  --accent: #fcee0a;
+  --accent-text: #0a0a12;
+  --accent-glow: rgba(252, 238, 10, 0.2);
+  --domain: #ff003c;
+  --technical: #00f0ff;
+  --security: #ff6600;
+  --ui: #b026ff;
+  --spec: #00ff9d;
+  --edge-related: rgba(0, 240, 255, 0.3);
+  --edge-spec: rgba(0, 255, 157, 0.3);
+  --edge-cross: rgba(255, 0, 60, 0.3);
+  --edge-color: rgba(0, 240, 255, 0.4);
+}
+body.theme-netrunner #detail-panel {
+  background: #12121f !important;
+  border-color: #2a2a4a !important;
+  box-shadow: 0 0 20px rgba(252, 238, 10, 0.05);
+}
+body.theme-netrunner .node-label {
+  stroke: #0a0a12;
+  stroke-width: 2px;
+}
+body.theme-netrunner .category-badge-domain { background: rgba(255, 0, 60, 0.15) !important; color: #ff003c !important; }
+body.theme-netrunner .category-badge-technical { background: rgba(0, 240, 255, 0.15) !important; color: #00f0ff !important; }
+body.theme-netrunner .category-badge-security { background: rgba(255, 102, 0, 0.15) !important; color: #ff6600 !important; }
+body.theme-netrunner .category-badge-ui { background: rgba(176, 38, 255, 0.15) !important; color: #b026ff !important; }
+body.theme-netrunner .category-badge-spec { background: rgba(0, 255, 157, 0.15) !important; color: #00ff9d !important; }
+
+/* Subtle neon glow effects */
+body.theme-netrunner #graph-container {
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.5);
+}
+body.theme-netrunner .dropdown-menu {
+  box-shadow: 0 0 15px rgba(252, 238, 10, 0.1);
+}
+body.theme-netrunner .loading-spinner {
+  border-color: var(--border);
+  border-top-color: var(--accent);
+}
+body.theme-netrunner .filter-item input[type="checkbox"]:checked {
+  background: var(--accent);
+  box-shadow: 0 0 6px rgba(252, 238, 10, 0.4);
+}
