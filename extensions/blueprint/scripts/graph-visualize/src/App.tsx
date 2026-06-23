@@ -201,20 +201,26 @@ function App() {
       return (a.term || a.label || a.id).localeCompare(b.term || b.label || b.id)
     }) || []
 
-  // Compute connections for selected node
+  // Compute connections for selected node (deduplicated by neighbor id)
   const connections = selectedNode
-    ? graphData?.edges
-        ?.filter((e: any) => e.source?.id === selectedNode.id || e.target?.id === selectedNode.id)
-        .map((e: any) => {
-          const neighbor = e.source?.id === selectedNode.id ? e.target : e.source
-          return {
-            id: neighbor.id,
-            label: neighbor.term || neighbor.label || neighbor.id,
-            type: neighbor.typeLabel || neighbor.type || neighbor.category || 'unknown',
-            edgeType: e.type || 'related',
-          }
-        })
-        .sort((a: any, b: any) => a.type.localeCompare(b.type))
+    ? (() => {
+        const seen = new Map<string, any>()
+        graphData?.edges
+          ?.filter((e: any) => e.source?.id === selectedNode.id || e.target?.id === selectedNode.id)
+          .forEach((e: any) => {
+            const neighbor = e.source?.id === selectedNode.id ? e.target : e.source
+            const key = neighbor.id
+            if (!seen.has(key)) {
+              seen.set(key, {
+                id: neighbor.id,
+                label: neighbor.term || neighbor.label || neighbor.id,
+                type: neighbor.typeLabel || neighbor.type || neighbor.category || 'unknown',
+                edgeType: e.type || 'related',
+              })
+            }
+          })
+        return [...seen.values()].sort((a: any, b: any) => a.type.localeCompare(b.type))
+      })()
     : []
 
   return (
