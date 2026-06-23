@@ -370,124 +370,124 @@ export const themes: Theme[] = [
     key: "netrunner",
     label: "⌘ Netrunner",
     vars: {
-      "--background": hexToHsl("#080810"),
-      "--foreground": hexToHsl("#e0e0ff"),
-      "--card": hexToHsl("#12121f"),
-      "--card-foreground": hexToHsl("#e0e0ff"),
-      "--popover": hexToHsl("#12121f"),
-      "--popover-foreground": hexToHsl("#e0e0ff"),
-      "--primary": hexToHsl("#00dcff"),
-      "--primary-foreground": hexToHsl("#080810"),
-      "--secondary": hexToHsl("#1a1a2e"),
-      "--secondary-foreground": hexToHsl("#00dcff"),
-      "--muted": hexToHsl("#1a1a2e"),
-      "--muted-foreground": hexToHsl("#8888aa"),
-      "--accent": hexToHsl("#00dcff"),
-      "--accent-foreground": hexToHsl("#080810"),
-      "--destructive": hexToHsl("#ff2d6b"),
-      "--destructive-foreground": hexToHsl("#080810"),
-      "--border": hexToHsl("#2a2a4a"),
-      "--input": hexToHsl("#2a2a4a"),
-      "--ring": hexToHsl("#00dcff"),
+      "--background": hexToHsl("#0A0F1F"),
+      "--foreground": hexToHsl("#F5F7FA"),
+      "--card": hexToHsl("#121830"),
+      "--card-foreground": hexToHsl("#F5F7FA"),
+      "--popover": hexToHsl("#121830"),
+      "--popover-foreground": hexToHsl("#F5F7FA"),
+      "--primary": hexToHsl("#00F0FF"),
+      "--primary-foreground": hexToHsl("#0A0F1F"),
+      "--secondary": hexToHsl("#1a2040"),
+      "--secondary-foreground": hexToHsl("#00F0FF"),
+      "--muted": hexToHsl("#1a2040"),
+      "--muted-foreground": hexToHsl("#8899aa"),
+      "--accent": hexToHsl("#00F0FF"),
+      "--accent-foreground": hexToHsl("#0A0F1F"),
+      "--destructive": hexToHsl("#FF3131"),
+      "--destructive-foreground": hexToHsl("#F5F7FA"),
+      "--border": hexToHsl("#2a3050"),
+      "--input": hexToHsl("#2a3050"),
+      "--ring": hexToHsl("#00F0FF"),
     },
     legacyVars: {
-      "--bg": "#080810",
-      "--surface": "#12121f",
-      "--surface2": "#1a1a2e",
-      "--btn-text": "#00dcff",
-      "--text": "#e0e0ff",
-      "--text-dim": "#8888aa",
-      "--text-bright": "#ffffff",
-      "--text-secondary": "#8888aa",
-      "--accent": "#00dcff",
-      "--accent-text": "#080810",
-      "--accent-glow": "rgba(0, 220, 255, 0.2)",
+      "--bg": "#0A0F1F",
+      "--surface": "#121830",
+      "--surface2": "#1a2040",
+      "--btn-text": "#00F0FF",
+      "--text": "#F5F7FA",
+      "--text-dim": "#8899aa",
+      "--text-bright": "#FFFFFF",
+      "--text-secondary": "#8899aa",
+      "--accent": "#00F0FF",
+      "--accent-text": "#0A0F1F",
+      "--accent-glow": "rgba(0, 240, 255, 0.2)",
     },
     nodeColors: [
-      "#00dcff",
-      "#ff2d6b",
-      "#c8ff00",
-      "#ff6b00",
-      "#a020f0",
-      "#00ff9d",
-      "#ff9fff",
-      "#ffcc00",
-      "#0af0a0",
-      "#ff4444",
-      "#4db8ff",
-      "#e040fb",
+      "#FCEE0A",  // signature yellow
+      "#FF2A6D",  // magenta
+      "#00F0FF",  // cyan
+      "#FF3131",  // red
+      "#9D4EDD",  // purple
+      "#00FF9D",  // neon green
+      "#FF6B6B",  // coral
+      "#FFAA00",  // orange
+      "#00CCDD",  // teal
+      "#FF4444",  // bright red
+      "#4DB8FF",  // sky blue
+      "#E040FB",  // pink-purple
     ],
-    edgeColor: "rgba(0, 220, 255, 0.35)",
+    edgeColor: "rgba(0, 240, 255, 0.35)",
   },
   {
     key: "netrunner-light",
     label: "⌘ Netrunner Light",
 
     vars: {
-      "--background": hexToHsl("#fef3c7"),
-      "--foreground": hexToHsl("#1a1a2e"),
+      "--background": hexToHsl("#0A0F1F"),
+      "--foreground": hexToHsl("#F5F7FA"),
 
-      "--card": hexToHsl("#fffbeb"),
-      "--card-foreground": hexToHsl("#1a1a2e"),
+      "--card": hexToHsl("#121830"),
+      "--card-foreground": hexToHsl("#F5F7FA"),
 
-      "--popover": hexToHsl("#fffbeb"),
-      "--popover-foreground": hexToHsl("#1a1a2e"),
+      "--popover": hexToHsl("#121830"),
+      "--popover-foreground": hexToHsl("#F5F7FA"),
 
-      "--primary": hexToHsl("#f59e0b"),
-      "--primary-foreground": hexToHsl("#1a1a2e"),
+      "--primary": hexToHsl("#00F0FF"),
+      "--primary-foreground": hexToHsl("#0A0F1F"),
 
-      "--secondary": hexToHsl("#fef3c7"),
-      "--secondary-foreground": hexToHsl("#1a1a2e"),
+      "--secondary": hexToHsl("#1a2040"),
+      "--secondary-foreground": hexToHsl("#00F0FF"),
 
-      "--muted": hexToHsl("#fef3c7"),
-      "--muted-foreground": hexToHsl("#4a4a5a"),
+      "--muted": hexToHsl("#1a2040"),
+      "--muted-foreground": hexToHsl("#8899aa"),
 
-      "--accent": hexToHsl("#f59e0b"),
-      "--accent-foreground": hexToHsl("#1a1a2e"),
+      "--accent": hexToHsl("#FCEE0A"),
+      "--accent-foreground": hexToHsl("#0A0F1F"),
 
-      "--destructive": hexToHsl("#e01535"),
-      "--destructive-foreground": hexToHsl("#ffffff"),
+      "--destructive": hexToHsl("#FF3131"),
+      "--destructive-foreground": hexToHsl("#F5F7FA"),
 
-      "--border": hexToHsl("#e5d98a"),
-      "--input": hexToHsl("#e5d98a"),
+      "--border": hexToHsl("#2a3050"),
+      "--input": hexToHsl("#2a3050"),
 
-      "--ring": hexToHsl("#f59e0b"),
+      "--ring": hexToHsl("#00F0FF"),
     },
 
     legacyVars: {
-      "--bg": "#fef3c7",
-      "--surface": "#fffbeb",
-      "--surface2": "#fef3c7",
+      "--bg": "#0A0F1F",
+      "--surface": "#121830",
+      "--surface2": "#1a2040",
 
-      "--btn-text": "#1a1a2e",
+      "--btn-text": "#FCEE0A",
 
-      "--text": "#1a1a2e",
-      "--text-dim": "#4a4a5a",
-      "--text-bright": "#000000",
-      "--text-secondary": "#4a4a5a",
+      "--text": "#F5F7FA",
+      "--text-dim": "#8899aa",
+      "--text-bright": "#FFFFFF",
+      "--text-secondary": "#8899aa",
 
-      "--accent": "#f59e0b",
-      "--accent-text": "#1a1a2e",
+      "--accent": "#FCEE0A",
+      "--accent-text": "#0A0F1F",
 
-      "--accent-glow": "rgba(245,158,11,0.3)",
+      "--accent-glow": "rgba(252, 238, 10, 0.25)",
     },
 
     nodeColors: [
-      "#0088cc",  // electric blue
-      "#e01535",  // vivid red
-      "#22c55e",  // bright green
-      "#f59e0b",  // amber
-      "#8b5cf6",  // violet
-      "#10b981",  // emerald
-      "#ec4899",  // pink
-      "#f97316",  // orange
-      "#06b6d4",  // cyan
-      "#ef4444",  // red
-      "#3b82f6",  // blue
-      "#a855f7",  // purple
+      "#FCEE0A",  // signature yellow
+      "#FF2A6D",  // magenta
+      "#00F0FF",  // cyan
+      "#FF3131",  // red
+      "#9D4EDD",  // purple
+      "#00FF9D",  // neon green
+      "#FF6B6B",  // coral
+      "#FFAA00",  // orange
+      "#00CCDD",  // teal
+      "#FF4444",  // bright red
+      "#4DB8FF",  // sky blue
+      "#E040FB",  // pink-purple
     ],
 
-    edgeColor: "rgba(245, 158, 11, 0.4)",
+    edgeColor: "rgba(252, 238, 10, 0.35)",
   },
 ];
 
