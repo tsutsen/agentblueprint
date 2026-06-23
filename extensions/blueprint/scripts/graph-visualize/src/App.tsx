@@ -250,20 +250,40 @@ function App() {
         <div className="p-3 border-b border-border">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-[10px] uppercase tracking-wider text-muted-foreground">Categories</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-5 px-1.5 text-[10px]"
-              onClick={() => {
-                if (activeCategories.size === Object.keys(categories).length) {
-                  setActiveCategories(new Set())
-                } else {
-                  setActiveCategories(new Set(Object.keys(categories)))
-                }
-              }}
-            >
-              {activeCategories.size === Object.keys(categories).length ? 'Deselect all' : 'Select all'}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]">
+                  {activeCategories.size === Object.keys(categories).length ? 'Deselect all' : 'Select all'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => {
+                  if (activeCategories.size === Object.keys(categories).length) {
+                    setActiveCategories(new Set())
+                  } else {
+                    setActiveCategories(new Set(Object.keys(categories)))
+                  }
+                }}>
+                  {activeCategories.size === Object.keys(categories).length ? 'Deselect all' : 'Select all'}
+                </DropdownMenuItem>
+                <Separator className="my-1" />
+                {Object.entries(categories).map(([cat, { count }]) => (
+                  <DropdownMenuCheckboxItem
+                    key={cat}
+                    checked={activeCategories.has(cat)}
+                    onCheckedChange={(checked) => {
+                      setActiveCategories((prev) => {
+                        const next = new Set(prev)
+                        checked ? next.add(cat) : next.delete(cat)
+                        return next
+                      })
+                    }}
+                  >
+                    {cat.charAt(0).toUpperCase() + cat.slice(1)} ({count})
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <div>
             <div className="space-y-0.5">
