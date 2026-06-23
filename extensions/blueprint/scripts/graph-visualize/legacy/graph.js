@@ -523,8 +523,8 @@ export function renderGraph() {
 // Starts a single animation loop that drives both dim and scale transitions.
 // dimTarget: null = no dimming (scale-only), otherwise target opacity value.
 //
-// Note: This function computes connected-set and size ranges (needed for
-// correct target radii), but skips label building — render() handles that.
+// Note: We capture old radii before updating sizeRange, then compute new
+// targets after — so the animation interpolates between the correct sizes.
 export function startAnimation(dimTarget) {
   // Cancel any previous animation
   if (animFrame) cancelAnimationFrame(animFrame);
@@ -532,6 +532,13 @@ export function startAnimation(dimTarget) {
   animStart = performance.now();
   animDimFrom = currentDim;
   animDimTarget = dimTarget;
+
+  // Capture OLD radii before updating sizeRange (for animation start values)
+  const oldRadii = new Map();
+  for (const n of graphData.nodes) {
+    if (!n.visible) continue;
+    oldRadii.set(n.id, n._animRadius ?? getNodeRadius(n));
+  }
 
   // Compute connected set and size ranges (needed for correct target radii).
   // Note: render() will recompute these on the first frame, but we need them
@@ -548,12 +555,12 @@ export function startAnimation(dimTarget) {
   }
   recalcSizeRange();
 
-  // Capture scale animation state
+  // Capture NEW radii (for animation target values)
   animScaleStartRadii = new Map();
   animScaleTargets = new Map();
   for (const n of graphData.nodes) {
     if (!n.visible) continue;
-    const startRadius = n._animRadius ?? getNodeRadius(n);
+    const startRadius = oldRadii.get(n.id) ?? getNodeRadius(n);
     const targetRadius = getNodeRadius(n);
     animScaleStartRadii.set(n.id, startRadius);
     animScaleTargets.set(n.id, targetRadius);
