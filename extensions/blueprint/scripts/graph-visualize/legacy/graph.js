@@ -5,16 +5,24 @@ export let graphData = null;
 export function getGraphData() { return graphData; }
 export function setGraphData(data) { graphData = data; }
 export let validEdges = null;
+export function setValidEdges(v) { validEdges = v; }
 let canvas, ctx;
 export let selectedNode = null;
+export function setSelectedNode(n) { selectedNode = n; }
 let connectedSet = null;
 export let showLabels = true;
+export function setShowLabels(v) { showLabels = v; }
 export let showSpecs = true;
 export let tickCount = 0;
+export function incrementTickCount() { tickCount++; }
 export let startTime = 0;
 export let activeCategories = new Set();
+export function setActiveCategories(s) { activeCategories.clear(); s.forEach(c => activeCategories.add(c)); }
 export let searchTerm = "";
+export function setSearchTerm(s) { searchTerm = s; }
 export let width, height;
+export function setWidth(w) { width = w; }
+export function setHeight(h) { height = h; }
 let draggedNode = null;
 export let isDragging = false;
 
@@ -823,6 +831,7 @@ let hoverLabelTimeout = null; // Timer for delayed label show
 const HOVER_LABEL_DELAY = 300; // ms to hold hover before label appears
 let simulation = null;
 export let sizeMetric = "degree"; // Default sizing metric
+export function setSizeMetric(m) { sizeMetric = m; }
 let currentDim = 1; // Current dim opacity (1 = full, 0.15 = dimmed)
 
 // Callbacks set by ui.js to avoid circular imports
