@@ -183,7 +183,11 @@ function App() {
             {graphData ? `${graphData.project} · v${graphData.version}` : 'Glossary Graph'}
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {graphData ? `${graphData.nodes.length} nodes, ${graphData.edges.length} edges` : 'Loading...'}
+            {graphData ? (() => {
+              const connectedIds = new Set(graphData.edges.flatMap(e => [e.source, e.target]));
+              const orphans = graphData.nodes.filter(n => !connectedIds.has(n.id)).length;
+              return `${graphData.nodes.length} nodes, ${graphData.edges.length} edges, ${orphans} orphans`;
+            })() : 'Loading...'}
           </p>
         </div>
 
