@@ -44,7 +44,11 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!data) return
+    if (!data) {
+      console.log('[GraphCanvas] No data, skipping')
+      return
+    }
+    console.log('[GraphCanvas] Effect running, data:', !!data)
 
     let cancelled = false
     setReady(false)
@@ -87,6 +91,7 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
       resizeObserver.observe(container)
 
       // Create and expose the bridge
+      console.log('[GraphCanvas] Creating bridge, current:', bridge.current)
       bridge.current = {
         setVisibility: (visibleIds: Set<string>) => {
           for (const n of data.nodes) {
@@ -152,6 +157,7 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
       }
 
       setReady(true)
+      console.log('[GraphCanvas] Bridge set, bridge.current:', bridge.current, 'ready:', ready)
 
       // Cleanup on unmount
       return () => {
