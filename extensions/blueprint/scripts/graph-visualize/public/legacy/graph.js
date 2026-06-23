@@ -504,16 +504,19 @@ function render() {
     ctx.fill();
 
     // Stroke
-    ctx.strokeStyle = isSelected
-      ? "#fff"
-      : d3.color(color).darker(0.8).formatHex();
-    ctx.lineWidth = (isSelected ? 2 : 1) / zoom.k;
+    const cs = getComputedStyle(document.documentElement);
+    const strokeColor = isSelected
+      ? cs.getPropertyValue("--node-stroke-selected").trim() || "#fff"
+      : (cs.getPropertyValue("--node-stroke").trim() || d3.color(color).darker(0.8).formatHex());
+    ctx.strokeStyle = strokeColor;
+    const strokeWidth = parseFloat(cs.getPropertyValue("--node-stroke-width")) || 1;
+    ctx.lineWidth = (isSelected ? strokeWidth * 2 : strokeWidth) / zoom.k;
     ctx.stroke();
 
     // Hover highlight
     if (isHovered && !isSelected) {
-      ctx.strokeStyle = "#fff";
-      ctx.lineWidth = 2 / zoom.k;
+      ctx.strokeStyle = cs.getPropertyValue("--node-stroke-hover").trim() || "#fff";
+      ctx.lineWidth = strokeWidth * 2 / zoom.k;
       ctx.stroke();
     }
   }

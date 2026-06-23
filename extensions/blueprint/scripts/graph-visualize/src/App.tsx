@@ -295,7 +295,7 @@ function App() {
     : []
 
   return (
-    <TooltipProvider delayDuration={200}>
+    <TooltipProvider delayDuration={500}>
       <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       {/* Sidebar */}
       <aside style={{ width: sidebarWidth, minWidth: 200, maxWidth: 800 }} className="flex flex-col border-r border-border bg-muted/30">
@@ -395,25 +395,31 @@ function App() {
                   : extractShortId(node.id, node.type);
                 const catDisplay = node.typeLabel || node.type || node.category || 'unknown';
                 return (
-                  <button
-                    key={node.id}
-                    onClick={() => bridgeRef.current?.selectNodeById(node.id)}
-                    className={`w-full min-w-0 max-w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
-                      selectedNode?.id === node.id
-                        ? 'bg-primary/10 text-primary'
-                        : 'hover:bg-muted/50'
-                    }`}
-                  >
-                    <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
-                      {idShort}
-                    </span>
-                    <span className="text-sm text-foreground flex-1 min-w-0 truncate">
+                  <Tooltip key={node.id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => bridgeRef.current?.selectNodeById(node.id)}
+                        className={`w-full min-w-0 max-w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
+                          selectedNode?.id === node.id
+                            ? 'bg-primary/10 text-primary'
+                            : 'hover:bg-muted/50'
+                        }`}
+                      >
+                        <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
+                          {idShort}
+                        </span>
+                        <span className="text-sm text-foreground flex-1 min-w-0 truncate">
+                          {node.term || node.label || node.id}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
+                          {catDisplay}
+                        </span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-[300px]">
                       {node.term || node.label || node.id}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
-                      {catDisplay}
-                    </span>
-                  </button>
+                    </TooltipContent>
+                  </Tooltip>
                 );
               })}
             </div>
@@ -451,7 +457,7 @@ function App() {
           </Tooltip>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs bg-background/90 backdrop-blur">
+              <Button variant="outline" size="sm" className="h-8 text-xs bg-background backdrop-blur">
                 Size: {SIZE_METRICS.find((m) => m.key === sizeMetric)?.label}
                 <ChevronDown className="h-3.5 w-3.5 ml-1" />
               </Button>
@@ -469,7 +475,7 @@ function App() {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs bg-background/90 backdrop-blur">
+              <Button variant="outline" size="sm" className="h-8 text-xs bg-background backdrop-blur">
                 Theme: {themes.find((t) => t.key === currentTheme)?.label || 'Default'}
                 <ChevronDown className="h-3.5 w-3.5 ml-1" />
               </Button>
@@ -498,7 +504,7 @@ function App() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 w-8 p-0 bg-background/90 backdrop-blur"
+                className="h-8 w-8 p-0 bg-background backdrop-blur"
                 onClick={() => bridgeRef.current?.zoomIn()}
               >
                 <ZoomIn className="h-3.5 w-3.5" />
@@ -511,7 +517,7 @@ function App() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 w-8 p-0 bg-background/90 backdrop-blur"
+                className="h-8 w-8 p-0 bg-background backdrop-blur"
                 onClick={() => bridgeRef.current?.zoomOut()}
               >
                 <ZoomOut className="h-3.5 w-3.5" />
@@ -524,7 +530,7 @@ function App() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 w-8 p-0 bg-background/90 backdrop-blur"
+                className="h-8 w-8 p-0 bg-background backdrop-blur"
                 onClick={() => bridgeRef.current?.resetZoom()}
               >
                 <RotateCcw className="h-3.5 w-3.5" />

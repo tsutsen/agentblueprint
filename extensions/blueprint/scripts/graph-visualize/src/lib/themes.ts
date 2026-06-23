@@ -18,6 +18,14 @@ export interface Theme {
   nodeColors: string[];
   // Single edge color (rgba)
   edgeColor: string;
+  // Node outline thickness (px at zoom 1)
+  nodeStrokeWidth: number;
+  // Node outline color (default: darker version of node color)
+  nodeStrokeColor?: string;
+  // Node outline color when selected
+  nodeStrokeSelectedColor?: string;
+  // Node outline color when hovered
+  nodeStrokeHoverColor?: string;
 }
 
 function hexToHsl(hex: string): string {
@@ -100,6 +108,7 @@ export const themes: Theme[] = [
       "#84cc16",
     ],
     edgeColor: "rgba(148, 163, 184, 0.4)",
+    nodeStrokeWidth: 1.5,
   },
   {
     key: "dark",
@@ -153,6 +162,7 @@ export const themes: Theme[] = [
       "#a3e635",
     ],
     edgeColor: "rgba(148, 163, 184, 0.4)",
+    nodeStrokeWidth: 1.5,
   },
   {
     key: "gruvbox",
@@ -206,6 +216,7 @@ export const themes: Theme[] = [
       "#98971a",
     ],
     edgeColor: "rgba(121, 134, 203, 0.3)",
+    nodeStrokeWidth: 1.5,
   },
   {
     key: "gruvbox-light",
@@ -259,6 +270,7 @@ export const themes: Theme[] = [
       "#4d7c0f",
     ],
     edgeColor: "rgba(121, 134, 203, 0.3)",
+    nodeStrokeWidth: 1.5,
   },
   {
     key: "neon",
@@ -312,6 +324,7 @@ export const themes: Theme[] = [
       "#76ff03",
     ],
     edgeColor: "rgba(68, 138, 255, 0.3)",
+    nodeStrokeWidth: 1.5,
   },
   {
     key: "retro",
@@ -365,10 +378,11 @@ export const themes: Theme[] = [
       "#33691e",
     ],
     edgeColor: "rgba(155, 89, 182, 0.3)",
+    nodeStrokeWidth: 1.5,
   },
   {
     key: "netrunner",
-    label: "⌘ Netrunner",
+    label: "Netrunner",
     vars: {
       "--background": hexToHsl("#0A0F1F"),
       "--foreground": hexToHsl("#F5F7FA"),
@@ -382,7 +396,7 @@ export const themes: Theme[] = [
       "--secondary-foreground": hexToHsl("#00F0FF"),
       "--muted": hexToHsl("#1a2040"),
       "--muted-foreground": hexToHsl("#8899aa"),
-      "--accent": hexToHsl("#00F0FF"),
+      "--accent": hexToHsl("#FCEE0A"),
       "--accent-foreground": hexToHsl("#0A0F1F"),
       "--destructive": hexToHsl("#FF3131"),
       "--destructive-foreground": hexToHsl("#F5F7FA"),
@@ -404,10 +418,10 @@ export const themes: Theme[] = [
       "--accent-glow": "rgba(0, 240, 255, 0.2)",
     },
     nodeColors: [
-      "#FCEE0A",  // signature yellow
       "#FF2A6D",  // magenta
-      "#00F0FF",  // cyan
       "#FF3131",  // red
+      "#FCEE0A",  // signature yellow
+      "#00F0FF",  // cyan
       "#9D4EDD",  // purple
       "#00FF9D",  // neon green
       "#FF6B6B",  // coral
@@ -418,29 +432,30 @@ export const themes: Theme[] = [
       "#E040FB",  // pink-purple
     ],
     edgeColor: "rgba(0, 240, 255, 0.35)",
+    nodeStrokeWidth: 2,
   },
   {
     key: "netrunner-light",
-    label: "⌘ Netrunner Light",
+    label: "Netrunner Light",
 
     vars: {
-      "--background": hexToHsl("#0A0F1F"),
-      "--foreground": hexToHsl("#F5F7FA"),
+      "--background": "#F5F7FA",
+      "--foreground": hexToHsl("#0A0F1F"),
 
-      "--card": hexToHsl("#121830"),
-      "--card-foreground": hexToHsl("#F5F7FA"),
+      "--card": hexToHsl("#FFFDE7"),
+      "--card-foreground": hexToHsl("#0A0F1F"),
 
-      "--popover": hexToHsl("#121830"),
-      "--popover-foreground": hexToHsl("#F5F7FA"),
+      "--popover": hexToHsl("#FFFDE7"),
+      "--popover-foreground": hexToHsl("#0A0F1F"),
 
       "--primary": hexToHsl("#00F0FF"),
       "--primary-foreground": hexToHsl("#0A0F1F"),
 
-      "--secondary": hexToHsl("#1a2040"),
-      "--secondary-foreground": hexToHsl("#00F0FF"),
+      "--secondary": hexToHsl("#FFF9C4"),
+      "--secondary-foreground": hexToHsl("#0A0F1F"),
 
-      "--muted": hexToHsl("#1a2040"),
-      "--muted-foreground": hexToHsl("#8899aa"),
+      "--muted": "57 98% 51%",
+      "--muted-foreground": hexToHsl("#0A0F1F"),
 
       "--accent": hexToHsl("#FCEE0A"),
       "--accent-foreground": hexToHsl("#0A0F1F"),
@@ -448,32 +463,32 @@ export const themes: Theme[] = [
       "--destructive": hexToHsl("#FF3131"),
       "--destructive-foreground": hexToHsl("#F5F7FA"),
 
-      "--border": hexToHsl("#2a3050"),
-      "--input": hexToHsl("#2a3050"),
+      "--border": hexToHsl("#E5D98A"),
+      "--input": hexToHsl("#E5D98A"),
 
       "--ring": hexToHsl("#00F0FF"),
     },
 
     legacyVars: {
-      "--bg": "#0A0F1F",
-      "--surface": "#121830",
-      "--surface2": "#1a2040",
+      "--bg": "#B3B3B3",
+      "--surface": "#FFFDE7",
+      "--surface2": "#FFF9C4",
 
-      "--btn-text": "#FCEE0A",
+      "--btn-text": "#0A0F1F",
 
-      "--text": "#F5F7FA",
-      "--text-dim": "#8899aa",
-      "--text-bright": "#FFFFFF",
-      "--text-secondary": "#8899aa",
+      "--text": "#0A0F1F",
+      "--text-dim": "#4A5568",
+      "--text-bright": "#000000",
+      "--text-secondary": "#4A5568",
 
       "--accent": "#FCEE0A",
       "--accent-text": "#0A0F1F",
 
-      "--accent-glow": "rgba(252, 238, 10, 0.25)",
+      "--accent-glow": "rgba(0, 240, 255, 0.25)",
     },
 
     nodeColors: [
-      "#FCEE0A",  // signature yellow
+      "#0A0F1F",  // deep background
       "#FF2A6D",  // magenta
       "#00F0FF",  // cyan
       "#FF3131",  // red
@@ -487,7 +502,8 @@ export const themes: Theme[] = [
       "#E040FB",  // pink-purple
     ],
 
-    edgeColor: "rgba(252, 238, 10, 0.35)",
+    edgeColor: "rgba(10, 15, 31, 0.3)",
+    nodeStrokeWidth: 2,
   },
 ];
 
@@ -514,6 +530,12 @@ export function applyTheme(themeKey: string): void {
   for (let i = 0; i < 12; i++) {
     root.style.setProperty(`--node-color-${i}`, theme.nodeColors[i]);
   }
+  // Apply node stroke width
+  root.style.setProperty("--node-stroke-width", theme.nodeStrokeWidth.toString());
+  // Apply node stroke colors
+  root.style.setProperty("--node-stroke", theme.nodeStrokeColor || "");
+  root.style.setProperty("--node-stroke-selected", theme.nodeStrokeSelectedColor || "#fff");
+  root.style.setProperty("--node-stroke-hover", theme.nodeStrokeHoverColor || "#fff");
   // Toggle dark class for compatibility
   const darkKeys = ["dark", "gruvbox", "neon", "netrunner"];
   if (darkKeys.includes(themeKey)) {
