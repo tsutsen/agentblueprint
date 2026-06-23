@@ -28,17 +28,16 @@ export function initUI() {
   // Register node select/deselect callbacks with graph.js
   setNodeSelectCallbacks(handleNodeSelected, handleNodeDeselected);
 
-  // Simple category colors for filter dots (works for all themes)
-  const CAT_COLORS = {
-    domain: '#ef4444', technical: '#3b82f6', security: '#f59e0b',
-    ui: '#8b5cf6', spec: '#10b981',
-    req: '#3b82f6', nfr: '#3b82f6',
-    con: '#8b5cf6', fn: '#10b981',
-    test: '#ef4444', gl: '#f59e0b',
-    design: '#8b5cf6', data: '#10b981',
-    api: '#ef4444', plan: '#f59e0b',
-    other: '#6b7280',
-  };
+  // Category filter dot color — pick one of the 12 node colors for this category
+  function getCatColor(cat) {
+    let hash = 0
+    for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash)
+    const idx = Math.abs(hash) % 12
+    try {
+      return getComputedStyle(document.documentElement)
+        .getPropertyValue(`--node-color-${idx}`).trim() || '#94a3b8'
+    } catch { return '#94a3b8' }
+  }
 
   document.getElementById('project-name').textContent =
     `${graphData.project} · v${graphData.version}`;
@@ -57,7 +56,7 @@ export function initUI() {
     div.innerHTML = `
       <input type="checkbox" data-category="${cat}">
       <span>${label}</span>
-      <div class="filter-dot" style="background: ${CAT_COLORS[cat] || '#6b7280'}"></div>
+      <div class="filter-dot" style="background: ${getCatColor(cat)}"></div>
       <span class="filter-count">${count}</span>`;
     const cb = div.querySelector('input');
     cb.checked = activeCategories.has(cat);
