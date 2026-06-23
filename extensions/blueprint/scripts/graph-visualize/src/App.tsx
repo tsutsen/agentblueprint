@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Label } from '@/components/ui/label'
-import { Search, RotateCcw, Settings, ChevronDown, ZoomIn, ZoomOut } from 'lucide-react'
+import { Search, RotateCcw, ChevronDown, ZoomIn, ZoomOut } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Switch } from '@/components/ui/switch'
 import { themes, applyTheme } from '@/lib/themes'
@@ -40,6 +40,7 @@ function App() {
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set())
   const [categories, setCategories] = useState<Record<string, { count: number; color: string }>>({})
   const [sizeMetric, setSizeMetric] = useState('degree')
+  const [currentTheme, setCurrentTheme] = useState('default')
   const [sortBy, setSortBy] = useState<'name' | 'degree'>('name')
   const [bridgeReady, setBridgeReady] = useState(false)
   const [simulating, setSimulating] = useState(false)
@@ -458,8 +459,8 @@ function App() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 text-xs bg-background/90 backdrop-blur">
-                <Settings className="h-3.5 w-3.5 mr-1" />
-                Theme
+                Theme: {themes.find((t) => t.key === currentTheme)?.label || 'Default'}
+                <ChevronDown className="h-3.5 w-3.5 ml-1" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
@@ -467,6 +468,7 @@ function App() {
                 <DropdownMenuItem
                   key={t.key}
                   onClick={() => {
+                    setCurrentTheme(t.key)
                     applyTheme(t.key)
                     bridgeRef.current?.updateTheme()
                   }}
