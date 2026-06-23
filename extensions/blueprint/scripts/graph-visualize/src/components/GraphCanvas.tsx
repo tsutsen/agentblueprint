@@ -159,18 +159,16 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, classN
       setReady(true)
       console.log('[GraphCanvas] Bridge set, bridge.current:', bridge.current, 'ready:', ready)
 
-      // Cleanup on unmount
+      // Cleanup on unmount (don't null bridge.current — App.tsx needs it)
       return () => {
         resizeObserver.disconnect()
         if (resizeRAF !== null) cancelAnimationFrame(resizeRAF)
-        bridge.current = null
       }
     })()
 
     // Cleanup
     return () => {
       cancelled = true
-      bridge.current = null
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])

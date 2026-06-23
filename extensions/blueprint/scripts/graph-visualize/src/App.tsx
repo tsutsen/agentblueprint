@@ -207,10 +207,7 @@ function App() {
   // Apply filters once bridge is ready (handles URL state restoration)
   // Uses searchTerm (not debounced) so it works on initial load
   useEffect(() => {
-    if (!graphData || !bridgeRef.current || !bridgeReady) {
-      console.log('[App] Skipping applyFilters:', { hasGraphData: !!graphData, hasBridge: !!bridgeRef.current, bridgeReady })
-      return
-    }
+    if (!graphData || !bridgeReady) return
     const visibleIds = new Set<string>()
     const search = searchTerm.toLowerCase().trim()
     for (const node of graphData.nodes) {
@@ -222,8 +219,7 @@ function App() {
         visibleIds.add(node.id)
       }
     }
-    console.log('[App] Applying filters:', { cats: [...activeCategories], search, visibleCount: visibleIds.size })
-    bridgeRef.current.setVisibility(visibleIds)
+    bridgeRef.current?.setVisibility(visibleIds)
   }, [graphData, bridgeReady, activeCategories, searchTerm])
 
   // Restore selected node from URL after bridge is ready
