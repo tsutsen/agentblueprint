@@ -360,7 +360,7 @@ function App() {
       <main className="flex-1 relative overflow-hidden">
         {/* Controls */}
         <div className="absolute top-3 left-3 flex items-start gap-1.5 z-10">
-          <label className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 h-8 text-xs font-medium bg-background/90 backdrop-blur border border-input cursor-pointer hover:bg-accent hover:text-accent-foreground">
+          <label className="flex items-center gap-1.5 bg-background/90 backdrop-blur rounded-md px-2 h-8 text-xs cursor-pointer border border-border">
             <Play className="h-3.5 w-3.5" />
             Simulation
             <Switch
