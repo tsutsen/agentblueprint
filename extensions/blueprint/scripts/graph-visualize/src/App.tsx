@@ -14,13 +14,15 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Switch } from '@/components/ui/switch'
 import { themes, applyTheme } from '@/lib/themes'
 
-/** Extract clean short ID: PREFIX-NNN (handles TST-NNN-xxx and TST-xxx-NNN patterns) */
-function extractShortId(id: string): string {
+/** Extract clean short ID: PREFIX-NNN (handles TST-NNN-xxx, TST-xxx-NNN, CON-NNN-xxx, FLW-NNN-xxx, and slug-style IDs) */
+function extractShortId(id: string, type?: string): string {
   const parts = id.split('-')
   const numIdx = parts.findIndex(p => /^\d+$/.test(p))
   if (numIdx >= 0) {
     return `${parts[0]}-${parts[numIdx]}`
   }
+  // Slug-style IDs (e.g. "citation-network-builder") — use type prefix
+  if (type) return type.toUpperCase()
   return parts.slice(0, 2).join('-')
 }
 
@@ -43,9 +45,42 @@ function App() {
   const [sortBy, setSortBy] = useState<'name' | 'degree'>('name')
   const [bridgeReady, setBridgeReady] = useState(false)
   const [simulating, setSimulating] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState(300)
 
   const bridgeRef = useRef<IGraphBridge | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const resizeRef = useRef<HTMLDivElement>(null)
+
+  // Sidebar resize handler
+  useEffect(() => {
+    const handle = resizeRef.current
+    if (!handle) return
+
+    let startX: number, startWidth: number
+
+    const onMouseMove = (e: MouseEvent) => {
+      const diff = e.clientX - startX
+      const newWidth = Math.max(200, Math.min(800, startWidth + diff))
+      setSidebarWidth(newWidth)
+    }
+
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    handle.addEventListener('mousedown', (e) => {
+      startX = e.clientX
+      startWidth = sidebarWidth
+      document.addEventListener('mousemove', onMouseMove)
+      document.addEventListener('mouseup', onMouseUp)
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+      e.preventDefault()
+    })
+  }, [sidebarWidth])
 
   // Load graph data
   useEffect(() => {
@@ -92,7 +127,7 @@ function App() {
     const visibleIds = new Set<string>()
     for (const node of graphData.nodes) {
       const cat = node.typeCat || node.category || 'other'
-      const catVisible = activeCategories.has(cat)
+      const catVisible = activeCategories.size === 0 || activeCategories.has(cat)
       const searchMatch = !debouncedSearch ||
         (node.term || node.label || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
       if (catVisible && searchMatch) {
@@ -152,7 +187,7 @@ function App() {
   // Compute visible node IDs (same logic as applyFilters)
   const visibleIds = new Set(graphData?.nodes.filter((node: any) => {
     const cat = node.typeCat || node.category || 'other'
-    const catVisible = activeCategories.has(cat)
+    const catVisible = activeCategories.size === 0 || activeCategories.has(cat)
     const searchMatch = !debouncedSearch ||
       (node.term || node.label || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
     return catVisible && searchMatch
@@ -186,7 +221,7 @@ function App() {
     <TooltipProvider delayDuration={200}>
       <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       {/* Sidebar */}
-      <aside className="w-[300px] min-w-[300px] flex flex-col border-r border-border bg-muted/30">
+      <aside style={{ width: sidebarWidth, minWidth: 200, maxWidth: 800 }} className="flex flex-col border-r border-border bg-muted/30">
         {/* Header */}
         <div className="p-4 border-b border-border">
           <h1 className="text-sm font-bold text-foreground">
@@ -215,30 +250,20 @@ function App() {
         <div className="p-3 border-b border-border">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-[10px] uppercase tracking-wider text-muted-foreground">Categories</h3>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]">
-                  Toggle all
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {Object.entries(categories).map(([cat, { count }]) => (
-                  <DropdownMenuCheckboxItem
-                    key={cat}
-                    checked={activeCategories.has(cat)}
-                    onCheckedChange={(checked) => {
-                      setActiveCategories((prev) => {
-                        const next = new Set(prev)
-                        checked ? next.add(cat) : next.delete(cat)
-                        return next
-                      })
-                    }}
-                  >
-                    {cat.charAt(0).toUpperCase() + cat.slice(1)} ({count})
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 px-1.5 text-[10px]"
+              onClick={() => {
+                if (activeCategories.size === Object.keys(categories).length) {
+                  setActiveCategories(new Set())
+                } else {
+                  setActiveCategories(new Set(Object.keys(categories)))
+                }
+              }}
+            >
+              {activeCategories.size === Object.keys(categories).length ? 'Deselect all' : 'Select all'}
+            </Button>
           </div>
           <div>
             <div className="space-y-0.5">
@@ -274,7 +299,7 @@ function App() {
           <h3 className="text-[10px] uppercase tracking-wider text-muted-foreground">Nodes</h3>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]">
+              <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px] ml-auto">
                 Sort: {sortBy}
               </Button>
             </DropdownMenuTrigger>
@@ -287,16 +312,14 @@ function App() {
         <ScrollArea className="flex-1 p-1">
           {sortedNodes.length === 0 && debouncedSearch ? (
             <p className="px-3 py-4 text-sm text-muted-foreground text-center">No matches for "{debouncedSearch}"</p>
-          ) : sortedNodes.length === 0 && activeCategories.size === 0 ? (
-            <p className="px-3 py-4 text-sm text-muted-foreground text-center">No categories selected</p>
-          ) : sortedNodes.length === 0 ? (
+          ) : sortedNodes.length === 0 && activeCategories.size > 0 ? (
             <p className="px-3 py-4 text-sm text-muted-foreground text-center">All categories hidden</p>
           ) : (
             <div className="space-y-0.5">
               {sortedNodes.map((node: any) => {
                 const idShort = (node.type === 'spec' || node.category === 'spec')
                   ? 'SPEC'
-                  : extractShortId(node.id);
+                  : extractShortId(node.id, node.type);
                 const catDisplay = node.typeLabel || node.type || node.category || 'unknown';
                 return (
                   <button
@@ -311,7 +334,7 @@ function App() {
                     <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
                       {idShort}
                     </span>
-                    <span className="font-medium text-foreground flex-1 min-w-0 truncate">
+                    <span className="text-sm text-foreground flex-1 min-w-0 truncate">
                       {node.term || node.label || node.id}
                     </span>
                     <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
@@ -324,6 +347,12 @@ function App() {
           )}
         </ScrollArea>
       </aside>
+
+      {/* Resize Handle */}
+      <div
+        ref={resizeRef}
+        className="w-[4px] cursor-col-resize hover:bg-primary/20 active:bg-primary/40 transition-colors flex-shrink-0"
+      />
 
       {/* Main Canvas Area */}
       <main className="flex-1 relative overflow-hidden">
@@ -474,7 +503,7 @@ function App() {
           <div data-testid="detail-scroll" className="flex-1 overflow-y-auto overflow-x-hidden">
             <div data-testid="detail-body" className="p-4 w-full">
               <p data-testid="detail-description" className="text-sm leading-relaxed text-muted-foreground break-words overflow-wrap-anywhere max-w-full">
-                {selectedNode.definition || 'No description available.'}
+                {selectedNode.definition || selectedNode.term || selectedNode.label || 'No description available.'}
               </p>
 
               <Separator className="my-3" />
