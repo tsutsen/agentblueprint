@@ -33,9 +33,42 @@ function App() {
   const [sortBy, setSortBy] = useState<'name' | 'degree'>('name')
   const [bridgeReady, setBridgeReady] = useState(false)
   const [simulating, setSimulating] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState(300)
 
   const bridgeRef = useRef<IGraphBridge | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const resizeRef = useRef<HTMLDivElement>(null)
+
+  // Sidebar resize handler
+  useEffect(() => {
+    const handle = resizeRef.current
+    if (!handle) return
+
+    let startX: number, startWidth: number
+
+    const onMouseMove = (e: MouseEvent) => {
+      const diff = e.clientX - startX
+      const newWidth = Math.max(200, Math.min(800, startWidth + diff))
+      setSidebarWidth(newWidth)
+    }
+
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    handle.addEventListener('mousedown', (e) => {
+      startX = e.clientX
+      startWidth = sidebarWidth
+      document.addEventListener('mousemove', onMouseMove)
+      document.addEventListener('mouseup', onMouseUp)
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+      e.preventDefault()
+    })
+  }, [sidebarWidth])
 
   // Load graph data
   useEffect(() => {
@@ -176,7 +209,7 @@ function App() {
     <TooltipProvider delayDuration={200}>
       <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       {/* Sidebar */}
-      <aside className="w-[300px] min-w-[300px] flex flex-col border-r border-border bg-muted/30">
+      <aside style={{ width: sidebarWidth, minWidth: 200, maxWidth: 800 }} className="flex flex-col border-r border-border bg-muted/30">
         {/* Header */}
         <div className="p-4 border-b border-border">
           <h1 className="text-sm font-bold text-foreground">
@@ -312,6 +345,12 @@ function App() {
           )}
         </ScrollArea>
       </aside>
+
+      {/* Resize Handle */}
+      <div
+        ref={resizeRef}
+        className="w-[4px] cursor-col-resize hover:bg-primary/20 active:bg-primary/40 transition-colors flex-shrink-0"
+      />
 
       {/* Main Canvas Area */}
       <main className="flex-1 relative overflow-hidden">
