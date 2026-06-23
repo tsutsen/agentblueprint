@@ -215,6 +215,11 @@ export function updateHtmlLabels() {
 
 // ─── Zoom/Pan State ───
 export let zoom = { x: 0, y: 0, k: 1 };
+export function setZoom(x, y, k) {
+  zoom.x = x;
+  zoom.y = y;
+  zoom.k = k;
+}
 let isPanning = false;
 let panStart = { x: 0, y: 0 };
 let zoomStart = { x: 0, y: 0 };

@@ -5,23 +5,16 @@ export let graphData = null;
 export function getGraphData() { return graphData; }
 export function setGraphData(data) { graphData = data; }
 export let validEdges = null;
-export function setValidEdges(v) { validEdges = v; }
 let canvas, ctx;
 export let selectedNode = null;
-export function setSelectedNode(n) { selectedNode = n; }
 let connectedSet = null;
 export let showLabels = true;
-export function setShowLabels(v) { showLabels = v; }
+export let showSpecs = true;
 export let tickCount = 0;
-export function setTickCount(v) { tickCount = v; }
 export let startTime = 0;
 export let activeCategories = new Set();
-export function setActiveCategories(v) { activeCategories = v; }
 export let searchTerm = "";
-export function setSearchTerm(v) { searchTerm = v; }
 export let width, height;
-export function setWidth(v) { width = v; }
-export function setHeight(v) { height = v; }
 let draggedNode = null;
 export let isDragging = false;
 
@@ -222,17 +215,21 @@ export function updateHtmlLabels() {
 
 // ─── Zoom/Pan State ───
 export let zoom = { x: 0, y: 0, k: 1 };
-export function setZoom(x, y, k) { if (x !== undefined) zoom.x = x; if (y !== undefined) zoom.y = y; if (k !== undefined) zoom.k = k; }
+export function setZoom(x, y, k) {
+  zoom.x = x;
+  zoom.y = y;
+  zoom.k = k;
+}
 let isPanning = false;
 let panStart = { x: 0, y: 0 };
 let zoomStart = { x: 0, y: 0 };
 let isMouseDown = false;
 let sizeRange = {
-  degree: [0, 1],
-  blast: [0, 1],
-  risk: [0, 1],
-  centrality: [0, 1],
-  type: [1, 3],
+  degree: { min: 0, max: 1 },
+  blast: { min: 0, max: 1 },
+  risk: { min: 0, max: 1 },
+  centrality: { min: 0, max: 1 },
+  type: { min: 1, max: 3 },
 };
 
 // ── Common scaling function ──
@@ -254,56 +251,36 @@ function scaleValue(value, minVal, maxVal, minRadius = 8, maxRadius = 40) {
 }
 
 // ─── Size Metric Lookup ───
-const SIZE_METRIC_KEYS = {
-  degree: 'degree',
-  blast: 'blastRadius',
-  risk: 'risk',
-  centrality: 'centrality',
-  responsibility: 'responsibility',
-  interfacePressure: 'interfacePressure',
-};
+// Only 'blast' needs remapping; all others use the metric name directly as the node property.
+const SIZE_METRIC_KEYS = { blast: 'blastRadius' };
 
-// ─── Configuration ───
-const DEFAULT_STATIC_LAYOUT_TICKS = 100;
-
-// ─── Canvas Initialization ───
-/**
- * Sets up the canvas element: sizing, DPI scaling, and context.
- */
-function initCanvas() {
+// ─── Init graph ───
+export function initGraph() {
   const container = document.getElementById("graph-container");
   width = container.clientWidth;
   height = container.clientHeight;
 
   canvas = document.getElementById("graph-canvas");
+
   if (!canvas) {
     console.error("Canvas element not found!");
-    return false;
+    return;
   }
   canvas.width = width * window.devicePixelRatio;
   canvas.height = height * window.devicePixelRatio;
   canvas.style.width = width + "px";
   canvas.style.height = height + "px";
   ctx = canvas.getContext("2d");
+
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-  return true;
-}
 
-// ─── Layout Initialization ───
-/**
- * Pre-resolves edge references, computes initial size ranges,
- * and runs a static force-directed layout.
- * @param {number} [maxStaticTicks] - Number of ticks for static layout (default: 100).
- */
-function initLayout(maxStaticTicks = DEFAULT_STATIC_LAYOUT_TICKS) {
-  // Pre-resolve edges — convert string IDs to node objects
+  // ── Pre-resolve edges ──
   const nodeMap = new Map();
-  for (const n of graphData.nodes) {
-    n.visible = true;
-    nodeMap.set(n.id, n);
-  }
+  // Initialize visible for all nodes
+  for (const n of graphData.nodes) n.visible = true;
+  for (const n of graphData.nodes) nodeMap.set(n.id, n);
 
-  // Compute dynamic size ranges (initial only)
+  // ── Compute dynamic size ranges (initial only) ──
   const _initMetrics = [
     "blastRadius",
     "degree",
@@ -321,17 +298,12 @@ function initLayout(maxStaticTicks = DEFAULT_STATIC_LAYOUT_TICKS) {
   for (let i = 0; i < _initMetrics.length; i++) {
     const key = _initMetrics[i];
     const rkey = rangeKeys[i];
-    const values = graphData.nodes
-      .map((n) => n[key] || 0)
-      .filter((v) => v > 0);
-    if (values.length > 0) {
-      sizeRange[rkey] = { min: 0, max: Math.max(...values) };
-    }
+    const values = graphData.nodes.map((n) => n[key] || 0).filter((v) => v > 0);
+    if (values.length > 0) sizeRange[rkey] = { min: 0, max: Math.max(...values) };
   }
-
   validEdges = [];
   for (const e of graphData.edges) {
-    e.visible = true;
+    e.visible = true; // Initialize edge visibility
     const srcId = typeof e.source === "object" ? e.source.id : e.source;
     const tgtId = typeof e.target === "object" ? e.target.id : e.target;
     const srcNode = nodeMap.get(srcId);
@@ -342,7 +314,7 @@ function initLayout(maxStaticTicks = DEFAULT_STATIC_LAYOUT_TICKS) {
     validEdges.push(e);
   }
 
-  // Initialize node positions in a circle
+  // ── Static layout — force-directed once ──
   graphData.nodes.forEach((n, i) => {
     const angle = (2 * Math.PI * i) / graphData.nodes.length;
     const radius = 200 + Math.random() * 200;
@@ -352,7 +324,6 @@ function initLayout(maxStaticTicks = DEFAULT_STATIC_LAYOUT_TICKS) {
     n.vy = 0;
   });
 
-  // Static force-directed layout
   const linkForce = d3.forceLink(validEdges).distance(120).strength(0.05);
   const chargeForce = d3.forceManyBody().strength(-150);
   const centerForce = d3.forceCenter(width / 2, height / 2).strength(0.02);
@@ -368,38 +339,22 @@ function initLayout(maxStaticTicks = DEFAULT_STATIC_LAYOUT_TICKS) {
     .alphaDecay(0.1)
     .velocityDecay(0.4);
 
-  for (let i = 0; i < maxStaticTicks; i++) simulation.tick();
+  for (let i = 0; i < 200; i++) simulation.tick();
   simulation.stop();
-}
 
-// ─── Event Listener Registration ───
-/**
- * Registers mouse and wheel event listeners on the canvas.
- */
-function initEvents() {
+  // ── Initial render ──
+
+  render();
+
+  // ── Event listeners ──
   canvas.addEventListener("mousedown", onMouseDown);
   canvas.addEventListener("mousemove", onMouseMove);
   canvas.addEventListener("mouseup", onMouseUp);
   canvas.addEventListener("wheel", onWheel, { passive: false });
-}
-
-// ─── Public API ───
-/**
- * Initialize the graph visualization.
- * Orchestrates canvas setup, layout computation, event binding, and first render.
- * @param {object} [options] - Optional configuration.
- * @param {number} [options.staticLayoutTicks] - Ticks for static layout (default: 100).
- */
-export function initGraph(options = {}) {
-  const maxStaticTicks = options?.staticLayoutTicks ?? DEFAULT_STATIC_LAYOUT_TICKS;
-
-  if (!initCanvas()) return;
-  initLayout(maxStaticTicks);
-  initEvents();
+  // ── Render ──
   render();
 
-  const overlay = document.getElementById("loading-overlay");
-  if (overlay) overlay.classList.add("hidden");
+  document.getElementById("loading-overlay").classList.add("hidden");
 }
 
 // ─── Render ───
@@ -562,16 +517,6 @@ export function renderGraph() {
   render();
 }
 
-// ─── Unified Animation System ───
-// Drives both dim and scale animations in a single rAF loop.
-let animFrame = null;
-let animStart = null;
-let animDimFrom = 1;
-let animDimTarget = null; // null = no dimming
-let animScaleStartRadii = null;
-let animScaleTargets = null;
-const ANIM_DURATION = 400; // ms — duration for both animations
-
 // ─── Unified Animation ───
 // Starts a single animation loop that drives both dim and scale transitions.
 // dimTarget: null = no dimming (scale-only), otherwise target opacity value.
@@ -665,7 +610,7 @@ function animStep(now) {
 // Returns the animated radius for a node (interpolated toward target)
 function getNodeAnimatedRadius(n) {
   if (n._animRadius !== undefined) {
-    return n._animRadius;
+    return Math.max(0, n._animRadius);
   }
   return getNodeRadius(n);
 }
@@ -811,6 +756,7 @@ function onMouseUp(event) {
   // If wasPanning, preserve selection (don't deselect)
 }
 
+
 function onWheel(event) {
   event.preventDefault();
   const rect = canvas.getBoundingClientRect();
@@ -876,7 +822,6 @@ let hoverLabelTimeout = null; // Timer for delayed label show
 const HOVER_LABEL_DELAY = 300; // ms to hold hover before label appears
 let simulation = null;
 export let sizeMetric = "degree"; // Default sizing metric
-export function setSizeMetric(v) { sizeMetric = v; }
 let currentDim = 1; // Current dim opacity (1 = full, 0.15 = dimmed)
 
 // Callbacks set by ui.js to avoid circular imports
@@ -905,12 +850,15 @@ export function deselectNode() {
   if (_onDeselectNode) _onDeselectNode();
 }
 
-// ─── Node Scale Animation ───
-let scaleAnimFrame = null; // requestAnimationFrame id for scale animation loop
-let scaleAnimStartTime = null;
-let scaleAnimTargets = null; // Map<nodeId, targetRadius>
-let scaleAnimStartRadii = null; // Map<nodeId, startRadius>
-const SCALE_ANIM_DURATION = 350; // ms — how long a scale transition takes
+// ─── Unified Animation System ───
+// Drives both dim and scale animations in a single rAF loop.
+let animFrame = null;
+let animStart = null;
+let animDimFrom = 1;
+let animDimTarget = null; // null = no dimming
+let animScaleStartRadii = null;
+let animScaleTargets = null;
+const ANIM_DURATION = 400; // ms — duration for both animations
 
 // ─── Simulation Control ───
 
