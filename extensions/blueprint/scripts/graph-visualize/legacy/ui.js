@@ -23,54 +23,10 @@ import {
 } from './graph.js';
 import { CATEGORY_COLORS } from './config.js';
 
-// ─── URL State Sync ───
-function updateURL() {
-  const params = new URLSearchParams(window.location.search);
-  if (activeCategories.size === 0 || activeCategories.size < Object.keys(CATEGORY_COLORS).length) {
-    params.set('cats', [...activeCategories].sort().join(','));
-  } else {
-    params.delete('cats');
-  }
-  if (searchTerm) {
-    params.set('q', searchTerm);
-  } else {
-    params.delete('q');
-  }
-  const newURL = `?${params.toString()}`;
-  history.replaceState(null, '', newURL);
-}
-
-function loadURLState() {
-  const params = new URLSearchParams(window.location.search);
-  const catsParam = params.get('cats');
-  if (catsParam) {
-    activeCategories.clear();
-    catsParam.split(',').forEach(c => {
-      const trimmed = c.trim();
-      if (trimmed) activeCategories.add(trimmed);
-    });
-  }
-  const qParam = params.get('q');
-  if (qParam) {
-    window.searchTerm = qParam;
-  }
-  return params.get('node');
-}
-
-function clearURLState() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.toString()) {
-    history.replaceState(null, '', window.location.pathname);
-  }
-}
-
 // ─── Init UI ───
 export function initUI() {
   // Register node select/deselect callbacks with graph.js
   setNodeSelectCallbacks(handleNodeSelected, handleNodeDeselected);
-
-  // Load state from URL before building filters
-  loadURLState();
 
   document.getElementById('project-name').textContent =
     `${graphData.project} · v${graphData.version}`;
@@ -97,7 +53,6 @@ export function initUI() {
     div.querySelector('input').addEventListener('change', (e) => {
       e.target.checked ? activeCategories.add(cat) : activeCategories.delete(cat);
       applyFilters();
-      updateURL();
     });
 
     // Single click: toggle checkbox
@@ -118,7 +73,6 @@ export function initUI() {
       activeCategories.add(cat);
       cb.checked = true;
       applyFilters();
-      updateURL();
     });
 
     catContainer.appendChild(div);
@@ -157,22 +111,13 @@ export function initUI() {
   // ── Search ──
   const searchInput = document.getElementById('search-input');
   let searchTimeout;
-  // Restore search from URL
-  if (searchTerm) {
-    searchInput.value = searchTerm;
-    applyFilters();
-  }
   searchInput.addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
       searchTerm = e.target.value.toLowerCase().trim();
       applyFilters();
-      updateURL();
     }, 200);
   });
-
-  // Restore selected node from URL after graph loads
-  restoreNodeFromURL();
 
   // Controls
   document.getElementById('btn-zoom-reset').addEventListener('click', resetZoom);
@@ -390,32 +335,11 @@ function handleNodeSelected(event, d) {
   document.querySelectorAll('.term-list-item').forEach(el => {
     el.classList.toggle('active', el.dataset.nodeId === d.id);
   });
-  // Sync selected node to URL
-  const params = new URLSearchParams(window.location.search);
-  params.set('node', d.id);
-  const newURL = `?${params.toString()}`;
-  history.replaceState(null, '', newURL);
 }
 
 function handleNodeDeselected() {
   document.querySelectorAll('.term-list-item').forEach(el => el.classList.remove('active'));
   document.getElementById('detail-panel').classList.remove('visible');
-  // Remove node from URL
-  const params = new URLSearchParams(window.location.search);
-  params.delete('node');
-  const newURL = `?${params.toString()}`;
-  history.replaceState(null, '', newURL);
-}
-
-function restoreNodeFromURL() {
-  const params = new URLSearchParams(window.location.search);
-  const nodeId = params.get('node');
-  if (!nodeId) return;
-  const node = graphData.nodes.find(n => n.id === nodeId);
-  if (!node) return;
-  // Create a minimal event object
-  const fakeEvent = { stopPropagation: () => {}, clientX: 0, clientY: 0 };
-  selectNode(fakeEvent, node);
 }
 
 export function showDetail(d) {
