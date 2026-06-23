@@ -28,10 +28,12 @@ export function initUI() {
   // Register node select/deselect callbacks with graph.js
   setNodeSelectCallbacks(handleNodeSelected, handleNodeDeselected);
 
-  // Category filter dot color — pick one of the 12 node colors for this category
+  // Category filter dot color — same hash as getNodeColor so dots match nodes
   function getCatColor(cat) {
+    // Must match getNodeColor logic: typeCat > category > type > 'other'
+    const catKey = cat || 'other'
     let hash = 0
-    for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash)
+    for (let i = 0; i < catKey.length; i++) hash = catKey.charCodeAt(i) + ((hash << 5) - hash)
     const idx = Math.abs(hash) % 12
     try {
       return getComputedStyle(document.documentElement)
@@ -45,8 +47,9 @@ export function initUI() {
   // Category/type filters
   const catContainer = document.getElementById('category-filters');
   const categoryCounts = {};
+  // Use same category lookup as getNodeColor: typeCat > category > type > 'other'
   for (const n of graphData.nodes) {
-    const cat = n.typeCat || n.category || 'other';
+    const cat = n.typeCat || n.category || n.type || 'other';
     categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
   }
   for (const [cat, count] of Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])) {
