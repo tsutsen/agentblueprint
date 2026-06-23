@@ -222,7 +222,7 @@ export function updateHtmlLabels() {
 }
 
 // ─── Zoom/Pan State ───
-export let zoom = { x: 0, y: 0, k: 0.4 };
+export let zoom = { x: 0, y: 0, k: 0.3 };
 export function setZoom(x, y, k) {
   zoom.x = x;
   zoom.y = y;
@@ -275,6 +275,11 @@ export function initGraph() {
     return;
   }
   canvas.width = width * window.devicePixelRatio;
+  canvas.height = height * window.devicePixelRatio;
+
+  // Center zoom on the graph (nodes are positioned around width/2, height/2)
+  zoom.x = -width / 2 * zoom.k + width / 2;
+  zoom.y = -height / 2 * zoom.k + height / 2;
   canvas.height = height * window.devicePixelRatio;
   canvas.style.width = width + "px";
   canvas.style.height = height + "px";
