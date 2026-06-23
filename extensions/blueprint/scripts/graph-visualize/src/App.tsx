@@ -154,27 +154,6 @@ function App() {
     history.replaceState(null, '', newURL)
   }, [activeCategories, searchTerm, categories, graphData])
 
-  // Apply filters when search/categories change (only after bridge is ready)
-  const applyFilters = useCallback(() => {
-    if (!graphData || !bridgeRef.current || !bridgeReady) return
-
-    const visibleIds = new Set<string>()
-    for (const node of graphData.nodes) {
-      const cat = node.typeCat || node.category || 'other'
-      const catVisible = activeCategories.has(cat)
-      const searchMatch = !debouncedSearch ||
-        (node.term || node.label || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
-      if (catVisible && searchMatch) {
-        visibleIds.add(node.id)
-      }
-    }
-    bridgeRef.current.setVisibility(visibleIds)
-  }, [graphData, activeCategories, debouncedSearch, bridgeReady])
-
-  useEffect(() => {
-    applyFilters()
-  }, [applyFilters])
-
   // Handle size metric change
   const handleSizeMetricChange = useCallback((metric: string) => {
     setSizeMetric(metric)
@@ -224,6 +203,22 @@ function App() {
   useEffect(() => {
     if (graphData) setBridgeReady(true)
   }, [graphData])
+
+  // Apply filters once bridge is ready (handles URL state restoration)
+  useEffect(() => {
+    if (!graphData || !bridgeRef.current || !bridgeReady) return
+    const visibleIds = new Set<string>()
+    for (const node of graphData.nodes) {
+      const cat = node.typeCat || node.category || 'other'
+      const catVisible = activeCategories.has(cat)
+      const searchMatch = !debouncedSearch ||
+        (node.term || node.label || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
+      if (catVisible && searchMatch) {
+        visibleIds.add(node.id)
+      }
+    }
+    bridgeRef.current.setVisibility(visibleIds)
+  }, [graphData, bridgeReady, activeCategories, debouncedSearch])
 
   // Restore selected node from URL after bridge is ready
   useEffect(() => {
