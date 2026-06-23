@@ -5,14 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Glossary Link Graph</title>
   <link rel="stylesheet" href="graph.css">
-  <link rel="stylesheet" href="theme-default-light.css" id="theme-default-light" disabled>
-  <link rel="stylesheet" href="theme-gruvbox.css" id="theme-gruvbox" disabled>
-  <link rel="stylesheet" href="theme-gruvbox-light.css" id="theme-gruvbox-light" disabled>
-  <link rel="stylesheet" href="theme-neon-dark.css" id="theme-neon-dark" disabled>
-  <link rel="stylesheet" href="theme-retro-light.css" id="theme-retro-light" disabled>
+  <link rel="stylesheet" href="themes.css">
   <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
-<body>
+<body class="theme-default-light">
   <div id="app">
 
     <!-- ─── Sidebar ─── -->
@@ -56,7 +52,6 @@
           <details class="dropdown theme-dropdown" id="theme-dropdown">
             <summary id="btn-theme">Theme</summary>
             <div class="dropdown-menu" id="theme-menu">
-              <div class="dropdown-item" data-theme="default">Default</div>
               <div class="dropdown-item" data-theme="default-light">Default Light</div>
               <div class="dropdown-item" data-theme="gruvbox">Gruvbox</div>
               <div class="dropdown-item" data-theme="gruvbox-light">Gruvbox Light</div>

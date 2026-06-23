@@ -185,8 +185,7 @@ export function initUI() {
   // Theme dropdown (native <details>)
   const themeDropdown = document.getElementById('theme-dropdown');
   const themeMenu = document.getElementById('theme-menu');
-  const themeSheets = document.querySelectorAll('[id^="theme-"]');
-  let currentTheme = localStorage.getItem('glossary-theme') || 'default';
+  let currentTheme = localStorage.getItem('glossary-theme') || 'default-light';
   applyTheme(currentTheme);
   updateThemeMenu();
 
@@ -201,10 +200,15 @@ export function initUI() {
   });
 
   function applyTheme(theme) {
-    themeSheets.forEach(sheet => {
-      sheet.disabled = sheet.id !== `theme-${theme}`;
-    });
-    // Wait for stylesheet to apply before updating colors
+    // Toggle theme class on body — removes old, adds new
+    document.body.className = document.body.className
+      .replace(/theme-\S+/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (theme) {
+      document.body.classList.add(`theme-${theme}`);
+    }
+    // Wait for CSS to apply before updating canvas colors
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         updateThemeColors();
