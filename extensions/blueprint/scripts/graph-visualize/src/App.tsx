@@ -29,8 +29,10 @@ function extractShortId(id: string, type?: string): string {
 // ─── Size Metrics ───
 const SIZE_METRICS = [
   { key: 'degree', label: 'Degree' },
+  { key: 'type', label: 'Type' },
   { key: 'blast', label: 'Blast Radius' },
   { key: 'risk', label: 'Risk Score' },
+  { key: 'centrality', label: 'Centrality' },
 ]
 
 function App() {
@@ -322,31 +324,25 @@ function App() {
                   : extractShortId(node.id, node.type);
                 const catDisplay = node.typeLabel || node.type || node.category || 'unknown';
                 return (
-                  <Tooltip key={node.id}>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => bridgeRef.current?.selectNodeById(node.id)}
-                        className={`w-full min-w-0 max-w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
-                          selectedNode?.id === node.id
-                            ? 'bg-primary/10 text-primary'
-                            : 'hover:bg-muted/50'
-                        }`}
-                      >
-                        <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
-                          {idShort}
-                        </span>
-                        <span className="text-sm text-foreground flex-1 min-w-0 truncate">
-                          {node.term || node.label || node.id}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
-                          {catDisplay}
-                        </span>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
+                  <button
+                    key={node.id}
+                    onClick={() => bridgeRef.current?.selectNodeById(node.id)}
+                    className={`w-full min-w-0 max-w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
+                      selectedNode?.id === node.id
+                        ? 'bg-primary/10 text-primary'
+                        : 'hover:bg-muted/50'
+                    }`}
+                  >
+                    <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
+                      {idShort}
+                    </span>
+                    <span className="text-sm text-foreground flex-1 min-w-0 truncate">
                       {node.term || node.label || node.id}
-                    </TooltipContent>
-                  </Tooltip>
+                    </span>
+                    <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
+                      {catDisplay}
+                    </span>
+                  </button>
                 );
               })}
             </div>
@@ -365,6 +361,7 @@ function App() {
         {/* Controls */}
         <div className="absolute top-3 left-3 flex items-start gap-1.5 z-10">
           <label className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 h-8 text-xs font-medium bg-background/90 backdrop-blur border border-input cursor-pointer hover:bg-accent hover:text-accent-foreground">
+            Simulation
             <Switch
               checked={simulating}
               onCheckedChange={(checked) => {
@@ -376,7 +373,6 @@ function App() {
                 setSimulating(checked)
               }}
             />
-            Simulation
           </label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
