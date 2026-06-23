@@ -103,3 +103,10 @@
 .graph-label.dimmed {
   opacity: 0.15 !important;
 }
+
+/* Override Radix ScrollArea's injected display:table wrapper */
+[data-radix-scroll-area-viewport] > div {
+  display: block !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
