@@ -2,7 +2,7 @@
  * Theme definitions — single source of truth for all theming.
  * Each theme sets:
  *   - shadcn UI variables (--background, --foreground, etc.)
- *   - legacy graph variables (--bg, --surface, --text, etc.)
+ *   - graph CSS variables (--bg, --surface, --text, etc.) for sidebar/UI
  *   - 12 node colors that cycle for node fill
  *   - single edge color (rgba)
  */
@@ -12,7 +12,7 @@ export interface Theme {
   label: string
   // shadcn UI variables (HSL format)
   vars: Record<string, string>
-  // Legacy graph CSS variables (hex/rgba) — used by graph.css
+  // Graph CSS variables (hex/rgba) — used by graph.css for sidebar/UI styling
   legacyVars: Record<string, string>
   // 12 node colors that cycle
   nodeColors: string[]
