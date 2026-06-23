@@ -582,6 +582,11 @@ const ANIM_DURATION = 400; // ms — duration for both animations
 // ─── Unified Animation ───
 // Starts a single animation loop that drives both dim and scale transitions.
 // dimTarget: null = no dimming (scale-only), otherwise target opacity value.
+//
+// Note: Connected-set computation, size range recalculation, and label building
+// are all handled by render() — this function only captures animation state
+// (start/target radii) and kicks off the rAF loop. This avoids duplicating
+// the work that render() does every frame.
 export function startAnimation(dimTarget) {
   // Cancel any previous animation
   if (animFrame) cancelAnimationFrame(animFrame);
@@ -590,32 +595,16 @@ export function startAnimation(dimTarget) {
   animDimFrom = currentDim;
   animDimTarget = dimTarget;
 
-  // Compute connected set and size ranges (needed for target radii)
-  connectedSet = null;
-  if (selectedNode) {
-    connectedSet = new Set([selectedNode.id]);
-    for (const e of validEdges) {
-      if (e.source.id === selectedNode.id || e.target.id === selectedNode.id) {
-        connectedSet.add(e.source.id);
-        connectedSet.add(e.target.id);
-      }
-    }
-  }
-  recalcSizeRange();
-  buildLabelSet();
-
-  // Capture scale animation state
-  const prevRadii = new Map();
-  for (const n of graphData.nodes) {
-    if (!n.visible) continue;
-    prevRadii.set(n.id, n._animRadius ?? getNodeRadius(n));
-  }
-
+  // Capture scale animation state.
+  // sizeRange reflects the current selection context from the last render() call.
+  // If no render() has run yet, it falls back to the initial ranges.
+  // The first animStep frame calls render() which updates sizeRange for the
+  // current selection — any visual mismatch lasts only a single frame.
   animScaleStartRadii = new Map();
   animScaleTargets = new Map();
   for (const n of graphData.nodes) {
     if (!n.visible) continue;
-    const startRadius = prevRadii.get(n.id);
+    const startRadius = n._animRadius ?? getNodeRadius(n);
     const targetRadius = getNodeRadius(n);
     animScaleStartRadii.set(n.id, startRadius);
     animScaleTargets.set(n.id, targetRadius);

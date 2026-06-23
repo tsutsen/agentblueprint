@@ -116,11 +116,13 @@ Removed — covered by the comprehensive console.log cleanup in #4.
 
 ---
 
-## 10. `startScaleAnimation()` Recomputes Everything
+## 10. `startScaleAnimation()` Recomputes Everything — ✅ **RESOLVED**
 
-`startScaleAnimation()` independently recomputes `connectedSet`, calls `recalcSizeRange()`, and calls `buildLabelSet()` — all of which `render()` also does. When called from `selectNode()` → `startScaleAnimation()`, then each `scaleAnimStep` frame calls `render()` which does the same work again.
+Removed connected-set computation, `recalcSizeRange()`, and `buildLabelSet()` from `startAnimation()`. These are now exclusively handled by `render()` every frame. `startAnimation()` only captures start/target radii and kicks off the rAF loop.
 
-**Simplify**: `startScaleAnimation()` should only capture start/target radii and kick off the animation. Let `render()` handle connected-set computation, size range recalculation, and label building. This eliminates the duplicate work.
+**Trade-off**: The first animation frame may use slightly stale `sizeRange` values (from the previous `render()` call) for target radius capture, but `render()` updates everything on that first frame, so any visual mismatch lasts only a single frame (~16ms).
+
+**Performance gain**: Eliminates 3× connected-set computation + 3× size range recalculation + 3× label placement per node selection/deselection event.
 
 ---
 
@@ -143,7 +145,7 @@ Five separate CSS files (`theme-default-light.css`, `theme-gruvbox.css`, etc.) w
 | ~~**1**~~ ✅ | Merge the two animation systems into one | Eliminates double-rAF, prevents double-render |
 | ~~**2**~~ ✅ | Move connected-set/size-range out of `startScaleAnimation()` into `render()` only | Eliminates duplicate computation per frame |
 | ~~**3**~~ ✅ | Simplify connected-set / size-range logic | Removed `_connected`/`_fullRanges` dual-state; single `sizeRange` with `{min, max}`; eliminated 40+ lines |
-| **4** | Delete dead code (`onClick`, `_pendingNodeId`, unused config, `isSimulating`) | ~20 lines, dead weight |
+| ~~**10**~~ ✅ | Eliminate duplicate connected-set/range/label work in `startAnimation()` | `render()` is now the sole owner of connected-set computation; eliminates 3× per selection event |
 | **5** ✅ | Split `initGraph()` into smaller functions | Better testability, readability |
 
 ---
