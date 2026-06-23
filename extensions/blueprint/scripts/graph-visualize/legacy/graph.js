@@ -570,17 +570,9 @@ export function startScaleAnimation() {
   // Cancel any previous animation
   if (scaleAnimFrame) cancelAnimationFrame(scaleAnimFrame);
 
-  // Capture the currently displayed radius for each node BEFORE any state changes.
-  // This is the "from" value for the animation. If a previous animation is in-flight,
-  // its _animRadius holds the current interpolated value. Otherwise, getNodeRadius()
-  // returns the last rendered size.
-  const prevRadii = new Map();
-  for (const n of graphData.nodes) {
-    if (!n.visible) continue;
-    prevRadii.set(n.id, n._animRadius ?? getNodeRadius(n));
-  }
-
-  // Compute connected set (needed for correct target radii)
+  // Compute connected set and recalculate size ranges FIRST,
+  // so that both prevRadii and targetRadii use consistent ranges.
+  // This prevents negative radii when toggling categories mid-animation.
   connectedSet = null;
   if (selectedNode) {
     connectedSet = new Set([selectedNode.id]);
@@ -591,9 +583,17 @@ export function startScaleAnimation() {
       }
     }
   }
-
-  // Recalculate size ranges so getNodeRadius() returns correct targets
   recalcSizeRange();
+
+  // Capture the currently displayed radius for each node.
+  // This is the "from" value for the animation. If a previous animation is in-flight,
+  // its _animRadius holds the current interpolated value. Otherwise, getNodeRadius()
+  // returns the last rendered size.
+  const prevRadii = new Map();
+  for (const n of graphData.nodes) {
+    if (!n.visible) continue;
+    prevRadii.set(n.id, n._animRadius ?? getNodeRadius(n));
+  }
 
   // Build label placement set (progressive disclosure)
   buildLabelSet();
@@ -646,7 +646,7 @@ function scaleAnimStep(now) {
 // Returns the animated radius for a node (interpolated toward target)
 function getNodeAnimatedRadius(n) {
   if (n._animRadius !== undefined) {
-    return n._animRadius;
+    return Math.max(0, n._animRadius);
   }
   return getNodeRadius(n);
 }
