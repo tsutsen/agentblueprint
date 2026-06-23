@@ -107,18 +107,52 @@ function App() {
         }
         setCategories(catCounts)
 
-        // Activate all categories by default
-        setActiveCategories(new Set(Object.keys(catCounts)))
+        // Restore state from URL
+        const params = new URLSearchParams(window.location.search)
+        const catsParam = params.get('cats')
+        if (catsParam) {
+          const cats = new Set(catsParam.split(',').map(c => c.trim()).filter(Boolean))
+          setActiveCategories(cats)
+        } else {
+          // Activate all categories by default
+          setActiveCategories(new Set(Object.keys(catCounts)))
+        }
+        const qParam = params.get('q')
+        if (qParam) {
+          setSearchTerm(qParam)
+        }
       })
       .catch((err) => console.error('Failed to load graph data:', err))
   }, [])
 
-  // Debounced search term
+  // Debounced search term + URL sync
   const [debouncedSearch, setDebouncedSearch] = useState('')
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 250)
     return () => clearTimeout(timer)
   }, [searchTerm])
+
+  // Sync URL on state changes (after initial load)
+  useEffect(() => {
+    if (!graphData) return
+    const params = new URLSearchParams(window.location.search)
+    // cats
+    if (activeCategories.size > 0 && activeCategories.size < Object.keys(categories).length) {
+      params.set('cats', [...activeCategories].sort().join(','))
+    } else {
+      params.delete('cats')
+    }
+    // q
+    if (searchTerm) {
+      params.set('q', searchTerm)
+    } else {
+      params.delete('q')
+    }
+    // node (only if different from current)
+    // (node param is handled in handleNodeSelect/handleNodeDeselect)
+    const newURL = `?${params.toString()}`
+    history.replaceState(null, '', newURL)
+  }, [activeCategories, searchTerm, categories, graphData])
 
   // Apply filters when search/categories change (only after bridge is ready)
   const applyFilters = useCallback(() => {
@@ -147,13 +181,20 @@ function App() {
     bridgeRef.current?.setSizeMetric(metric)
   }, [])
 
-  // Handle node selection
+  // Handle node selection — sync to URL
   const handleNodeSelect = useCallback((node: any) => {
     setSelectedNode(node)
+    const params = new URLSearchParams(window.location.search)
+    params.set('node', node.id)
+    history.replaceState(null, '', `?${params.toString()}`)
   }, [])
 
+  // Handle node deselection — sync to URL
   const handleNodeDeselect = useCallback(() => {
     setSelectedNode(null)
+    const params = new URLSearchParams(window.location.search)
+    params.delete('node')
+    history.replaceState(null, '', `?${params.toString()}`)
   }, [])
 
   // Keyboard shortcuts: Escape to deselect/clear search, K to focus search
@@ -183,6 +224,18 @@ function App() {
   useEffect(() => {
     if (graphData) setBridgeReady(true)
   }, [graphData])
+
+  // Restore selected node from URL after bridge is ready
+  useEffect(() => {
+    if (!graphData || !bridgeReady) return
+    const params = new URLSearchParams(window.location.search)
+    const nodeId = params.get('node')
+    if (!nodeId) return
+    const node = graphData.nodes.find((n: any) => n.id === nodeId)
+    if (!node) return
+    // Select the node
+    bridgeRef.current?.selectNodeById(nodeId)
+  }, [graphData, bridgeReady])
 
   // Compute visible node IDs (same logic as applyFilters)
   const visibleIds = new Set(graphData?.nodes.filter((node: any) => {
