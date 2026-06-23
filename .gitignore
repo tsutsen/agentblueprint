@@ -22,3 +22,4 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+extensions/blueprint/scripts/graph-visualize/graph-simplification-analysis.md

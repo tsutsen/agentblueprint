@@ -37,9 +37,6 @@ async function init() {
   const gd = getGraphData();
   if (!gd) return;
 
-  console.log('Loaded graph data:', gd);
-  console.log('Nodes:', gd.nodes.length);
-  console.log('Edges:', gd.edges.length);
 
   initUI();
   initGraph();

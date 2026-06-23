@@ -72,16 +72,7 @@ function buildLabelSet() {
     candidates.push(n);
   }
 
-  console.log(
-    "[LABELS] zoom:",
-    zoom.k.toFixed(2),
-    "candidates:",
-    candidates.length,
-    "showLabels:",
-    showLabels,
-    "labelSet size:",
-    _labelVisibleSet.size,
-  );
+
 
   // 2. Sort by priority: larger radius first (they win conflicts)
   candidates.sort((a, b) => getNodeRadius(b) - getNodeRadius(a));
@@ -271,7 +262,7 @@ export function initGraph() {
   height = container.clientHeight;
 
   canvas = document.getElementById("graph-canvas");
-  console.log("Canvas element:", canvas);
+
   if (!canvas) {
     console.error("Canvas element not found!");
     return;
@@ -281,7 +272,7 @@ export function initGraph() {
   canvas.style.width = width + "px";
   canvas.style.height = height + "px";
   ctx = canvas.getContext("2d");
-  console.log("Canvas context:", ctx);
+
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
   // ── Pre-resolve edges ──
@@ -353,8 +344,7 @@ export function initGraph() {
   simulation.stop();
 
   // ── Initial render ──
-  console.log("Initial render:", graphData.nodes.length, "nodes");
-  console.log("First node:", graphData.nodes[0]);
+
   render();
 
   // ── Event listeners ──
@@ -407,15 +397,7 @@ export function recalcSizeRange() {
       }
       sizeRange._connected = true;
       sizeRange._fullRanges = fullRanges;
-      console.log(
-        "[RECALC] connected set:",
-        connectedSet.size,
-        "nodes | ranges:",
-        JSON.stringify({
-          degree: sizeRange.degree,
-          blast: sizeRange.blast,
-        }),
-      );
+
     } else {
       // Connected node is selected but all its neighbors are filtered out.
       // Fall back to full visible-set ranges instead of keeping stale connected-set values.
@@ -437,19 +419,7 @@ export function recalcSizeRange() {
     }
   }
 
-  // Only log when visible count changes
   if (visibleNodes.length !== _lastVisibleCount) {
-    const maxDeg = Math.max(...visibleNodes.map((n) => n.degree || 0));
-    console.log(
-      "[SIZE] visible:",
-      _lastVisibleCount,
-      "->",
-      visibleNodes.length,
-      "| maxDeg:",
-      maxDeg,
-      "connected:",
-      sizeRange._connected,
-    );
     _lastVisibleCount = visibleNodes.length;
   }
 }
@@ -860,22 +830,7 @@ function getNodeRadius(d) {
     connectedSet &&
     connectedSet.size <= 1
   ) {
-    console.log(
-      "[RADIUS]",
-      d.id,
-      "| metric:",
-      sizeMetric,
-      "rangeKey:",
-      rangeKey,
-      "useConnected:",
-      useConnected,
-      "sizeRange[" + rangeKey + "]:",
-      sizeRange[rangeKey],
-      "range:",
-      `[${minVal},${maxVal}]`,
-      "_connected:",
-      sizeRange._connected,
-    );
+
   }
 
   const nodeKey = SIZE_METRIC_KEYS[sizeMetric] ?? "degree";
@@ -888,14 +843,7 @@ function getNodeRadius(d) {
     connectedSet &&
     connectedSet.size <= 1
   ) {
-    console.log(
-      "[RADIUS-RESULT]",
-      d.id,
-      "| value:",
-      value,
-      "radius:",
-      radius.toFixed(1),
-    );
+
   }
   return radius;
 }
