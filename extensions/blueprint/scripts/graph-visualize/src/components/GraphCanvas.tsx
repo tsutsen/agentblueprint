@@ -122,7 +122,7 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, onBrid
           wrapper.deselectNode()
         },
         resetZoom: () => {
-          wrapper.setZoom(0, 0, 1)
+          wrapper.setZoom(0, 0, 0.4)
           wrapper.renderGraph()
         },
         startSimulation: () => {
