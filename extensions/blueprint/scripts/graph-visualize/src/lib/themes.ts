@@ -424,52 +424,52 @@ export const themes: Theme[] = [
     label: "⌘ Netrunner Light",
 
     vars: {
-      "--background": hexToHsl("#f4f6fc"),
-      "--foreground": hexToHsl("#0a0e1a"),
+      "--background": hexToHsl("#fef3c7"),
+      "--foreground": hexToHsl("#1a1a2e"),
 
-      "--card": hexToHsl("#ffffff"),
-      "--card-foreground": hexToHsl("#0a0e1a"),
+      "--card": hexToHsl("#fffbeb"),
+      "--card-foreground": hexToHsl("#1a1a2e"),
 
-      "--popover": hexToHsl("#ffffff"),
-      "--popover-foreground": hexToHsl("#0a0e1a"),
+      "--popover": hexToHsl("#fffbeb"),
+      "--popover-foreground": hexToHsl("#1a1a2e"),
 
-      "--primary": hexToHsl("#0088cc"),
-      "--primary-foreground": hexToHsl("#f4f6fc"),
+      "--primary": hexToHsl("#f59e0b"),
+      "--primary-foreground": hexToHsl("#1a1a2e"),
 
-      "--secondary": hexToHsl("#e2eaf5"),
-      "--secondary-foreground": hexToHsl("#0a0e1a"),
+      "--secondary": hexToHsl("#fef3c7"),
+      "--secondary-foreground": hexToHsl("#1a1a2e"),
 
-      "--muted": hexToHsl("#e2eaf5"),
-      "--muted-foreground": hexToHsl("#4a5568"),
+      "--muted": hexToHsl("#fef3c7"),
+      "--muted-foreground": hexToHsl("#4a4a5a"),
 
-      "--accent": hexToHsl("#0088cc"),
-      "--accent-foreground": hexToHsl("#f4f6fc"),
+      "--accent": hexToHsl("#f59e0b"),
+      "--accent-foreground": hexToHsl("#1a1a2e"),
 
       "--destructive": hexToHsl("#e01535"),
       "--destructive-foreground": hexToHsl("#ffffff"),
 
-      "--border": hexToHsl("#c8d4e8"),
-      "--input": hexToHsl("#c8d4e8"),
+      "--border": hexToHsl("#e5d98a"),
+      "--input": hexToHsl("#e5d98a"),
 
-      "--ring": hexToHsl("#0088cc"),
+      "--ring": hexToHsl("#f59e0b"),
     },
 
     legacyVars: {
-      "--bg": "#f4f6fc",
-      "--surface": "#ffffff",
-      "--surface2": "#e2eaf5",
+      "--bg": "#fef3c7",
+      "--surface": "#fffbeb",
+      "--surface2": "#fef3c7",
 
-      "--btn-text": "#0a0e1a",
+      "--btn-text": "#1a1a2e",
 
-      "--text": "#0a0e1a",
-      "--text-dim": "#4a5568",
+      "--text": "#1a1a2e",
+      "--text-dim": "#4a4a5a",
       "--text-bright": "#000000",
-      "--text-secondary": "#4a5568",
+      "--text-secondary": "#4a4a5a",
 
-      "--accent": "#0088cc",
-      "--accent-text": "#f4f6fc",
+      "--accent": "#f59e0b",
+      "--accent-text": "#1a1a2e",
 
-      "--accent-glow": "rgba(0,136,204,0.25)",
+      "--accent-glow": "rgba(245,158,11,0.3)",
     },
 
     nodeColors: [
@@ -487,7 +487,7 @@ export const themes: Theme[] = [
       "#a855f7",  // purple
     ],
 
-    edgeColor: "rgba(0, 136, 204, 0.4)",
+    edgeColor: "rgba(245, 158, 11, 0.4)",
   },
 ];
 
