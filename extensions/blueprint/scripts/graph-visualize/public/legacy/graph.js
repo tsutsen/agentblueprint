@@ -827,8 +827,12 @@ function getNodeRadius(d) {
 }
 
 function getNodeColor(d) {
-  const idx = d._nodeIndex ?? 0;
-  const cssVar = `--node-color-${idx % 12}`;
+  // Map category to one of 12 colors
+  const cat = d.typeCat || d.category || d.type || 'other';
+  let hash = 0;
+  for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash);
+  const idx = Math.abs(hash) % 12;
+  const cssVar = `--node-color-${idx}`;
   try {
     const color = getComputedStyle(document.documentElement)
       .getPropertyValue(cssVar).trim();
