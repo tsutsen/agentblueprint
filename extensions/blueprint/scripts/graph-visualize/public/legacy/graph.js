@@ -583,10 +583,8 @@ const ANIM_DURATION = 400; // ms — duration for both animations
 // Starts a single animation loop that drives both dim and scale transitions.
 // dimTarget: null = no dimming (scale-only), otherwise target opacity value.
 //
-// Note: Connected-set computation, size range recalculation, and label building
-// are all handled by render() — this function only captures animation state
-// (start/target radii) and kicks off the rAF loop. This avoids duplicating
-// the work that render() does every frame.
+// Note: This function computes connected-set and size ranges (needed for
+// correct target radii), but skips label building — render() handles that.
 export function startAnimation(dimTarget) {
   // Cancel any previous animation
   if (animFrame) cancelAnimationFrame(animFrame);
@@ -595,11 +593,22 @@ export function startAnimation(dimTarget) {
   animDimFrom = currentDim;
   animDimTarget = dimTarget;
 
-  // Capture scale animation state.
-  // sizeRange reflects the current selection context from the last render() call.
-  // If no render() has run yet, it falls back to the initial ranges.
-  // The first animStep frame calls render() which updates sizeRange for the
-  // current selection — any visual mismatch lasts only a single frame.
+  // Compute connected set and size ranges (needed for correct target radii).
+  // Note: render() will recompute these on the first frame, but we need them
+  // here so getNodeRadius() returns the correct targets for the animation.
+  connectedSet = null;
+  if (selectedNode) {
+    connectedSet = new Set([selectedNode.id]);
+    for (const e of validEdges) {
+      if (e.source.id === selectedNode.id || e.target.id === selectedNode.id) {
+        connectedSet.add(e.source.id);
+        connectedSet.add(e.target.id);
+      }
+    }
+  }
+  recalcSizeRange();
+
+  // Capture scale animation state
   animScaleStartRadii = new Map();
   animScaleTargets = new Map();
   for (const n of graphData.nodes) {
