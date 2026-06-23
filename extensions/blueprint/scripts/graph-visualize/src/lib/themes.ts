@@ -217,6 +217,37 @@ export const themes: Theme[] = [
       '--edge-cross': 'rgba(255, 105, 180, 0.3)',
     },
   },
+  {
+    key: 'netrunner',
+    label: '⌘ Netrunner',
+    vars: {
+      '--background': hexToHsl('#0a0a12'),
+      '--foreground': hexToHsl('#e0e0ff'),
+      '--card': hexToHsl('#12121f'),
+      '--card-foreground': hexToHsl('#e0e0ff'),
+      '--popover': hexToHsl('#12121f'),
+      '--popover-foreground': hexToHsl('#e0e0ff'),
+      '--primary': hexToHsl('#fcee0a'),
+      '--primary-foreground': hexToHsl('#0a0a12'),
+      '--secondary': hexToHsl('#1a1a2e'),
+      '--secondary-foreground': hexToHsl('#fcee0a'),
+      '--muted': hexToHsl('#1a1a2e'),
+      '--muted-foreground': hexToHsl('#8888aa'),
+      '--accent': hexToHsl('#fcee0a'),
+      '--accent-foreground': hexToHsl('#0a0a12'),
+      '--destructive': hexToHsl('#ff003c'),
+      '--destructive-foreground': hexToHsl('#0a0a12'),
+      '--border': hexToHsl('#2a2a4a'),
+      '--input': hexToHsl('#2a2a4a'),
+      '--ring': hexToHsl('#fcee0a'),
+    },
+    canvasVars: {
+      '--edge-color': 'rgba(0, 240, 255, 0.4)',
+      '--edge-related': 'rgba(0, 240, 255, 0.3)',
+      '--edge-spec': 'rgba(0, 255, 157, 0.3)',
+      '--edge-cross': 'rgba(255, 0, 60, 0.3)',
+    },
+  },
 ]
 
 /**
@@ -236,7 +267,7 @@ export function applyTheme(themeKey: string): void {
     root.style.setProperty(key, value)
   }
   // Toggle dark class for compatibility
-  const darkKeys = ['dark', 'gruvbox', 'neon']
+  const darkKeys = ['dark', 'gruvbox', 'neon', 'netrunner']
   if (darkKeys.includes(themeKey)) {
     root.classList.add('dark')
   } else {
