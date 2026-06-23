@@ -93,19 +93,18 @@ function App() {
       .then((data) => {
         setGraphData(data)
 
-        // Compute categories
+        // Compute categories — use same hash as getNodeColor for consistent colors
         const catCounts: Record<string, { count: number; color: string }> = {}
-        const defaultColors: Record<string, string> = {
-          domain: '#f472b6', technical: '#38bdf8', security: '#fbbf24',
-          ui: '#a78bfa', spec: '#34d399', req: '#38bdf8', nfr: '#7dd3fc',
-          con: '#a78bfa', fn: '#34d399', test: '#f87171', gl: '#fbbf24',
-          design: '#c084fc', data: '#4ade80', api: '#f472b6', plan: '#facc15',
-          other: '#94a3b8',
+        function getCatColor(cat: string): string {
+          let hash = 0
+          for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash)
+          const idx = Math.abs(hash) % 12
+          return `var(--node-color-${idx})`
         }
         for (const node of data.nodes) {
-          const cat = node.typeCat || node.category || 'other'
+          const cat = node.typeCat || node.category || node.type || 'other'
           if (!catCounts[cat]) {
-            catCounts[cat] = { count: 0, color: defaultColors[cat] || '#94a3b8' }
+            catCounts[cat] = { count: 0, color: getCatColor(cat) }
           }
           catCounts[cat].count++
         }

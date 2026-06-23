@@ -36,8 +36,10 @@ export function initUI() {
     for (let i = 0; i < catKey.length; i++) hash = catKey.charCodeAt(i) + ((hash << 5) - hash)
     const idx = Math.abs(hash) % 12
     try {
-      return getComputedStyle(document.documentElement)
-        .getPropertyValue(`--node-color-${idx}`).trim() || '#94a3b8'
+      const color = getComputedStyle(document.documentElement)
+        .getPropertyValue(`--node-color-${idx}`).trim()
+      console.log(`[getCatColor] cat=${catKey} hash=${hash} idx=${idx} color=${color}`)
+      return color || '#94a3b8'
     } catch { return '#94a3b8' }
   }
 
