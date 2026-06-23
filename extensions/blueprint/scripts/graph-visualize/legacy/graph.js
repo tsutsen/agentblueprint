@@ -378,32 +378,25 @@ export function recalcSizeRange() {
     }
   }
 
-  // Select the active range: connected-set when a node is selected, otherwise full
-  const activeRanges = (selectedNode && connectedSet) ? fullRanges : null;
-  if (activeRanges) {
-    // Compute ranges from connected neighborhood
+  // Store both full-set and connected-set ranges so getNodeRadius() can
+  // pick the right one per node (connected nodes use connected range, others use full)
+  for (const m of metrics) {
+    if (fullRanges[m.rangeKey]) {
+      sizeRange[m.rangeKey] = { full: fullRanges[m.rangeKey] };
+    }
+  }
+
+  // Also compute connected-set ranges when a node is selected
+  if (selectedNode && connectedSet) {
     const connectedNodes = visibleNodes.filter((n) => connectedSet.has(n.id));
     if (connectedNodes.length > 0) {
       for (const m of metrics) {
         const values = connectedNodes.map((n) => n[m.nodeKey] || 0);
         const maxVal = Math.max(...values);
-        // Zero-value special case: when all connected nodes have 0,
-        // scaleValue returns maxRadius to highlight the node.
-        sizeRange[m.rangeKey] = maxVal > 0 ? { min: 0, max: maxVal } : { min: 0, max: 0 };
-      }
-    } else {
-      // Connected node selected but all neighbors filtered out — fall back to full ranges
-      for (const m of metrics) {
-        if (fullRanges[m.rangeKey]) {
-          sizeRange[m.rangeKey] = fullRanges[m.rangeKey];
-        }
-      }
-    }
-  } else {
-    // Restore full visible-set ranges
-    for (const m of metrics) {
-      if (fullRanges[m.rangeKey]) {
-        sizeRange[m.rangeKey] = fullRanges[m.rangeKey];
+        sizeRange[m.rangeKey] = {
+          full: sizeRange[m.rangeKey]?.full ?? { min: 0, max: maxVal },
+          connected: maxVal > 0 ? { min: 0, max: maxVal } : { min: 0, max: 0 },
+        };
       }
     }
   }
@@ -795,8 +788,17 @@ function getNodeRadius(d) {
 
   const rangeKey = sizeMetric ?? "degree";
   const range = sizeRange[rangeKey];
-  const minVal = range?.min ?? 0;
-  const maxVal = range?.max ?? 0;
+
+  // Pick the right range: connected-set range for connected nodes,
+  // full visible-set range for all others
+  let minVal, maxVal;
+  if (range?.connected && connectedSet?.has(d.id)) {
+    minVal = range.connected.min;
+    maxVal = range.connected.max;
+  } else {
+    minVal = range?.full?.min ?? range?.min ?? 0;
+    maxVal = range?.full?.max ?? range?.max ?? 0;
+  }
 
   const nodeKey = SIZE_METRIC_KEYS[rangeKey] ?? rangeKey;
   const value = d[nodeKey] ?? 0;
