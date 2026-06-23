@@ -46,6 +46,11 @@ function App() {
   const [simulating, setSimulating] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(300)
 
+  // Apply initial theme
+  useEffect(() => {
+    applyTheme(currentTheme)
+  }, [])
+
   const bridgeRef = useRef<IGraphBridge | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const resizeRef = useRef<HTMLDivElement>(null)
