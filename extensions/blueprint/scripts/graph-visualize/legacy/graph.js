@@ -354,7 +354,8 @@ export function initGraph() {
   // ── Render ──
   render();
 
-  document.getElementById("loading-overlay").classList.add("hidden");
+  const overlay = document.getElementById("loading-overlay");
+  if (overlay) overlay.classList.add("hidden");
 }
 
 // ─── Render ───
