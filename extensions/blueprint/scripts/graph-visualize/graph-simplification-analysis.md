@@ -142,7 +142,7 @@ Five separate CSS files (`theme-default-light.css`, `theme-gruvbox.css`, etc.) w
 |----------|--------|--------|
 | ~~**1**~~ ✅ | Merge the two animation systems into one | Eliminates double-rAF, prevents double-render |
 | ~~**2**~~ ✅ | Move connected-set/size-range out of `startScaleAnimation()` into `render()` only | Eliminates duplicate computation per frame |
-| ~~**3**~~ ✅ | Remove all `console.log` from render path | Eliminates console spam, cleaner code |
+| ~~**3**~~ ✅ | Simplify connected-set / size-range logic | Removed `_connected`/`_fullRanges` dual-state; single `sizeRange` with `{min, max}`; eliminated 40+ lines |
 | **4** | Delete dead code (`onClick`, `_pendingNodeId`, unused config, `isSimulating`) | ~20 lines, dead weight |
 | **5** ✅ | Split `initGraph()` into smaller functions | Better testability, readability |
 
@@ -165,6 +165,36 @@ Split `initGraph()` into four focused functions:
 - `initCanvas()` returns a boolean so `initGraph()` can bail early on missing canvas
 - Backward compatible — `initGraph()` with no args works exactly as before
 - TypeScript compiles cleanly, ESLint passes, `vite build` succeeds
+
+---
+
+## 3. Overly Complex Connected-Set / Size Range Logic — ✅ **RESOLVED**
+
+Simplified `recalcSizeRange()` and `getNodeRadius()` to use a single `sizeRange` object with `{ min, max }` properties per metric, eliminating the `_connected` flag and `_fullRanges` backup dictionary.
+
+**Changes:**
+
+| Before | After |
+|--------|-------|
+| `sizeRange[rangeKey] = [0, maxVal]` (array) | `sizeRange[rangeKey] = { min: 0, max: maxVal }` (object) |
+| `sizeRange._connected` flag | Removed — active range is always in `sizeRange[rangeKey]` |
+| `sizeRange._fullRanges` backup dict | Removed — full ranges computed on demand in `recalcSizeRange()` |
+| `SIZE_METRIC_KEYS` with 6 entries | `SIZE_METRIC_KEYS = { blast: 'blastRadius' }` (only 1 non-trivial mapping) |
+| `getNodeRadius()` had 3-way range lookup | Single lookup: `sizeRange[rangeKey]` |
+| ~60 lines in `recalcSizeRange()` | ~50 lines — cleaner branching, no duplicated metrics loop |
+
+**How it works now:**
+1. `recalcSizeRange()` computes full visible-set ranges first
+2. If a node is selected, it computes connected-set ranges and overwrites `sizeRange` entries
+3. If no selection (or all neighbors filtered), full ranges are restored
+4. `getNodeRadius()` simply reads `sizeRange[rangeKey]` — always the correct active range
+5. The zero-value special case (`{min:0, max:0}` → `maxRadius`) is handled by `scaleValue()` directly
+
+**Benefits:**
+- No stale state — `sizeRange` always reflects the current selection context
+- No dual-state tracking (`_connected` / `_fullRanges`)
+- `getNodeRadius()` is 15 lines shorter with no conditional branching on range source
+- `vite build` succeeds cleanly
 | **6** | Replace theme CSS files with single file + class toggling | One file instead of five, less brittle |
 | **7** | Replace `settleAfterDrag` tick cap with `setTimeout` | Simpler, less fragile |
-| **8** | Replace `SIZE_METRIC_KEYS` with inline logic | 6 lines → 1 line |
+| ~~**8**~~ ✅ | Replace `SIZE_METRIC_KEYS` with inline logic | 6 lines → 1 line (merged into #3 resolution) |

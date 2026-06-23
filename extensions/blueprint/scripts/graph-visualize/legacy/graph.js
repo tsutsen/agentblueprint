@@ -220,11 +220,11 @@ let panStart = { x: 0, y: 0 };
 let zoomStart = { x: 0, y: 0 };
 let isMouseDown = false;
 let sizeRange = {
-  degree: [0, 1],
-  blast: [0, 1],
-  risk: [0, 1],
-  centrality: [0, 1],
-  type: [1, 3],
+  degree: { min: 0, max: 1 },
+  blast: { min: 0, max: 1 },
+  risk: { min: 0, max: 1 },
+  centrality: { min: 0, max: 1 },
+  type: { min: 1, max: 3 },
 };
 
 // ── Common scaling function ──
@@ -246,14 +246,8 @@ function scaleValue(value, minVal, maxVal, minRadius = 8, maxRadius = 40) {
 }
 
 // ─── Size Metric Lookup ───
-const SIZE_METRIC_KEYS = {
-  degree: 'degree',
-  blast: 'blastRadius',
-  risk: 'risk',
-  centrality: 'centrality',
-  responsibility: 'responsibility',
-  interfacePressure: 'interfacePressure',
-};
+// Only 'blast' needs remapping; all others use the metric name directly as the node property.
+const SIZE_METRIC_KEYS = { blast: 'blastRadius' };
 
 // ─── Init graph ───
 export function initGraph() {
@@ -300,7 +294,7 @@ export function initGraph() {
     const key = _initMetrics[i];
     const rkey = rangeKeys[i];
     const values = graphData.nodes.map((n) => n[key] || 0).filter((v) => v > 0);
-    if (values.length > 0) sizeRange[rkey] = [0, Math.max(...values)];
+    if (values.length > 0) sizeRange[rkey] = { min: 0, max: Math.max(...values) };
   }
   validEdges = [];
   for (const e of graphData.edges) {
@@ -366,53 +360,48 @@ export function recalcSizeRange() {
   const visibleNodes = graphData.nodes.filter((n) => n.visible !== false);
   if (visibleNodes.length === 0) return;
 
-  // Store the full visible set range
-  const fullRanges = {};
-  const _metrics = [
+  const metrics = [
     { nodeKey: "blastRadius", rangeKey: "blast" },
     { nodeKey: "degree", rangeKey: "degree" },
     { nodeKey: "risk", rangeKey: "risk" },
     { nodeKey: "centrality", rangeKey: "centrality" },
   ];
 
-  for (const m of _metrics) {
+  // Compute full visible-set ranges
+  const fullRanges = {};
+  for (const m of metrics) {
     const values = visibleNodes
       .map((n) => n[m.nodeKey] || 0)
       .filter((v) => v > 0);
     if (values.length > 0) {
-      fullRanges[m.rangeKey] = [0, Math.max(...values)];
+      fullRanges[m.rangeKey] = { min: 0, max: Math.max(...values) };
     }
   }
 
-  // If a node is selected, also compute range for connected neighborhood
-  if (selectedNode && connectedSet) {
+  // Select the active range: connected-set when a node is selected, otherwise full
+  const activeRanges = (selectedNode && connectedSet) ? fullRanges : null;
+  if (activeRanges) {
+    // Compute ranges from connected neighborhood
     const connectedNodes = visibleNodes.filter((n) => connectedSet.has(n.id));
     if (connectedNodes.length > 0) {
-      for (const m of _metrics) {
+      for (const m of metrics) {
         const values = connectedNodes.map((n) => n[m.nodeKey] || 0);
         const maxVal = Math.max(...values);
-        // When all connected nodes have 0 for a metric, use [0,0] so scaleValue hits the
-        // minVal===maxVal===0 path and returns maxRadius (highlighting isolated/zero-value nodes)
-        sizeRange[m.rangeKey] = maxVal > 0 ? [0, maxVal] : [0, 0];
+        // Zero-value special case: when all connected nodes have 0,
+        // scaleValue returns maxRadius to highlight the node.
+        sizeRange[m.rangeKey] = maxVal > 0 ? { min: 0, max: maxVal } : { min: 0, max: 0 };
       }
-      sizeRange._connected = true;
-      sizeRange._fullRanges = fullRanges;
-
     } else {
-      // Connected node is selected but all its neighbors are filtered out.
-      // Fall back to full visible-set ranges instead of keeping stale connected-set values.
-      sizeRange._connected = false;
-      for (const m of _metrics) {
+      // Connected node selected but all neighbors filtered out — fall back to full ranges
+      for (const m of metrics) {
         if (fullRanges[m.rangeKey]) {
           sizeRange[m.rangeKey] = fullRanges[m.rangeKey];
         }
       }
-      sizeRange._fullRanges = fullRanges;
     }
   } else {
-    // Restore full ranges
-    sizeRange._connected = false;
-    for (const m of _metrics) {
+    // Restore full visible-set ranges
+    for (const m of metrics) {
       if (fullRanges[m.rangeKey]) {
         sizeRange[m.rangeKey] = fullRanges[m.rangeKey];
       }
@@ -788,11 +777,6 @@ function onWheel(event) {
 function getNodeRadius(d) {
   if (d.type === "spec" || d.category === "spec") return 15;
 
-  // Determine which range to use: connected set or full visible set
-  let useConnected =
-    sizeRange._connected && connectedSet && connectedSet.has(d.id);
-  let rangeKey;
-
   if (sizeMetric === "type") {
     const typeSizes = {
       CON: 6, FN: 5, REQ: 4.5, NFR: 4.5, US: 4.5,
@@ -804,48 +788,15 @@ function getNodeRadius(d) {
     return scaleValue(value, 1, 6, 8, 40);
   }
 
-  // Use sizeMetric itself as the range key ("blast", "degree", etc.)
-  // SIZE_METRIC_KEYS maps to the NODE property ("blastRadius") — not the range storage key.
-  rangeKey = sizeMetric ?? "degree";
+  const rangeKey = sizeMetric ?? "degree";
+  const range = sizeRange[rangeKey];
+  const minVal = range?.min ?? 0;
+  const maxVal = range?.max ?? 0;
 
-  let minVal, maxVal;
-  if (useConnected) {
-    minVal = sizeRange[rangeKey]?.[0] ?? 0;
-    maxVal = sizeRange[rangeKey]?.[1] ?? 0;
-  } else {
-    const fr = sizeRange._fullRanges;
-    if (fr && fr[rangeKey]) {
-      minVal = fr[rangeKey][0];
-      maxVal = fr[rangeKey][1];
-    } else {
-      minVal = sizeRange[rangeKey]?.[0] ?? 0;
-      maxVal = sizeRange[rangeKey]?.[1] ?? 0;
-    }
-  }
+  const nodeKey = SIZE_METRIC_KEYS[rangeKey] ?? rangeKey;
+  const value = d[nodeKey] ?? 0;
 
-  // Debug: log for selected node with 0 connections
-  if (
-    selectedNode &&
-    selectedNode.id === d.id &&
-    connectedSet &&
-    connectedSet.size <= 1
-  ) {
-
-  }
-
-  const nodeKey = SIZE_METRIC_KEYS[sizeMetric] ?? "degree";
-  let value = d[nodeKey] ?? 0;
-
-  const radius = scaleValue(value, minVal, maxVal, 8, 40);
-  if (
-    selectedNode &&
-    selectedNode.id === d.id &&
-    connectedSet &&
-    connectedSet.size <= 1
-  ) {
-
-  }
-  return radius;
+  return scaleValue(value, minVal, maxVal, 8, 40);
 }
 
 function getNodeColor(d) {
