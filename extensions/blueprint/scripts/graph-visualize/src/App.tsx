@@ -14,15 +14,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Switch } from '@/components/ui/switch'
 import { themes, applyTheme } from '@/lib/themes'
 
-/** Extract clean short ID: PREFIX-NNN (handles TST-NNN-xxx, TST-xxx-NNN, CON-NNN-xxx, FLW-NNN-xxx, and slug-style IDs) */
-function extractShortId(id: string, type?: string): string {
+/** Extract clean short ID: PREFIX-NNN (handles TST-NNN-xxx and TST-xxx-NNN patterns) */
+function extractShortId(id: string): string {
   const parts = id.split('-')
   const numIdx = parts.findIndex(p => /^\d+$/.test(p))
   if (numIdx >= 0) {
     return `${parts[0]}-${parts[numIdx]}`
   }
-  // Slug-style IDs (e.g. "citation-network-builder") — use type prefix
-  if (type) return type.toUpperCase()
   return parts.slice(0, 2).join('-')
 }
 
@@ -296,7 +294,7 @@ function App() {
               {sortedNodes.map((node: any) => {
                 const idShort = (node.type === 'spec' || node.category === 'spec')
                   ? 'SPEC'
-                  : extractShortId(node.id, node.type);
+                  : extractShortId(node.id);
                 const catDisplay = node.typeLabel || node.type || node.category || 'unknown';
                 return (
                   <button
@@ -311,7 +309,7 @@ function App() {
                     <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
                       {idShort}
                     </span>
-                    <span className="text-sm text-foreground flex-1 min-w-0 truncate">
+                    <span className="font-medium text-foreground flex-1 min-w-0 truncate">
                       {node.term || node.label || node.id}
                     </span>
                     <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
@@ -474,7 +472,7 @@ function App() {
           <div data-testid="detail-scroll" className="flex-1 overflow-y-auto overflow-x-hidden">
             <div data-testid="detail-body" className="p-4 w-full">
               <p data-testid="detail-description" className="text-sm leading-relaxed text-muted-foreground break-words overflow-wrap-anywhere max-w-full">
-                {selectedNode.definition || selectedNode.term || selectedNode.label || 'No description available.'}
+                {selectedNode.definition || 'No description available.'}
               </p>
 
               <Separator className="my-3" />
