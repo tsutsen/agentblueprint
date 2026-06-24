@@ -94,9 +94,16 @@ function App() {
 
   // ─── Sync parent state → graph via bridge ───
   useEffect(() => {
-    if (!bridgeRef.current) return
-    bridgeRef.current.setVisibility(activeCategories)
-  }, [activeCategories])
+    if (!bridgeRef.current || !graphData) return
+    const ids = new Set(graphData.nodes.filter((node: any) => {
+      const cat = node.typeCat || node.category || 'other'
+      const catVisible = activeCategories.has(cat)
+      const searchMatch = !debouncedSearch ||
+        (node.term || node.label || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
+      return catVisible && searchMatch
+    }).map((n: any) => n.id))
+    bridgeRef.current.setVisibility(ids)
+  }, [activeCategories, debouncedSearch, graphData])
 
   useEffect(() => {
     if (!bridgeRef.current) return
