@@ -602,23 +602,23 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     // Initial render
     render()
 
-    // ─── D3 Zoom (wheel + middle-click pan) ───
-    // We use d3-zoom for wheel zooming and middle-click panning.
-    // Left-click node dragging/panning is handled manually below.
-    const zoomBehavior = d3.zoom()
-      .scaleExtent([0.05, 8])
-      .filter((event) => {
-        // Only handle wheel and middle-click; let left-click pass through to manual handlers
-        if (event.button !== 0) return true
-        if (event.type === 'wheel') return true
-        return false
-      })
-      .on('zoom', (event: any) => {
-        zoomRef.current = event.transform
-        render()
-      })
+    // ─── Manual wheel zoom (replaces d3-zoom to avoid double transform) ───
+    function onWheel(event: WheelEvent) {
+      event.preventDefault()
+      const rect = canvas.getBoundingClientRect()
+      const mouseX = event.clientX - rect.left
+      const mouseY = event.clientY - rect.top
 
-    d3.select(canvas).call(zoomBehavior as any)
+      const delta = event.deltaY > 0 ? 0.9 : 1.1
+      const newK = Math.max(0.05, Math.min(8, zoomRef.current.k * delta))
+
+      // Zoom toward mouse position (same formula as original graph.js)
+      zoomRef.current.x = mouseX - (mouseX - zoomRef.current.x) * (newK / zoomRef.current.k)
+      zoomRef.current.y = mouseY - (mouseY - zoomRef.current.y) * (newK / zoomRef.current.k)
+      zoomRef.current.k = newK
+
+      render()
+    }
 
     // ─── Mouse Events (left-click: node drag, pan, select) ───
     function getMousePos(event: MouseEvent) {
@@ -787,6 +787,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     canvas.addEventListener('mousedown', onMouseDown, { capture: true })
     canvas.addEventListener('mousemove', onMouseMove, { capture: true })
     canvas.addEventListener('mouseup', onMouseUp, { capture: true })
+    canvas.addEventListener('wheel', onWheel, { passive: false })
 
     // ─── Resize observer ───
     const resizeObserver = new ResizeObserver(() => {
@@ -809,10 +810,10 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     // ─── Cleanup ───
     return () => {
-      zoomBehavior.on('zoom', null)
       canvas.removeEventListener('mousedown', onMouseDown)
       canvas.removeEventListener('mousemove', onMouseMove)
       canvas.removeEventListener('mouseup', onMouseUp)
+      canvas.removeEventListener('wheel', onWheel)
       resizeObserver.disconnect()
       if (resizeRAFRef.current !== null) cancelAnimationFrame(resizeRAFRef.current)
       if (animFrameRef.current !== null) cancelAnimationFrame(animFrameRef.current)
