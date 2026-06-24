@@ -421,6 +421,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     // Draw nodes
     for (const n of data.nodes) {
       if (!n.visible) continue
+      if (isNaN(n.x) || isNaN(n.y)) { n.x = w / 2; n.y = h / 2 }
       const r = n._animRadius !== undefined ? Math.max(0, n._animRadius) : getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
       const color = getNodeColor(n, themeColorsRef.current)
       const isSelected = selectedNodeRef.current && selectedNodeRef.current.id === n.id
@@ -612,7 +613,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     // Initial static layout
     const initSim = d3.forceSimulation(data.nodes)
-      .force('link', d3.forceLink(validEdgesRef.current).distance(120).strength(0.05))
+      .force('link', d3.forceLink(validEdgesRef.current).id((d: any) => d.id).distance(120).strength(0.05))
       .force('charge', d3.forceManyBody().strength(-150))
       .force('center', d3.forceCenter(w / 2, h / 2).strength(0.02))
       .force('collision', d3.forceCollide().radius(25))
