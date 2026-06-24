@@ -352,8 +352,12 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     const h = heightRef.current
     const z = zoomRef.current
 
-    ctx.setTransform(1, 0, 0, 1, 0, 0)
-    ctx.clearRect(0, 0, w, h)
+    // Clear full canvas (canvas has w*dpr x h*dpr pixels)
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    // Scale context for DPR so all drawing uses CSS coordinates (matching node positions)
+    const dpr = window.devicePixelRatio || 1
+    ctx.scale(dpr, dpr)
     ctx.save()
     ctx.translate(z.x, z.y)
     ctx.scale(z.k, z.k)
