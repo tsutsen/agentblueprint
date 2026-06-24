@@ -164,20 +164,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   const isDraggingRef = useRef(false)
   const renderPendingRef = useRef(false)
   const rafIdRef = useRef<number | null>(null)
-  // Dirty flags — only recompute when inputs actually change
-  const needsRecalcRef = useRef(true)
-  const needsLabelRebuildRef = useRef(true)
-  const labelsDirtyRef = useRef(true)
-  const prevZoomKRef = useRef(0)
-
   // Cached connected set — only updated on selection change
   const connectedEdgesRef = useRef<Set<any> | null>(null)
-
-  function markNeedsRecalc() { needsRecalcRef.current = true }
-  function markNeedsLabelRebuild() {
-    needsLabelRebuildRef.current = true
-    labelsDirtyRef.current = true
-  }
 
   // Deferred render — batches rapid calls into a single RAF
   function deferRender() {
@@ -271,7 +259,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       }
     }
     labelVisibleSetRef.current = newVisible
-    labelsDirtyRef.current = true
   }
 
   // ─── Update HTML labels ───
@@ -373,6 +360,9 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
+    const nCount = data?.nodes?.length ?? 0
+    const vCount = data?.nodes?.filter((n: any) => n.visible !== false)?.length ?? 0
+    if (nCount > 0 && vCount === 0) console.warn('[render] ALL NODES INVISIBLE!')
 
     const w = widthRef.current
     const h = heightRef.current
@@ -397,17 +387,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     // Use cached connected edges (only updated on selection change)
     const connectedEdges = connectedEdgesRef.current
 
-    // Only recompute when inputs actually change
-    if (needsRecalcRef.current) {
-      recalcSizeRange()
-      needsRecalcRef.current = false
-    }
-    // Label rebuild throttled by zoom hysteresis
-    if (needsLabelRebuildRef.current || Math.abs(z.k - prevZoomKRef.current) > 0.05) {
-      buildLabelSet()
-      needsLabelRebuildRef.current = false
-      prevZoomKRef.current = z.k
-    }
+    // Always recompute — dirty flags are broken
+    recalcSizeRange()
 
     const edgeColor = getEdgeColor(themeColorsRef.current)
     const currentDim = currentDimRef.current
@@ -468,7 +449,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     }
 
     // Always update label positions — they follow nodes during pan/drag/sim
-    // Only rebuild label set when inputs change (handled by needsLabelRebuildRef)
     updateHtmlLabels()
     ctx.globalAlpha = 1
     ctx.restore()
@@ -556,17 +536,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   // ─── Initialize graph ───
   useEffect(() => {
     if (!data) return
-
-    // Reset dirty flags — data changed, need full recomputation
-    needsRecalcRef.current = true
-    needsLabelRebuildRef.current = true
-
-    // Immediately compute size ranges and label set so nodes are visible on first render
-    recalcSizeRange()
-    needsRecalcRef.current = false
-    buildLabelSet()
-    needsLabelRebuildRef.current = false
-    labelsDirtyRef.current = true
 
     const container = containerRef.current
     const canvas = canvasRef.current
@@ -915,8 +884,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       for (const n of data.nodes) {
         n.visible = visibleIds.has(n.id)
       }
-      markNeedsRecalc()
-      markNeedsLabelRebuild()
       startAnimation(null)
       if (simulationRef.current) {
         simulationRef.current.stop()
@@ -933,8 +900,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       themeRef.current = newTheme
       setThemeState(newTheme)
       localStorage.setItem('graph-theme', newTheme)
-      markNeedsRecalc()
-      markNeedsLabelRebuild()
       // render() is called by the theme useEffect after applying CSS
     },
     updateTheme: () => {
@@ -946,8 +911,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     setSizeMetric: (metric: string) => {
       sizeMetricRef.current = metric
       setSizeMetricState(metric)
-      markNeedsRecalc()
-      markNeedsLabelRebuild()
       startAnimation(null)
       deferRender()
     },
@@ -957,7 +920,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     setLabels: (show: boolean) => {
       showLabelsRef.current = show
       setShowLabelsState(show)
-      markNeedsLabelRebuild()
       deferRender()
     },
 
@@ -991,14 +953,12 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       const node = data.nodes.find((n: any) => n.id === id)
       if (node) {
         selectedNodeRef.current = node
-        markNeedsRecalc()
         startAnimation(0.15)
         onNodeSelect?.(node)
       }
     },
     deselectNode: () => {
       selectedNodeRef.current = null
-      markNeedsRecalc()
       startAnimation(1)
       onNodeDeselect?.()
     },
