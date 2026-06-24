@@ -189,6 +189,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     centerX?: number
     centerY?: number
     centerStrength?: number
+    orphanStrength?: number
     tick?: () => void
   }) {
     const linkForce = d3.forceLink(edges)
@@ -219,6 +220,31 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     if (opts.centerX != null && opts.centerY != null) {
       sim.force('center', d3.forceCenter(opts.centerX, opts.centerY).strength(opts.centerStrength ?? 0.02))
+    }
+
+    if (opts.orphanStrength != null && opts.centerX != null && opts.centerY != null) {
+      const cx = opts.centerX
+      const cy = opts.centerY
+      const strength = opts.orphanStrength
+      const edgeNodeIds = new Set<string>()
+      for (const e of edges) {
+        edgeNodeIds.add(typeof e.source === 'object' ? (e.source as GraphNode).id : (e.source as string))
+        edgeNodeIds.add(typeof e.target === 'object' ? (e.target as GraphNode).id : (e.target as string))
+      }
+      let orphanTickCount = 0
+      const orphanForce = () => {
+        orphanTickCount++
+        const decay = Math.max(0, 1 - orphanTickCount / 80)
+        if (decay === 0) return
+        for (const n of nodes) {
+          if (edgeNodeIds.has(n.id)) continue
+          const dx = cx - (n.x ?? cx)
+          const dy = cy - (n.y ?? cy)
+          n.vx = (n.vx ?? 0) + dx * strength * 0.005 * decay
+          n.vy = (n.vy ?? 0) + dy * strength * 0.005 * decay
+        }
+      }
+      sim.force('orphanPull', orphanForce as unknown as d3.Force<GraphNode, undefined>)
     }
 
     if (opts.tick) {
@@ -545,10 +571,11 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     const cy = heightRef.current / 2
     simulationRef.current = createSimulation(visibleNodes, visibleEdges, {
       alpha: 1, alphaDecay: 0.1, alphaMin: 0, velocityDecay: 0.4,
-      chargeStrength: -100,
+      chargeStrength: -200,
       linkDistance: 180,
       linkStrength: 0.15,
-      centerX: cx, centerY: cy, centerStrength: 0.15,
+      centerX: cx, centerY: cy, centerStrength: 0.5,
+      orphanStrength: 1.0,
       tick: () => render(),
     }).on('end', () => {
       simulatingRef.current = false
