@@ -503,7 +503,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
         }
       }
     }
-    // Don't call recalcSizeRange here — trust the dirty flag in render()
+    recalcSizeRange()
 
     animScaleStartRadiiRef.current = new Map()
     animScaleTargetsRef.current = new Map()
