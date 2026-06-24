@@ -367,6 +367,12 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     const w = widthRef.current
     const h = heightRef.current
     const z = zoomRef.current
+    if (nCount > 0 && vCount > 0) {
+      const firstVisible = data.nodes.find((n: any) => n.visible !== false)
+      if (firstVisible) {
+        console.log('[render] zoom=', JSON.stringify(z), 'nodePos=', firstVisible.x.toFixed(1), firstVisible.y.toFixed(1), 'canvas=', w, 'x', h)
+      }
+    }
 
     // Reset transform to identity, then clear full canvas
     ctx.setTransform(1, 0, 0, 1, 0, 0)
@@ -816,6 +822,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
         resizeRAFRef.current = null
         const w = container.clientWidth
         const h = container.clientHeight
+        // Skip if dimensions haven't actually changed — canvas.width = sameValue resets the bitmap
+        if (w === widthRef.current && h === heightRef.current) return
         widthRef.current = w
         heightRef.current = h
         const dpr = window.devicePixelRatio || 1
@@ -930,10 +938,13 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       if (simulationRef.current) simulationRef.current.stop()
       const visibleNodes = data.nodes.filter((n: any) => n.visible)
       const visibleEdges = validEdgesRef.current.filter((e: any) => e.visible)
+      // Anchor to centroid of current positions so simulation doesn't pull nodes to stale canvas-center
+      const cx = visibleNodes.length > 0 ? visibleNodes.reduce((s: number, n: any) => s + n.x, 0) / visibleNodes.length : widthRef.current / 2
+      const cy = visibleNodes.length > 0 ? visibleNodes.reduce((s: number, n: any) => s + n.y, 0) / visibleNodes.length : heightRef.current / 2
       simulationRef.current = d3.forceSimulation(visibleNodes)
         .force('link', d3.forceLink(visibleEdges).distance(120).strength(0.05))
         .force('charge', d3.forceManyBody().strength(-150))
-        .force('center', d3.forceCenter(widthRef.current / 2, heightRef.current / 2).strength(0.02))
+        .force('center', d3.forceCenter(cx, cy).strength(0.02))
         .force('collision', d3.forceCollide().radius(25))
         .alpha(0.3)
         .alphaDecay(0)
