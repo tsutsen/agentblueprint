@@ -589,98 +589,130 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   }
 
   // ─── Initialize graph ───
+  // ─── Layout init (runs once, StrictMode-safe) ───
   useEffect(() => {
     if (!data) return
-    dataRef.current = data  // sync here, not in a separate effect
+    dataRef.current = data
 
     const container = containerRef.current
     const canvas = canvasRef.current
     if (!container || !canvas) return
 
-    // Only run init layout once (StrictMode safety)
     const isFirstMount = !initializedRef.current
     initializedRef.current = true
 
     if (isFirstMount) {
+      // Clear previous labels
+      labelElementsRef.current.clear()
+      labelVisibleSetRef.current = null
 
-    // Clear previous labels
-    labelElementsRef.current.clear()
-    labelVisibleSetRef.current = null
+      // Compute size ranges
+      for (const m of SIZE_METRICS) {
+        const values = dataRef.current.nodes.map((n: GraphNode) => n.metrics[m.key] || 0).filter((v: number) => v > 0)
+        if (values.length > 0) sizeRangeRef.current[m.key] = { min: 0, max: Math.max(...values) }
+      }
 
-    // Compute size ranges
-    for (const m of SIZE_METRICS) {
-      const values = dataRef.current.nodes.map((n: GraphNode) => n.metrics[m.key] || 0).filter((v: number) => v > 0)
-      if (values.length > 0) sizeRangeRef.current[m.key] = { min: 0, max: Math.max(...values) }
+      // Build node map
+      nodeMapRef.current = new Map()
+      for (const n of dataRef.current.nodes) {
+        n.visible = true
+        n._animRadius = undefined
+        nodeMapRef.current.set(n.id, n)
+      }
+
+      // Pre-resolve edges
+      validEdgesRef.current = []
+      for (const e of dataRef.current.edges) {
+        e.visible = true
+        const srcId = typeof e.source === 'object' ? e.source.id : e.source
+        const tgtId = typeof e.target === 'object' ? e.target.id : e.target
+        const srcNode = nodeMapRef.current.get(srcId)
+        const tgtNode = nodeMapRef.current.get(tgtId)
+        if (!srcNode || !tgtNode) continue
+        e.source = srcNode
+        e.target = tgtNode
+        validEdgesRef.current.push(e)
+      }
+
+      // Initial sizing
+      const w = container.clientWidth
+      const h = container.clientHeight
+      widthRef.current = w
+      heightRef.current = h
+
+      // Canvas setup with DPR
+      const dpr = window.devicePixelRatio || 1
+      canvas.width = w * dpr
+      canvas.height = h * dpr
+      canvas.style.width = w + 'px'
+      canvas.style.height = h + 'px'
+
+      // Center zoom
+      const initK = 0.3
+      zoomRef.current = { x: -w / 2 * initK + w / 2, y: -h / 2 * initK + h / 2, k: initK }
+
+      // Initial node placement
+      dataRef.current.nodes.forEach((n: GraphNode, i: number) => {
+        const angle = (2 * Math.PI * i) / dataRef.current.nodes.length
+        const radius = 200 + Math.random() * 200
+        n.x = w / 2 + radius * Math.cos(angle)
+        n.y = h / 2 + radius * Math.sin(angle)
+        n.vx = 0
+        n.vy = 0
+      })
+
+      // Initial static layout
+      const initSim = createSimulation(dataRef.current.nodes, validEdgesRef.current, {
+        alpha: 0.3, alphaDecay: 0.1, velocityDecay: 0.4,
+        chargeStrength: -150,
+        linkIdAccessor: true,
+        centerX: w / 2, centerY: h / 2, centerStrength: 0.02,
+        collisionRadius: 25,
+      })
+      for (let i = 0; i < 200; i++) initSim.tick()
+      initSim.stop()
+    } else {
+      // StrictMode remount — reset D3-mutated state so re-init is clean
+      for (const n of dataRef.current.nodes) {
+        delete n.x
+        delete n.y
+        delete n.vx
+        delete n.vy
+        delete n.fx
+        delete n.fy
+        delete n.index
+      }
+      for (const e of dataRef.current.edges) {
+        delete (e as any).index
+      }
     }
 
-    // Build node map
-    nodeMapRef.current = new Map()
-    for (const n of dataRef.current.nodes) {
-      n.visible = true
-      n._animRadius = undefined
-      nodeMapRef.current.set(n.id, n)
-    }
-
-    // Pre-resolve edges
-    validEdgesRef.current = []
-    for (const e of dataRef.current.edges) {
-      e.visible = true
-      const srcId = typeof e.source === 'object' ? e.source.id : e.source
-      const tgtId = typeof e.target === 'object' ? e.target.id : e.target
-      const srcNode = nodeMapRef.current.get(srcId)
-      const tgtNode = nodeMapRef.current.get(tgtId)
-      if (!srcNode || !tgtNode) continue
-      e.source = srcNode
-      e.target = tgtNode
-      validEdgesRef.current.push(e)
-    }
-
-    // Initial sizing
-    const w = container.clientWidth
-    const h = container.clientHeight
-    widthRef.current = w
-    heightRef.current = h
-
-    // Canvas setup with DPR
-    const dpr = window.devicePixelRatio || 1
-    canvas.width = w * dpr
-    canvas.height = h * dpr
-    canvas.style.width = w + 'px'
-    canvas.style.height = h + 'px'
-
-    // Center zoom
-    const initK = 0.3
-    zoomRef.current = { x: -w / 2 * initK + w / 2, y: -h / 2 * initK + h / 2, k: initK }
-
-    // Initial node placement
-    dataRef.current.nodes.forEach((n: GraphNode, i: number) => {
-      const angle = (2 * Math.PI * i) / dataRef.current.nodes.length
-      const radius = 200 + Math.random() * 200
-      n.x = w / 2 + radius * Math.cos(angle)
-      n.y = h / 2 + radius * Math.sin(angle)
-      n.vx = 0
-      n.vy = 0
-    })
-
-    // Initial static layout
-    const initSim = createSimulation(dataRef.current.nodes, validEdgesRef.current, {
-      alpha: 0.3, alphaDecay: 0.1, velocityDecay: 0.4,
-      chargeStrength: -150,
-      linkIdAccessor: true,
-      centerX: w / 2, centerY: h / 2, centerStrength: 0.02,
-      collisionRadius: 25,
-    })
-    for (let i = 0; i < 200; i++) initSim.tick()
-    initSim.stop()
-
-    // Initial render
+    // Always render on mount (new or remount)
     render()
-  } else {
-    // StrictMode remount — just render with existing positions
-    render()
-  }
 
-  // ─── Manual wheel zoom (replaces d3-zoom to avoid double transform) ───
+    return () => {
+      // Reset D3-mutated state on unmount
+      for (const n of dataRef.current.nodes) {
+        delete n.x
+        delete n.y
+        delete n.vx
+        delete n.vy
+        delete n.fx
+        delete n.fy
+        delete n.index
+      }
+      for (const e of dataRef.current.edges) {
+        delete (e as any).index
+      }
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Mouse & wheel event listeners ───
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    // Manual wheel zoom (replaces d3-zoom to avoid double transform)
     function onWheel(event: WheelEvent) {
       event.preventDefault()
       const rect = canvas.getBoundingClientRect()
@@ -698,7 +730,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       render()
     }
 
-    // ─── Mouse Events (left-click: node drag, pan, select) ───
+    // Mouse position in world coordinates
     function getMousePos(event: MouseEvent) {
       const rect = canvas.getBoundingClientRect()
       const z = zoomRef.current
@@ -866,7 +898,20 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     canvas.addEventListener('mouseup', onMouseUp, { capture: true })
     canvas.addEventListener('wheel', onWheel, { passive: false })
 
-    // ─── Resize observer ───
+    return () => {
+      canvas.removeEventListener('mousedown', onMouseDown)
+      canvas.removeEventListener('mousemove', onMouseMove)
+      canvas.removeEventListener('mouseup', onMouseUp)
+      canvas.removeEventListener('wheel', onWheel)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Resize observer ───
+  useEffect(() => {
+    const container = containerRef.current
+    const canvas = canvasRef.current
+    if (!container || !canvas) return
+
     const resizeObserver = new ResizeObserver(() => {
       if (resizeRAFRef.current !== null) return
       resizeRAFRef.current = requestAnimationFrame(() => {
@@ -887,14 +932,15 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     })
     resizeObserver.observe(container)
 
-    // ─── Cleanup ───
     return () => {
-      canvas.removeEventListener('mousedown', onMouseDown)
-      canvas.removeEventListener('mousemove', onMouseMove)
-      canvas.removeEventListener('mouseup', onMouseUp)
-      canvas.removeEventListener('wheel', onWheel)
       resizeObserver.disconnect()
       if (resizeRAFRef.current !== null) cancelAnimationFrame(resizeRAFRef.current)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Global cleanup (sim, anim frame, hover timeout) ───
+  useEffect(() => {
+    return () => {
       if (animFrameRef.current !== null) cancelAnimationFrame(animFrameRef.current)
       if (hoverLabelTimeoutRef.current) clearTimeout(hoverLabelTimeoutRef.current)
       if (simulationRef.current) {
