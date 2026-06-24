@@ -467,6 +467,7 @@ function App() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 text-xs bg-background backdrop-blur graph-control-btn">
+                Theme: {themes.find((t) => t.key === currentTheme)?.label || 'Default'}
                 <ChevronDown className="h-3.5 w-3.5 ml-1" />
               </Button>
             </DropdownMenuTrigger>
