@@ -76,25 +76,17 @@ function scaleValue(value: number, minVal: number, maxVal: number, minRadius = 8
   return minRadius + Math.pow(normalized, 1.5) * (maxRadius - minRadius)
 }
 
-function getNodeColor(d: any): string {
+function getNodeColor(d: any, colors: Record<string, string>): string {
   const cat = d.typeCat || d.category || d.type || 'other'
   let hash = 0
   for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash)
   const idx = Math.abs(hash) % 12
   const cssVar = `--node-color-${idx}`
-  try {
-    const color = getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim()
-    if (color) return color
-  } catch { /* fallback */ }
-  return '#94a3b8'
+  return colors[cssVar] || '#94a3b8'
 }
 
-function getEdgeColor(): string {
-  try {
-    const val = getComputedStyle(document.documentElement).getPropertyValue('--edge-color').trim()
-    if (val) return val
-  } catch { /* fallback */ }
-  return 'rgba(148, 163, 184, 0.4)'
+function getEdgeColor(colors: Record<string, string>): string {
+  return colors['--edge-color'] || 'rgba(148, 163, 184, 0.4)'
 }
 
 function getNodeRadius(d: any, sizeMetric: string, sizeRange: any, connectedSet: Set<string> | null, type?: string): number {
@@ -139,6 +131,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   // Also keep state for theme useEffect (triggers re-apply)
   const [themeState, setThemeState] = useState(themeRef.current)
   const [sizeMetricState, setSizeMetricState] = useState(sizeMetricRef.current)
+  // Live theme colors for render (avoids getComputedStyle staleness)
+  const themeColorsRef = useRef<Record<string, string>>({})
 
   // Mutable refs (avoid re-renders during animation)
   const zoomRef = useRef({ x: 0, y: 0, k: 0.3 })
@@ -389,7 +383,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     recalcSizeRange()
     buildLabelSet()
 
-    const edgeColor = getEdgeColor()
+    const edgeColor = getEdgeColor(themeColorsRef.current)
     const currentDim = currentDimRef.current
 
     // Draw edges
@@ -415,7 +409,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     for (const n of data.nodes) {
       if (!n.visible) continue
       const r = n._animRadius !== undefined ? Math.max(0, n._animRadius) : getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
-      const color = getNodeColor(n)
+      const color = getNodeColor(n, themeColorsRef.current)
       const isSelected = selectedNodeRef.current && selectedNodeRef.current.id === n.id
       const isHovered = hoveredNodeRef.current && hoveredNodeRef.current.id === n.id
       const isConnected = !connectedSetRef.current || connectedSetRef.current.has(n.id)
@@ -904,6 +898,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     for (const [key, value] of Object.entries(colors)) {
       cs.setProperty(key, value)
     }
+    themeColorsRef.current = colors
     render()
   }, [themeState]) // eslint-disable-line react-hooks/exhaustive-deps
 
