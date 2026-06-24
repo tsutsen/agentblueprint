@@ -522,7 +522,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
           connectedEdgesRef.current!.add(e)
         }
       }
-      // connected set built: size = connectedSetRef.current.size
     }
     recalcSizeRange()
 
