@@ -952,11 +952,10 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       simulationRef.current = d3.forceSimulation(visibleNodes)
         .force('link', d3.forceLink(visibleEdges).id((d: any) => d.id).distance(120).strength(0.05))
         .force('charge', d3.forceManyBody().strength(-150))
-        .force('center', d3.forceCenter(cx, cy).strength(0.02))
         .force('collision', d3.forceCollide().radius(25))
         .alpha(0.3)
         .alphaDecay(0)
-        .alphaMin(0)
+        .velocityDecay(0.4)
         .on('tick', () => render())
     },
     stopSimulation: () => {
