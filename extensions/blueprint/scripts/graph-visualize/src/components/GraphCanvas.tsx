@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback, useImperativeHandle } from 'r
 import * as d3 from 'd3'
 import { themes } from '@/lib/themes'
 import { SIZE_METRICS } from '@/lib/metrics'
+import type { GraphNode, GraphEdge, GraphData, SizeRange, SizeRangeMap } from '@/lib/graph-types'
 
 // ─── Bridge Interface ───
 export interface IGraphBridge {
@@ -30,7 +31,7 @@ export interface IGraphBridge {
   // ── Selection (parent commands, canvas fires events) ──
   selectNodeById(id: string): void
   deselectNode(): void
-  getSelectedNode(): any | null
+  getSelectedNode(): GraphNode | null
 
   // ── Zoom ──
   zoomIn(): void
@@ -44,9 +45,9 @@ export interface IGraphBridge {
 
 // ─── Props ───
 export interface GraphCanvasProps {
-  data: any
+  data: GraphData
   bridgeRef?: React.Ref<IGraphBridge | null>
-  onNodeSelect?: (node: any) => void
+  onNodeSelect?: (node: GraphNode) => void
   onNodeDeselect?: () => void
   className?: string
 }
@@ -78,7 +79,7 @@ function scaleValue(value: number, minVal: number, maxVal: number, minRadius = 8
   return minRadius + Math.pow(normalized, 1.5) * (maxRadius - minRadius)
 }
 
-function getNodeColor(d: any, colors: Record<string, string>): string {
+function getNodeColor(d: GraphNode, colors: Record<string, string>): string {
   const cat = d.typeCat || d.category || d.type || 'other'
   let hash = 0
   for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash)
@@ -91,7 +92,7 @@ function getEdgeColor(colors: Record<string, string>): string {
   return colors['--edge-color'] || 'rgba(148, 163, 184, 0.4)'
 }
 
-function getNodeRadius(d: any, sizeMetric: string, sizeRange: any, connectedSet: Set<string> | null, type?: string): number {
+function getNodeRadius(d: GraphNode, sizeMetric: string, sizeRange: SizeRangeMap, connectedSet: Set<string> | null): number {
   if (d.type === 'spec' || d.category === 'spec') return 15
 
   if (sizeMetric === 'type') {
@@ -114,7 +115,7 @@ function getNodeRadius(d: any, sizeMetric: string, sizeRange: any, connectedSet:
     maxVal = range?.full?.max ?? range?.max ?? 0
   }
 
-  const value = d[metric.nodeProperty] ?? 0
+  const value = d.metrics[metric.key] ?? 0
   return scaleValue(value, minVal, maxVal, 8, 40)
 }
 
@@ -141,16 +142,16 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   const resizeRAFRef = useRef<number | null>(null)
 
   // ─── Selection & hover ───
-  const selectedNodeRef = useRef<any>(null)
-  const hoveredNodeRef = useRef<any>(null)
-  const hoveredLabelNodeRef = useRef<any>(null)
+  const selectedNodeRef = useRef<GraphNode | null>(null)
+  const hoveredNodeRef = useRef<GraphNode | null>(null)
+  const hoveredLabelNodeRef = useRef<GraphNode | null>(null)
   const connectedSetRef = useRef<Set<string> | null>(null)
-  const connectedEdgesRef = useRef<Set<any> | null>(null)
+  const connectedEdgesRef = useRef<Set<GraphEdge> | null>(null)
 
   // ─── Data & layout ───
-  const validEdgesRef = useRef<any[]>([])
-  const nodeMapRef = useRef<Map<string, any>>(new Map())
-  const sizeRangeRef = useRef<any>({})
+  const validEdgesRef = useRef<GraphEdge[]>([])
+  const nodeMapRef = useRef<Map<string, GraphNode>>(new Map())
+  const sizeRangeRef = useRef<SizeRangeMap>({})
   const simulationRef = useRef<d3.Simulation<any, any> | null>(null)
   const initializedRef = useRef(false)
   const currentDimRef = useRef(1)
@@ -174,7 +175,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   const panStartRef = useRef({ x: 0, y: 0 })
   const zoomStartRef = useRef({ x: 0, y: 0 })
   const isMouseDownRef = useRef(false)
-  const draggedNodeRef = useRef<any>(null)
+  const draggedNodeRef = useRef<GraphNode | null>(null)
   const isDraggingRef = useRef(false)
 
   // ─── Render batching ───
@@ -193,7 +194,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   }
 
   // ─── Simulation factory ───
-  function createSimulation(nodes: any[], edges: any[], opts: {
+  function createSimulation(nodes: GraphNode[], edges: GraphEdge[], opts: {
     alpha?: number
     alphaDecay?: number
     velocityDecay?: number
@@ -213,7 +214,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       .distance(opts.linkDistance ?? 120)
       .strength(opts.linkStrength ?? 0.05)
     if (opts.linkIdAccessor) {
-      linkForce.id((d: any) => d.id)
+      linkForce.id((d: GraphNode) => d.id)
     }
 
     const chargeForce = d3.forceManyBody().strength(opts.chargeStrength ?? -150)
@@ -259,7 +260,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     // Cache getNodeRadius results — inputs don't change within this call
     const radiusCache = new Map<string, number>()
-    const cachedRadius = (n: any) => {
+    const cachedRadius = (n: GraphNode) => {
       const cached = radiusCache.get(n.id)
       if (cached !== undefined) return cached
       const r = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
@@ -267,7 +268,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       return r
     }
 
-    const candidates: any[] = []
+    const candidates: GraphNode[] = []
     for (const n of data.nodes) {
       if (!n.visible) continue
       if (z.k < LABEL_MAX_ZOOM) {
@@ -285,10 +286,10 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     const cellKey = (wx: number, wy: number) => `${Math.floor(wx / cellSize)},${Math.floor(wy / cellSize)}`
 
-    const labelBBox = (n: any) => {
+    const labelBBox = (n: GraphNode) => {
       const r = cachedRadius(n)
       const fs = n.type === 'spec' ? 14 : 13
-      const text = n.term || n.label || n.id || ''
+      const text = n.name || n.id || ''
       const tw = text.length * fs * LABEL_CHAR_WIDTH + LABEL_PAD_X * 2
       const th = fs
       return {
@@ -355,7 +356,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       if (!labelEl) {
         labelEl = document.createElement('div')
         labelEl.className = 'graph-label'
-        labelEl.textContent = n.term || n.label || n.id
+        labelEl.textContent = n.name || n.id
         container.appendChild(labelEl)
         labelElementsRef.current.set(n.id, labelEl)
       }
@@ -379,7 +380,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     }
 
     // Remove elements for hidden nodes
-    const visibleIds = new Set(data.nodes.filter((n: any) => n.visible).map((n: any) => n.id))
+    const visibleIds = new Set(data.nodes.filter((n: GraphNode) => n.visible).map((n: GraphNode) => n.id))
     for (const [id, el] of labelElementsRef.current) {
       if (!visibleIds.has(id)) {
         el.remove()
@@ -390,12 +391,12 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
   // ─── Recalculate size ranges ───
   function recalcSizeRange() {
-    const visibleNodes = data.nodes.filter((n: any) => n.visible !== false)
+    const visibleNodes = data.nodes.filter((n: GraphNode) => n.visible !== false)
     if (visibleNodes.length === 0) return
 
-    const fullRanges: any = {}
+    const fullRanges: SizeRangeMap = {}
     for (const m of SIZE_METRICS) {
-      const values = visibleNodes.map((n: any) => n[m.nodeProperty] || 0).filter((v: number) => v > 0)
+      const values = visibleNodes.map((n: GraphNode) => n.metrics[m.key] || 0).filter((v: number) => v > 0)
       if (values.length > 0) fullRanges[m.key] = { min: 0, max: Math.max(...values) }
     }
 
@@ -407,10 +408,10 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     // Connected-set ranges
     if (selectedNodeRef.current && connectedSetRef.current) {
-      const connectedNodes = visibleNodes.filter((n: any) => connectedSetRef.current!.has(n.id))
+      const connectedNodes = visibleNodes.filter((n: GraphNode) => connectedSetRef.current!.has(n.id))
       if (connectedNodes.length > 0) {
         for (const m of SIZE_METRICS) {
-          const values = connectedNodes.map((n: any) => n[m.nodeProperty] || 0)
+          const values = connectedNodes.map((n: GraphNode) => n.metrics[m.key] || 0)
           const maxVal = Math.max(...values)
           sizeRangeRef.current[m.key] = {
             full: sizeRangeRef.current[m.key]?.full ?? { min: 0, max: maxVal },
@@ -428,7 +429,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     const nCount = data?.nodes?.length ?? 0
-    const vCount = data?.nodes?.filter((n: any) => n.visible !== false)?.length ?? 0
+    const vCount = data?.nodes?.filter((n: GraphNode) => n.visible !== false)?.length ?? 0
     const w = widthRef.current
     const h = heightRef.current
     const z = zoomRef.current
@@ -620,7 +621,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     // Compute size ranges
     for (const m of SIZE_METRICS) {
-      const values = data.nodes.map((n: any) => n[m.nodeProperty] || 0).filter((v: number) => v > 0)
+      const values = data.nodes.map((n: GraphNode) => n.metrics[m.key] || 0).filter((v: number) => v > 0)
       if (values.length > 0) sizeRangeRef.current[m.key] = { min: 0, max: Math.max(...values) }
     }
 
@@ -664,7 +665,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     zoomRef.current = { x: -w / 2 * initK + w / 2, y: -h / 2 * initK + h / 2, k: initK }
 
     // Initial node placement
-    data.nodes.forEach((n: any, i: number) => {
+    data.nodes.forEach((n: GraphNode, i: number) => {
       const angle = (2 * Math.PI * i) / data.nodes.length
       const radius = 200 + Math.random() * 200
       n.x = w / 2 + radius * Math.cos(angle)
@@ -838,8 +839,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
             node.fy = node.y
             // Settle after drag
             if (simulationRef.current) simulationRef.current.stop()
-            const visibleNodes = data.nodes.filter((n: any) => n.visible)
-            const visibleEdges = validEdgesRef.current.filter((e: any) => e.visible)
+            const visibleNodes = data.nodes.filter((n: GraphNode) => n.visible)
+            const visibleEdges = validEdgesRef.current.filter((e: GraphEdge) => e.visible)
             simulationRef.current = createSimulation(visibleNodes, visibleEdges, {
               alpha: 0.15, alphaDecay: 0.12, velocityDecay: 0.7,
               chargeStrength: -350, chargeDistanceMax: 300,
@@ -1001,17 +1002,17 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     startSimulation: () => {
       simulatingRef.current = true
       if (simulationRef.current) simulationRef.current.stop()
-      const visibleNodes = data.nodes.filter((n: any) => n.visible)
+      const visibleNodes = data.nodes.filter((n: GraphNode) => n.visible)
       const visibleNodeSet = new Set(visibleNodes)
       // Re-resolve edges so D3 uses .id to match nodes (not array index)
       const visibleEdges = validEdgesRef.current
-        .filter((e: any) => e.visible && visibleNodeSet.has(e.source) && visibleNodeSet.has(e.target))
-        .map((e: any) => ({ ...e, source: e.source, target: e.target }))
+        .filter((e: GraphEdge) => e.visible && visibleNodeSet.has(e.source) && visibleNodeSet.has(e.target))
+        .map((e: GraphEdge) => ({ ...e, source: e.source, target: e.target }))
       const cx = visibleNodes.length > 0
-        ? visibleNodes.reduce((s: number, n: any) => s + n.x, 0) / visibleNodes.length
+        ? visibleNodes.reduce((s: number, n: GraphNode) => s + (n.x ?? 0), 0) / visibleNodes.length
         : widthRef.current / 2
       const cy = visibleNodes.length > 0
-        ? visibleNodes.reduce((s: number, n: any) => s + n.y, 0) / visibleNodes.length
+        ? visibleNodes.reduce((s: number, n: GraphNode) => s + (n.y ?? 0), 0) / visibleNodes.length
         : heightRef.current / 2
       simulationRef.current = createSimulation(visibleNodes, visibleEdges, {
         alpha: 0.3, alphaDecay: 0, velocityDecay: 0.4,
@@ -1029,7 +1030,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     // Selection
     selectNodeById: (id: string) => {
-      const node = data.nodes.find((n: any) => n.id === id)
+      const node = data.nodes.find((n: GraphNode) => n.id === id)
       if (node) {
         selectedNodeRef.current = node
         startAnimation(0.15)

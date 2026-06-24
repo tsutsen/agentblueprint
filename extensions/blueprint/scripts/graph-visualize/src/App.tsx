@@ -99,7 +99,7 @@ function App() {
       const cat = node.typeCat || node.category || 'other'
       const catVisible = activeCategories.has(cat)
       const searchMatch = !debouncedSearch ||
-        (node.term || node.label || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
+        (node.name || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
       return catVisible && searchMatch
     }).map((n: any) => n.id))
     bridgeRef.current.setVisibility(ids)
@@ -210,15 +210,15 @@ function App() {
     const cat = node.typeCat || node.category || 'other'
     const catVisible = activeCategories.has(cat)
     const searchMatch = !debouncedSearch ||
-      (node.term || node.label || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
+      (node.name || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
     return catVisible && searchMatch
   }).map((n: any) => n.id) || [])
 
   const sortedNodes = graphData?.nodes
     .filter((n: any) => visibleIds.has(n.id))
     .sort((a: any, b: any) => {
-      if (sortBy === 'degree') return (b.degree || 0) - (a.degree || 0)
-      return (a.term || a.label || a.id).localeCompare(b.term || b.label || b.id)
+      if (sortBy === 'degree') return (b.metrics.degree || 0) - (a.metrics.degree || 0)
+      return (a.name || a.id).localeCompare(b.name || b.id)
     }) || []
 
   // ─── Connections for selected node ───
@@ -233,7 +233,7 @@ function App() {
             if (!seen.has(key)) {
               seen.set(key, {
                 id: neighbor.id,
-                label: neighbor.term || neighbor.label || neighbor.id,
+                label: neighbor.name || neighbor.id,
                 type: neighbor.typeLabel || neighbor.type || neighbor.category || 'unknown',
                 edgeType: e.type || 'related',
               })
@@ -364,12 +364,12 @@ function App() {
                           </span>
                         </div>
                         <span className="text-sm text-foreground truncate block min-w-0">
-                          {node.term || node.label || node.id}
+                          {node.name || node.id}
                         </span>
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="right" className="max-w-[300px]">
-                      {node.term || node.label || node.id}
+                      {node.name || node.id}
                     </TooltipContent>
                   </Tooltip>
                 );
@@ -511,7 +511,7 @@ function App() {
           {/* Header */}
           <div data-testid="detail-header" className="flex items-start justify-between p-4 border-b border-border">
             <div data-testid="detail-header-text" className="flex flex-col gap-1 pr-2 min-w-0 flex-1">
-              <span data-testid="detail-node-name" className="text-base font-semibold break-words overflow-wrap-anywhere">{selectedNode.term || selectedNode.label || selectedNode.id}</span>
+              <span data-testid="detail-node-name" className="text-base font-semibold break-words overflow-wrap-anywhere">{selectedNode.name || selectedNode.id}</span>
               <div className="flex items-center gap-2">
                 <Badge data-testid="detail-type-badge" variant="secondary" className="text-[10px] uppercase">
                   {selectedNode.typeLabel || selectedNode.type || selectedNode.category || 'unknown'}
@@ -536,7 +536,7 @@ function App() {
           <div data-testid="detail-scroll" className="flex-1 overflow-y-auto overflow-x-hidden">
             <div data-testid="detail-body" className="p-4 w-full">
               <p data-testid="detail-description" className="text-sm leading-relaxed text-muted-foreground break-words overflow-wrap-anywhere max-w-full">
-                {selectedNode.definition || selectedNode.term || selectedNode.label || 'No description available.'}
+                {selectedNode.description || selectedNode.name || 'No description available.'}
               </p>
 
               <Separator className="my-3" />
@@ -545,20 +545,16 @@ function App() {
               <div data-testid="detail-stats" className="space-y-1.5 text-sm">
                 <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
                   <Label className="text-muted-foreground">Connections</Label>
-                  <span data-testid="detail-stat-degree" className="font-mono text-right">{selectedNode.degree ?? 0}</span>
+                  <span data-testid="detail-stat-degree" className="font-mono text-right">{selectedNode.metrics.degree ?? 0}</span>
                 </div>
-                {selectedNode.blastRadius !== undefined && (
-                  <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
-                    <Label className="text-muted-foreground">Blast Radius</Label>
-                    <span data-testid="detail-stat-blast-radius" className="font-mono text-right">{selectedNode.blastRadius}</span>
-                  </div>
-                )}
-                {selectedNode.risk !== undefined && (
-                  <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
-                    <Label className="text-muted-foreground">Risk Score</Label>
-                    <span data-testid="detail-stat-risk" className="font-mono text-right">{selectedNode.risk}</span>
-                  </div>
-                )}
+                <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
+                  <Label className="text-muted-foreground">Blast Radius</Label>
+                  <span data-testid="detail-stat-blast-radius" className="font-mono text-right">{selectedNode.metrics.blast}</span>
+                </div>
+                <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
+                  <Label className="text-muted-foreground">Risk Score</Label>
+                  <span data-testid="detail-stat-risk" className="font-mono text-right">{selectedNode.metrics.risk}</span>
+                </div>
 
               </div>
 

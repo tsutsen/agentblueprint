@@ -1,19 +1,19 @@
 /**
  * Size metric definitions — single source of truth for graph node sizing.
- * Each metric has a key (used internally) and a label (shown in UI).
+ * Each metric key corresponds to a key in GraphNode.metrics.
  */
 
+import type { NodeMetrics } from './graph-types'
+
 export interface SizeMetric {
-  key: string
+  key: keyof NodeMetrics
   label: string
-  // The property name on graph nodes that holds the metric value
-  nodeProperty: string
 }
 
 export const SIZE_METRICS: SizeMetric[] = [
-  { key: 'degree', label: 'Degree', nodeProperty: 'degree' },
-  { key: 'blast', label: 'Blast Radius', nodeProperty: 'blastRadius' },
-  { key: 'risk', label: 'Risk Score', nodeProperty: 'risk' },
+  { key: 'degree', label: 'Degree' },
+  { key: 'blast', label: 'Blast Radius' },
+  { key: 'risk', label: 'Risk Score' },
 ]
 
 /** Get a metric by key */
@@ -22,4 +22,4 @@ export function getSizeMetric(key: string): SizeMetric | undefined {
 }
 
 /** Default metric key */
-export const DEFAULT_SIZE_METRIC = 'degree'
+export const DEFAULT_SIZE_METRIC: keyof NodeMetrics = 'degree'
