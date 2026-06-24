@@ -25,6 +25,8 @@ export interface Theme {
   nodeStrokeSelectedColor?: string;
   // Node outline color when hovered
   nodeStrokeHoverColor?: string;
+  // Label font size (px at zoom 1)
+  labelFontSize: number;
 }
 
 function hexToHsl(hex: string): string {
@@ -95,6 +97,7 @@ export const themes: Theme[] = [
     ],
     edgeColor: "rgba(148, 163, 184, 0.4)",
     nodeStrokeWidth: 1.5,
+    labelFontSize: 13,
   },
   {
     key: "dark",
@@ -136,6 +139,7 @@ export const themes: Theme[] = [
     ],
     edgeColor: "rgba(148, 163, 184, 0.4)",
     nodeStrokeWidth: 1.5,
+    labelFontSize: 13,
   },
   {
     key: "gruvbox",
@@ -177,6 +181,7 @@ export const themes: Theme[] = [
     ],
     edgeColor: "rgba(121, 134, 203, 0.3)",
     nodeStrokeWidth: 1.5,
+    labelFontSize: 13,
   },
   {
     key: "gruvbox-light",
@@ -218,6 +223,7 @@ export const themes: Theme[] = [
     ],
     edgeColor: "rgba(121, 134, 203, 0.3)",
     nodeStrokeWidth: 1.5,
+    labelFontSize: 13,
   },
   {
     key: "neon",
@@ -259,6 +265,7 @@ export const themes: Theme[] = [
     ],
     edgeColor: "rgba(68, 138, 255, 0.3)",
     nodeStrokeWidth: 1.5,
+    labelFontSize: 13,
   },
   {
     key: "retro",
@@ -300,6 +307,7 @@ export const themes: Theme[] = [
     ],
     edgeColor: "rgba(155, 89, 182, 0.3)",
     nodeStrokeWidth: 1.5,
+    labelFontSize: 13,
   },
   {
     key: "netrunner",
@@ -341,6 +349,7 @@ export const themes: Theme[] = [
     ],
     edgeColor: "rgba(0, 240, 255, 0.35)",
     nodeStrokeWidth: 2,
+    labelFontSize: 13,
   },
 ];
 

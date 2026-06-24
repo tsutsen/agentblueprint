@@ -139,6 +139,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
   // ─── Labels ───
   const labelElementsRef = useRef<Map<string, HTMLDivElement>>(new Map())
+  const labelFontSizeRef = useRef(13)
   const labelVisibleSetRef = useRef<Set<string> | null>(null)
   const lastLabelZoomRef = useRef(0)
   const hoverLabelTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -267,7 +268,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     candidates.sort((a, b) => cachedRadius(b) - cachedRadius(a))
 
-    const fontSize = 13 / z.k
+    const fontSize = labelFontSizeRef.current / z.k
     const cellSize = fontSize * 2
     const occupied = new Map<string, true>()
 
@@ -275,7 +276,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     const labelBBox = (n: GraphNode) => {
       const r = cachedRadius(n)
-      const fs = 13
+      const fs = labelFontSizeRef.current
       const text = n.name || n.id || ''
       const tw = text.length * fs * LABEL_CHAR_WIDTH + LABEL_PAD_X * 2
       const th = fs
@@ -350,7 +351,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
       labelEl.style.left = `${labelX}px`
       labelEl.style.top = `${labelY}px`
-      labelEl.style.fontSize = '13px'
+      labelEl.style.fontSize = `${labelFontSizeRef.current}px`
 
       const isVisible = labelVisibleSetRef.current?.has(n.id) ?? false
       if (isVisible) {
@@ -932,6 +933,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     }
 
     themeColorsRef.current = colors
+    labelFontSizeRef.current = theme.labelFontSize
     render()
   }, [themeState]) // eslint-disable-line react-hooks/exhaustive-deps
 
