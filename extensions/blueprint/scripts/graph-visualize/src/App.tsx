@@ -12,7 +12,8 @@ import { Label } from '@/components/ui/label'
 import { Search, RotateCcw, ChevronDown, ZoomIn, ZoomOut } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Switch } from '@/components/ui/switch'
-import { themes, applyTheme } from '@/lib/themes'
+import { themes } from '@/lib/themes'
+import { SIZE_METRICS } from '@/lib/metrics'
 
 /** Extract clean short ID: PREFIX-NNN (handles TST-NNN-xxx, TST-xxx-NNN, CON-NNN-xxx, FLW-NNN-xxx, and slug-style IDs) */
 function extractShortId(id: string, type?: string): string {
@@ -26,43 +27,143 @@ function extractShortId(id: string, type?: string): string {
   return parts.slice(0, 2).join('-')
 }
 
-// ─── Size Metrics ───
-const SIZE_METRICS = [
-  { key: 'degree', label: 'Degree' },
-  { key: 'blast', label: 'Blast Radius' },
-  { key: 'risk', label: 'Risk Score' },
-]
-
 function App() {
   const [graphData, setGraphData] = useState<any>(null)
   const [selectedNode, setSelectedNode] = useState<any>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set())
   const [categories, setCategories] = useState<Record<string, { count: number; color: string }>>({})
-  const [sizeMetric, setSizeMetric] = useState('degree')
-  const [currentTheme, setCurrentTheme] = useState(
-    () => (localStorage.getItem('graph-theme') as any) || 'default'
-  )
   const [sortBy, setSortBy] = useState<'name' | 'degree'>('name')
-  const [bridgeReady, setBridgeReady] = useState(false)
-  const [simulating, setSimulating] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(300)
-
-  // Apply initial theme from localStorage
-  useEffect(() => {
-    applyTheme(currentTheme)
-  }, [])
-
-  // Save theme to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem('graph-theme', currentTheme)
-  }, [currentTheme])
 
   const bridgeRef = useRef<IGraphBridge | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const resizeRef = useRef<HTMLDivElement>(null)
 
-  // Sidebar resize handler
+  // ─── Load graph data ───
+  useEffect(() => {
+    fetch('/graph-data.json')
+      .then((res) => res.json())
+      .then((data) => {
+        setGraphData(data)
+
+        // Compute categories
+        const catCounts: Record<string, { count: number; color: string }> = {}
+        function getCatColor(cat: string): string {
+          let hash = 0
+          for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash)
+          const idx = Math.abs(hash) % 12
+          return `var(--node-color-${idx})`
+        }
+        for (const node of data.nodes) {
+          const cat = node.typeCat || node.category || node.type || 'other'
+          if (!catCounts[cat]) {
+            catCounts[cat] = { count: 0, color: getCatColor(cat) }
+          }
+          catCounts[cat].count++
+        }
+        setCategories(catCounts)
+
+        // Restore state from URL
+        const params = new URLSearchParams(window.location.search)
+        const catsParam = params.get('cats')
+        if (catsParam) {
+          const cats = new Set(catsParam.split(',').map(c => c.trim()).filter(Boolean))
+          setActiveCategories(cats)
+        } else {
+          setActiveCategories(new Set(Object.keys(catCounts)))
+        }
+        const qParam = params.get('q')
+        if (qParam) {
+          setSearchTerm(qParam)
+        }
+      })
+      .catch((err) => console.error('Failed to load graph data:', err))
+  }, [])
+
+  // ─── Debounced search ───
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 250)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
+  // ─── Sync parent state → graph via bridge ───
+  useEffect(() => {
+    if (!bridgeRef.current) return
+    bridgeRef.current.setVisibility(activeCategories)
+  }, [activeCategories])
+
+  useEffect(() => {
+    if (!bridgeRef.current) return
+    bridgeRef.current.setSearchTerm(searchTerm)
+  }, [searchTerm])
+
+  // ─── Sync URL on user interaction ───
+  const handleCategoryChange = (cat: string, checked: boolean) => {
+    setActiveCategories((prev) => {
+      const next = new Set(prev)
+      checked ? next.add(cat) : next.delete(cat)
+      return next
+    })
+  }
+
+  // Sync URL on user interaction (categories/search)
+  useEffect(() => {
+    if (!graphData) return
+    const params = new URLSearchParams(window.location.search)
+    if (activeCategories.size > 0 && activeCategories.size < Object.keys(categories).length) {
+      params.set('cats', [...activeCategories].sort().join(','))
+    } else {
+      params.delete('cats')
+    }
+    if (searchTerm) {
+      params.set('q', searchTerm)
+    } else {
+      params.delete('q')
+    }
+    history.replaceState(null, '', `?${params.toString()}`)
+  }, [activeCategories, searchTerm, categories, graphData])
+
+  // ─── Node selection ───
+  const handleNodeSelect = useCallback((node: any) => {
+    setSelectedNode(node)
+    const params = new URLSearchParams(window.location.search)
+    params.set('node', node.id)
+    history.replaceState(null, '', `?${params.toString()}`)
+  }, [])
+
+  const handleNodeDeselect = useCallback(() => {
+    setSelectedNode(null)
+    const params = new URLSearchParams(window.location.search)
+    params.delete('node')
+    history.replaceState(null, '', `?${params.toString()}`)
+  }, [])
+
+  // ─── Keyboard shortcuts ───
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (selectedNode) {
+          bridgeRef.current?.deselectNode()
+        } else if (searchTerm) {
+          setSearchTerm('')
+          searchInputRef.current?.blur()
+        }
+      }
+      if ((e.key === 'k' || e.key === 'K') && !selectedNode) {
+        const target = e.target as HTMLElement
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+          e.preventDefault()
+          searchInputRef.current?.focus()
+        }
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [selectedNode, searchTerm])
+
+  // ─── Sidebar resize ───
   useEffect(() => {
     const handle = resizeRef.current
     if (!handle) return
@@ -93,160 +194,7 @@ function App() {
     })
   }, [sidebarWidth])
 
-  // Load graph data
-  useEffect(() => {
-    fetch('/graph-data.json')
-      .then((res) => res.json())
-      .then((data) => {
-        setGraphData(data)
-
-        // Compute categories — use same hash as getNodeColor for consistent colors
-        const catCounts: Record<string, { count: number; color: string }> = {}
-        function getCatColor(cat: string): string {
-          let hash = 0
-          for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash)
-          const idx = Math.abs(hash) % 12
-          return `var(--node-color-${idx})`
-        }
-        for (const node of data.nodes) {
-          const cat = node.typeCat || node.category || node.type || 'other'
-          if (!catCounts[cat]) {
-            catCounts[cat] = { count: 0, color: getCatColor(cat) }
-          }
-          catCounts[cat].count++
-        }
-        setCategories(catCounts)
-
-        // Restore state from URL
-        const params = new URLSearchParams(window.location.search)
-        const catsParam = params.get('cats')
-        if (catsParam) {
-          const cats = new Set(catsParam.split(',').map(c => c.trim()).filter(Boolean))
-          setActiveCategories(cats)
-        } else {
-          // Activate all categories by default
-          setActiveCategories(new Set(Object.keys(catCounts)))
-        }
-        const qParam = params.get('q')
-        if (qParam) {
-          setSearchTerm(qParam)
-        }
-      })
-      .catch((err) => console.error('Failed to load graph data:', err))
-  }, [])
-
-  // Debounced search term + URL sync
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 250)
-    return () => clearTimeout(timer)
-  }, [searchTerm])
-
-  // Sync URL on user interaction
-  const handleCategoryChange = (cat: string, checked: boolean) => {
-    setActiveCategories((prev) => {
-      const next = new Set(prev)
-      checked ? next.add(cat) : next.delete(cat)
-      return next
-    })
-  }
-  const handleSearchChange = (val: string) => {
-    setSearchTerm(val)
-  }
-
-  // Sync URL on user interaction (categories/search)
-  useEffect(() => {
-    if (!graphData) return
-    const params = new URLSearchParams(window.location.search)
-    if (activeCategories.size > 0 && activeCategories.size < Object.keys(categories).length) {
-      params.set('cats', [...activeCategories].sort().join(','))
-    } else {
-      params.delete('cats')
-    }
-    if (searchTerm) {
-      params.set('q', searchTerm)
-    } else {
-      params.delete('q')
-    }
-    history.replaceState(null, '', `?${params.toString()}`)
-  }, [activeCategories, searchTerm, categories, graphData])
-
-  // Handle size metric change
-  const handleSizeMetricChange = useCallback((metric: string) => {
-    setSizeMetric(metric)
-    bridgeRef.current?.setSizeMetric(metric)
-  }, [])
-
-  // Handle node selection — sync to URL
-  const handleNodeSelect = useCallback((node: any) => {
-    setSelectedNode(node)
-    const params = new URLSearchParams(window.location.search)
-    params.set('node', node.id)
-    history.replaceState(null, '', `?${params.toString()}`)
-  }, [])
-
-  // Handle node deselection — sync to URL
-  const handleNodeDeselect = useCallback(() => {
-    setSelectedNode(null)
-    const params = new URLSearchParams(window.location.search)
-    params.delete('node')
-    history.replaceState(null, '', `?${params.toString()}`)
-  }, [])
-
-  // Keyboard shortcuts: Escape to deselect/clear search, K to focus search
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (selectedNode) {
-          bridgeRef.current?.deselectNode()
-        } else if (searchTerm) {
-          setSearchTerm('')
-          searchInputRef.current?.blur()
-        }
-      }
-      if ((e.key === 'k' || e.key === 'K') && !selectedNode) {
-        const target = e.target as HTMLElement
-        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
-          e.preventDefault()
-          searchInputRef.current?.focus()
-        }
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [selectedNode, searchTerm])
-
-  // Apply filters once bridge is ready (handles URL state restoration)
-  // Uses searchTerm (not debounced) so it works on initial load
-  useEffect(() => {
-    if (!graphData || !bridgeReady) return
-    const visibleIds = new Set<string>()
-    const search = searchTerm.toLowerCase().trim()
-    for (const node of graphData.nodes) {
-      const cat = node.typeCat || node.category || 'other'
-      const catVisible = activeCategories.has(cat)
-      const searchMatch = !search ||
-        (node.term || node.label || node.id).toLowerCase().includes(search)
-      if (catVisible && searchMatch) {
-        visibleIds.add(node.id)
-      }
-    }
-    bridgeRef.current?.setVisibility(visibleIds)
-  }, [graphData, bridgeReady, activeCategories, searchTerm])
-
-  // Restore selected node from URL after bridge is ready
-  useEffect(() => {
-    if (!graphData || !bridgeReady) return
-    const params = new URLSearchParams(window.location.search)
-    const nodeId = params.get('node')
-    if (!nodeId) return
-    const node = graphData.nodes.find((n: any) => n.id === nodeId)
-    if (!node) return
-    // Select the node
-    bridgeRef.current?.selectNodeById(nodeId)
-  }, [graphData, bridgeReady])
-
-  // Compute visible node IDs (same logic as applyFilters)
+  // ─── Visible + sorted nodes (for sidebar) ───
   const visibleIds = new Set(graphData?.nodes.filter((node: any) => {
     const cat = node.typeCat || node.category || 'other'
     const catVisible = activeCategories.has(cat)
@@ -255,7 +203,6 @@ function App() {
     return catVisible && searchMatch
   }).map((n: any) => n.id) || [])
 
-  // Compute sorted + filtered nodes (sidebar)
   const sortedNodes = graphData?.nodes
     .filter((n: any) => visibleIds.has(n.id))
     .sort((a: any, b: any) => {
@@ -263,7 +210,7 @@ function App() {
       return (a.term || a.label || a.id).localeCompare(b.term || b.label || b.id)
     }) || []
 
-  // Compute connections for selected node (deduplicated by neighbor id)
+  // ─── Connections for selected node ───
   const connections = selectedNode
     ? (() => {
         const seen = new Map<string, any>()
@@ -308,7 +255,7 @@ function App() {
               placeholder="Search nodes... (K)"
               className="pl-9 h-8 text-sm"
               value={searchTerm}
-              onChange={(e) => handleSearchChange(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value)}
               ref={searchInputRef}
             />
           </div>
@@ -424,7 +371,7 @@ function App() {
       {/* Resize Handle */}
       <div
         ref={resizeRef}
-        className="w-[4px] cursor-col-resize hover:bg-primary/20 active:bg-primary/40 transition-colors flex-shrink-0"
+        className="w-[4px] cursor-col-resize hover:bg-primary/20 active-primary/40 transition-colors flex-shrink-0"
       />
 
       {/* Main Canvas Area */}
@@ -436,14 +383,13 @@ function App() {
               <label className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 h-8 text-xs font-medium bg-background/90 backdrop-blur border border-input cursor-pointer graph-control-btn">
                 Simulation
                 <Switch
-                  checked={simulating}
+                  checked={bridgeRef.current?.isSimulating() ?? false}
                   onCheckedChange={(checked) => {
                     if (checked) {
                       bridgeRef.current?.startSimulation()
                     } else {
                       bridgeRef.current?.stopSimulation()
                     }
-                    setSimulating(checked)
                   }}
                 />
               </label>
@@ -452,7 +398,7 @@ function App() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 text-xs bg-background backdrop-blur graph-control-btn">
-                Size: {SIZE_METRICS.find((m) => m.key === sizeMetric)?.label}
+                Size: {SIZE_METRICS.find((m) => m.key === bridgeRef.current?.getSizeMetric())?.label}
                 <ChevronDown className="h-3.5 w-3.5 ml-1" />
               </Button>
             </DropdownMenuTrigger>
@@ -460,7 +406,7 @@ function App() {
               {SIZE_METRICS.map((m) => (
                 <DropdownMenuItem
                   key={m.key}
-                  onClick={() => handleSizeMetricChange(m.key)}
+                  onClick={() => bridgeRef.current?.setSizeMetric(m.key)}
                 >
                   {m.label}
                 </DropdownMenuItem>
@@ -470,7 +416,7 @@ function App() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 text-xs bg-background backdrop-blur graph-control-btn">
-                Theme: {themes.find((t) => t.key === currentTheme)?.label || 'Default'}
+                Theme: {themes.find((t) => t.key === bridgeRef.current?.getTheme())?.label || 'Default'}
                 <ChevronDown className="h-3.5 w-3.5 ml-1" />
               </Button>
             </DropdownMenuTrigger>
@@ -479,9 +425,7 @@ function App() {
                 <DropdownMenuItem
                   key={t.key}
                   onClick={() => {
-                    setCurrentTheme(t.key)
-                    applyTheme(t.key)
-                    bridgeRef.current?.updateTheme()
+                    bridgeRef.current?.setTheme(t.key)
                   }}
                 >
                   {t.label}
@@ -538,10 +482,9 @@ function App() {
         {graphData && (
           <GraphCanvas
             data={graphData}
-            bridge={bridgeRef}
+            bridgeRef={bridgeRef}
             onNodeSelect={handleNodeSelect}
             onNodeDeselect={handleNodeDeselect}
-            onBridgeReady={() => setBridgeReady(true)}
           />
         )}
       </main>

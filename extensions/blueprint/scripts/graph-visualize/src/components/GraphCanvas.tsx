@@ -1,21 +1,65 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
+import { applyTheme } from '@/lib/themes'
+import { getConfig } from '@/lib/config'
 
+// ─── Bridge Interface ───
+// Everything the parent app can command or query via the bridge ref.
 export interface IGraphBridge {
-  setVisibility: (visibleIds: Set<string>) => void
-  setSizeMetric: (metric: string) => void
-  selectNodeById: (id: string) => void
-  deselectNode: () => void
-  resetZoom: () => void
-  startSimulation: () => void
-  stopSimulation: () => void
-  zoomIn: () => void
-  zoomOut: () => void
-  updateTheme: () => void
-  setLabels: (show: boolean) => void
-  getSelectedNode: () => any | null
-  getZoom: () => { x: number; y: number; k: number }
-  triggerRender: () => void
+  // ── Visibility (parent commands) ──
+  setVisibility(visibleIds: Set<string>): void
+  setSearchTerm(term: string): void
+
+  // ── Theme (graph manages, parent syncs via bridge) ──
+  getTheme(): string
+  setTheme(theme: string): void
+  updateTheme(): void
+
+  // ── Size metric (graph manages, parent syncs via bridge) ──
+  getSizeMetric(): string
+  setSizeMetric(metric: string): void
+
+  // ── Labels (graph manages, parent syncs via bridge) ──
+  getLabels(): boolean
+  setLabels(show: boolean): void
+
+  // ── Simulation (graph manages, parent syncs via bridge) ──
+  isSimulating(): boolean
+  startSimulation(): void
+  stopSimulation(): void
+
+  // ── Selection (parent commands, canvas fires events) ──
+  selectNodeById(id: string): void
+  deselectNode(): void
+  getSelectedNode(): any | null
+
+  // ── Zoom ──
+  zoomIn(): void
+  zoomOut(): void
+  resetZoom(): void
+  getZoom(): { x: number; y: number; k: number }
+
+  // ── Render ──
+  triggerRender(): void
+}
+
+// ─── Props ───
+export interface GraphCanvasProps {
+  // Graph data (required)
+  data: any
+
+  // Bridge ref (parent gets bridge via this ref)
+  bridgeRef?: React.Ref<IGraphBridge | null>
+
+  // Events (canvas → parent)
+  onNodeSelect?: (node: any) => void
+  onNodeDeselect?: () => void
+
+  // Called when graph is fully initialized and ready
+  onReady?: () => void
+
+  // Optional className for the container
+  className?: string
 }
 
 declare global {
@@ -25,33 +69,50 @@ declare global {
   }
 }
 
-export interface GraphCanvasProps {
-  data: any
-  bridge: React.MutableRefObject<IGraphBridge | null>
-  onNodeSelect?: (node: any) => void
-  onNodeDeselect?: () => void
-  onBridgeReady?: () => void
-  className?: string
-}
-
 /**
- * GraphCanvas — Uses the pre-loaded legacy D3 graph via window.__GRAPH_WRAPPER__.
- * The bootstrap.js script loads D3 + graph.js + config.js as native ES modules
- * before the React app mounts, so the wrapper is ready synchronously.
+ * GraphCanvas — Self-contained D3 canvas graph component.
+ *
+ * Manages its own internal state (theme, size metric, labels, simulation).
+ * Parent app syncs via the bridge ref:
+ *   - Read state: bridge.getTheme(), bridge.getSizeMetric(), etc.
+ *   - Set state: bridge.setTheme(), bridge.setSizeMetric(), etc.
+ *   - Commands: bridge.selectNodeById(), bridge.deselectNode(), etc.
+ *
+ * The parent app is responsible for:
+ *   - Sidebar UI (checkboxes, search, node list)
+ *   - Detail panel UI (node info, connections)
+ *   - Control bar UI (zoom, simulate, metric, theme)
+ *   - URL state sync
  */
-export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, onBridgeReady, className }: GraphCanvasProps) {
+export function GraphCanvas({
+  data,
+  bridgeRef,
+  onNodeSelect,
+  onNodeDeselect,
+  onReady,
+  className,
+}: GraphCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
   // Store data in a ref so bridge functions always reference current data
   const dataRef = useRef(data)
-  useEffect(() => { dataRef.current = data }, [data])
   useEffect(() => {
-    // Run once on mount — uses dataRef.current which updates via separate effect
+    dataRef.current = data
+  }, [data])
+
+  // Internal state managed by the graph
+  const [theme, setThemeState] = useState(getConfig().defaultTheme)
+  const [sizeMetric, setSizeMetricState] = useState(getConfig().defaultSizeMetric)
+  const [showLabels, setShowLabelsState] = useState(getConfig().defaultShowLabels)
+  const [simulating, setSimulatingState] = useState(getConfig().defaultSimulating)
+
+  // Initialize graph once on mount
+  useEffect(() => {
     let cancelled = false
     setReady(false)
 
-    // Wait for the legacy modules to be ready, then initialize
     ;(async () => {
       const wrapper = await window.__GRAPH_READY__
       if (cancelled || !wrapper) {
@@ -89,49 +150,78 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, onBrid
       resizeObserver.observe(container)
 
       // Create and expose the bridge
-      bridge.current = {
+      const bridge: IGraphBridge = {
+        // ── Visibility ──
         setVisibility: (visibleIds: Set<string>) => {
           for (const n of dataRef.current.nodes) {
             n.visible = visibleIds.has(n.id)
           }
           wrapper.startAnimation(null)
-          // Restart simulation so newly visible nodes are included
           if (wrapper.hasSimulation()) {
             wrapper.stopSimulation()
             wrapper.startSimulation()
           }
         },
+        setSearchTerm: (term: string) => {
+          wrapper.setSearchTerm(term)
+          wrapper.startAnimation(null)
+        },
+
+        // ── Theme ──
+        getTheme: () => theme,
+        setTheme: (newTheme: string) => {
+          setThemeState(newTheme)
+          applyTheme(newTheme)
+          wrapper.updateThemeColors()
+        },
+        updateTheme: () => {
+          wrapper.updateThemeColors()
+        },
+
+        // ── Size metric ──
+        getSizeMetric: () => sizeMetric,
         setSizeMetric: (metric: string) => {
+          setSizeMetricState(metric)
           wrapper.setSizeMetric(metric)
           wrapper.recalcSizeRange()
           wrapper.startAnimation(null)
           wrapper.renderGraph()
         },
+
+        // ── Labels ──
+        getLabels: () => showLabels,
+        setLabels: (show: boolean) => {
+          setShowLabelsState(show)
+          wrapper.setShowLabels(show)
+          wrapper.renderGraph()
+        },
+
+        // ── Simulation ──
+        isSimulating: () => simulating,
+        startSimulation: () => {
+          setSimulatingState(true)
+          wrapper.startSimulation()
+        },
+        stopSimulation: () => {
+          setSimulatingState(false)
+          wrapper.stopSimulation()
+        },
+
+        // ── Selection ──
         selectNodeById: (id: string) => {
           const node = dataRef.current.nodes.find((n: any) => n.id === id)
           if (node) {
             wrapper.setSelectedNode(node)
             wrapper.startAnimation(0.15)
-            // Trigger the selection callback so React detail panel updates
             onNodeSelect?.(node)
           }
         },
         deselectNode: () => {
           wrapper.deselectNode()
         },
-        resetZoom: () => {
-          const w = wrapper.getWidth() || 800
-          const h = wrapper.getHeight() || 600
-          const k = 0.3
-          wrapper.setZoom(-w / 2 * k + w / 2, -h / 2 * k + h / 2, k)
-          wrapper.renderGraph()
-        },
-        startSimulation: () => {
-          wrapper.startSimulation()
-        },
-        stopSimulation: () => {
-          wrapper.stopSimulation()
-        },
+        getSelectedNode: () => wrapper.getSelectedNode(),
+
+        // ── Zoom ──
         zoomIn: () => {
           const w = wrapper.getWidth() || 800
           const h = wrapper.getHeight() || 600
@@ -156,38 +246,32 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, onBrid
           wrapper.setZoom(newX, newY, newK)
           wrapper.renderGraph()
         },
-        updateTheme: () => {
-          wrapper.updateThemeColors()
-        },
-        setLabels: (show: boolean) => {
-          wrapper.setShowLabels(show)
+        resetZoom: () => {
+          const w = wrapper.getWidth() || 800
+          const h = wrapper.getHeight() || 600
+          const k = 0.3
+          wrapper.setZoom(-w / 2 * k + w / 2, -h / 2 * k + h / 2, k)
           wrapper.renderGraph()
         },
-        getSelectedNode: () => wrapper.getSelectedNode(),
         getZoom: () => wrapper.getZoom(),
+
+        // ── Render ──
         triggerRender: () => wrapper.renderGraph(),
       }
 
-      setReady(true)
-      onBridgeReady?.()
-
-      // Apply initial filters from URL state
-      const params = new URLSearchParams(window.location.search)
-      const catsParam = params.get('cats')
-      if (catsParam) {
-        const cats = new Set(catsParam.split(',').map(c => c.trim()).filter(Boolean))
-        const visibleIds = new Set<string>()
-        for (const node of dataRef.current.nodes) {
-          const cat = node.typeCat || node.category || 'other'
-          if (cats.has(cat)) visibleIds.add(node.id)
+      // Attach bridge to ref if provided
+      if (bridgeRef) {
+        if (typeof bridgeRef === 'function') {
+          bridgeRef(bridge)
+        } else {
+          bridgeRef.current = bridge
         }
-        bridge.current?.setVisibility(visibleIds)
-      } else {
-        const allIds = new Set<string>(dataRef.current.nodes.map((n: any) => n.id))
-        bridge.current?.setVisibility(allIds)
       }
 
-      // Cleanup on unmount (don't null bridge.current — App.tsx needs it)
+      setReady(true)
+      onReady?.()
+
+      // Cleanup on unmount
       return () => {
         resizeObserver.disconnect()
         if (resizeRAF !== null) cancelAnimationFrame(resizeRAF)
@@ -198,8 +282,7 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, onBrid
     return () => {
       cancelled = true
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error) {
     return (
