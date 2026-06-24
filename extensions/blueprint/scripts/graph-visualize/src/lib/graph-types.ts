@@ -20,6 +20,8 @@ export interface GraphNode {
   // Runtime state (mutated by graph component)
   visible: boolean
   _animRadius?: number
+  _colorIdx?: number
+  _cachedColor?: string
 
   // D3 simulation properties
   x?: number

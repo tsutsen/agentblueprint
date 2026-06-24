@@ -71,12 +71,14 @@ function scaleValue(value: number, minVal: number, maxVal: number, minRadius = 8
   return minRadius + Math.pow(normalized, 1.5) * (maxRadius - minRadius)
 }
 
-function getNodeColor(d: GraphNode, colors: Record<string, string>): string {
-  const cat = d.category
+function computeColorIndex(category: string): number {
   let hash = 0
-  for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash)
-  const idx = Math.abs(hash) % 12
-  const cssVar = `--node-color-${idx}`
+  for (let i = 0; i < category.length; i++) hash = category.charCodeAt(i) + ((hash << 5) - hash)
+  return Math.abs(hash) % 12
+}
+
+function getNodeColor(n: GraphNode, colors: Record<string, string>): string {
+  const cssVar = `--node-color-${n._colorIdx}`
   return colors[cssVar] || '#94a3b8'
 }
 
@@ -465,7 +467,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       if (!n.visible) continue
       if (isNaN(n.x) || isNaN(n.y)) { n.x = w / 2; n.y = h / 2 }
       const r = n._animRadius !== undefined ? Math.max(0, n._animRadius) : getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
-      const color = getNodeColor(n, themeColorsRef.current)
+      const color = n._cachedColor ?? getNodeColor(n, themeColorsRef.current)
       const isSelected = selectedNodeRef.current && selectedNodeRef.current.id === n.id
       const isHovered = hoveredNodeRef.current && hoveredNodeRef.current.id === n.id
       const isConnected = !connectedSetRef.current || connectedSetRef.current.has(n.id)
@@ -622,11 +624,12 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       if (values.length > 0) sizeRangeRef.current[m.key] = { full: { min: 0, max: Math.max(...values) } }
     }
 
-    // Build node map
+    // Build node map + precompute color indices
     nodeMapRef.current = new Map()
     for (const n of dataRef.current.nodes) {
       n.visible = true
       n._animRadius = undefined
+      n._colorIdx = computeColorIndex(n.category)
       nodeMapRef.current.set(n.id, n)
     }
 
@@ -958,6 +961,13 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     themeColorsRef.current = colors
     labelFontSizeRef.current = theme.labelFontSize
+
+    // Cache resolved color string on each node (avoids hash + CSS lookup per frame)
+    for (const n of dataRef.current.nodes) {
+      const cssVar = `--node-color-${n._colorIdx ?? 0}`
+      n._cachedColor = colors[cssVar] || '#94a3b8'
+    }
+
     render()
   }, [themeState]) // eslint-disable-line react-hooks/exhaustive-deps
 
