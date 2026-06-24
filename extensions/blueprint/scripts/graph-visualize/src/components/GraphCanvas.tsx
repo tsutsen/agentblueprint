@@ -187,13 +187,13 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     for (const n of data.nodes) {
       if (!n.visible) continue
       if (z.k < LABEL_MAX_ZOOM) {
-        const screenRadius = getNodeRadius(n, sizeMetric, sizeRangeRef.current, connectedSetRef.current) * z.k
+        const screenRadius = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current) * z.k
         if (screenRadius < LABEL_NODE_RADIUS_THRESHOLD) continue
       }
       candidates.push(n)
     }
 
-    candidates.sort((a, b) => getNodeRadius(b, sizeMetric, sizeRangeRef.current, connectedSetRef.current) - getNodeRadius(a, sizeMetric, sizeRangeRef.current, connectedSetRef.current))
+    candidates.sort((a, b) => getNodeRadius(b, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current) - getNodeRadius(a, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current))
 
     const fontSize = 13 / z.k
     const cellSize = fontSize * 2
@@ -202,7 +202,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     const cellKey = (wx: number, wy: number) => `${Math.floor(wx / cellSize)},${Math.floor(wy / cellSize)}`
 
     const labelBBox = (n: any) => {
-      const r = getNodeRadius(n, sizeMetric, sizeRangeRef.current, connectedSetRef.current)
+      const r = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
       const fs = n.type === 'spec' ? 14 : 13
       const text = n.term || n.label || n.id || ''
       const tw = text.length * fs * LABEL_CHAR_WIDTH + LABEL_PAD_X * 2
@@ -264,7 +264,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       if (!n.visible) continue
 
       const labelX = z.x + n.x * z.k
-      const r = getNodeRadius(n, sizeMetric, sizeRangeRef.current, connectedSet)
+      const r = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSet)
       const labelY = z.y + n.y * z.k - r * z.k - 8
 
       let labelEl = labelElementsRef.current.get(n.id)
@@ -414,7 +414,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     // Draw nodes
     for (const n of data.nodes) {
       if (!n.visible) continue
-      const r = n._animRadius !== undefined ? Math.max(0, n._animRadius) : getNodeRadius(n, sizeMetric, sizeRangeRef.current, connectedSetRef.current)
+      const r = n._animRadius !== undefined ? Math.max(0, n._animRadius) : getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
       const color = getNodeColor(n)
       const isSelected = selectedNodeRef.current && selectedNodeRef.current.id === n.id
       const isHovered = hoveredNodeRef.current && hoveredNodeRef.current.id === n.id
@@ -464,7 +464,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     const oldRadii = new Map<string, number>()
     for (const n of data.nodes) {
       if (!n.visible) continue
-      oldRadii.set(n.id, n._animRadius ?? getNodeRadius(n, sizeMetric, sizeRangeRef.current, connectedSetRef.current))
+      oldRadii.set(n.id, n._animRadius ?? getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current))
     }
 
     // Build connected set for correct target radii
@@ -484,8 +484,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     animScaleTargetsRef.current = new Map()
     for (const n of data.nodes) {
       if (!n.visible) continue
-      const startRadius = oldRadii.get(n.id) ?? getNodeRadius(n, sizeMetric, sizeRangeRef.current, connectedSetRef.current)
-      const targetRadius = getNodeRadius(n, sizeMetric, sizeRangeRef.current, connectedSetRef.current)
+      const startRadius = oldRadii.get(n.id) ?? getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
+      const targetRadius = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
       animScaleStartRadiiRef.current.set(n.id, startRadius)
       animScaleTargetsRef.current.set(n.id, targetRadius)
       n._animRadius = startRadius
@@ -649,7 +649,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
         if (!n.visible) continue
         const dx = pos.x - n.x
         const dy = pos.y - n.y
-        const r = getNodeRadius(n, sizeMetric, sizeRangeRef.current, connectedSetRef.current) + 5
+        const r = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current) + 5
         if (dx * dx + dy * dy < r * r) return n
       }
       return null
