@@ -133,15 +133,27 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, onBrid
           wrapper.stopSimulation()
         },
         zoomIn: () => {
+          const w = wrapper.getWidth() || 800
+          const h = wrapper.getHeight() || 600
           const z = wrapper.getZoom()
+          const centerGraphX = z.x + w / (2 * z.k)
+          const centerGraphY = z.y + h / (2 * z.k)
           const newK = Math.min(z.k * 1.3, 10)
-          wrapper.setZoom(z.x, z.y, newK)
+          const newX = centerGraphX - w / (2 * newK)
+          const newY = centerGraphY - h / (2 * newK)
+          wrapper.setZoom(newX, newY, newK)
           wrapper.renderGraph()
         },
         zoomOut: () => {
+          const w = wrapper.getWidth() || 800
+          const h = wrapper.getHeight() || 600
           const z = wrapper.getZoom()
+          const centerGraphX = z.x + w / (2 * z.k)
+          const centerGraphY = z.y + h / (2 * z.k)
           const newK = Math.max(z.k / 1.3, 0.1)
-          wrapper.setZoom(z.x, z.y, newK)
+          const newX = centerGraphX - w / (2 * newK)
+          const newY = centerGraphY - h / (2 * newK)
+          wrapper.setZoom(newX, newY, newK)
           wrapper.renderGraph()
         },
         updateTheme: () => {
