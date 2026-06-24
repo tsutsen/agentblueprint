@@ -362,17 +362,9 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     if (!ctx) return
     const nCount = data?.nodes?.length ?? 0
     const vCount = data?.nodes?.filter((n: any) => n.visible !== false)?.length ?? 0
-    if (nCount > 0 && vCount === 0) console.warn('[render] ALL NODES INVISIBLE!')
-
     const w = widthRef.current
     const h = heightRef.current
     const z = zoomRef.current
-    if (nCount > 0 && vCount > 0) {
-      const firstVisible = data.nodes.find((n: any) => n.visible !== false)
-      if (firstVisible) {
-        console.log('[render] zoom=', JSON.stringify(z), 'nodePos=', firstVisible.x.toFixed(1), firstVisible.y.toFixed(1), 'canvas=', w, 'x', h)
-      }
-    }
 
     // Reset transform to identity, then clear full canvas
     ctx.setTransform(1, 0, 0, 1, 0, 0)
