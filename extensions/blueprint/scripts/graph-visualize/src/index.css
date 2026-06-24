@@ -110,3 +110,12 @@
   min-width: 0 !important;
   width: 100% !important;
 }
+
+/* Control buttons: guaranteed visible hover in all themes */
+.graph-control-btn {
+  color: hsl(var(--foreground));
+}
+.graph-control-btn:hover {
+  background-color: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+}
