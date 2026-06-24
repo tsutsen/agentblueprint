@@ -72,7 +72,7 @@
 /* ── Graph Canvas Styles (from legacy graph.css) ── */
 #graph-container {
   overflow: hidden;
-  background: var(--bg);
+  background: hsl(var(--background));
 }
 
 #graph-canvas {

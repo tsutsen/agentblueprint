@@ -2,7 +2,7 @@
  * Theme definitions — single source of truth for all theming.
  * Each theme sets:
  *   - shadcn UI variables (--background, --foreground, etc.)
- *   - graph CSS variables (--bg, --surface, --text, etc.) for sidebar/UI
+
  *   - 12 node colors that cycle for node fill
  *   - single edge color (rgba)
  */
@@ -12,8 +12,7 @@ export interface Theme {
   label: string;
   // shadcn UI variables (HSL format)
   vars: Record<string, string>;
-  // Graph CSS variables (hex/rgba) — used by graph.css for sidebar/UI styling
-  legacyVars: Record<string, string>;
+
   // 12 node colors that cycle
   nodeColors: string[];
   // Single edge color (rgba)
@@ -80,9 +79,6 @@ export const themes: Theme[] = [
       "--input": "214.3 31.8% 91.4%",
       "--ring": "222.2 84% 4.9%",
     },
-    legacyVars: {
-      "--bg": "#ffffff",
-    },
     nodeColors: [
       "#3b82f6",
       "#ef4444",
@@ -123,9 +119,6 @@ export const themes: Theme[] = [
       "--border": hexToHsl("#333333"),
       "--input": hexToHsl("#333333"),
       "--ring": hexToHsl("#ffffff"),
-    },
-    legacyVars: {
-      "--bg": "#0a0a0a",
     },
     nodeColors: [
       "#60a5fa",
@@ -168,9 +161,6 @@ export const themes: Theme[] = [
       "--input": hexToHsl("#665c54"),
       "--ring": hexToHsl("#fabd2f"),
     },
-    legacyVars: {
-      "--bg": "#1d2021",
-    },
     nodeColors: [
       "#83a598",
       "#fb4934",
@@ -211,9 +201,6 @@ export const themes: Theme[] = [
       "--border": hexToHsl("#bdae93"),
       "--input": hexToHsl("#bdae93"),
       "--ring": hexToHsl("#d79921"),
-    },
-    legacyVars: {
-      "--bg": "#fbf1c7",
     },
     nodeColors: [
       "#047587",
@@ -256,9 +243,6 @@ export const themes: Theme[] = [
       "--input": hexToHsl("#4a2c7a"),
       "--ring": hexToHsl("#00ffcc"),
     },
-    legacyVars: {
-      "--bg": "#0d0221",
-    },
     nodeColors: [
       "#00ffcc",
       "#ff4081",
@@ -299,9 +283,6 @@ export const themes: Theme[] = [
       "--border": hexToHsl("#dda0dd"),
       "--input": hexToHsl("#dda0dd"),
       "--ring": hexToHsl("#4b0082"),
-    },
-    legacyVars: {
-      "--bg": "#fff0f5",
     },
     nodeColors: [
       "#6a0dad",
@@ -344,9 +325,6 @@ export const themes: Theme[] = [
       "--input": hexToHsl("#2a3050"),
       "--ring": hexToHsl("#00F0FF"),
     },
-    legacyVars: {
-      "--bg": "#0A0F1F",
-    },
     nodeColors: [
       "#FF2A6D",  // magenta
       "#FF3131",  // red
@@ -375,11 +353,7 @@ export function applyTheme(themeKey: string): void {
   if (!theme) return;
 
   const root = document.documentElement;
-  // Apply legacy graph CSS variables FIRST
-  for (const [key, value] of Object.entries(theme.legacyVars)) {
-    root.style.setProperty(key, value);
-  }
-  // Apply shadcn UI variables SECOND (overwrites any collisions)
+  // Apply shadcn UI variables
   for (const [key, value] of Object.entries(theme.vars)) {
     root.style.setProperty(key, value);
   }
