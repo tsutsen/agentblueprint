@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { GraphCanvas, type IGraphBridge } from '@/components/GraphCanvas'
 import type { GraphData, GraphNode, GraphEdge } from '@/lib/graph-types'
 import { extractShortId } from '@/lib/utils'
+import { themes } from '@/lib/themes'
+import { SIZE_METRICS } from '@/lib/metrics'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -14,9 +16,12 @@ import { Label } from '@/components/ui/label'
 import { Search, RotateCcw, ChevronDown, ZoomIn, ZoomOut } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Switch } from '@/components/ui/switch'
-import { themes } from '@/lib/themes'
-import { SIZE_METRICS } from '@/lib/metrics'
 
+// Module-level fetch — runs once, survives StrictMode double-mount
+const graphDataPromise = fetch('/graph-data.json')
+  .then((res) => res.json())
+  .then((data: GraphData) => data)
+  .catch((err) => { console.error('Failed to load graph data:', err); return null })
 
 function App() {
   const [graphData, setGraphData] = useState<GraphData | null>(null)
@@ -35,45 +40,43 @@ function App() {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const resizeRef = useRef<HTMLDivElement>(null)
 
-  // ─── Load graph data ───
+  // ─── Load graph data (module-level promise, fetched once) ───
   useEffect(() => {
-    fetch('/graph-data.json')
-      .then((res) => res.json())
-      .then((data) => {
-        setGraphData(data)
+    graphDataPromise.then((data) => {
+      if (!data) return
+      setGraphData(data)
 
-        // Compute categories
-        const catCounts: Record<string, { count: number; color: string }> = {}
-        function getCatColor(cat: string): string {
-          let hash = 0
-          for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash)
-          const idx = Math.abs(hash) % 12
-          return `var(--node-color-${idx})`
+      // Compute categories
+      const catCounts: Record<string, { count: number; color: string }> = {}
+      function getCatColor(cat: string): string {
+        let hash = 0
+        for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash)
+        const idx = Math.abs(hash) % 12
+        return `var(--node-color-${idx})`
+      }
+      for (const node of data.nodes) {
+        const cat = node.category
+        if (!catCounts[cat]) {
+          catCounts[cat] = { count: 0, color: getCatColor(cat) }
         }
-        for (const node of data.nodes) {
-          const cat = node.category
-          if (!catCounts[cat]) {
-            catCounts[cat] = { count: 0, color: getCatColor(cat) }
-          }
-          catCounts[cat].count++
-        }
-        setCategories(catCounts)
+        catCounts[cat].count++
+      }
+      setCategories(catCounts)
 
-        // Restore state from URL
-        const params = new URLSearchParams(window.location.search)
-        const catsParam = params.get('cats')
-        if (catsParam) {
-          const cats = new Set(catsParam.split(',').map(c => c.trim()).filter(Boolean))
-          setActiveCategories(cats)
-        } else {
-          setActiveCategories(new Set(Object.keys(catCounts)))
-        }
-        const qParam = params.get('q')
-        if (qParam) {
-          setSearchTerm(qParam)
-        }
-      })
-      .catch((err) => console.error('Failed to load graph data:', err))
+      // Restore state from URL
+      const params = new URLSearchParams(window.location.search)
+      const catsParam = params.get('cats')
+      if (catsParam) {
+        const cats = new Set(catsParam.split(',').map(c => c.trim()).filter(Boolean))
+        setActiveCategories(cats)
+      } else {
+        setActiveCategories(new Set(Object.keys(catCounts)))
+      }
+      const qParam = params.get('q')
+      if (qParam) {
+        setSearchTerm(qParam)
+      }
+    })
   }, [])
 
   // ─── Debounced search ───

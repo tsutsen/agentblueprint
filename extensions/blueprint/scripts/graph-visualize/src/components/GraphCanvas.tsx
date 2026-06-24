@@ -166,9 +166,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
   // ─── Data ref — prevents stale closures in render callbacks ───
   const dataRef = useRef(data)
-  // NOTE: no useEffect sync here — dataRef is synced in the init effect only,
-  // because App.tsx may re-fetch data in StrictMode creating a new object
-  // whose nodes lack initialized positions.
+  // Synced in init effect only — dataRef stays bound to the same object
+  // that the layout simulation ran on, preventing NaN position collapse.
 
   // Deferred render — batches rapid calls into a single RAF
   function deferRender() {
