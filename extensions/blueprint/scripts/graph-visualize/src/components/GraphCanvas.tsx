@@ -599,13 +599,15 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     labelVisibleSetRef.current = null
 
     // Compute size ranges
-    const metrics = ['blastRadius', 'degree', 'risk', 'volume', 'centrality']
-    const rangeKeys = ['blast', 'degree', 'risk', 'volume', 'centrality']
-    for (let i = 0; i < metrics.length; i++) {
-      const key = metrics[i]
-      const rkey = rangeKeys[i]
-      const values = data.nodes.map((n: any) => n[key] || 0).filter((v: number) => v > 0)
-      if (values.length > 0) sizeRangeRef.current[rkey] = { min: 0, max: Math.max(...values) }
+    const metrics = [
+      { nodeKey: 'blastRadius', rangeKey: 'blast' },
+      { nodeKey: 'degree', rangeKey: 'degree' },
+      { nodeKey: 'risk', rangeKey: 'risk' },
+      { nodeKey: 'centrality', rangeKey: 'centrality' },
+    ]
+    for (const m of metrics) {
+      const values = data.nodes.map((n: any) => n[m.nodeKey] || 0).filter((v: number) => v > 0)
+      if (values.length > 0) sizeRangeRef.current[m.rangeKey] = { min: 0, max: Math.max(...values) }
     }
 
     // Build node map
