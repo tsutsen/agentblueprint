@@ -10,6 +10,10 @@
 export interface Theme {
   key: string;
   label: string;
+  // Font families for UI and canvas labels
+  fontFamily: string;
+  // Secondary font (e.g. monospace for sidebar, code, detail panel)
+  fontFamilyMono: string;
   // shadcn UI variables (HSL format)
   vars: Record<string, string>;
 
@@ -60,6 +64,8 @@ export const themes: Theme[] = [
   {
     key: "default",
     label: "Default Light",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontFamilyMono: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', Consolas, monospace",
     vars: {
       "--background": hexToHsl("#ffffff"),            // page / main canvas background
       "--foreground": hexToHsl("#030712"),            // primary text color
@@ -102,6 +108,8 @@ export const themes: Theme[] = [
   {
     key: "dark",
     label: "Dark",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontFamilyMono: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', Consolas, monospace",
     vars: {
       "--background": hexToHsl("#0a0a0a"),            // page / main canvas background
       "--foreground": hexToHsl("#e0e0e0"),            // primary text color
@@ -144,6 +152,8 @@ export const themes: Theme[] = [
   {
     key: "gruvbox",
     label: "Gruvbox Dark",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontFamilyMono: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', Consolas, monospace",
     vars: {
       "--background": hexToHsl("#1d2021"),            // page / main canvas background
       "--foreground": hexToHsl("#c3b89a"),            // primary text color
@@ -186,6 +196,8 @@ export const themes: Theme[] = [
   {
     key: "gruvbox-light",
     label: "Gruvbox Light",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontFamilyMono: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', Consolas, monospace",
     vars: {
       "--background": hexToHsl("#fbf1c7"),            // page / main canvas background
       "--foreground": hexToHsl("#504945"),            // primary text color
@@ -228,6 +240,8 @@ export const themes: Theme[] = [
   {
     key: "neon",
     label: "Neon Dark",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontFamilyMono: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', Consolas, monospace",
     vars: {
       "--background": hexToHsl("#0d0221"),            // page / main canvas background
       "--foreground": hexToHsl("#00ffcc"),            // primary text color
@@ -270,6 +284,8 @@ export const themes: Theme[] = [
   {
     key: "retro",
     label: "Retro Light",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontFamilyMono: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', Consolas, monospace",
     vars: {
       "--background": hexToHsl("#fff0f5"),            // page / main canvas background
       "--foreground": hexToHsl("#4b0082"),            // primary text color
@@ -312,6 +328,8 @@ export const themes: Theme[] = [
   {
     key: "netrunner",
     label: "Netrunner",
+    fontFamily: "'Space Grotesk', 'Inter', sans-serif",
+    fontFamilyMono: "'Fira Code', 'JetBrains Mono', Consolas, monospace",
     vars: {
       "--background": hexToHsl("#0A0F1F"),            // page / main canvas background
       "--foreground": hexToHsl("#F5F7FA"),            // primary text color
@@ -366,6 +384,9 @@ export function applyTheme(themeKey: string): void {
   for (const [key, value] of Object.entries(theme.vars)) {
     root.style.setProperty(key, value);
   }
+  // Apply font families
+  root.style.setProperty("--font-primary", theme.fontFamily);
+  root.style.setProperty("--font-secondary", theme.fontFamilyMono);
   // Apply edge color
   root.style.setProperty("--edge-color", theme.edgeColor);
   // Apply 12 node colors

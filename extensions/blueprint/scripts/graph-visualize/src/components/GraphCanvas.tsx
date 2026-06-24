@@ -1049,6 +1049,10 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     // Default node stroke to darker version of first node color
     colors['--node-stroke'] = theme.nodeStrokeColor || ''
 
+    // Apply font families
+    cs.setProperty('--font-primary', theme.fontFamily)
+    cs.setProperty('--font-secondary', theme.fontFamilyMono)
+
     // Apply to DOM
     for (const [key, value] of Object.entries(theme.vars)) {
       cs.setProperty(key, value)
