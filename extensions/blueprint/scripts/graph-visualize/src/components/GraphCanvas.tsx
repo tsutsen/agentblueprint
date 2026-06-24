@@ -248,17 +248,27 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       return
     }
 
+    // Cache getNodeRadius results — inputs don't change within this call
+    const radiusCache = new Map<string, number>()
+    const cachedRadius = (n: any) => {
+      const cached = radiusCache.get(n.id)
+      if (cached !== undefined) return cached
+      const r = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
+      radiusCache.set(n.id, r)
+      return r
+    }
+
     const candidates: any[] = []
     for (const n of data.nodes) {
       if (!n.visible) continue
       if (z.k < LABEL_MAX_ZOOM) {
-        const screenRadius = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current) * z.k
+        const screenRadius = cachedRadius(n) * z.k
         if (screenRadius < LABEL_NODE_RADIUS_THRESHOLD) continue
       }
       candidates.push(n)
     }
 
-    candidates.sort((a, b) => getNodeRadius(b, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current) - getNodeRadius(a, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current))
+    candidates.sort((a, b) => cachedRadius(b) - cachedRadius(a))
 
     const fontSize = 13 / z.k
     const cellSize = fontSize * 2
@@ -267,7 +277,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     const cellKey = (wx: number, wy: number) => `${Math.floor(wx / cellSize)},${Math.floor(wy / cellSize)}`
 
     const labelBBox = (n: any) => {
-      const r = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
+      const r = cachedRadius(n)
       const fs = n.type === 'spec' ? 14 : 13
       const text = n.term || n.label || n.id || ''
       const tw = text.length * fs * LABEL_CHAR_WIDTH + LABEL_PAD_X * 2
