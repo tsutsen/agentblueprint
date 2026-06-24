@@ -59,25 +59,25 @@ export const themes: Theme[] = [
     key: "default",
     label: "Default Light",
     vars: {
-      "--background": hexToHsl("#ffffff"),
-      "--foreground": hexToHsl("#030712"),
-      "--card": hexToHsl("#ffffff"),
-      "--card-foreground": hexToHsl("#030712"),
-      "--popover": hexToHsl("#ffffff"),
-      "--popover-foreground": hexToHsl("#030712"),
-      "--primary": hexToHsl("#0f172a"),
-      "--primary-foreground": hexToHsl("#f8fafc"),
-      "--secondary": hexToHsl("#f1f5f9"),
-      "--secondary-foreground": hexToHsl("#0f172a"),
-      "--muted": hexToHsl("#f1f5f9"),
-      "--muted-foreground": hexToHsl("#64748b"),
-      "--accent": hexToHsl("#f1f5f9"),
-      "--accent-foreground": hexToHsl("#0f172a"),
-      "--destructive": hexToHsl("#ef4444"),
-      "--destructive-foreground": hexToHsl("#f8fafc"),
-      "--border": hexToHsl("#e2e8f0"),
-      "--input": hexToHsl("#e2e8f0"),
-      "--ring": hexToHsl("#0f172a"),
+      "--background": hexToHsl("#ffffff"),            // page / main canvas background
+      "--foreground": hexToHsl("#030712"),            // primary text color
+      "--card": hexToHsl("#ffffff"),                  // card / panel backgrounds
+      "--card-foreground": hexToHsl("#030712"),       // text inside cards
+      "--popover": hexToHsl("#ffffff"),               // dropdown / tooltip / popover bg
+      "--popover-foreground": hexToHsl("#030712"),    // text inside popovers
+      "--primary": hexToHsl("#0f172a"),               // main action buttons, selected state
+      "--primary-foreground": hexToHsl("#f8fafc"),    // text on primary buttons
+      "--secondary": hexToHsl("#f1f5f9"),             // secondary buttons, subtle backgrounds
+      "--secondary-foreground": hexToHsl("#0f172a"),  // text on secondary buttons
+      "--muted": hexToHsl("#f1f5f9"),                 // muted / disabled backgrounds
+      "--muted-foreground": hexToHsl("#64748b"),      // secondary / placeholder text
+      "--accent": hexToHsl("#f1f5f9"),                // hover / focus backgrounds
+      "--accent-foreground": hexToHsl("#0f172a"),     // text on accent hover
+      "--destructive": hexToHsl("#ef4444"),           // delete / error buttons
+      "--destructive-foreground": hexToHsl("#f8fafc"),// text on destructive buttons
+      "--border": hexToHsl("#e2e8f0"),                // borders on inputs, cards, panels
+      "--input": hexToHsl("#e2e8f0"),                 // input field backgrounds
+      "--ring": hexToHsl("#0f172a"),                  // focus ring / outline color
     },
     nodeColors: [
       "#3b82f6",
@@ -100,25 +100,25 @@ export const themes: Theme[] = [
     key: "dark",
     label: "Dark",
     vars: {
-      "--background": hexToHsl("#0a0a0a"),
-      "--foreground": hexToHsl("#e0e0e0"),
-      "--card": hexToHsl("#0a0a0a"),
-      "--card-foreground": hexToHsl("#e0e0e0"),
-      "--popover": hexToHsl("#1a1a1a"),
-      "--popover-foreground": hexToHsl("#e0e0e0"),
-      "--primary": hexToHsl("#ffffff"),
-      "--primary-foreground": hexToHsl("#0a0a0a"),
-      "--secondary": hexToHsl("#1a1a1a"),
-      "--secondary-foreground": hexToHsl("#e0e0e0"),
-      "--muted": hexToHsl("#2a2a2a"),
-      "--muted-foreground": hexToHsl("#888888"),
-      "--accent": hexToHsl("#ffffff"),
-      "--accent-foreground": hexToHsl("#0a0a0a"),
-      "--destructive": hexToHsl("#ff6b6b"),
-      "--destructive-foreground": hexToHsl("#0a0a0a"),
-      "--border": hexToHsl("#333333"),
-      "--input": hexToHsl("#333333"),
-      "--ring": hexToHsl("#ffffff"),
+      "--background": hexToHsl("#0a0a0a"),            // page / main canvas background
+      "--foreground": hexToHsl("#e0e0e0"),            // primary text color
+      "--card": hexToHsl("#0a0a0a"),                  // card / panel backgrounds
+      "--card-foreground": hexToHsl("#e0e0e0"),       // text inside cards
+      "--popover": hexToHsl("#1a1a1a"),               // dropdown / tooltip / popover bg
+      "--popover-foreground": hexToHsl("#e0e0e0"),    // text inside popovers
+      "--primary": hexToHsl("#ffffff"),               // main action buttons, selected state
+      "--primary-foreground": hexToHsl("#0a0a0a"),    // text on primary buttons
+      "--secondary": hexToHsl("#1a1a1a"),             // secondary buttons, subtle backgrounds
+      "--secondary-foreground": hexToHsl("#e0e0e0"),  // text on secondary buttons
+      "--muted": hexToHsl("#2a2a2a"),                 // muted / disabled backgrounds
+      "--muted-foreground": hexToHsl("#888888"),      // secondary / placeholder text
+      "--accent": hexToHsl("#ffffff"),                // hover / focus backgrounds
+      "--accent-foreground": hexToHsl("#0a0a0a"),     // text on accent hover
+      "--destructive": hexToHsl("#ff6b6b"),           // delete / error buttons
+      "--destructive-foreground": hexToHsl("#0a0a0a"),// text on destructive buttons
+      "--border": hexToHsl("#333333"),                // borders on inputs, cards, panels
+      "--input": hexToHsl("#333333"),                 // input field backgrounds
+      "--ring": hexToHsl("#ffffff"),                  // focus ring / outline color
     },
     nodeColors: [
       "#60a5fa",
@@ -141,25 +141,25 @@ export const themes: Theme[] = [
     key: "gruvbox",
     label: "Gruvbox Dark",
     vars: {
-      "--background": hexToHsl("#1d2021"),
-      "--foreground": hexToHsl("#c3b89a"),
-      "--card": hexToHsl("#3c3836"),
-      "--card-foreground": hexToHsl("#c3b89a"),
-      "--popover": hexToHsl("#3c3836"),
-      "--popover-foreground": hexToHsl("#c3b89a"),
-      "--primary": hexToHsl("#fabd2f"),
-      "--primary-foreground": hexToHsl("#1d2021"),
-      "--secondary": hexToHsl("#504945"),
-      "--secondary-foreground": hexToHsl("#c3b89a"),
-      "--muted": hexToHsl("#504945"),
-      "--muted-foreground": hexToHsl("#a89984"),
-      "--accent": hexToHsl("#fabd2f"),
-      "--accent-foreground": hexToHsl("#1d2021"),
-      "--destructive": hexToHsl("#ff6b6b"),
-      "--destructive-foreground": hexToHsl("#1d2021"),
-      "--border": hexToHsl("#665c54"),
-      "--input": hexToHsl("#665c54"),
-      "--ring": hexToHsl("#fabd2f"),
+      "--background": hexToHsl("#1d2021"),            // page / main canvas background
+      "--foreground": hexToHsl("#c3b89a"),            // primary text color
+      "--card": hexToHsl("#3c3836"),                  // card / panel backgrounds
+      "--card-foreground": hexToHsl("#c3b89a"),       // text inside cards
+      "--popover": hexToHsl("#3c3836"),               // dropdown / tooltip / popover bg
+      "--popover-foreground": hexToHsl("#c3b89a"),    // text inside popovers
+      "--primary": hexToHsl("#fabd2f"),               // main action buttons, selected state
+      "--primary-foreground": hexToHsl("#1d2021"),    // text on primary buttons
+      "--secondary": hexToHsl("#504945"),             // secondary buttons, subtle backgrounds
+      "--secondary-foreground": hexToHsl("#c3b89a"),  // text on secondary buttons
+      "--muted": hexToHsl("#504945"),                 // muted / disabled backgrounds
+      "--muted-foreground": hexToHsl("#a89984"),      // secondary / placeholder text
+      "--accent": hexToHsl("#fabd2f"),                // hover / focus backgrounds
+      "--accent-foreground": hexToHsl("#1d2021"),     // text on accent hover
+      "--destructive": hexToHsl("#ff6b6b"),           // delete / error buttons
+      "--destructive-foreground": hexToHsl("#1d2021"),// text on destructive buttons
+      "--border": hexToHsl("#665c54"),                // borders on inputs, cards, panels
+      "--input": hexToHsl("#665c54"),                 // input field backgrounds
+      "--ring": hexToHsl("#fabd2f"),                  // focus ring / outline color
     },
     nodeColors: [
       "#83a598",
@@ -182,25 +182,25 @@ export const themes: Theme[] = [
     key: "gruvbox-light",
     label: "Gruvbox Light",
     vars: {
-      "--background": hexToHsl("#fbf1c7"),
-      "--foreground": hexToHsl("#504945"),
-      "--card": hexToHsl("#ebdbb2"),
-      "--card-foreground": hexToHsl("#504945"),
-      "--popover": hexToHsl("#ebdbb2"),
-      "--popover-foreground": hexToHsl("#504945"),
-      "--primary": hexToHsl("#d79921"),
-      "--primary-foreground": hexToHsl("#1a1a1a"),
-      "--secondary": hexToHsl("#d5c4a1"),
-      "--secondary-foreground": hexToHsl("#504945"),
-      "--muted": hexToHsl("#d5c4a1"),
-      "--muted-foreground": hexToHsl("#7c6f64"),
-      "--accent": hexToHsl("#d79921"),
-      "--accent-foreground": hexToHsl("#1a1a1a"),
-      "--destructive": hexToHsl("#9d0006"),
-      "--destructive-foreground": hexToHsl("#fbf1c7"),
-      "--border": hexToHsl("#bdae93"),
-      "--input": hexToHsl("#bdae93"),
-      "--ring": hexToHsl("#d79921"),
+      "--background": hexToHsl("#fbf1c7"),            // page / main canvas background
+      "--foreground": hexToHsl("#504945"),            // primary text color
+      "--card": hexToHsl("#ebdbb2"),                  // card / panel backgrounds
+      "--card-foreground": hexToHsl("#504945"),       // text inside cards
+      "--popover": hexToHsl("#ebdbb2"),               // dropdown / tooltip / popover bg
+      "--popover-foreground": hexToHsl("#504945"),    // text inside popovers
+      "--primary": hexToHsl("#d79921"),               // main action buttons, selected state
+      "--primary-foreground": hexToHsl("#1a1a1a"),    // text on primary buttons
+      "--secondary": hexToHsl("#d5c4a1"),             // secondary buttons, subtle backgrounds
+      "--secondary-foreground": hexToHsl("#504945"),  // text on secondary buttons
+      "--muted": hexToHsl("#d5c4a1"),                 // muted / disabled backgrounds
+      "--muted-foreground": hexToHsl("#7c6f64"),      // secondary / placeholder text
+      "--accent": hexToHsl("#d79921"),                // hover / focus backgrounds
+      "--accent-foreground": hexToHsl("#1a1a1a"),     // text on accent hover
+      "--destructive": hexToHsl("#9d0006"),           // delete / error buttons
+      "--destructive-foreground": hexToHsl("#fbf1c7"),// text on destructive buttons
+      "--border": hexToHsl("#bdae93"),                // borders on inputs, cards, panels
+      "--input": hexToHsl("#bdae93"),                 // input field backgrounds
+      "--ring": hexToHsl("#d79921"),                  // focus ring / outline color
     },
     nodeColors: [
       "#047587",
@@ -223,25 +223,25 @@ export const themes: Theme[] = [
     key: "neon",
     label: "Neon Dark",
     vars: {
-      "--background": hexToHsl("#0d0221"),
-      "--foreground": hexToHsl("#00ffcc"),
-      "--card": hexToHsl("#1a0a2e"),
-      "--card-foreground": hexToHsl("#00ffcc"),
-      "--popover": hexToHsl("#1a0a2e"),
-      "--popover-foreground": hexToHsl("#00ffcc"),
-      "--primary": hexToHsl("#00ffcc"),
-      "--primary-foreground": hexToHsl("#0d0221"),
-      "--secondary": hexToHsl("#2d1b4e"),
-      "--secondary-foreground": hexToHsl("#00ffcc"),
-      "--muted": hexToHsl("#2d1b4e"),
-      "--muted-foreground": hexToHsl("#a09cff"),
-      "--accent": hexToHsl("#00ffcc"),
-      "--accent-foreground": hexToHsl("#0d0221"),
-      "--destructive": hexToHsl("#ff4081"),
-      "--destructive-foreground": hexToHsl("#0d0221"),
-      "--border": hexToHsl("#4a2c7a"),
-      "--input": hexToHsl("#4a2c7a"),
-      "--ring": hexToHsl("#00ffcc"),
+      "--background": hexToHsl("#0d0221"),            // page / main canvas background
+      "--foreground": hexToHsl("#00ffcc"),            // primary text color
+      "--card": hexToHsl("#1a0a2e"),                  // card / panel backgrounds
+      "--card-foreground": hexToHsl("#00ffcc"),       // text inside cards
+      "--popover": hexToHsl("#1a0a2e"),               // dropdown / tooltip / popover bg
+      "--popover-foreground": hexToHsl("#00ffcc"),    // text inside popovers
+      "--primary": hexToHsl("#00ffcc"),               // main action buttons, selected state
+      "--primary-foreground": hexToHsl("#0d0221"),    // text on primary buttons
+      "--secondary": hexToHsl("#2d1b4e"),             // secondary buttons, subtle backgrounds
+      "--secondary-foreground": hexToHsl("#00ffcc"),  // text on secondary buttons
+      "--muted": hexToHsl("#2d1b4e"),                 // muted / disabled backgrounds
+      "--muted-foreground": hexToHsl("#a09cff"),      // secondary / placeholder text
+      "--accent": hexToHsl("#00ffcc"),                // hover / focus backgrounds
+      "--accent-foreground": hexToHsl("#0d0221"),     // text on accent hover
+      "--destructive": hexToHsl("#ff4081"),           // delete / error buttons
+      "--destructive-foreground": hexToHsl("#0d0221"),// text on destructive buttons
+      "--border": hexToHsl("#4a2c7a"),                // borders on inputs, cards, panels
+      "--input": hexToHsl("#4a2c7a"),                 // input field backgrounds
+      "--ring": hexToHsl("#00ffcc"),                  // focus ring / outline color
     },
     nodeColors: [
       "#00ffcc",
@@ -264,25 +264,25 @@ export const themes: Theme[] = [
     key: "retro",
     label: "Retro Light",
     vars: {
-      "--background": hexToHsl("#fff0f5"),
-      "--foreground": hexToHsl("#4b0082"),
-      "--card": hexToHsl("#ffffff"),
-      "--card-foreground": hexToHsl("#4b0082"),
-      "--popover": hexToHsl("#ffffff"),
-      "--popover-foreground": hexToHsl("#4b0082"),
-      "--primary": hexToHsl("#dda0dd"),
-      "--primary-foreground": hexToHsl("#ffffff"),
-      "--secondary": hexToHsl("#f0e0ef"),
-      "--secondary-foreground": hexToHsl("#4b0082"),
-      "--muted": hexToHsl("#f0e0ef"),
-      "--muted-foreground": hexToHsl("#9370db"),
-      "--accent": hexToHsl("#dda0dd"),
-      "--accent-foreground": hexToHsl("#ffffff"),
-      "--destructive": hexToHsl("#ff69b4"),
-      "--destructive-foreground": hexToHsl("#ffffff"),
-      "--border": hexToHsl("#dda0dd"),
-      "--input": hexToHsl("#dda0dd"),
-      "--ring": hexToHsl("#4b0082"),
+      "--background": hexToHsl("#fff0f5"),            // page / main canvas background
+      "--foreground": hexToHsl("#4b0082"),            // primary text color
+      "--card": hexToHsl("#ffffff"),                  // card / panel backgrounds
+      "--card-foreground": hexToHsl("#4b0082"),       // text inside cards
+      "--popover": hexToHsl("#ffffff"),               // dropdown / tooltip / popover bg
+      "--popover-foreground": hexToHsl("#4b0082"),    // text inside popovers
+      "--primary": hexToHsl("#dda0dd"),               // main action buttons, selected state
+      "--primary-foreground": hexToHsl("#ffffff"),    // text on primary buttons
+      "--secondary": hexToHsl("#f0e0ef"),             // secondary buttons, subtle backgrounds
+      "--secondary-foreground": hexToHsl("#4b0082"),  // text on secondary buttons
+      "--muted": hexToHsl("#f0e0ef"),                 // muted / disabled backgrounds
+      "--muted-foreground": hexToHsl("#9370db"),      // secondary / placeholder text
+      "--accent": hexToHsl("#dda0dd"),                // hover / focus backgrounds
+      "--accent-foreground": hexToHsl("#ffffff"),     // text on accent hover
+      "--destructive": hexToHsl("#ff69b4"),           // delete / error buttons
+      "--destructive-foreground": hexToHsl("#ffffff"),// text on destructive buttons
+      "--border": hexToHsl("#dda0dd"),                // borders on inputs, cards, panels
+      "--input": hexToHsl("#dda0dd"),                 // input field backgrounds
+      "--ring": hexToHsl("#4b0082"),                  // focus ring / outline color
     },
     nodeColors: [
       "#6a0dad",
@@ -305,25 +305,25 @@ export const themes: Theme[] = [
     key: "netrunner",
     label: "Netrunner",
     vars: {
-      "--background": hexToHsl("#0A0F1F"),
-      "--foreground": hexToHsl("#F5F7FA"),
-      "--card": hexToHsl("#121830"),
-      "--card-foreground": hexToHsl("#F5F7FA"),
-      "--popover": hexToHsl("#121830"),
-      "--popover-foreground": hexToHsl("#F5F7FA"),
-      "--primary": hexToHsl("#00F0FF"),
-      "--primary-foreground": hexToHsl("#0A0F1F"),
-      "--secondary": hexToHsl("#1a2040"),
-      "--secondary-foreground": hexToHsl("#00F0FF"),
-      "--muted": hexToHsl("#1a2040"),
-      "--muted-foreground": hexToHsl("#8899aa"),
-      "--accent": hexToHsl("#FCEE0A"),
-      "--accent-foreground": hexToHsl("#0A0F1F"),
-      "--destructive": hexToHsl("#FF3131"),
-      "--destructive-foreground": hexToHsl("#F5F7FA"),
-      "--border": hexToHsl("#2a3050"),
-      "--input": hexToHsl("#2a3050"),
-      "--ring": hexToHsl("#00F0FF"),
+      "--background": hexToHsl("#0A0F1F"),            // page / main canvas background
+      "--foreground": hexToHsl("#F5F7FA"),            // primary text color
+      "--card": hexToHsl("#121830"),                  // card / panel backgrounds
+      "--card-foreground": hexToHsl("#F5F7FA"),       // text inside cards
+      "--popover": hexToHsl("#121830"),               // dropdown / tooltip / popover bg
+      "--popover-foreground": hexToHsl("#F5F7FA"),    // text inside popovers
+      "--primary": hexToHsl("#00F0FF"),               // main action buttons, selected state
+      "--primary-foreground": hexToHsl("#0A0F1F"),    // text on primary buttons
+      "--secondary": hexToHsl("#1a2040"),             // secondary buttons, subtle backgrounds
+      "--secondary-foreground": hexToHsl("#00F0FF"),  // text on secondary buttons
+      "--muted": hexToHsl("#1a2040"),                 // muted / disabled backgrounds
+      "--muted-foreground": hexToHsl("#8899aa"),      // secondary / placeholder text
+      "--accent": hexToHsl("#FCEE0A"),                // hover / focus backgrounds
+      "--accent-foreground": hexToHsl("#0A0F1F"),     // text on accent hover
+      "--destructive": hexToHsl("#FF3131"),           // delete / error buttons
+      "--destructive-foreground": hexToHsl("#F5F7FA"),// text on destructive buttons
+      "--border": hexToHsl("#2a3050"),                // borders on inputs, cards, panels
+      "--input": hexToHsl("#2a3050"),                 // input field backgrounds
+      "--ring": hexToHsl("#00F0FF"),                  // focus ring / outline color
     },
     nodeColors: [
       "#FF2A6D",  // magenta
