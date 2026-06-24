@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback, useImperativeHandle } from 'r
 import * as d3 from 'd3'
 import { themes } from '@/lib/themes'
 import { SIZE_METRICS } from '@/lib/metrics'
+import { hashToIndex, scaleValue } from '@/lib/utils'
 import type { GraphNode, GraphEdge, GraphData, SizeRange, SizeRangeMap } from '@/lib/graph-types'
 
 // ─── Bridge Interface ───
@@ -65,18 +66,6 @@ const ANIM_DURATION = 400
 const HOVER_LABEL_DELAY = 300
 
 // ─── Helpers ───
-function scaleValue(value: number, minVal: number, maxVal: number, minRadius = 8, maxRadius = 40): number {
-  if (maxVal === minVal) return minVal === 0 && maxVal === 0 ? maxRadius : minRadius
-  const normalized = Math.max(0, Math.min(1, (value - minVal) / (maxVal - minVal)))
-  return minRadius + Math.pow(normalized, 1.5) * (maxRadius - minRadius)
-}
-
-function computeColorIndex(category: string): number {
-  let hash = 0
-  for (let i = 0; i < category.length; i++) hash = category.charCodeAt(i) + ((hash << 5) - hash)
-  return Math.abs(hash) % 12
-}
-
 function getNodeColor(n: GraphNode, colors: Record<string, string>): string {
   const cssVar = `--node-color-${n._colorIdx}`
   return colors[cssVar] || '#94a3b8'
@@ -629,7 +618,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     for (const n of dataRef.current.nodes) {
       n.visible = true
       n._animRadius = undefined
-      n._colorIdx = computeColorIndex(n.category)
+      n._colorIdx = hashToIndex(n.category)
       nodeMapRef.current.set(n.id, n)
     }
 

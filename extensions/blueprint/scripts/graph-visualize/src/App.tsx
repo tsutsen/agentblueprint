@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { GraphCanvas, type IGraphBridge } from '@/components/GraphCanvas'
-import type { GraphData, GraphNode, GraphEdge } from '@/lib/graph-types'
-import { extractShortId } from '@/lib/utils'
+import type { GraphData, GraphNode } from '@/lib/graph-types'
+import { extractShortId, getVisibleNodeIds, getNodeConnections, hashToIndex } from '@/lib/utils'
 import { themes } from '@/lib/themes'
 import { SIZE_METRICS } from '@/lib/metrics'
 import { Button } from '@/components/ui/button'
@@ -48,16 +48,10 @@ function App() {
 
       // Compute categories
       const catCounts: Record<string, { count: number; color: string }> = {}
-      function getCatColor(cat: string): string {
-        let hash = 0
-        for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash)
-        const idx = Math.abs(hash) % 12
-        return `var(--node-color-${idx})`
-      }
       for (const node of data.nodes) {
         const cat = node.category
         if (!catCounts[cat]) {
-          catCounts[cat] = { count: 0, color: getCatColor(cat) }
+          catCounts[cat] = { count: 0, color: `var(--node-color-${hashToIndex(cat)})` }
         }
         catCounts[cat].count++
       }
@@ -89,13 +83,7 @@ function App() {
   // ─── Sync parent state → graph via bridge ───
   useEffect(() => {
     if (!bridgeRef.current || !graphData) return
-    const ids = new Set(graphData.nodes.filter((node: GraphNode) => {
-      const cat = node.category
-      const catVisible = activeCategories.has(cat)
-      const searchMatch = !debouncedSearch ||
-        (node.name || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
-      return catVisible && searchMatch
-    }).map((n: GraphNode) => n.id))
+    const ids = getVisibleNodeIds(graphData, activeCategories, debouncedSearch)
     bridgeRef.current.setVisibility(ids)
   }, [activeCategories, debouncedSearch, graphData])
 
@@ -200,13 +188,7 @@ function App() {
   }, [sidebarWidth])
 
   // ─── Visible + sorted nodes (for sidebar) ───
-  const visibleIds = new Set(graphData?.nodes.filter((node: GraphNode) => {
-    const cat = node.category
-    const catVisible = activeCategories.has(cat)
-    const searchMatch = !debouncedSearch ||
-      (node.name || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
-    return catVisible && searchMatch
-  }).map((n: GraphNode) => n.id) || [])
+  const visibleIds = graphData ? getVisibleNodeIds(graphData, activeCategories, debouncedSearch) : new Set()
 
   const sortedNodes = graphData?.nodes
     .filter((n: GraphNode) => visibleIds.has(n.id))
@@ -216,28 +198,8 @@ function App() {
     }) || []
 
   // ─── Connections for selected node ───
-  const connections = selectedNode
-    ? (() => {
-        const seen = new Map<string, { id: string; label: string; type: string; edgeType: string }>()
-        graphData?.edges
-          ?.filter((e: GraphEdge) => (typeof e.source === 'object' ? e.source.id : e.source) === selectedNode.id || (typeof e.target === 'object' ? e.target.id : e.target) === selectedNode.id)
-          .forEach((e: GraphEdge) => {
-            const neighbor = (typeof e.source === 'object' ? e.source.id : e.source) === selectedNode.id
-              ? (typeof e.target === 'object' ? e.target : null)
-              : (typeof e.source === 'object' ? e.source : null)
-            if (!neighbor || typeof neighbor !== 'object') return
-            const key = neighbor.id
-            if (!seen.has(key)) {
-              seen.set(key, {
-                id: neighbor.id,
-                label: neighbor.name,
-                type: neighbor.category,
-                edgeType: e.type || 'related',
-              })
-            }
-          })
-        return [...seen.values()].sort((a, b) => a.type.localeCompare(b.type))
-      })()
+  const connections = selectedNode && graphData
+    ? getNodeConnections(graphData, selectedNode.id)
     : []
 
   return (
