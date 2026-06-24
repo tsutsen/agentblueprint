@@ -139,7 +139,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
   // ─── Labels ───
   const labelElementsRef = useRef<Map<string, HTMLDivElement>>(new Map())
-  const labelFontSizeRef = useRef(13)
+  const labelFontSizeRef = useRef(themes.find(t => t.key === (localStorage.getItem('graph-theme') || 'default'))?.labelFontSize ?? 13)
   const labelVisibleSetRef = useRef<Set<string> | null>(null)
   const lastLabelZoomRef = useRef(0)
   const hoverLabelTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
