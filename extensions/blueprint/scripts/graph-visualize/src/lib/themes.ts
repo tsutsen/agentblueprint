@@ -89,9 +89,9 @@ export const themes: Theme[] = [
       "--text-dim": "#666666",
       "--text-bright": "#000000",
       "--text-secondary": "#666666",
-      "--accent": "#000000",
-      "--accent-text": "#ffffff",
-      "--accent-glow": "rgba(0, 0, 0, 0.1)",
+      "--graph-accent": "#000000",
+      "--graph-accent-text": "#ffffff",
+      "--graph-accent-glow": "rgba(0, 0, 0, 0.1)",
     },
     nodeColors: [
       "#3b82f6",
@@ -143,9 +143,9 @@ export const themes: Theme[] = [
       "--text-dim": "#888888",
       "--text-bright": "#ffffff",
       "--text-secondary": "#888888",
-      "--accent": "#ffffff",
-      "--accent-text": "#0a0a0a",
-      "--accent-glow": "rgba(255, 255, 255, 0.1)",
+      "--graph-accent": "#ffffff",
+      "--graph-accent-text": "#0a0a0a",
+      "--graph-accent-glow": "rgba(255, 255, 255, 0.1)",
     },
     nodeColors: [
       "#60a5fa",
@@ -197,9 +197,9 @@ export const themes: Theme[] = [
       "--text-dim": "#a89984",
       "--text-bright": "#d5c4a1",
       "--text-secondary": "#a89984",
-      "--accent": "#fabd2f",
-      "--accent-text": "#1a1a1a",
-      "--accent-glow": "rgba(250, 189, 47, 0.15)",
+      "--graph-accent": "#fabd2f",
+      "--graph-accent-text": "#1a1a1a",
+      "--graph-accent-glow": "rgba(250, 189, 47, 0.15)",
     },
     nodeColors: [
       "#83a598",
@@ -251,9 +251,9 @@ export const themes: Theme[] = [
       "--text-dim": "#7c6f64",
       "--text-bright": "#282828",
       "--text-secondary": "#7c6f64",
-      "--accent": "#d79921",
-      "--accent-text": "#1a1a1a",
-      "--accent-glow": "rgba(215, 153, 33, 0.15)",
+      "--graph-accent": "#d79921",
+      "--graph-accent-text": "#1a1a1a",
+      "--graph-accent-glow": "rgba(215, 153, 33, 0.15)",
     },
     nodeColors: [
       "#047587",
@@ -305,9 +305,9 @@ export const themes: Theme[] = [
       "--text-dim": "#a09cff",
       "--text-bright": "#ff80ff",
       "--text-secondary": "#a09cff",
-      "--accent": "#00ffcc",
-      "--accent-text": "#0d0221",
-      "--accent-glow": "rgba(0, 255, 204, 0.2)",
+      "--graph-accent": "#00ffcc",
+      "--graph-accent-text": "#0d0221",
+      "--graph-accent-glow": "rgba(0, 255, 204, 0.2)",
     },
     nodeColors: [
       "#00ffcc",
@@ -359,9 +359,9 @@ export const themes: Theme[] = [
       "--text-dim": "#9b1b9b",
       "--text-bright": "#1a0030",
       "--text-secondary": "#9b1b9b",
-      "--accent": "#d6357f",
-      "--accent-text": "#1a1a1a",
-      "--accent-glow": "rgba(255, 105, 180, 0.2)",
+      "--graph-accent": "#d6357f",
+      "--graph-accent-text": "#1a1a1a",
+      "--graph-accent-glow": "rgba(255, 105, 180, 0.2)",
     },
     nodeColors: [
       "#6a0dad",
@@ -413,9 +413,9 @@ export const themes: Theme[] = [
       "--text-dim": "#8899aa",
       "--text-bright": "#FFFFFF",
       "--text-secondary": "#8899aa",
-      "--accent": "#00F0FF",
-      "--accent-text": "#0A0F1F",
-      "--accent-glow": "rgba(0, 240, 255, 0.2)",
+      "--graph-accent": "#00F0FF",
+      "--graph-accent-text": "#0A0F1F",
+      "--graph-accent-glow": "rgba(0, 240, 255, 0.2)",
     },
     nodeColors: [
       "#FF2A6D",  // magenta
@@ -445,12 +445,12 @@ export function applyTheme(themeKey: string): void {
   if (!theme) return;
 
   const root = document.documentElement;
-  // Apply shadcn UI variables
-  for (const [key, value] of Object.entries(theme.vars)) {
+  // Apply legacy graph CSS variables FIRST
+  for (const [key, value] of Object.entries(theme.legacyVars)) {
     root.style.setProperty(key, value);
   }
-  // Apply legacy graph CSS variables
-  for (const [key, value] of Object.entries(theme.legacyVars)) {
+  // Apply shadcn UI variables SECOND (overwrites any collisions)
+  for (const [key, value] of Object.entries(theme.vars)) {
     root.style.setProperty(key, value);
   }
   // Apply edge color
