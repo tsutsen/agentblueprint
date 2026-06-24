@@ -467,10 +467,9 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       }
     }
 
-    if (labelsDirtyRef.current) {
-      updateHtmlLabels()
-      labelsDirtyRef.current = false
-    }
+    // Always update label positions — they follow nodes during pan/drag/sim
+    // Only rebuild label set when inputs change (handled by needsLabelRebuildRef)
+    updateHtmlLabels()
     ctx.globalAlpha = 1
     ctx.restore()
     ctx.globalAlpha = 1
