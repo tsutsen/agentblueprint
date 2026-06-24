@@ -177,6 +177,60 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       render()
     })
   }
+
+  // ─── Simulation factory ───
+  function createSimulation(nodes: any[], edges: any[], opts: {
+    alpha?: number
+    alphaDecay?: number
+    velocityDecay?: number
+    chargeStrength?: number
+    chargeDistanceMax?: number
+    linkDistance?: number
+    linkStrength?: number
+    linkIdAccessor?: boolean
+    collisionRadius?: number
+    collisionStrength?: number
+    centerX?: number
+    centerY?: number
+    centerStrength?: number
+    tick?: () => void
+  }) {
+    const linkForce = d3.forceLink(edges)
+      .distance(opts.linkDistance ?? 120)
+      .strength(opts.linkStrength ?? 0.05)
+    if (opts.linkIdAccessor) {
+      linkForce.id((d: any) => d.id)
+    }
+
+    const chargeForce = d3.forceManyBody().strength(opts.chargeStrength ?? -150)
+    if (opts.chargeDistanceMax != null) {
+      chargeForce.distanceMax(opts.chargeDistanceMax)
+    }
+
+    const collideForce = d3.forceCollide().radius(opts.collisionRadius ?? 25)
+    if (opts.collisionStrength != null) {
+      collideForce.strength(opts.collisionStrength)
+    }
+
+    const sim = d3.forceSimulation(nodes)
+      .force('link', linkForce)
+      .force('charge', chargeForce)
+      .force('collision', collideForce)
+      .alpha(opts.alpha ?? 0.3)
+      .alphaDecay(opts.alphaDecay ?? 0)
+      .velocityDecay(opts.velocityDecay ?? 0.4)
+
+    if (opts.centerX != null && opts.centerY != null) {
+      sim.force('center', d3.forceCenter(opts.centerX, opts.centerY).strength(opts.centerStrength ?? 0.02))
+    }
+
+    if (opts.tick) {
+      sim.on('tick', opts.tick)
+    }
+
+    return sim
+  }
+
   const widthRef = useRef(800)
   const heightRef = useRef(600)
   const resizeRAFRef = useRef<number | null>(null)
@@ -604,15 +658,13 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     })
 
     // Initial static layout
-    const initSim = d3.forceSimulation(data.nodes)
-      .force('link', d3.forceLink(validEdgesRef.current).id((d: any) => d.id).distance(120).strength(0.05))
-      .force('charge', d3.forceManyBody().strength(-150))
-      .force('center', d3.forceCenter(w / 2, h / 2).strength(0.02))
-      .force('collision', d3.forceCollide().radius(25))
-      .alpha(0.3)
-      .alphaDecay(0.1)
-      .velocityDecay(0.4)
-
+    const initSim = createSimulation(data.nodes, validEdgesRef.current, {
+      alpha: 0.3, alphaDecay: 0.1, velocityDecay: 0.4,
+      chargeStrength: -150,
+      linkIdAccessor: true,
+      centerX: w / 2, centerY: h / 2, centerStrength: 0.02,
+      collisionRadius: 25,
+    })
     for (let i = 0; i < 200; i++) initSim.tick()
     initSim.stop()
 
@@ -768,16 +820,13 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
             if (simulationRef.current) simulationRef.current.stop()
             const visibleNodes = data.nodes.filter((n: any) => n.visible)
             const visibleEdges = validEdgesRef.current.filter((e: any) => e.visible)
-            simulationRef.current = d3.forceSimulation(visibleNodes)
-              .force('link', d3.forceLink(visibleEdges).distance(120).strength(0.08))
-              .force('charge', d3.forceManyBody().strength(-350).distanceMax(300))
-              .force('collision', d3.forceCollide().radius(25).strength(0.7))
-              .alpha(0.15)
-              .alphaDecay(0.12)
-              .velocityDecay(0.7)
-              .on('tick', () => {
-                render()
-              })
+            simulationRef.current = createSimulation(visibleNodes, visibleEdges, {
+              alpha: 0.15, alphaDecay: 0.12, velocityDecay: 0.7,
+              chargeStrength: -350, chargeDistanceMax: 300,
+              linkStrength: 0.08,
+              collisionRadius: 25, collisionStrength: 0.7,
+              tick: () => render(),
+            })
               .on('end', () => {
                 node.fx = null
                 node.fy = null
@@ -941,14 +990,12 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       const cy = visibleNodes.length > 0
         ? visibleNodes.reduce((s: number, n: any) => s + n.y, 0) / visibleNodes.length
         : heightRef.current / 2
-      simulationRef.current = d3.forceSimulation(visibleNodes)
-        .force('link', d3.forceLink(visibleEdges).id((d: any) => d.id).distance(120).strength(0.05))
-        .force('charge', d3.forceManyBody().strength(-150))
-        .force('collision', d3.forceCollide().radius(25))
-        .alpha(0.3)
-        .alphaDecay(0)
-        .velocityDecay(0.4)
-        .on('tick', () => render())
+      simulationRef.current = createSimulation(visibleNodes, visibleEdges, {
+        alpha: 0.3, alphaDecay: 0, velocityDecay: 0.4,
+        chargeStrength: -150,
+        linkIdAccessor: true,
+        tick: () => render(),
+      })
     },
     stopSimulation: () => {
       simulatingRef.current = false
