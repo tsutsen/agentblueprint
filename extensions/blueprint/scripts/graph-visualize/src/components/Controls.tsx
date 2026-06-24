@@ -37,7 +37,7 @@ export function Controls({
               Explode
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Run layout simulation (settles then stops)</TooltipContent>
+          <TooltipContent side="bottom">Push nodes farther apart</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>

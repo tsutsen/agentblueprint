@@ -1189,8 +1189,30 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     resetZoom: () => {
       const w = widthRef.current
       const h = heightRef.current
-      const k = 0.3
-      zoomRef.current = { x: -w / 2 * k + w / 2, y: -h / 2 * k + h / 2, k }
+      const visibleNodes = dataRef.current.nodes.filter(n => n.visible !== false)
+      if (visibleNodes.length === 0) {
+        zoomRef.current = { x: w / 2, y: h / 2, k: 1 }
+        render()
+        return
+      }
+      const padding = 60
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+      for (const n of visibleNodes) {
+        if (n.x != null) {
+          minX = Math.min(minX, n.x)
+          maxX = Math.max(maxX, n.x)
+        }
+        if (n.y != null) {
+          minY = Math.min(minY, n.y)
+          maxY = Math.max(maxY, n.y)
+        }
+      }
+      const boundsW = maxX - minX || 1
+      const boundsH = maxY - minY || 1
+      const k = Math.min((w - padding * 2) / boundsW, (h - padding * 2) / boundsH, 3)
+      const cx = (minX + maxX) / 2
+      const cy = (minY + maxY) / 2
+      zoomRef.current = { x: -cx * k + w / 2, y: -cy * k + h / 2, k }
       render()
     },
     getZoom: () => ({ ...zoomRef.current }),
