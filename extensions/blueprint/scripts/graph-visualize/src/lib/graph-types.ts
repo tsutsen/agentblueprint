@@ -15,7 +15,6 @@ export interface GraphNode {
   name: string
   description?: string
   category: string
-  originSpec?: string
   metrics: NodeMetrics
 
   // Runtime state (mutated by graph component)

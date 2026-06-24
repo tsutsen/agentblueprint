@@ -24,7 +24,6 @@
     {
       "id": "REQ-001",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 5,
         "blast": 12,
@@ -36,7 +35,6 @@
     {
       "id": "REQ-002",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 7,
         "blast": 17,
@@ -48,7 +46,6 @@
     {
       "id": "REQ-003",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 7,
         "blast": 17,
@@ -60,7 +57,6 @@
     {
       "id": "REQ-004",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 6,
         "blast": 17,
@@ -72,7 +68,6 @@
     {
       "id": "REQ-005",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 5,
         "blast": 12,
@@ -84,7 +79,6 @@
     {
       "id": "REQ-006",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 4,
         "blast": 2,
@@ -96,7 +90,6 @@
     {
       "id": "REQ-020",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 6,
         "blast": 17,
@@ -108,7 +101,6 @@
     {
       "id": "REQ-021",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 6,
         "blast": 12,
@@ -120,7 +112,6 @@
     {
       "id": "REQ-007",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 5,
         "blast": 2,
@@ -132,7 +123,6 @@
     {
       "id": "REQ-008",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 6,
         "blast": 12,
@@ -144,7 +134,6 @@
     {
       "id": "REQ-009",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 7,
         "blast": 12,
@@ -156,7 +145,6 @@
     {
       "id": "REQ-010",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 5,
         "blast": 12,
@@ -168,7 +156,6 @@
     {
       "id": "REQ-011",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 9,
         "blast": 17,
@@ -180,7 +167,6 @@
     {
       "id": "REQ-012",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 6,
         "blast": 12,
@@ -192,7 +178,6 @@
     {
       "id": "REQ-013",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 6,
         "blast": 12,
@@ -204,7 +189,6 @@
     {
       "id": "REQ-014",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 7,
         "blast": 12,
@@ -216,7 +200,6 @@
     {
       "id": "REQ-015",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 6,
         "blast": 2,
@@ -228,7 +211,6 @@
     {
       "id": "REQ-016",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 7,
         "blast": 12,
@@ -240,7 +222,6 @@
     {
       "id": "REQ-017",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 7,
         "blast": 12,
@@ -252,7 +233,6 @@
     {
       "id": "REQ-018",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 9,
         "blast": 12,
@@ -264,7 +244,6 @@
     {
       "id": "REQ-019",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 8,
         "blast": 12,
@@ -276,7 +255,6 @@
     {
       "id": "REQ-022",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 8,
         "blast": 13,
@@ -288,7 +266,6 @@
     {
       "id": "REQ-023",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 7,
         "blast": 12,
@@ -300,7 +277,6 @@
     {
       "id": "REQ-024",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 8,
         "blast": 12,
@@ -312,7 +288,6 @@
     {
       "id": "REQ-025",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 6,
         "blast": 14,
@@ -324,7 +299,6 @@
     {
       "id": "REQ-026",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 7,
         "blast": 13,
@@ -336,7 +310,6 @@
     {
       "id": "REQ-027",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 5,
         "blast": 2,
@@ -348,7 +321,6 @@
     {
       "id": "REQ-028",
       "category": "req",
-      "type": "REQ",
       "metrics": {
         "degree": 4,
         "blast": 2,
@@ -360,7 +332,6 @@
     {
       "id": "NFR-001",
       "category": "nfr",
-      "type": "NFR",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -372,7 +343,6 @@
     {
       "id": "NFR-002",
       "category": "nfr",
-      "type": "NFR",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -384,7 +354,6 @@
     {
       "id": "NFR-004",
       "category": "nfr",
-      "type": "NFR",
       "metrics": {
         "degree": 7,
         "blast": 0,
@@ -396,7 +365,6 @@
     {
       "id": "NFR-005",
       "category": "nfr",
-      "type": "NFR",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -408,7 +376,6 @@
     {
       "id": "NFR-006",
       "category": "nfr",
-      "type": "NFR",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -420,7 +387,6 @@
     {
       "id": "US-001",
       "category": "design",
-      "type": "US",
       "metrics": {
         "degree": 30,
         "blast": 0,
@@ -432,7 +398,6 @@
     {
       "id": "US-002",
       "category": "design",
-      "type": "US",
       "metrics": {
         "degree": 11,
         "blast": 0,
@@ -444,7 +409,6 @@
     {
       "id": "US-003",
       "category": "design",
-      "type": "US",
       "metrics": {
         "degree": 9,
         "blast": 0,
@@ -456,7 +420,6 @@
     {
       "id": "US-004",
       "category": "design",
-      "type": "US",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -468,7 +431,6 @@
     {
       "id": "US-005",
       "category": "design",
-      "type": "US",
       "metrics": {
         "degree": 11,
         "blast": 0,
@@ -480,7 +442,6 @@
     {
       "id": "SC-001",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -492,7 +453,6 @@
     {
       "id": "SC-002",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -504,7 +464,6 @@
     {
       "id": "SC-003",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -516,7 +475,6 @@
     {
       "id": "SC-004",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -528,7 +486,6 @@
     {
       "id": "SC-005",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -540,7 +497,6 @@
     {
       "id": "SC-006",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -552,7 +508,6 @@
     {
       "id": "SC-007",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -564,7 +519,6 @@
     {
       "id": "SC-008",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -576,7 +530,6 @@
     {
       "id": "SC-009",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -588,7 +541,6 @@
     {
       "id": "SC-010",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -600,7 +552,6 @@
     {
       "id": "SC-011",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -612,7 +563,6 @@
     {
       "id": "SC-012",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -624,7 +574,6 @@
     {
       "id": "SC-013",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -636,7 +585,6 @@
     {
       "id": "SC-014",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -648,7 +596,6 @@
     {
       "id": "SC-015",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -660,7 +607,6 @@
     {
       "id": "SC-016",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -672,7 +618,6 @@
     {
       "id": "SC-017",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -684,7 +629,6 @@
     {
       "id": "SC-018",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -696,7 +640,6 @@
     {
       "id": "SC-019",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -708,7 +651,6 @@
     {
       "id": "SC-020",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -720,7 +662,6 @@
     {
       "id": "SC-021",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -732,7 +673,6 @@
     {
       "id": "SC-022",
       "category": "design",
-      "type": "SC",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -744,7 +684,6 @@
     {
       "id": "GL-001",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 42,
         "blast": 9,
@@ -756,7 +695,6 @@
     {
       "id": "GL-002",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 4,
         "blast": 13,
@@ -768,7 +706,6 @@
     {
       "id": "GL-003",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 10,
         "blast": 13,
@@ -780,7 +717,6 @@
     {
       "id": "GL-004",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 58,
         "blast": 13,
@@ -792,7 +728,6 @@
     {
       "id": "GL-005",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 21,
         "blast": 13,
@@ -804,7 +739,6 @@
     {
       "id": "GL-006",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 23,
         "blast": 9,
@@ -816,7 +750,6 @@
     {
       "id": "GL-007",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 17,
         "blast": 9,
@@ -828,7 +761,6 @@
     {
       "id": "GL-008",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 73,
         "blast": 9,
@@ -840,7 +772,6 @@
     {
       "id": "GL-009",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 12,
         "blast": 9,
@@ -852,7 +783,6 @@
     {
       "id": "GL-010",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 11,
         "blast": 9,
@@ -864,7 +794,6 @@
     {
       "id": "GL-011",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 44,
         "blast": 1,
@@ -876,7 +805,6 @@
     {
       "id": "GL-012",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 33,
         "blast": 1,
@@ -888,7 +816,6 @@
     {
       "id": "GL-013",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 5,
         "blast": 9,
@@ -900,7 +827,6 @@
     {
       "id": "GL-014",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 4,
         "blast": 9,
@@ -912,7 +838,6 @@
     {
       "id": "GL-015",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 10,
         "blast": 9,
@@ -924,7 +849,6 @@
     {
       "id": "GL-016",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 8,
         "blast": 9,
@@ -936,7 +860,6 @@
     {
       "id": "GL-017",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 7,
         "blast": 9,
@@ -948,7 +871,6 @@
     {
       "id": "GL-018",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 7,
         "blast": 9,
@@ -960,7 +882,6 @@
     {
       "id": "GL-019",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 10,
         "blast": 9,
@@ -972,7 +893,6 @@
     {
       "id": "GL-020",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 5,
         "blast": 9,
@@ -984,7 +904,6 @@
     {
       "id": "GL-021",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 5,
         "blast": 9,
@@ -996,7 +915,6 @@
     {
       "id": "GL-022",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 5,
         "blast": 9,
@@ -1008,7 +926,6 @@
     {
       "id": "GL-023",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 23,
         "blast": 14,
@@ -1020,7 +937,6 @@
     {
       "id": "GL-024",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 33,
         "blast": 9,
@@ -1032,7 +948,6 @@
     {
       "id": "GL-025",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 12,
         "blast": 9,
@@ -1044,7 +959,6 @@
     {
       "id": "GL-026",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 18,
         "blast": 10,
@@ -1056,7 +970,6 @@
     {
       "id": "GL-027",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 19,
         "blast": 11,
@@ -1068,7 +981,6 @@
     {
       "id": "GL-028",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 11,
@@ -1080,7 +992,6 @@
     {
       "id": "GL-030",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 5,
         "blast": 10,
@@ -1092,7 +1003,6 @@
     {
       "id": "GL-031",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 15,
@@ -1104,7 +1014,6 @@
     {
       "id": "GL-032",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 3,
         "blast": 10,
@@ -1116,7 +1025,6 @@
     {
       "id": "GL-033",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 10,
@@ -1128,7 +1036,6 @@
     {
       "id": "GL-034",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 3,
         "blast": 10,
@@ -1140,7 +1047,6 @@
     {
       "id": "GL-035",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 125,
         "blast": 9,
@@ -1152,7 +1058,6 @@
     {
       "id": "GL-036",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 27,
         "blast": 10,
@@ -1164,7 +1069,6 @@
     {
       "id": "GL-037",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 9,
@@ -1176,7 +1080,6 @@
     {
       "id": "GL-038",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 10,
@@ -1188,7 +1091,6 @@
     {
       "id": "GL-039",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 10,
@@ -1200,7 +1102,6 @@
     {
       "id": "GL-040",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 10,
@@ -1212,7 +1113,6 @@
     {
       "id": "GL-041",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 10,
@@ -1224,7 +1124,6 @@
     {
       "id": "GL-042",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 10,
@@ -1236,7 +1135,6 @@
     {
       "id": "GL-043",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 10,
@@ -1248,7 +1146,6 @@
     {
       "id": "GL-044",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 10,
@@ -1260,7 +1157,6 @@
     {
       "id": "GL-045",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 10,
@@ -1272,7 +1168,6 @@
     {
       "id": "GL-046",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 10,
@@ -1284,7 +1179,6 @@
     {
       "id": "GL-047",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 10,
@@ -1296,7 +1190,6 @@
     {
       "id": "GL-048",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 1,
         "blast": 11,
@@ -1308,7 +1201,6 @@
     {
       "id": "GL-049",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 11,
@@ -1320,7 +1212,6 @@
     {
       "id": "GL-050",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 3,
         "blast": 12,
@@ -1332,7 +1223,6 @@
     {
       "id": "GL-051",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 3,
         "blast": 12,
@@ -1344,7 +1234,6 @@
     {
       "id": "GL-052",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 7,
         "blast": 14,
@@ -1356,7 +1245,6 @@
     {
       "id": "GL-053",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 7,
         "blast": 12,
@@ -1368,7 +1256,6 @@
     {
       "id": "GL-054",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 6,
         "blast": 12,
@@ -1380,7 +1267,6 @@
     {
       "id": "GL-055",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 1,
         "blast": 11,
@@ -1392,7 +1278,6 @@
     {
       "id": "GL-056",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 1,
         "blast": 11,
@@ -1404,7 +1289,6 @@
     {
       "id": "GL-057",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 4,
         "blast": 14,
@@ -1416,7 +1300,6 @@
     {
       "id": "GL-058",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 4,
         "blast": 14,
@@ -1428,7 +1311,6 @@
     {
       "id": "GL-059",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 14,
@@ -1440,7 +1322,6 @@
     {
       "id": "GL-060",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 3,
         "blast": 11,
@@ -1452,7 +1333,6 @@
     {
       "id": "GL-061",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 10,
@@ -1464,7 +1344,6 @@
     {
       "id": "GL-062",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 5,
         "blast": 15,
@@ -1476,7 +1355,6 @@
     {
       "id": "GL-063",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 6,
         "blast": 15,
@@ -1488,7 +1366,6 @@
     {
       "id": "GL-065",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 20,
@@ -1500,7 +1377,6 @@
     {
       "id": "GL-066",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 4,
         "blast": 20,
@@ -1512,7 +1388,6 @@
     {
       "id": "GL-067",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 4,
         "blast": 20,
@@ -1524,7 +1399,6 @@
     {
       "id": "GL-068",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 3,
         "blast": 10,
@@ -1536,7 +1410,6 @@
     {
       "id": "GL-069",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 1,
         "blast": 11,
@@ -1548,7 +1421,6 @@
     {
       "id": "GL-070",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 11,
@@ -1560,7 +1432,6 @@
     {
       "id": "GL-071",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 3,
         "blast": 14,
@@ -1572,7 +1443,6 @@
     {
       "id": "GL-072",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 20,
@@ -1584,7 +1454,6 @@
     {
       "id": "GL-073",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 6,
         "blast": 11,
@@ -1596,7 +1465,6 @@
     {
       "id": "GL-074",
       "category": "security",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 10,
@@ -1608,7 +1476,6 @@
     {
       "id": "GL-075",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 11,
@@ -1620,7 +1487,6 @@
     {
       "id": "GL-076",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 11,
@@ -1632,7 +1498,6 @@
     {
       "id": "GL-077",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 1,
         "blast": 10,
@@ -1644,7 +1509,6 @@
     {
       "id": "GL-078",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 5,
         "blast": 10,
@@ -1656,7 +1520,6 @@
     {
       "id": "GL-079",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 3,
         "blast": 14,
@@ -1668,7 +1531,6 @@
     {
       "id": "GL-080",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 14,
@@ -1680,7 +1542,6 @@
     {
       "id": "GL-081",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 10,
@@ -1692,7 +1553,6 @@
     {
       "id": "GL-082",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 8,
         "blast": 20,
@@ -1704,7 +1564,6 @@
     {
       "id": "GL-083",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 3,
         "blast": 20,
@@ -1716,7 +1575,6 @@
     {
       "id": "GL-084",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 5,
         "blast": 21,
@@ -1728,7 +1586,6 @@
     {
       "id": "GL-085",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 13,
@@ -1740,7 +1597,6 @@
     {
       "id": "GL-086",
       "category": "domain",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 21,
@@ -1752,7 +1608,6 @@
     {
       "id": "GL-087",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 12,
@@ -1764,7 +1619,6 @@
     {
       "id": "GL-089",
       "category": "technical",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 14,
@@ -1776,7 +1630,6 @@
     {
       "id": "session-manager",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 11,
         "blast": 0,
@@ -1788,7 +1641,6 @@
     {
       "id": "search-engine",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -1800,7 +1652,6 @@
     {
       "id": "ranking-engine",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 7,
         "blast": 0,
@@ -1812,7 +1663,6 @@
     {
       "id": "downloader",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -1824,7 +1674,6 @@
     {
       "id": "document-processor",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -1836,7 +1685,6 @@
     {
       "id": "report-synthesiser",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 12,
         "blast": 0,
@@ -1848,7 +1696,6 @@
     {
       "id": "persistence-layer",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -1860,7 +1707,6 @@
     {
       "id": "citation-network-builder",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -1872,7 +1718,6 @@
     {
       "id": "citation-export",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -1884,7 +1729,6 @@
     {
       "id": "error-handling-middleware",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 9,
         "blast": 0,
@@ -1896,7 +1740,6 @@
     {
       "id": "FLW-001-sessionCreationSearchTags",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -1908,7 +1751,6 @@
     {
       "id": "FLW-002-queryExecutionPaperMetadata",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -1920,7 +1762,6 @@
     {
       "id": "FLW-003-scoringDecisionSplit",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -1932,7 +1773,6 @@
     {
       "id": "FLW-004-borderlineReviewGate",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -1944,7 +1784,6 @@
     {
       "id": "FLW-005-downloadPdfIngestion",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -1956,7 +1795,6 @@
     {
       "id": "FLW-006-extractionCatalog",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -1968,7 +1806,6 @@
     {
       "id": "FLW-007-findingsReviewGate",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -1980,7 +1817,6 @@
     {
       "id": "FLW-008-reportSynthesis",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -1992,7 +1828,6 @@
     {
       "id": "FLW-009-export",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -2004,7 +1839,6 @@
     {
       "id": "FLW-010-extensionPath",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -2016,7 +1850,6 @@
     {
       "id": "FLW-011-findSimilarSources",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -2028,7 +1861,6 @@
     {
       "id": "FLW-012-citationNetworkGeneration",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -2040,7 +1872,6 @@
     {
       "id": "FLW-013-parallelPathsFeedIntoPipelineAtAnyPoint",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -2052,7 +1883,6 @@
     {
       "id": "CON-001-Systemmustbeimple",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -2064,7 +1894,6 @@
     {
       "id": "CON-002-Allsessionartifact",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -2076,7 +1905,6 @@
     {
       "id": "CON-003-Thesystemmustsupp",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -2088,7 +1916,6 @@
     {
       "id": "CON-004-Thesystemmustoper",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -2100,7 +1927,6 @@
     {
       "id": "CON-005-EachPapermusthave",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -2112,7 +1938,6 @@
     {
       "id": "CON-006-OnlyoneCatalogEntr",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -2124,7 +1949,6 @@
     {
       "id": "CON-007-Thesystemmusthand",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -2136,7 +1960,6 @@
     {
       "id": "CON-008-AllpersistedJSONa",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -2148,7 +1971,6 @@
     {
       "id": "CON-009-Onceareportisgen",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -2160,7 +1982,6 @@
     {
       "id": "CON-010-Searchexecutionmus",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -2172,7 +1993,6 @@
     {
       "id": "CON-011-Paperscoringmustc",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -2184,7 +2004,6 @@
     {
       "id": "CON-012-Storagebudgetmust",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -2196,7 +2015,6 @@
     {
       "id": "CON-013-Sessionstatemustb",
       "category": "con",
-      "type": "CON",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -2208,7 +2026,6 @@
     {
       "id": "FN-001-createSession",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 4,
         "blast": 0,
@@ -2220,7 +2037,6 @@
     {
       "id": "ENT-001-ResearchSession",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 23,
         "blast": 0,
@@ -2232,7 +2048,6 @@
     {
       "id": "FN-002-getSessionSummary",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2244,7 +2059,6 @@
     {
       "id": "FN-003-updateSessionTitle",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2256,7 +2070,6 @@
     {
       "id": "FN-004-deleteSession",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2268,7 +2081,6 @@
     {
       "id": "FN-005-sendMessage",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2280,7 +2092,6 @@
     {
       "id": "ENT-003-ResearchBrief",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 9,
         "blast": 0,
@@ -2292,7 +2103,6 @@
     {
       "id": "FN-006-getResearchBrief",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2304,7 +2114,6 @@
     {
       "id": "FN-007-submitQuery",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 8,
         "blast": 0,
@@ -2316,7 +2125,6 @@
     {
       "id": "ENT-004-Query",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 15,
         "blast": 0,
@@ -2328,7 +2136,6 @@
     {
       "id": "FN-008-getQueryResults",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 7,
         "blast": 0,
@@ -2340,7 +2147,6 @@
     {
       "id": "FN-009-cancelQuery",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2352,7 +2158,6 @@
     {
       "id": "FN-010-getQueryStatus",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2364,7 +2169,6 @@
     {
       "id": "FN-011-loadMoreResults",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 8,
         "blast": 0,
@@ -2376,7 +2180,6 @@
     {
       "id": "FN-012-rankSources",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2388,7 +2191,6 @@
     {
       "id": "ENT-005-Source",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 31,
         "blast": 0,
@@ -2400,7 +2202,6 @@
     {
       "id": "FN-013-selectSourceForRanking",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 7,
         "blast": 0,
@@ -2412,7 +2213,6 @@
     {
       "id": "FN-014-selectSourceForQuery",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2424,7 +2224,6 @@
     {
       "id": "FN-015-downloadPaper",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 8,
         "blast": 0,
@@ -2436,7 +2235,6 @@
     {
       "id": "FN-016-getDownloadStatus",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2448,7 +2246,6 @@
     {
       "id": "FN-017-cancelDownload",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2460,7 +2257,6 @@
     {
       "id": "FN-018-getDownloadedPapers",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2472,7 +2268,6 @@
     {
       "id": "FN-019-processSource",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 10,
         "blast": 0,
@@ -2484,7 +2279,6 @@
     {
       "id": "FN-020-getSourceMetadata",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2496,7 +2290,6 @@
     {
       "id": "FN-021-getSourceData",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 8,
         "blast": 0,
@@ -2508,7 +2301,6 @@
     {
       "id": "FN-022-getSourceFile",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 7,
         "blast": 0,
@@ -2520,7 +2312,6 @@
     {
       "id": "FN-023-editSource",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 7,
         "blast": 0,
@@ -2532,7 +2323,6 @@
     {
       "id": "FN-024-getProcessingStatus",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2544,7 +2334,6 @@
     {
       "id": "FN-025-cancelProcessing",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2556,7 +2345,6 @@
     {
       "id": "FN-026-deleteSource",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 8,
         "blast": 0,
@@ -2568,7 +2356,6 @@
     {
       "id": "FN-027-rankFullSources",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2580,7 +2367,6 @@
     {
       "id": "FN-028-getRankedSources",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2592,7 +2378,6 @@
     {
       "id": "FN-029-generateFindingClusters",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 8,
         "blast": 0,
@@ -2604,7 +2389,6 @@
     {
       "id": "ENT-010-FindingCluster",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2616,7 +2400,6 @@
     {
       "id": "FN-030-getFindingClusters",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 7,
         "blast": 0,
@@ -2628,7 +2411,6 @@
     {
       "id": "FN-031-generateReport",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 8,
         "blast": 0,
@@ -2640,7 +2422,6 @@
     {
       "id": "ENT-008-Report",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 15,
         "blast": 0,
@@ -2652,7 +2433,6 @@
     {
       "id": "FN-032-getReport",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2664,7 +2444,6 @@
     {
       "id": "FN-033-getReportSummary",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2676,7 +2455,6 @@
     {
       "id": "FN-034-getHypothesisVerdicts",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2688,7 +2466,6 @@
     {
       "id": "ENT-009-HypothesisVerdict",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2700,7 +2477,6 @@
     {
       "id": "FN-035-getReportStatus",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2712,7 +2488,6 @@
     {
       "id": "FN-036-cancelReportGeneration",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2724,7 +2499,6 @@
     {
       "id": "FN-037-saveSession",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2736,7 +2510,6 @@
     {
       "id": "FN-038-loadSession",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2748,7 +2521,6 @@
     {
       "id": "FN-039-saveQuery",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2760,7 +2532,6 @@
     {
       "id": "FN-040-loadQuery",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2772,7 +2543,6 @@
     {
       "id": "FN-041-deleteQuery",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2784,7 +2554,6 @@
     {
       "id": "FN-042-saveSource",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2796,7 +2565,6 @@
     {
       "id": "FN-043-loadSource",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2808,7 +2576,6 @@
     {
       "id": "FN-044-saveReport",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2820,7 +2587,6 @@
     {
       "id": "FN-045-loadReport",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2832,7 +2598,6 @@
     {
       "id": "FN-046-deleteReport",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2844,7 +2609,6 @@
     {
       "id": "FN-047-listSessions",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2856,7 +2620,6 @@
     {
       "id": "FN-048-buildAuthorNetwork",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2868,7 +2631,6 @@
     {
       "id": "ENT-011-CitationNetwork",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 9,
         "blast": 0,
@@ -2880,7 +2642,6 @@
     {
       "id": "FN-049-buildPaperNetwork",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2892,7 +2653,6 @@
     {
       "id": "FN-050-getAuthorNetwork",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2904,7 +2664,6 @@
     {
       "id": "FN-051-getPaperNetwork",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -2916,7 +2675,6 @@
     {
       "id": "FN-052-exportBibliography",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 8,
         "blast": 0,
@@ -2928,7 +2686,6 @@
     {
       "id": "ENT-014-ExportArchive",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 7,
         "blast": 0,
@@ -2940,7 +2697,6 @@
     {
       "id": "FN-053-exportCitations",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 7,
         "blast": 0,
@@ -2952,7 +2708,6 @@
     {
       "id": "FN-054-getExport",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2964,7 +2719,6 @@
     {
       "id": "FN-055-getExportFormats",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2976,7 +2730,6 @@
     {
       "id": "FN-056-logError",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -2988,7 +2741,6 @@
     {
       "id": "ENT-016-Error",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 7,
         "blast": 0,
@@ -3000,7 +2752,6 @@
     {
       "id": "FN-057-getError",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -3012,7 +2763,6 @@
     {
       "id": "FN-058-getSessionErrors",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -3024,7 +2774,6 @@
     {
       "id": "FN-059-getErrorRecovery",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -3036,7 +2785,6 @@
     {
       "id": "FN-060-editMessage",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -3048,7 +2796,6 @@
     {
       "id": "FN-061-deleteMessage",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -3060,7 +2807,6 @@
     {
       "id": "FN-062-updateResearchBriefField",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 6,
         "blast": 0,
@@ -3072,7 +2818,6 @@
     {
       "id": "FN-063-exportReportAsPDF",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -3084,7 +2829,6 @@
     {
       "id": "FN-064-exportSessionArchive",
       "category": "fn",
-      "type": "FN",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -3096,7 +2840,6 @@
     {
       "id": "TST-001-exportReportAsPDF",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3108,7 +2851,6 @@
     {
       "id": "TST-002-exportReportAsPDF",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3120,7 +2862,6 @@
     {
       "id": "TST-003-exportSessionArchive",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3132,7 +2873,6 @@
     {
       "id": "TST-004-exportSessionArchive",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3144,7 +2884,6 @@
     {
       "id": "TST-005-createSession",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3156,7 +2895,6 @@
     {
       "id": "TST-006-createSession",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3168,7 +2906,6 @@
     {
       "id": "TST-007-getSessionSummary",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3180,7 +2917,6 @@
     {
       "id": "TST-008-getSessionSummary",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3192,7 +2928,6 @@
     {
       "id": "TST-009-getSessionSummary",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3204,7 +2939,6 @@
     {
       "id": "TST-010-updateSessionTitle",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3216,7 +2950,6 @@
     {
       "id": "TST-011-updateSessionTitle",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3228,7 +2961,6 @@
     {
       "id": "TST-012-updateSessionTitle",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3240,7 +2972,6 @@
     {
       "id": "TST-013-deleteSession",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3252,7 +2983,6 @@
     {
       "id": "TST-014-deleteSession",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3264,7 +2994,6 @@
     {
       "id": "TST-015-deleteSession",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3276,7 +3005,6 @@
     {
       "id": "TST-016-sendMessage",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3288,7 +3016,6 @@
     {
       "id": "TST-017-sendMessage",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3300,7 +3027,6 @@
     {
       "id": "TST-018-sendMessage",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3312,7 +3038,6 @@
     {
       "id": "TST-019-getResearchBrief",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -3324,7 +3049,6 @@
     {
       "id": "TST-020-getResearchBrief",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3336,7 +3060,6 @@
     {
       "id": "TST-021-getResearchBrief",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3348,7 +3071,6 @@
     {
       "id": "TST-022-submitQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3360,7 +3082,6 @@
     {
       "id": "TST-023-submitQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3372,7 +3093,6 @@
     {
       "id": "TST-024-submitQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3384,7 +3104,6 @@
     {
       "id": "TST-025-submitQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3396,7 +3115,6 @@
     {
       "id": "TST-026-submitQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3408,7 +3126,6 @@
     {
       "id": "TST-027-getQueryResults",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3420,7 +3137,6 @@
     {
       "id": "TST-028-getQueryResults",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3432,7 +3148,6 @@
     {
       "id": "TST-029-getQueryResults",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3444,7 +3159,6 @@
     {
       "id": "TST-030-getQueryResults",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3456,7 +3170,6 @@
     {
       "id": "TST-031-cancelQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3468,7 +3181,6 @@
     {
       "id": "TST-032-cancelQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3480,7 +3192,6 @@
     {
       "id": "TST-033-cancelQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3492,7 +3203,6 @@
     {
       "id": "TST-034-cancelQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3504,7 +3214,6 @@
     {
       "id": "TST-035-getQueryStatus",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3516,7 +3225,6 @@
     {
       "id": "TST-036-getQueryStatus",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3528,7 +3236,6 @@
     {
       "id": "TST-037-getQueryStatus",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3540,7 +3247,6 @@
     {
       "id": "TST-038-loadMoreResults",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3552,7 +3258,6 @@
     {
       "id": "TST-039-loadMoreResults",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3564,7 +3269,6 @@
     {
       "id": "TST-040-loadMoreResults",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3576,7 +3280,6 @@
     {
       "id": "TST-041-loadMoreResults",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3588,7 +3291,6 @@
     {
       "id": "TST-042-loadMoreResults",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3600,7 +3302,6 @@
     {
       "id": "TST-043-rankSources",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3612,7 +3313,6 @@
     {
       "id": "TST-044-rankSources",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3624,7 +3324,6 @@
     {
       "id": "TST-045-rankSources",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3636,7 +3335,6 @@
     {
       "id": "TST-046-selectSourceForRanking",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3648,7 +3346,6 @@
     {
       "id": "TST-047-selectSourceForRanking",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3660,7 +3357,6 @@
     {
       "id": "TST-048-selectSourceForRanking",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3672,7 +3368,6 @@
     {
       "id": "TST-049-selectSourceForRanking",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3684,7 +3379,6 @@
     {
       "id": "TST-050-selectSourceForQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -3696,7 +3390,6 @@
     {
       "id": "TST-051-selectSourceForQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -3708,7 +3401,6 @@
     {
       "id": "TST-052-selectSourceForQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -3720,7 +3412,6 @@
     {
       "id": "TST-053-downloadPaper",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3732,7 +3423,6 @@
     {
       "id": "TST-054-downloadPaper",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3744,7 +3434,6 @@
     {
       "id": "TST-055-downloadPaper",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3756,7 +3445,6 @@
     {
       "id": "TST-056-downloadPaper",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3768,7 +3456,6 @@
     {
       "id": "TST-057-downloadPaper",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3780,7 +3467,6 @@
     {
       "id": "TST-058-downloadPaper",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3792,7 +3478,6 @@
     {
       "id": "TST-059-getDownloadStatus",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3804,7 +3489,6 @@
     {
       "id": "TST-060-getDownloadStatus",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3816,7 +3500,6 @@
     {
       "id": "TST-061-getDownloadStatus",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3828,7 +3511,6 @@
     {
       "id": "TST-062-cancelDownload",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3840,7 +3522,6 @@
     {
       "id": "TST-063-cancelDownload",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3852,7 +3533,6 @@
     {
       "id": "TST-064-cancelDownload",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3864,7 +3544,6 @@
     {
       "id": "TST-065-cancelDownload",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3876,7 +3555,6 @@
     {
       "id": "TST-066-getDownloadedPapers",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3888,7 +3566,6 @@
     {
       "id": "TST-067-getDownloadedPapers",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3900,7 +3577,6 @@
     {
       "id": "TST-068-getDownloadedPapers",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -3912,7 +3588,6 @@
     {
       "id": "TST-069-processSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 4,
         "blast": 0,
@@ -3924,7 +3599,6 @@
     {
       "id": "TST-070-processSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3936,7 +3610,6 @@
     {
       "id": "TST-071-processSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3948,7 +3621,6 @@
     {
       "id": "TST-072-processSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3960,7 +3632,6 @@
     {
       "id": "TST-073-processSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3972,7 +3643,6 @@
     {
       "id": "TST-074-getSourceMetadata",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3984,7 +3654,6 @@
     {
       "id": "TST-075-getSourceMetadata",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -3996,7 +3665,6 @@
     {
       "id": "TST-076-getSourceMetadata",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4008,7 +3676,6 @@
     {
       "id": "TST-077-getSourceData",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 4,
         "blast": 0,
@@ -4020,7 +3687,6 @@
     {
       "id": "TST-078-getSourceData",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4032,7 +3698,6 @@
     {
       "id": "TST-079-getSourceData",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4044,7 +3709,6 @@
     {
       "id": "TST-080-getSourceData",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4056,7 +3720,6 @@
     {
       "id": "TST-081-getSourceFile",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4068,7 +3731,6 @@
     {
       "id": "TST-082-getSourceFile",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4080,7 +3742,6 @@
     {
       "id": "TST-083-getSourceFile",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4092,7 +3753,6 @@
     {
       "id": "TST-084-getSourceFile",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4104,7 +3764,6 @@
     {
       "id": "TST-085-editSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 4,
         "blast": 0,
@@ -4116,7 +3775,6 @@
     {
       "id": "TST-086-editSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4128,7 +3786,6 @@
     {
       "id": "TST-087-editSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4140,7 +3797,6 @@
     {
       "id": "TST-088-editSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4152,7 +3808,6 @@
     {
       "id": "TST-089-getProcessingStatus",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -4164,7 +3819,6 @@
     {
       "id": "TST-090-getProcessingStatus",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4176,7 +3830,6 @@
     {
       "id": "TST-091-getProcessingStatus",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -4188,7 +3841,6 @@
     {
       "id": "TST-092-cancelProcessing",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -4200,7 +3852,6 @@
     {
       "id": "TST-093-cancelProcessing",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4212,7 +3863,6 @@
     {
       "id": "TST-094-cancelProcessing",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -4224,7 +3874,6 @@
     {
       "id": "TST-095-cancelProcessing",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -4236,7 +3885,6 @@
     {
       "id": "TST-096-deleteSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4248,7 +3896,6 @@
     {
       "id": "TST-097-deleteSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4260,7 +3907,6 @@
     {
       "id": "TST-098-deleteSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -4272,7 +3918,6 @@
     {
       "id": "TST-099-deleteSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4284,7 +3929,6 @@
     {
       "id": "TST-100-rankFullSources",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4296,7 +3940,6 @@
     {
       "id": "TST-101-rankFullSources",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4308,7 +3951,6 @@
     {
       "id": "TST-102-rankFullSources",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4320,7 +3962,6 @@
     {
       "id": "TST-103-rankFullSources",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4332,7 +3973,6 @@
     {
       "id": "TST-104-getRankedSources",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4344,7 +3984,6 @@
     {
       "id": "TST-105-getRankedSources",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4356,7 +3995,6 @@
     {
       "id": "TST-106-getRankedSources",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4368,7 +4006,6 @@
     {
       "id": "TST-107-getRankedSources",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4380,7 +4017,6 @@
     {
       "id": "TST-108-generateFindingClusters",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 4,
         "blast": 0,
@@ -4392,7 +4028,6 @@
     {
       "id": "TST-109-generateFindingClusters",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -4404,7 +4039,6 @@
     {
       "id": "TST-110-generateFindingClusters",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 4,
         "blast": 0,
@@ -4416,7 +4050,6 @@
     {
       "id": "TST-111-generateFindingClusters",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -4428,7 +4061,6 @@
     {
       "id": "TST-112-getFindingClusters",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -4440,7 +4072,6 @@
     {
       "id": "TST-113-getFindingClusters",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -4452,7 +4083,6 @@
     {
       "id": "TST-114-getFindingClusters",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -4464,7 +4094,6 @@
     {
       "id": "TST-115-getFindingClusters",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -4476,7 +4105,6 @@
     {
       "id": "TST-116-generateReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -4488,7 +4116,6 @@
     {
       "id": "TST-117-generateReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4500,7 +4127,6 @@
     {
       "id": "TST-118-generateReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -4512,7 +4138,6 @@
     {
       "id": "TST-119-generateReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4524,7 +4149,6 @@
     {
       "id": "TST-120-generateReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4536,7 +4160,6 @@
     {
       "id": "TST-121-getReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4548,7 +4171,6 @@
     {
       "id": "TST-122-getReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4560,7 +4182,6 @@
     {
       "id": "TST-123-getReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4572,7 +4193,6 @@
     {
       "id": "TST-124-getReportSummary",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4584,7 +4204,6 @@
     {
       "id": "TST-125-getReportSummary",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4596,7 +4215,6 @@
     {
       "id": "TST-126-getReportSummary",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4608,7 +4226,6 @@
     {
       "id": "TST-127-getHypothesisVerdicts",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4620,7 +4237,6 @@
     {
       "id": "TST-128-getHypothesisVerdicts",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -4632,7 +4248,6 @@
     {
       "id": "TST-129-getHypothesisVerdicts",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4644,7 +4259,6 @@
     {
       "id": "TST-130-getReportStatus",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4656,7 +4270,6 @@
     {
       "id": "TST-131-getReportStatus",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4668,7 +4281,6 @@
     {
       "id": "TST-132-getReportStatus",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4680,7 +4292,6 @@
     {
       "id": "TST-133-cancelReportGeneration",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4692,7 +4303,6 @@
     {
       "id": "TST-134-cancelReportGeneration",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4704,7 +4314,6 @@
     {
       "id": "TST-135-cancelReportGeneration",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4716,7 +4325,6 @@
     {
       "id": "TST-136-cancelReportGeneration",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4728,7 +4336,6 @@
     {
       "id": "TST-137-saveSession",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4740,7 +4347,6 @@
     {
       "id": "TST-138-saveSession",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -4752,7 +4358,6 @@
     {
       "id": "TST-139-saveSession",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -4764,7 +4369,6 @@
     {
       "id": "TST-140-loadSession",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4776,7 +4380,6 @@
     {
       "id": "TST-141-loadSession",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -4788,7 +4391,6 @@
     {
       "id": "TST-142-loadSession",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -4800,7 +4402,6 @@
     {
       "id": "TST-143-saveQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4812,7 +4413,6 @@
     {
       "id": "TST-144-saveQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4824,7 +4424,6 @@
     {
       "id": "TST-145-saveQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4836,7 +4435,6 @@
     {
       "id": "TST-146-loadQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4848,7 +4446,6 @@
     {
       "id": "TST-147-loadQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4860,7 +4457,6 @@
     {
       "id": "TST-148-loadQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4872,7 +4468,6 @@
     {
       "id": "TST-149-deleteQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4884,7 +4479,6 @@
     {
       "id": "TST-150-deleteQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4896,7 +4490,6 @@
     {
       "id": "TST-151-deleteQuery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4908,7 +4501,6 @@
     {
       "id": "TST-152-saveSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4920,7 +4512,6 @@
     {
       "id": "TST-153-saveSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4932,7 +4523,6 @@
     {
       "id": "TST-154-saveSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4944,7 +4534,6 @@
     {
       "id": "TST-155-loadSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4956,7 +4545,6 @@
     {
       "id": "TST-156-loadSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4968,7 +4556,6 @@
     {
       "id": "TST-157-loadSource",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4980,7 +4567,6 @@
     {
       "id": "TST-158-saveReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -4992,7 +4578,6 @@
     {
       "id": "TST-159-saveReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5004,7 +4589,6 @@
     {
       "id": "TST-160-saveReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5016,7 +4600,6 @@
     {
       "id": "TST-161-loadReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5028,7 +4611,6 @@
     {
       "id": "TST-162-loadReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5040,7 +4622,6 @@
     {
       "id": "TST-163-loadReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5052,7 +4633,6 @@
     {
       "id": "TST-164-deleteReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5064,7 +4644,6 @@
     {
       "id": "TST-165-deleteReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5076,7 +4655,6 @@
     {
       "id": "TST-166-deleteReport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5088,7 +4666,6 @@
     {
       "id": "TST-167-listSessions",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5100,7 +4677,6 @@
     {
       "id": "TST-168-listSessions",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5112,7 +4688,6 @@
     {
       "id": "TST-169-listSessions",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5124,7 +4699,6 @@
     {
       "id": "TST-170-buildAuthorNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5136,7 +4710,6 @@
     {
       "id": "TST-171-buildAuthorNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5148,7 +4721,6 @@
     {
       "id": "TST-172-buildAuthorNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5160,7 +4732,6 @@
     {
       "id": "TST-173-buildAuthorNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5172,7 +4743,6 @@
     {
       "id": "TST-174-buildPaperNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -5184,7 +4754,6 @@
     {
       "id": "TST-175-buildPaperNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5196,7 +4765,6 @@
     {
       "id": "TST-176-buildPaperNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5208,7 +4776,6 @@
     {
       "id": "TST-177-buildPaperNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5220,7 +4787,6 @@
     {
       "id": "TST-178-getAuthorNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5232,7 +4798,6 @@
     {
       "id": "TST-179-getAuthorNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5244,7 +4809,6 @@
     {
       "id": "TST-180-getAuthorNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5256,7 +4820,6 @@
     {
       "id": "TST-181-getAuthorNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5268,7 +4831,6 @@
     {
       "id": "TST-182-getPaperNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -5280,7 +4842,6 @@
     {
       "id": "TST-183-getPaperNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5292,7 +4853,6 @@
     {
       "id": "TST-184-getPaperNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5304,7 +4864,6 @@
     {
       "id": "TST-185-getPaperNetwork",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5316,7 +4875,6 @@
     {
       "id": "TST-186-exportBibliography",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5328,7 +4886,6 @@
     {
       "id": "TST-187-exportBibliography",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5340,7 +4897,6 @@
     {
       "id": "TST-188-exportBibliography",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5352,7 +4908,6 @@
     {
       "id": "TST-189-exportBibliography",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5364,7 +4919,6 @@
     {
       "id": "TST-190-exportBibliography",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5376,7 +4930,6 @@
     {
       "id": "TST-191-exportBibliography",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5388,7 +4941,6 @@
     {
       "id": "TST-192-exportCitations",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5400,7 +4952,6 @@
     {
       "id": "TST-193-exportCitations",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5412,7 +4963,6 @@
     {
       "id": "TST-194-exportCitations",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5424,7 +4974,6 @@
     {
       "id": "TST-195-exportCitations",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5436,7 +4985,6 @@
     {
       "id": "TST-196-exportCitations",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5448,7 +4996,6 @@
     {
       "id": "TST-197-getExport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5460,7 +5007,6 @@
     {
       "id": "TST-198-getExport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5472,7 +5018,6 @@
     {
       "id": "TST-199-getExport",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5484,7 +5029,6 @@
     {
       "id": "TST-200-getExportFormats",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5496,7 +5040,6 @@
     {
       "id": "TST-201-getExportFormats",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5508,7 +5051,6 @@
     {
       "id": "TST-202-getExportFormats",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5520,7 +5062,6 @@
     {
       "id": "TST-203-logError",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5532,7 +5073,6 @@
     {
       "id": "TST-204-logError",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5544,7 +5084,6 @@
     {
       "id": "TST-205-logError",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5556,7 +5095,6 @@
     {
       "id": "TST-206-getError",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5568,7 +5106,6 @@
     {
       "id": "TST-207-getError",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5580,7 +5117,6 @@
     {
       "id": "TST-208-getError",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5592,7 +5128,6 @@
     {
       "id": "TST-209-getSessionErrors",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5604,7 +5139,6 @@
     {
       "id": "TST-210-getSessionErrors",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5616,7 +5150,6 @@
     {
       "id": "TST-211-getSessionErrors",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5628,7 +5161,6 @@
     {
       "id": "TST-212-getErrorRecovery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5640,7 +5172,6 @@
     {
       "id": "TST-213-getErrorRecovery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5652,7 +5183,6 @@
     {
       "id": "TST-214-getErrorRecovery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5664,7 +5194,6 @@
     {
       "id": "TST-215-getErrorRecovery",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5676,7 +5205,6 @@
     {
       "id": "TST-216-editMessage",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5688,7 +5216,6 @@
     {
       "id": "TST-217-editMessage",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5700,7 +5227,6 @@
     {
       "id": "TST-218-editMessage",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5712,7 +5238,6 @@
     {
       "id": "TST-219-editMessage",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5724,7 +5249,6 @@
     {
       "id": "TST-220-deleteMessage",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5736,7 +5260,6 @@
     {
       "id": "TST-221-deleteMessage",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5748,7 +5271,6 @@
     {
       "id": "TST-222-deleteMessage",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5760,7 +5282,6 @@
     {
       "id": "TST-223-deleteMessage",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5772,7 +5293,6 @@
     {
       "id": "TST-224-updateResearchBriefField",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5784,7 +5304,6 @@
     {
       "id": "TST-225-updateResearchBriefField",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5796,7 +5315,6 @@
     {
       "id": "TST-226-updateResearchBriefField",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5808,7 +5326,6 @@
     {
       "id": "TST-createSession-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5820,7 +5337,6 @@
     {
       "id": "TST-getResearchBrief-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5832,7 +5348,6 @@
     {
       "id": "TST-sendMessage-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5844,7 +5359,6 @@
     {
       "id": "TST-submitQuery-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5856,7 +5370,6 @@
     {
       "id": "TST-getQueryResults-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5868,7 +5381,6 @@
     {
       "id": "TST-rankSources-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5880,7 +5392,6 @@
     {
       "id": "TST-getRankedSources-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -5892,7 +5403,6 @@
     {
       "id": "TST-editSource-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5904,7 +5414,6 @@
     {
       "id": "TST-downloadPaper-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5916,7 +5425,6 @@
     {
       "id": "TST-processSource-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -5928,7 +5436,6 @@
     {
       "id": "TST-getSourceData-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5940,7 +5447,6 @@
     {
       "id": "TST-generateReport-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5952,7 +5458,6 @@
     {
       "id": "TST-saveSession-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5964,7 +5469,6 @@
     {
       "id": "TST-saveQuery-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -5976,7 +5480,6 @@
     {
       "id": "TST-saveSource-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -5988,7 +5491,6 @@
     {
       "id": "TST-saveReport-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6000,7 +5502,6 @@
     {
       "id": "TST-listSessions-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6012,7 +5513,6 @@
     {
       "id": "TST-loadSession-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6024,7 +5524,6 @@
     {
       "id": "TST-exportBibliography-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -6036,7 +5535,6 @@
     {
       "id": "TST-exportCitations-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6048,7 +5546,6 @@
     {
       "id": "TST-cancelQuery-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6060,7 +5557,6 @@
     {
       "id": "TST-getHypothesisVerdicts-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -6072,7 +5568,6 @@
     {
       "id": "TST-buildAuthorNetwork-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6084,7 +5579,6 @@
     {
       "id": "TST-buildPaperNetwork-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6096,7 +5590,6 @@
     {
       "id": "TST-generateFindingClusters-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6108,7 +5601,6 @@
     {
       "id": "TST-getExportFormats-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6120,7 +5612,6 @@
     {
       "id": "TST-getSessionSummary-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6132,7 +5623,6 @@
     {
       "id": "TST-saveSession-002",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6144,7 +5634,6 @@
     {
       "id": "TST-getSessionSummary-003",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6156,7 +5645,6 @@
     {
       "id": "TST-logError-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6168,7 +5656,6 @@
     {
       "id": "TST-getSessionErrors-001",
       "category": "test",
-      "type": "TST",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6180,7 +5667,6 @@
     {
       "id": "UJ-001",
       "category": "design",
-      "type": "UJ",
       "metrics": {
         "degree": 4,
         "blast": 0,
@@ -6192,7 +5678,6 @@
     {
       "id": "UJ-002",
       "category": "design",
-      "type": "UJ",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -6204,7 +5689,6 @@
     {
       "id": "UJ-003",
       "category": "design",
-      "type": "UJ",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -6216,7 +5700,6 @@
     {
       "id": "UJ-004",
       "category": "design",
-      "type": "UJ",
       "metrics": {
         "degree": 4,
         "blast": 0,
@@ -6228,7 +5711,6 @@
     {
       "id": "UJ-005",
       "category": "design",
-      "type": "UJ",
       "metrics": {
         "degree": 4,
         "blast": 0,
@@ -6240,7 +5722,6 @@
     {
       "id": "UXAC-001",
       "category": "design",
-      "type": "UXAC",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6252,7 +5733,6 @@
     {
       "id": "UXAC-002",
       "category": "design",
-      "type": "UXAC",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6264,7 +5744,6 @@
     {
       "id": "UXAC-003",
       "category": "design",
-      "type": "UXAC",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6276,7 +5755,6 @@
     {
       "id": "UXAC-004",
       "category": "design",
-      "type": "UXAC",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6288,7 +5766,6 @@
     {
       "id": "UXAC-005",
       "category": "design",
-      "type": "UXAC",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -6300,7 +5777,6 @@
     {
       "id": "DG-001-Minimizecognitiveloa",
       "category": "design",
-      "type": "DG",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6312,7 +5788,6 @@
     {
       "id": "DG-002-Supporthighinformati",
       "category": "design",
-      "type": "DG",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6324,7 +5799,6 @@
     {
       "id": "DG-003-Providetransparentsy",
       "category": "design",
-      "type": "DG",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6336,7 +5810,6 @@
     {
       "id": "DG-004-Supportasynchronousi",
       "category": "design",
-      "type": "DG",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6348,7 +5821,6 @@
     {
       "id": "DG-005-Prioritizereadabilit",
       "category": "design",
-      "type": "DG",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6360,7 +5832,6 @@
     {
       "id": "DG-006-Progressivedisclosur",
       "category": "design",
-      "type": "DG",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6372,7 +5843,6 @@
     {
       "id": "DG-007-Provideclearremediat",
       "category": "design",
-      "type": "DG",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6384,7 +5854,6 @@
     {
       "id": "DCON-001-inputFields",
       "category": "design",
-      "type": "DCON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6396,7 +5865,6 @@
     {
       "id": "DCON-002-buttons",
       "category": "design",
-      "type": "DCON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6408,7 +5876,6 @@
     {
       "id": "DCON-003-cards",
       "category": "design",
-      "type": "DCON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6420,7 +5887,6 @@
     {
       "id": "DCON-004-tables",
       "category": "design",
-      "type": "DCON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6432,7 +5898,6 @@
     {
       "id": "DCON-005-tabs/navigation",
       "category": "design",
-      "type": "DCON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6444,7 +5909,6 @@
     {
       "id": "DCON-006-sidePanel",
       "category": "design",
-      "type": "DCON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6456,7 +5920,6 @@
     {
       "id": "DCON-007-paginationControls",
       "category": "design",
-      "type": "DCON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6468,7 +5931,6 @@
     {
       "id": "DCON-008-toastNotifications",
       "category": "design",
-      "type": "DCON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6480,7 +5942,6 @@
     {
       "id": "DCON-009-graphCanvas",
       "category": "design",
-      "type": "DCON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6492,7 +5953,6 @@
     {
       "id": "DCON-010-barChart",
       "category": "design",
-      "type": "DCON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6504,7 +5964,6 @@
     {
       "id": "DCON-011-interactiveMarkdownPreview",
       "category": "design",
-      "type": "DCON",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6516,7 +5975,6 @@
     {
       "id": "SCR-001-landingPage",
       "category": "design",
-      "type": "SCR",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -6528,7 +5986,6 @@
     {
       "id": "SCR-002-sessionBrief",
       "category": "design",
-      "type": "SCR",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -6540,7 +5997,6 @@
     {
       "id": "SCR-003-queries",
       "category": "design",
-      "type": "SCR",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -6552,7 +6008,6 @@
     {
       "id": "SCR-004-papers",
       "category": "design",
-      "type": "SCR",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -6564,7 +6019,6 @@
     {
       "id": "SCR-005-catalog",
       "category": "design",
-      "type": "SCR",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -6576,7 +6030,6 @@
     {
       "id": "SCR-006-report",
       "category": "design",
-      "type": "SCR",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -6588,7 +6041,6 @@
     {
       "id": "SCR-007-settings",
       "category": "design",
-      "type": "SCR",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6600,7 +6052,6 @@
     {
       "id": "SCR-008-help",
       "category": "design",
-      "type": "SCR",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6612,7 +6063,6 @@
     {
       "id": "ENT-002-Search",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 4,
         "blast": 0,
@@ -6624,7 +6074,6 @@
     {
       "id": "ENT-006-Finding",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -6636,7 +6085,6 @@
     {
       "id": "ENT-007-Claim",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -6648,7 +6096,6 @@
     {
       "id": "ENT-012-AuthorCitation",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -6660,7 +6107,6 @@
     {
       "id": "ENT-013-SourceCitation",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 4,
         "blast": 0,
@@ -6672,7 +6118,6 @@
     {
       "id": "ENT-015-UserEdit",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 4,
         "blast": 0,
@@ -6684,7 +6129,6 @@
     {
       "id": "ENT-017-SessionSummary",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -6696,7 +6140,6 @@
     {
       "id": "ENT-018-Message",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -6708,7 +6151,6 @@
     {
       "id": "ENT-019-Library",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 5,
         "blast": 0,
@@ -6720,7 +6162,6 @@
     {
       "id": "ENT-020-ErrorRecovery",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -6732,7 +6173,6 @@
     {
       "id": "ENT-021-SessionFilter",
       "category": "data",
-      "type": "Entity",
       "metrics": {
         "degree": 2,
         "blast": 0,
@@ -6744,7 +6184,6 @@
     {
       "id": "NUM-001-EvidenceType",
       "category": "data",
-      "type": "Enum",
       "metrics": {
         "degree": 8,
         "blast": 0,
@@ -6756,7 +6195,6 @@
     {
       "id": "NUM-002-ExtractionFlag",
       "category": "data",
-      "type": "Enum",
       "metrics": {
         "degree": 3,
         "blast": 0,
@@ -6768,7 +6206,6 @@
     {
       "id": "NUM-003-SourceStatus",
       "category": "data",
-      "type": "Enum",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6780,7 +6217,6 @@
     {
       "id": "NUM-004-VerdictOutcome",
       "category": "data",
-      "type": "Enum",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6792,7 +6228,6 @@
     {
       "id": "NUM-005-SufficiencyVerdict",
       "category": "data",
-      "type": "Enum",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6804,7 +6239,6 @@
     {
       "id": "NUM-006-ErrorCode",
       "category": "data",
-      "type": "Enum",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6816,7 +6250,6 @@
     {
       "id": "NUM-007-ErrorSeverity",
       "category": "data",
-      "type": "Enum",
       "metrics": {
         "degree": 0,
         "blast": 0,
@@ -6828,7 +6261,6 @@
     {
       "id": "NUM-008-QueryStatus",
       "category": "data",
-      "type": "Enum",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6840,7 +6272,6 @@
     {
       "id": "NUM-009-QuerySource",
       "category": "data",
-      "type": "Enum",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6852,7 +6283,6 @@
     {
       "id": "NUM-010-SearchStatus",
       "category": "data",
-      "type": "Enum",
       "metrics": {
         "degree": 1,
         "blast": 0,
@@ -6864,7 +6294,6 @@
     {
       "id": "GL-029",
       "category": "gl",
-      "type": "GL",
       "metrics": {
         "degree": 2,
         "blast": 0,

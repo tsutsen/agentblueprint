@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { GraphCanvas, type IGraphBridge } from '@/components/GraphCanvas'
+import type { GraphData, GraphNode, GraphEdge } from '@/lib/graph-types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -16,20 +17,19 @@ import { themes } from '@/lib/themes'
 import { SIZE_METRICS } from '@/lib/metrics'
 
 /** Extract clean short ID: PREFIX-NNN (handles TST-NNN-xxx, TST-xxx-NNN, CON-NNN-xxx, FLW-NNN-xxx, and slug-style IDs) */
-function extractShortId(id: string, type?: string): string {
+function extractShortId(id: string): string {
   const parts = id.split('-')
   const numIdx = parts.findIndex(p => /^\d+$/.test(p))
   if (numIdx >= 0) {
     return `${parts[0]}-${parts[numIdx]}`
   }
-  // Slug-style IDs (e.g. "citation-network-builder") — use type prefix
-  if (type) return type.toUpperCase()
+  // Slug-style IDs (e.g. "citation-network-builder") — show first two segments
   return parts.slice(0, 2).join('-')
 }
 
 function App() {
-  const [graphData, setGraphData] = useState<any>(null)
-  const [selectedNode, setSelectedNode] = useState<any>(null)
+  const [graphData, setGraphData] = useState<GraphData | null>(null)
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set())
   const [categories, setCategories] = useState<Record<string, { count: number; color: string }>>({})
@@ -60,7 +60,7 @@ function App() {
           return `var(--node-color-${idx})`
         }
         for (const node of data.nodes) {
-          const cat = node.typeCat || node.category || node.type || 'other'
+          const cat = node.category
           if (!catCounts[cat]) {
             catCounts[cat] = { count: 0, color: getCatColor(cat) }
           }
@@ -95,13 +95,13 @@ function App() {
   // ─── Sync parent state → graph via bridge ───
   useEffect(() => {
     if (!bridgeRef.current || !graphData) return
-    const ids = new Set(graphData.nodes.filter((node: any) => {
-      const cat = node.typeCat || node.category || 'other'
+    const ids = new Set(graphData.nodes.filter((node: GraphNode) => {
+      const cat = node.category
       const catVisible = activeCategories.has(cat)
       const searchMatch = !debouncedSearch ||
         (node.name || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
       return catVisible && searchMatch
-    }).map((n: any) => n.id))
+    }).map((n: GraphNode) => n.id))
     bridgeRef.current.setVisibility(ids)
   }, [activeCategories, debouncedSearch, graphData])
 
@@ -137,7 +137,7 @@ function App() {
   }, [activeCategories, searchTerm, categories, graphData])
 
   // ─── Node selection ───
-  const handleNodeSelect = useCallback((node: any) => {
+  const handleNodeSelect = useCallback((node: GraphNode) => {
     setSelectedNode(node)
     const params = new URLSearchParams(window.location.search)
     params.set('node', node.id)
@@ -206,40 +206,43 @@ function App() {
   }, [sidebarWidth])
 
   // ─── Visible + sorted nodes (for sidebar) ───
-  const visibleIds = new Set(graphData?.nodes.filter((node: any) => {
-    const cat = node.typeCat || node.category || 'other'
+  const visibleIds = new Set(graphData?.nodes.filter((node: GraphNode) => {
+    const cat = node.category
     const catVisible = activeCategories.has(cat)
     const searchMatch = !debouncedSearch ||
       (node.name || node.id).toLowerCase().includes(debouncedSearch.toLowerCase())
     return catVisible && searchMatch
-  }).map((n: any) => n.id) || [])
+  }).map((n: GraphNode) => n.id) || [])
 
   const sortedNodes = graphData?.nodes
-    .filter((n: any) => visibleIds.has(n.id))
-    .sort((a: any, b: any) => {
-      if (sortBy === 'degree') return (b.metrics.degree || 0) - (a.metrics.degree || 0)
-      return (a.name || a.id).localeCompare(b.name || b.id)
+    .filter((n: GraphNode) => visibleIds.has(n.id))
+    .sort((a: GraphNode, b: GraphNode) => {
+      if (sortBy === 'degree') return b.metrics.degree - a.metrics.degree
+      return a.name.localeCompare(b.name)
     }) || []
 
   // ─── Connections for selected node ───
   const connections = selectedNode
     ? (() => {
-        const seen = new Map<string, any>()
+        const seen = new Map<string, { id: string; label: string; type: string; edgeType: string }>()
         graphData?.edges
-          ?.filter((e: any) => e.source?.id === selectedNode.id || e.target?.id === selectedNode.id)
-          .forEach((e: any) => {
-            const neighbor = e.source?.id === selectedNode.id ? e.target : e.source
+          ?.filter((e: GraphEdge) => (typeof e.source === 'object' ? e.source.id : e.source) === selectedNode.id || (typeof e.target === 'object' ? e.target.id : e.target) === selectedNode.id)
+          .forEach((e: GraphEdge) => {
+            const neighbor = (typeof e.source === 'object' ? e.source.id : e.source) === selectedNode.id
+              ? (typeof e.target === 'object' ? e.target : null)
+              : (typeof e.source === 'object' ? e.source : null)
+            if (!neighbor || typeof neighbor !== 'object') return
             const key = neighbor.id
             if (!seen.has(key)) {
               seen.set(key, {
                 id: neighbor.id,
-                label: neighbor.name || neighbor.id,
-                type: neighbor.typeLabel || neighbor.type || neighbor.category || 'unknown',
+                label: neighbor.name,
+                type: neighbor.category,
                 edgeType: e.type || 'related',
               })
             }
           })
-        return [...seen.values()].sort((a: any, b: any) => a.type.localeCompare(b.type))
+        return [...seen.values()].sort((a, b) => a.type.localeCompare(b.type))
       })()
     : []
 
@@ -338,11 +341,9 @@ function App() {
             <p className="px-3 py-4 text-sm text-muted-foreground text-center">All categories hidden</p>
           ) : (
             <div className="space-y-0.5">
-              {sortedNodes.map((node: any) => {
-                const idShort = (node.type === 'spec' || node.category === 'spec')
-                  ? 'SPEC'
-                  : extractShortId(node.id, node.type);
-                const catDisplay = node.typeLabel || node.type || node.category || 'unknown';
+              {sortedNodes.map((node: GraphNode) => {
+                const idShort = extractShortId(node.id);
+                const catDisplay = node.category;
                 return (
                   <Tooltip key={node.id}>
                     <TooltipTrigger asChild>
@@ -514,7 +515,7 @@ function App() {
               <span data-testid="detail-node-name" className="text-base font-semibold break-words overflow-wrap-anywhere">{selectedNode.name || selectedNode.id}</span>
               <div className="flex items-center gap-2">
                 <Badge data-testid="detail-type-badge" variant="secondary" className="text-[10px] uppercase">
-                  {selectedNode.typeLabel || selectedNode.type || selectedNode.category || 'unknown'}
+                  {selectedNode.category}
                 </Badge>
                 <span data-testid="detail-node-id" className="text-xs text-muted-foreground font-mono">
                   {selectedNode.id.split('-').slice(0, 2).join('-')}
@@ -567,7 +568,7 @@ function App() {
                       Connections ({connections.length})
                     </Label>
                     <div className="space-y-0.5">
-                        {connections.map((conn: any) => (
+                        {connections.map((conn) => (
                           <button
                             data-testid={`detail-connection-${conn.id}`}
                             key={conn.id}

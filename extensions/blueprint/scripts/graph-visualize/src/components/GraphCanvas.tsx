@@ -52,14 +52,6 @@ export interface GraphCanvasProps {
   className?: string
 }
 
-/** Extract clean short ID: PREFIX-NNN */
-function extractShortId(id: string, type?: string): string {
-  const parts = id.split('-')
-  const numIdx = parts.findIndex(p => /^\d+$/.test(p))
-  if (numIdx >= 0) return `${parts[0]}-${parts[numIdx]}`
-  if (type) return type.toUpperCase()
-  return parts.slice(0, 2).join('-')
-}
 
 // ─── Constants ───
 const LABEL_MIN_ZOOM = 0.5
@@ -80,7 +72,7 @@ function scaleValue(value: number, minVal: number, maxVal: number, minRadius = 8
 }
 
 function getNodeColor(d: GraphNode, colors: Record<string, string>): string {
-  const cat = d.typeCat || d.category || d.type || 'other'
+  const cat = d.category
   let hash = 0
   for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash)
   const idx = Math.abs(hash) % 12
@@ -93,17 +85,6 @@ function getEdgeColor(colors: Record<string, string>): string {
 }
 
 function getNodeRadius(d: GraphNode, sizeMetric: string, sizeRange: SizeRangeMap, connectedSet: Set<string> | null): number {
-  if (d.type === 'spec' || d.category === 'spec') return 15
-
-  if (sizeMetric === 'type') {
-    const typeSizes: Record<string, number> = {
-      CON: 6, FN: 5, REQ: 4.5, NFR: 4.5, US: 4.5, SC: 4, Entity: 4, GL: 3.5,
-      TST: 2.5, Enum: 2.5, API: 4, EP: 5, TASK: 3, ISSUE: 4, DG: 3, UJ: 4, UXAC: 4, IS: 4, spec: 5,
-    }
-    const value = typeSizes[d.type] || 1
-    return scaleValue(value, 1, 6, 8, 40)
-  }
-
   const metric = SIZE_METRICS.find((m) => m.key === sizeMetric) || SIZE_METRICS[0]
   const range = sizeRange[metric.key]
   let minVal: number, maxVal: number
@@ -152,7 +133,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   const validEdgesRef = useRef<GraphEdge[]>([])
   const nodeMapRef = useRef<Map<string, GraphNode>>(new Map())
   const sizeRangeRef = useRef<SizeRangeMap>({})
-  const simulationRef = useRef<d3.Simulation<any, any> | null>(null)
+  const simulationRef = useRef<d3.Simulation<GraphNode, undefined> | null>(null)
   const initializedRef = useRef(false)
   const currentDimRef = useRef(1)
 
@@ -294,7 +275,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     const labelBBox = (n: GraphNode) => {
       const r = cachedRadius(n)
-      const fs = n.type === 'spec' ? 14 : 13
+      const fs = 13
       const text = n.name || n.id || ''
       const tw = text.length * fs * LABEL_CHAR_WIDTH + LABEL_PAD_X * 2
       const th = fs
@@ -369,7 +350,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
       labelEl.style.left = `${labelX}px`
       labelEl.style.top = `${labelY}px`
-      labelEl.style.fontSize = `${n.type === 'spec' ? 14 : 13}px`
+      labelEl.style.fontSize = '13px'
 
       const isVisible = labelVisibleSetRef.current?.has(n.id) ?? false
       if (isVisible) {
