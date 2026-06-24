@@ -602,17 +602,25 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     // Initial render
     render()
 
-    // ─── D3 Zoom ───
-    const zoom = d3.zoom()
+    // ─── D3 Zoom (wheel + middle-click pan) ───
+    // We use d3-zoom for wheel zooming and middle-click panning.
+    // Left-click node dragging/panning is handled manually below.
+    const zoomBehavior = d3.zoom()
       .scaleExtent([0.05, 8])
+      .filter((event) => {
+        // Only handle wheel and middle-click; let left-click pass through to manual handlers
+        if (event.button !== 0) return true
+        if (event.type === 'wheel') return true
+        return false
+      })
       .on('zoom', (event: any) => {
         zoomRef.current = event.transform
         render()
       })
 
-    const svg = d3.select(canvas).call(zoom as any)
+    d3.select(canvas).call(zoomBehavior as any)
 
-    // ─── Mouse Events ───
+    // ─── Mouse Events (left-click: node drag, pan, select) ───
     function getMousePos(event: MouseEvent) {
       const rect = canvas.getBoundingClientRect()
       const z = zoomRef.current
@@ -636,6 +644,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     function onMouseDown(event: MouseEvent) {
       if (event.button !== 0) return
+      event.stopPropagation()
       isMouseDownRef.current = true
       const pos = getMousePos(event)
       const node = findNodeAt(pos)
@@ -651,6 +660,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     }
 
     function onMouseMove(event: MouseEvent) {
+      event.stopPropagation()
       const pos = getMousePos(event)
 
       if (draggedNodeRef.current) {
@@ -710,6 +720,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     }
 
     function onMouseUp(event: MouseEvent) {
+      event.stopPropagation()
       const wasPanning = isPanningRef.current
       isPanningRef.current = false
       isMouseDownRef.current = false
@@ -719,7 +730,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
           const pos = getMousePos(event)
           const node = findNodeAt(pos)
           if (node) {
-            event.stopPropagation()
             selectedNodeRef.current = node
             startAnimation(0.15)
             onNodeSelect?.(node)
@@ -774,9 +784,9 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       }
     }
 
-    canvas.addEventListener('mousedown', onMouseDown)
-    canvas.addEventListener('mousemove', onMouseMove)
-    canvas.addEventListener('mouseup', onMouseUp)
+    canvas.addEventListener('mousedown', onMouseDown, { capture: true })
+    canvas.addEventListener('mousemove', onMouseMove, { capture: true })
+    canvas.addEventListener('mouseup', onMouseUp, { capture: true })
 
     // ─── Resize observer ───
     const resizeObserver = new ResizeObserver(() => {
