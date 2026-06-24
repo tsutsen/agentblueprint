@@ -352,7 +352,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     const h = heightRef.current
     const z = zoomRef.current
 
-    // Clear full canvas (in pixel coordinates, before DPR scaling)
+    // Reset transform to identity, then clear full canvas
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     // Scale by DPR so all subsequent transforms are in CSS coords
