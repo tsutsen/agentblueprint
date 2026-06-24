@@ -237,6 +237,11 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     lastLabelZoomRef.current = z.k
 
     if (!showLabelsRef.current || z.k < LABEL_MIN_ZOOM || !dataRef.current) {
+      // Exception: always show the hovered node's label
+      if (hoveredLabelNodeRef.current && hoveredLabelNodeRef.current.visible) {
+        labelVisibleSetRef.current = new Set([hoveredLabelNodeRef.current.id])
+        return
+      }
       labelVisibleSetRef.current = null
       return
     }
@@ -315,6 +320,11 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       }
     }
     labelVisibleSetRef.current = newVisible
+
+    // Always show label for the hovered node (after 300ms delay)
+    if (hoveredLabelNodeRef.current && hoveredLabelNodeRef.current.visible) {
+      newVisible.add(hoveredLabelNodeRef.current.id)
+    }
   }
 
   // ─── Update HTML labels ───
@@ -855,6 +865,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
         }
         if (hoveredLabelNodeRef.current && hoveredLabelNodeRef.current !== node) {
           hoveredLabelNodeRef.current = null
+          labelSetDirtyRef.current = true
           render()
         }
         hoveredNodeRef.current = node
@@ -863,6 +874,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
           hoverLabelTimeoutRef.current = setTimeout(() => {
             hoverLabelTimeoutRef.current = null
             hoveredLabelNodeRef.current = node
+            labelSetDirtyRef.current = true
             render()
           }, HOVER_LABEL_DELAY)
         }
