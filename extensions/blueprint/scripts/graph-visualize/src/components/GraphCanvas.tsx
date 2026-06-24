@@ -905,7 +905,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       cs.setProperty(key, value)
     }
     render()
-  }, [theme]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [themeState]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Bridge ───
   useImperativeHandle(bridgeRef, () => ({
