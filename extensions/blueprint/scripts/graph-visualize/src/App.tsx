@@ -1,21 +1,11 @@
-import { useState, useRef, useEffect, useCallback, memo } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { GraphCanvas, type IGraphBridge } from '@/components/GraphCanvas'
+import { Sidebar, type SidebarHandle } from '@/components/Sidebar'
+import { DetailPanel, type ConnectionInfo } from '@/components/DetailPanel'
+import { Controls } from '@/components/Controls'
 import type { GraphData, GraphNode } from '@/lib/graph-types'
-import { extractShortId, getVisibleNodeIds, getNodeConnections, hashToIndex } from '@/lib/utils'
-import { themes } from '@/lib/themes'
-import { SIZE_METRICS } from '@/lib/metrics'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { X } from 'lucide-react'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Label } from '@/components/ui/label'
-import { Search, RotateCcw, ChevronDown, ZoomIn, ZoomOut } from 'lucide-react'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Switch } from '@/components/ui/switch'
+import { getVisibleNodeIds, getNodeConnections, hashToIndex } from '@/lib/utils'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
 // Module-level fetch — runs once, survives StrictMode double-mount
 const graphDataPromise = fetch('/graph-data.json')
@@ -23,48 +13,8 @@ const graphDataPromise = fetch('/graph-data.json')
   .then((data: GraphData) => data)
   .catch((err) => { console.error('Failed to load graph data:', err); return null })
 
-// ─── Memoized sidebar node item ───
-const SidebarNodeItem = memo(function SidebarNodeItem({
-  node,
-  isSelected,
-  onSelectNodeId,
-}: {
-  node: GraphNode
-  isSelected: boolean
-  onSelectNodeId: (id: string) => void
-}) {
-  const idShort = extractShortId(node.id)
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          onClick={() => onSelectNodeId(node.id)}
-          className={`w-full min-w-0 max-w-full text-left rounded transition-colors px-2 py-1 ${
-            isSelected ? 'bg-primary/10 text-primary' : 'hover:bg-muted/50'
-          }`}
-        >
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
-              {idShort}
-            </span>
-            <span className="text-[10px] text-muted-foreground/60 flex-shrink-0">·</span>
-            <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
-              {node.category}
-            </span>
-          </div>
-          <span className="text-sm text-foreground truncate block min-w-0">
-            {node.name || node.id}
-          </span>
-        </button>
-      </TooltipTrigger>
-      <TooltipContent side="right" className="max-w-[300px]">
-        {node.name || node.id}
-      </TooltipContent>
-    </Tooltip>
-  )
-})
-
 function App() {
+  // ─── State ───
   const [graphData, setGraphData] = useState<GraphData | null>(null)
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -77,7 +27,6 @@ function App() {
   const [currentTheme, setCurrentTheme] = useState('default')
 
   const bridgeRef = useRef<IGraphBridge | null>(null)
-  const searchInputRef = useRef<HTMLInputElement>(null)
   const resizeRef = useRef<HTMLDivElement>(null)
 
   // ─── Sync canvas state → parent UI on mount ───
@@ -140,16 +89,23 @@ function App() {
     bridgeRef.current.setSearchTerm(searchTerm)
   }, [searchTerm])
 
-  // ─── Sync URL on user interaction ───
-  const handleCategoryChange = (cat: string, checked: boolean) => {
+  // ─── Category toggle ───
+  const handleCategoryChange = useCallback((cat: string, checked: boolean) => {
+    if (cat === '__toggle_all__') {
+      setActiveCategories((prev) => {
+        const allCats = Object.keys(categories)
+        return prev.size === allCats.length ? new Set() : new Set(allCats)
+      })
+      return
+    }
     setActiveCategories((prev) => {
       const next = new Set(prev)
       checked ? next.add(cat) : next.delete(cat)
       return next
     })
-  }
+  }, [categories])
 
-  // Sync URL on user interaction (categories/search)
+  // ─── Sync URL on user interaction (categories/search) ───
   useEffect(() => {
     if (!graphData) return
     const params = new URLSearchParams(window.location.search)
@@ -182,12 +138,13 @@ function App() {
     history.replaceState(null, '', `?${params.toString()}`)
   }, [])
 
-  // ─── Sidebar node selection (stable ref for memoized items) ───
+  // ─── Sidebar node selection (stable callback for memoized items) ───
   const handleSidebarSelect = useCallback((id: string) => {
     bridgeRef.current?.selectNodeById(id)
   }, [])
 
   // ─── Keyboard shortcuts ───
+  const sidebarRef = useRef<SidebarHandle>(null)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -195,14 +152,13 @@ function App() {
           bridgeRef.current?.deselectNode()
         } else if (searchTerm) {
           setSearchTerm('')
-          searchInputRef.current?.blur()
         }
       }
       if ((e.key === 'k' || e.key === 'K') && !selectedNode) {
         const target = e.target as HTMLElement
         if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
           e.preventDefault()
-          searchInputRef.current?.focus()
+          sidebarRef.current?.focusSearch()
         }
       }
     }
@@ -241,7 +197,7 @@ function App() {
     })
   }, [sidebarWidth])
 
-  // ─── Visible + sorted nodes (for sidebar) ───
+  // ─── Visible + sorted nodes ───
   const visibleIds = graphData ? getVisibleNodeIds(graphData, activeCategories, debouncedSearch) : new Set()
 
   const sortedNodes = graphData?.nodes
@@ -252,328 +208,71 @@ function App() {
     }) || []
 
   // ─── Connections for selected node ───
-  const connections = selectedNode && graphData
+  const connections: ConnectionInfo[] = selectedNode && graphData
     ? getNodeConnections(graphData, selectedNode.id)
     : []
 
   return (
     <TooltipProvider delayDuration={500}>
       <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
-      {/* Sidebar */}
-      <aside style={{ width: sidebarWidth, minWidth: 200, maxWidth: 800 }} className="flex flex-col border-r border-border bg-muted/30">
-        {/* Header */}
-        <div className="p-4 border-b border-border">
-          <h1 className="text-sm font-bold text-foreground">
-            {graphData ? `${graphData.project} · v${graphData.version}` : 'Glossary Graph'}
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {graphData ? `${graphData.nodes.length} nodes, ${graphData.edges.length} edges` : 'Loading...'}
-          </p>
-        </div>
+        {/* Sidebar */}
+        <aside style={{ width: sidebarWidth, minWidth: 200, maxWidth: 800 }} className="flex flex-col border-r border-border bg-muted/30">
+          <Sidebar
+            ref={sidebarRef}
+            graphData={graphData}
+            selectedNode={selectedNode}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            categories={categories}
+            activeCategories={activeCategories}
+            onCategoryChange={handleCategoryChange}
+            sortedNodes={sortedNodes}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            debouncedSearch={debouncedSearch}
+            onSelectNode={handleSidebarSelect}
+          />
+        </aside>
 
-        {/* Search */}
-        <div className="p-3 border-b border-border">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search nodes... (K)"
-              className="pl-9 h-8 text-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              ref={searchInputRef}
+        {/* Resize Handle */}
+        <div
+          ref={resizeRef}
+          className="w-[4px] cursor-col-resize hover:bg-primary/20 active-primary/40 transition-colors flex-shrink-0"
+        />
+
+        {/* Main Canvas Area */}
+        <main className="flex-1 relative overflow-hidden">
+          <Controls
+            bridge={bridgeRef.current}
+            isSimulating={isSimulating}
+            onSimulationChange={setIsSimulating}
+            sizeMetric={sizeMetric}
+            onSizeMetricChange={setSizeMetricState}
+            currentTheme={currentTheme}
+            onThemeChange={setCurrentTheme}
+          />
+
+          {/* Graph Canvas */}
+          {graphData && (
+            <GraphCanvas
+              data={graphData}
+              bridgeRef={bridgeRef}
+              onNodeSelect={handleNodeSelect}
+              onNodeDeselect={handleNodeDeselect}
             />
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="p-3 border-b border-border">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-[10px] uppercase tracking-wider text-muted-foreground">Categories</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-5 px-1.5 text-[10px]"
-              onClick={() => {
-                if (activeCategories.size === Object.keys(categories).length) {
-                  setActiveCategories(new Set())
-                } else {
-                  setActiveCategories(new Set(Object.keys(categories)))
-                }
-              }}
-            >
-              {activeCategories.size === Object.keys(categories).length ? 'Deselect all' : 'Select all'}
-            </Button>
-          </div>
-          <div>
-            <div className="space-y-0.5">
-              {Object.entries(categories)
-                .sort((a, b) => b[1].count - a[1].count)
-                .map(([cat, { count, color }]) => (
-                  <label
-                    key={cat}
-                    className="flex items-center gap-2 p-1 rounded cursor-pointer hover:bg-muted/50 text-sm"
-                  >
-                    <Checkbox
-                      id={`cat-${cat}`}
-                      checked={activeCategories.has(cat)}
-                      onCheckedChange={(checked) => handleCategoryChange(cat, checked === true)}
-                    />
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                    <span className="flex-1 truncate">{cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
-                    <span className="text-xs text-muted-foreground font-mono">{count}</span>
-                  </label>
-                ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Node List */}
-        <div className="px-3 py-1.5 border-b border-border flex items-center gap-1">
-          <h3 className="text-[10px] uppercase tracking-wider text-muted-foreground">Nodes</h3>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px] ml-auto">
-                Sort: {sortBy}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuItem onClick={() => setSortBy('name')}>Name</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy('degree')}>Degree</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <ScrollArea className="flex-1 p-1">
-          {sortedNodes.length === 0 && debouncedSearch ? (
-            <p className="px-3 py-4 text-sm text-muted-foreground text-center">No matches for "{debouncedSearch}"</p>
-          ) : sortedNodes.length === 0 && activeCategories.size === 0 ? (
-            <p className="px-3 py-4 text-sm text-muted-foreground text-center">No categories selected</p>
-          ) : sortedNodes.length === 0 ? (
-            <p className="px-3 py-4 text-sm text-muted-foreground text-center">All categories hidden</p>
-          ) : (
-            <div className="space-y-0.5">
-              {sortedNodes.map((node: GraphNode) => (
-                <SidebarNodeItem
-                  key={node.id}
-                  node={node}
-                  isSelected={selectedNode?.id === node.id}
-                  onSelectNodeId={handleSidebarSelect}
-                />
-              ))}
-            </div>
           )}
-        </ScrollArea>
-      </aside>
+        </main>
 
-      {/* Resize Handle */}
-      <div
-        ref={resizeRef}
-        className="w-[4px] cursor-col-resize hover:bg-primary/20 active-primary/40 transition-colors flex-shrink-0"
-      />
-
-      {/* Main Canvas Area */}
-      <main className="flex-1 relative overflow-hidden">
-        {/* Controls */}
-        <div className="absolute top-3 left-3 flex items-start gap-1.5 z-10">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <label className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 h-8 text-xs font-medium bg-background/90 backdrop-blur border border-input cursor-pointer graph-control-btn">
-                Simulation
-                <Switch
-                  checked={isSimulating}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      bridgeRef.current?.startSimulation()
-                    } else {
-                      bridgeRef.current?.stopSimulation()
-                    }
-                    setIsSimulating(checked)
-                  }}
-                />
-              </label>
-            </TooltipTrigger>
-          </Tooltip>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs bg-background backdrop-blur graph-control-btn">
-                Size: {SIZE_METRICS.find((m) => m.key === sizeMetric)?.label}
-                <ChevronDown className="h-3.5 w-3.5 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {SIZE_METRICS.map((m) => (
-                <DropdownMenuItem
-                  key={m.key}
-                  onClick={() => {
-                    bridgeRef.current?.setSizeMetric(m.key)
-                    setSizeMetricState(m.key)
-                  }}
-                >
-                  {m.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs bg-background backdrop-blur graph-control-btn">
-                Theme: {themes.find((t) => t.key === currentTheme)?.label || 'Default'}
-                <ChevronDown className="h-3.5 w-3.5 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {themes.map((t) => (
-                <DropdownMenuItem
-                  key={t.key}
-                  onClick={() => {
-                    bridgeRef.current?.setTheme(t.key)
-                    setCurrentTheme(t.key)
-                  }}
-                >
-                  {t.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* Zoom Controls — bottom left */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-1 z-10">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0 bg-background backdrop-blur graph-control-btn"
-                onClick={() => bridgeRef.current?.zoomIn()}
-              >
-                <ZoomIn className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="top">Zoom in</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0 bg-background backdrop-blur graph-control-btn"
-                onClick={() => bridgeRef.current?.zoomOut()}
-              >
-                <ZoomOut className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="top">Zoom out</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0 bg-background backdrop-blur graph-control-btn"
-                onClick={() => bridgeRef.current?.resetZoom()}
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="top">Reset zoom</TooltipContent>
-          </Tooltip>
-        </div>
-
-        {/* Graph Canvas */}
-        {graphData && (
-          <GraphCanvas
-            data={graphData}
-            bridgeRef={bridgeRef}
-            onNodeSelect={handleNodeSelect}
-            onNodeDeselect={handleNodeDeselect}
+        {/* Detail Panel */}
+        {selectedNode && (
+          <DetailPanel
+            node={selectedNode}
+            connections={connections}
+            onClose={() => bridgeRef.current?.deselectNode()}
+            onSelectNode={handleSidebarSelect}
           />
         )}
-      </main>
-
-      {/* Detail Panel — floating card, auto-height with max-height scroll */}
-      {selectedNode && (
-        <div data-testid="detail-panel" className="absolute top-4 right-4 w-[360px] max-h-[calc(100%-2rem)] bg-card border border-border rounded-xl shadow-lg z-40 flex flex-col overflow-hidden">
-          {/* Header */}
-          <div data-testid="detail-header" className="flex items-start justify-between p-4 border-b border-border">
-            <div data-testid="detail-header-text" className="flex flex-col gap-1 pr-2 min-w-0 flex-1">
-              <span data-testid="detail-node-name" className="text-base font-semibold break-words overflow-wrap-anywhere">{selectedNode.name || selectedNode.id}</span>
-              <div className="flex items-center gap-2">
-                <Badge data-testid="detail-type-badge" variant="secondary" className="text-[10px] uppercase">
-                  {selectedNode.category}
-                </Badge>
-                <span data-testid="detail-node-id" className="text-xs text-muted-foreground font-mono">
-                  {selectedNode.id.split('-').slice(0, 2).join('-')}
-                </span>
-              </div>
-            </div>
-            <Button
-              data-testid="detail-close-btn"
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0 shrink-0"
-              onClick={() => bridgeRef.current?.deselectNode()}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Scrollable content */}
-          <div data-testid="detail-scroll" className="flex-1 overflow-y-auto overflow-x-hidden">
-            <div data-testid="detail-body" className="p-4 w-full">
-              <p data-testid="detail-description" className="text-sm leading-relaxed text-muted-foreground break-words overflow-wrap-anywhere max-w-full">
-                {selectedNode.description || selectedNode.name || 'No description available.'}
-              </p>
-
-              <Separator className="my-3" />
-
-              {/* Stats */}
-              <div data-testid="detail-stats" className="space-y-1.5 text-sm">
-                <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
-                  <Label className="text-muted-foreground">Connections</Label>
-                  <span data-testid="detail-stat-degree" className="font-mono text-right">{selectedNode.metrics.degree ?? 0}</span>
-                </div>
-                <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
-                  <Label className="text-muted-foreground">Blast Radius</Label>
-                  <span data-testid="detail-stat-blast-radius" className="font-mono text-right">{selectedNode.metrics.blast}</span>
-                </div>
-                <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
-                  <Label className="text-muted-foreground">Risk Score</Label>
-                  <span data-testid="detail-stat-risk" className="font-mono text-right">{selectedNode.metrics.risk}</span>
-                </div>
-
-              </div>
-
-              {/* Connections */}
-              {connections.length > 0 && (
-                <>
-                  <Separator className="my-3" />
-                  <div data-testid="detail-connections" className="w-full">
-                    <Label className="text-xs text-muted-foreground mb-1.5 block">
-                      Connections ({connections.length})
-                    </Label>
-                    <div className="space-y-0.5">
-                        {connections.map((conn) => (
-                          <button
-                            data-testid={`detail-connection-${conn.id}`}
-                            key={conn.id}
-                            onClick={() => bridgeRef.current?.selectNodeById(conn.id)}
-                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-muted/50 text-left"
-                          >
-                            <span data-testid={`detail-conn-label-${conn.id}`} className="truncate flex-1 min-w-0">{conn.label}</span>
-                            <Badge variant="secondary" className="text-[10px] flex-shrink-0">
-                              {conn.type}
-                            </Badge>
-                          </button>
-                        ))}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
     </TooltipProvider>
   )
 }
