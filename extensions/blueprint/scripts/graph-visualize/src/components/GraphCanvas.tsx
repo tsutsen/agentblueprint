@@ -1007,15 +1007,15 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
         n.visible = visibleIds.has(n.id)
       }
       labelSetDirtyRef.current = true
-      // Don't start animation if nodes haven't been positioned yet (initial layout not done)
-      const hasPositions = dataRef.current.nodes.length > 0 && dataRef.current.nodes[0].x !== undefined
-      if (hasPositions) {
-        startAnimation(null)
-      }
-      if (simulationRef.current) {
-        simulationRef.current.stop()
+      // Recalculate sizes for visible nodes
+      connectedSetRef.current = null
+      connectedEdgesRef.current = null
+      recalcSizeRange()
+      // Restart simulation with updated visibility (preserves user's simulation preference)
+      if (simulatingRef.current) {
         startSimulationInternal()
       }
+      render()
     },
     setSearchTerm: (_term: string) => {
       // Search is handled by parent via setVisibility
