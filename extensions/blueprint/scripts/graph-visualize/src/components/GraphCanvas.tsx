@@ -936,7 +936,11 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       for (const n of data.nodes) {
         n.visible = visibleIds.has(n.id)
       }
-      startAnimation(null)
+      // Don't start animation if nodes haven't been positioned yet (initial layout not done)
+      const hasPositions = data.nodes.length > 0 && data.nodes[0].x !== undefined
+      if (hasPositions) {
+        startAnimation(null)
+      }
       if (simulationRef.current) {
         simulationRef.current.stop()
         startSimulation()
