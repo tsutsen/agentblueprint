@@ -162,6 +162,33 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   const isMouseDownRef = useRef(false)
   const draggedNodeRef = useRef<any>(null)
   const isDraggingRef = useRef(false)
+  const renderPendingRef = useRef(false)
+  const rafIdRef = useRef<number | null>(null)
+  // Dirty flags — only recompute when inputs actually change
+  const needsRecalcRef = useRef(true)
+  const needsLabelRebuildRef = useRef(true)
+  const labelsDirtyRef = useRef(true)
+  const prevZoomKRef = useRef(0)
+
+  // Cached connected set — only updated on selection change
+  const connectedEdgesRef = useRef<Set<any> | null>(null)
+
+  function markNeedsRecalc() { needsRecalcRef.current = true }
+  function markNeedsLabelRebuild() {
+    needsLabelRebuildRef.current = true
+    labelsDirtyRef.current = true
+  }
+
+  // Deferred render — batches rapid calls into a single RAF
+  function deferRender() {
+    if (renderPendingRef.current) return
+    renderPendingRef.current = true
+    if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current)
+    rafIdRef.current = requestAnimationFrame(() => {
+      renderPendingRef.current = false
+      render()
+    })
+  }
   const widthRef = useRef(800)
   const heightRef = useRef(600)
   const resizeRAFRef = useRef<number | null>(null)
@@ -244,6 +271,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       }
     }
     labelVisibleSetRef.current = newVisible
+    labelsDirtyRef.current = true
   }
 
   // ─── Update HTML labels ───
@@ -366,23 +394,20 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     // Draw nodes and edges (in CSS coords, scaled by DPR)
     // ...
 
-    // Build connected set
-    connectedSetRef.current = null
-    let connectedEdges: Set<any> | null = null
-    if (selectedNodeRef.current) {
-      connectedSetRef.current = new Set([selectedNodeRef.current.id])
-      connectedEdges = new Set()
-      for (const e of validEdgesRef.current) {
-        if (e.source.id === selectedNodeRef.current.id || e.target.id === selectedNodeRef.current.id) {
-          connectedSetRef.current.add(e.source.id)
-          connectedSetRef.current.add(e.target.id)
-          connectedEdges.add(e)
-        }
-      }
-    }
+    // Use cached connected edges (only updated on selection change)
+    const connectedEdges = connectedEdgesRef.current
 
-    recalcSizeRange()
-    buildLabelSet()
+    // Only recompute when inputs actually change
+    if (needsRecalcRef.current) {
+      recalcSizeRange()
+      needsRecalcRef.current = false
+    }
+    // Label rebuild throttled by zoom hysteresis
+    if (needsLabelRebuildRef.current || Math.abs(z.k - prevZoomKRef.current) > 0.05) {
+      buildLabelSet()
+      needsLabelRebuildRef.current = false
+      prevZoomKRef.current = z.k
+    }
 
     const edgeColor = getEdgeColor(themeColorsRef.current)
     const currentDim = currentDimRef.current
@@ -426,23 +451,26 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       ctx.fillStyle = color
       ctx.fill()
 
-      const cs = getComputedStyle(document.documentElement)
+      const c = themeColorsRef.current
       const strokeColor = isSelected
-        ? cs.getPropertyValue('--node-stroke-selected').trim() || '#fff'
-        : (cs.getPropertyValue('--node-stroke').trim() || d3.color(color).darker(0.8).formatHex())
+        ? (c['--node-stroke-selected'] || '#fff')
+        : (c['--node-stroke'] || d3.color(color)!.darker(0.8).formatHex())
       ctx.strokeStyle = strokeColor
-      const strokeWidth = parseFloat(cs.getPropertyValue('--node-stroke-width')) || 1
+      const strokeWidth = parseFloat(c['--node-stroke-width']) || 1
       ctx.lineWidth = (isSelected ? strokeWidth * 2 : strokeWidth) / z.k
       ctx.stroke()
 
       if (isHovered && !isSelected) {
-        ctx.strokeStyle = cs.getPropertyValue('--node-stroke-hover').trim() || '#fff'
+        ctx.strokeStyle = c['--node-stroke-hover'] || '#fff'
         ctx.lineWidth = strokeWidth * 2 / z.k
         ctx.stroke()
       }
     }
 
-    updateHtmlLabels()
+    if (labelsDirtyRef.current) {
+      updateHtmlLabels()
+      labelsDirtyRef.current = false
+    }
     ctx.globalAlpha = 1
     ctx.restore()
     ctx.globalAlpha = 1
@@ -464,16 +492,19 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     // Build connected set for correct target radii
     connectedSetRef.current = null
+    connectedEdgesRef.current = null
     if (selectedNodeRef.current) {
       connectedSetRef.current = new Set([selectedNodeRef.current.id])
+      connectedEdgesRef.current = new Set()
       for (const e of validEdgesRef.current) {
         if (e.source.id === selectedNodeRef.current.id || e.target.id === selectedNodeRef.current.id) {
           connectedSetRef.current.add(e.source.id)
           connectedSetRef.current.add(e.target.id)
+          connectedEdgesRef.current!.add(e)
         }
       }
     }
-    recalcSizeRange()
+    // Don't call recalcSizeRange here — trust the dirty flag in render()
 
     animScaleStartRadiiRef.current = new Map()
     animScaleTargetsRef.current = new Map()
@@ -526,6 +557,10 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   // ─── Initialize graph ───
   useEffect(() => {
     if (!data) return
+
+    // Reset dirty flags — data changed, need full recomputation
+    needsRecalcRef.current = true
+    needsLabelRebuildRef.current = true
 
     const container = containerRef.current
     const canvas = canvasRef.current
@@ -766,7 +801,9 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
               .alpha(0.15)
               .alphaDecay(0.12)
               .velocityDecay(0.7)
-              .on('tick', () => render())
+              .on('tick', () => {
+                render()
+              })
               .on('end', () => {
                 node.fx = null
                 node.fy = null
@@ -861,7 +898,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     }
 
     themeColorsRef.current = colors
-    render()
+    // Don't call deferRender — CSS vars update instantly, graph re-renders on next interaction
+    // This avoids the freeze that occurs when idle callback fires synchronously
   }, [themeState]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Bridge ───
@@ -871,6 +909,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       for (const n of data.nodes) {
         n.visible = visibleIds.has(n.id)
       }
+      markNeedsRecalc()
+      markNeedsLabelRebuild()
       startAnimation(null)
       if (simulationRef.current) {
         simulationRef.current.stop()
@@ -887,6 +927,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       themeRef.current = newTheme
       setThemeState(newTheme)
       localStorage.setItem('graph-theme', newTheme)
+      markNeedsRecalc()
+      markNeedsLabelRebuild()
       // render() is called by the theme useEffect after applying CSS
     },
     updateTheme: () => {
@@ -898,8 +940,10 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     setSizeMetric: (metric: string) => {
       sizeMetricRef.current = metric
       setSizeMetricState(metric)
+      markNeedsRecalc()
+      markNeedsLabelRebuild()
       startAnimation(null)
-      render()
+      deferRender()
     },
 
     // Labels
@@ -907,7 +951,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     setLabels: (show: boolean) => {
       showLabelsRef.current = show
       setShowLabelsState(show)
-      render()
+      markNeedsLabelRebuild()
+      deferRender()
     },
 
     // Simulation
@@ -940,12 +985,14 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       const node = data.nodes.find((n: any) => n.id === id)
       if (node) {
         selectedNodeRef.current = node
+        markNeedsRecalc()
         startAnimation(0.15)
         onNodeSelect?.(node)
       }
     },
     deselectNode: () => {
       selectedNodeRef.current = null
+      markNeedsRecalc()
       startAnimation(1)
       onNodeDeselect?.()
     },
