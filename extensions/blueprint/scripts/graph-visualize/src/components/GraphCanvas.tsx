@@ -931,6 +931,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       setThemeState(newTheme)
       localStorage.setItem('graph-theme', newTheme)
       // render() is called by the theme useEffect after applying CSS
+    },
     updateTheme: () => {
       render()
     },
