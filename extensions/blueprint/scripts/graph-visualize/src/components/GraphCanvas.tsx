@@ -182,6 +182,12 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   const renderPendingRef = useRef(false)
   const rafIdRef = useRef<number | null>(null)
 
+  // ─── Data ref — prevents stale closures in render callbacks ───
+  const dataRef = useRef(data)
+  // NOTE: no useEffect sync here — dataRef is synced in the init effect only,
+  // because App.tsx may re-fetch data in StrictMode creating a new object
+  // whose nodes lack initialized positions.
+
   // Deferred render — batches rapid calls into a single RAF
   function deferRender() {
     if (renderPendingRef.current) return
@@ -428,8 +434,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    const nCount = data?.nodes?.length ?? 0
-    const vCount = data?.nodes?.filter((n: GraphNode) => n.visible !== false)?.length ?? 0
+    const nCount = dataRef.current?.nodes?.length ?? 0
+    const vCount = dataRef.current?.nodes?.filter((n: GraphNode) => n.visible !== false)?.length ?? 0
     const w = widthRef.current
     const h = heightRef.current
     const z = zoomRef.current
@@ -480,7 +486,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     ctx.globalAlpha = 1
 
     // Draw nodes
-    for (const n of data.nodes) {
+    for (const n of dataRef.current.nodes) {
       if (!n.visible) continue
       if (isNaN(n.x) || isNaN(n.y)) { n.x = w / 2; n.y = h / 2 }
       const r = n._animRadius !== undefined ? Math.max(0, n._animRadius) : getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
@@ -604,6 +610,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   // ─── Initialize graph ───
   useEffect(() => {
     if (!data) return
+    dataRef.current = data  // sync here, not in a separate effect
 
     const container = containerRef.current
     const canvas = canvasRef.current
