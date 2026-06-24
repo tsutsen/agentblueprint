@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import type { GraphData, GraphNode, GraphEdge } from '@/lib/graph-types'
+import type { GraphData } from '@/lib/graph-types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -55,16 +55,17 @@ export function getNodeConnections(
   data: GraphData,
   nodeId: string,
 ): { id: string; label: string; type: string; edgeType: string }[] {
+  const nodeMap = new Map(data.nodes.map((n) => [n.id, n]))
   const seen = new Map<string, { id: string; label: string; type: string; edgeType: string }>()
   for (const e of data.edges) {
-    const srcId = typeof e.source === 'object' ? e.source.id : e.source
-    const tgtId = typeof e.target === 'object' ? e.target.id : e.target
+    const srcId = e.source
+    const tgtId = e.target
     if (srcId !== nodeId && tgtId !== nodeId) continue
-    const neighbor = srcId === nodeId ? e.target : e.source
-    if (typeof neighbor !== 'object') continue
-    const key = neighbor.id
-    if (!seen.has(key)) {
-      seen.set(key, {
+    const neighborId = srcId === nodeId ? tgtId : srcId
+    const neighbor = nodeMap.get(neighborId)
+    if (!neighbor) continue
+    if (!seen.has(neighborId)) {
+      seen.set(neighborId, {
         id: neighbor.id,
         label: neighbor.name || neighbor.id,
         type: neighbor.category,

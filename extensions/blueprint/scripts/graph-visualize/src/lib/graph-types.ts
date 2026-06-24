@@ -22,6 +22,7 @@ export interface GraphNode {
   _animRadius?: number
   _colorIdx?: number
   _cachedColor?: string
+  _cachedStroke?: string
 
   // D3 simulation properties
   x?: number
@@ -30,31 +31,39 @@ export interface GraphNode {
   vy?: number
   fx?: number | null
   fy?: number | null
+  index?: number
 }
 
-/** An edge in the graph — source/target are strings before resolution, GraphNode after. */
+/** An edge in the graph — raw form from JSON (string references). */
+export interface RawGraphEdge {
+  source: string
+  target: string
+  type?: string
+}
+
+/** An edge in the graph — resolved form (object references). */
 export interface GraphEdge {
-  source: string | GraphNode
-  target: string | GraphNode
+  source: GraphNode
+  target: GraphNode
   type?: string
 
   // Runtime state
   visible: boolean
 }
 
-/** Full graph data payload. */
+/** Full graph data payload — raw form from JSON. */
 export interface GraphData {
+  project: string
+  version: string
   summary: Record<string, unknown>
   nodes: GraphNode[]
-  edges: GraphEdge[]
+  edges: RawGraphEdge[]
 }
 
-/** Size range for a metric. */
+/** Size range for a metric — nested so full/connected share the same shape. */
 export interface SizeRange {
-  min: number
-  max: number
-  full?: SizeRange
-  connected?: SizeRange
+  full?: { min: number; max: number }
+  connected?: { min: number; max: number }
 }
 
 /** Map of metric key → size range. */

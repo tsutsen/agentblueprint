@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, memo } from 'react'
 import { GraphCanvas, type IGraphBridge } from '@/components/GraphCanvas'
 import type { GraphData, GraphNode } from '@/lib/graph-types'
 import { extractShortId, getVisibleNodeIds, getNodeConnections, hashToIndex } from '@/lib/utils'
@@ -23,6 +23,47 @@ const graphDataPromise = fetch('/graph-data.json')
   .then((data: GraphData) => data)
   .catch((err) => { console.error('Failed to load graph data:', err); return null })
 
+// ─── Memoized sidebar node item ───
+const SidebarNodeItem = memo(function SidebarNodeItem({
+  node,
+  isSelected,
+  onSelectNodeId,
+}: {
+  node: GraphNode
+  isSelected: boolean
+  onSelectNodeId: (id: string) => void
+}) {
+  const idShort = extractShortId(node.id)
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          onClick={() => onSelectNodeId(node.id)}
+          className={`w-full min-w-0 max-w-full text-left rounded transition-colors px-2 py-1 ${
+            isSelected ? 'bg-primary/10 text-primary' : 'hover:bg-muted/50'
+          }`}
+        >
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
+              {idShort}
+            </span>
+            <span className="text-[10px] text-muted-foreground/60 flex-shrink-0">·</span>
+            <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
+              {node.category}
+            </span>
+          </div>
+          <span className="text-sm text-foreground truncate block min-w-0">
+            {node.name || node.id}
+          </span>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="right" className="max-w-[300px]">
+        {node.name || node.id}
+      </TooltipContent>
+    </Tooltip>
+  )
+})
+
 function App() {
   const [graphData, setGraphData] = useState<GraphData | null>(null)
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
@@ -32,13 +73,20 @@ function App() {
   const [sortBy, setSortBy] = useState<'name' | 'degree'>('name')
   const [sidebarWidth, setSidebarWidth] = useState(300)
   const [isSimulating, setIsSimulating] = useState(false)
-  const [showLabels, setShowLabels] = useState(true)
   const [sizeMetric, setSizeMetricState] = useState('degree')
   const [currentTheme, setCurrentTheme] = useState('default')
 
   const bridgeRef = useRef<IGraphBridge | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const resizeRef = useRef<HTMLDivElement>(null)
+
+  // ─── Sync canvas state → parent UI on mount ───
+  useEffect(() => {
+    if (!bridgeRef.current) return
+    setCurrentTheme(bridgeRef.current.getTheme())
+    setSizeMetricState(bridgeRef.current.getSizeMetric())
+    setIsSimulating(bridgeRef.current.isSimulating())
+  }, [graphData])
 
   // ─── Load graph data (module-level promise, fetched once) ───
   useEffect(() => {
@@ -121,6 +169,7 @@ function App() {
   // ─── Node selection ───
   const handleNodeSelect = useCallback((node: GraphNode) => {
     setSelectedNode(node)
+    setIsSimulating(false) // simulation stops on select
     const params = new URLSearchParams(window.location.search)
     params.set('node', node.id)
     history.replaceState(null, '', `?${params.toString()}`)
@@ -131,6 +180,11 @@ function App() {
     const params = new URLSearchParams(window.location.search)
     params.delete('node')
     history.replaceState(null, '', `?${params.toString()}`)
+  }, [])
+
+  // ─── Sidebar node selection (stable ref for memoized items) ───
+  const handleSidebarSelect = useCallback((id: string) => {
+    bridgeRef.current?.selectNodeById(id)
   }, [])
 
   // ─── Keyboard shortcuts ───
@@ -297,40 +351,14 @@ function App() {
             <p className="px-3 py-4 text-sm text-muted-foreground text-center">All categories hidden</p>
           ) : (
             <div className="space-y-0.5">
-              {sortedNodes.map((node: GraphNode) => {
-                const idShort = extractShortId(node.id);
-                const catDisplay = node.category;
-                return (
-                  <Tooltip key={node.id}>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => bridgeRef.current?.selectNodeById(node.id)}
-                        className={`w-full min-w-0 max-w-full text-left rounded transition-colors px-2 py-1 ${
-                          selectedNode?.id === node.id
-                            ? 'bg-primary/10 text-primary'
-                            : 'hover:bg-muted/50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
-                            {idShort}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground/60 flex-shrink-0">·</span>
-                          <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
-                            {catDisplay}
-                          </span>
-                        </div>
-                        <span className="text-sm text-foreground truncate block min-w-0">
-                          {node.name || node.id}
-                        </span>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="max-w-[300px]">
-                      {node.name || node.id}
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
+              {sortedNodes.map((node: GraphNode) => (
+                <SidebarNodeItem
+                  key={node.id}
+                  node={node}
+                  isSelected={selectedNode?.id === node.id}
+                  onSelectNodeId={handleSidebarSelect}
+                />
+              ))}
             </div>
           )}
         </ScrollArea>

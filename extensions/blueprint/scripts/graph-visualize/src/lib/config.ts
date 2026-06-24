@@ -4,7 +4,7 @@
  */
 
 import { themes } from './themes'
-import { SIZE_METRICS, DEFAULT_SIZE_METRIC } from './metrics'
+import { DEFAULT_SIZE_METRIC } from './metrics'
 
 export interface GraphConfig {
   // Theme

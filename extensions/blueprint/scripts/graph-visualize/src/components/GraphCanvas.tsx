@@ -1,9 +1,9 @@
-import { useRef, useEffect, useState, useCallback, useImperativeHandle } from 'react'
+import { useRef, useEffect, useState, useImperativeHandle } from 'react'
 import * as d3 from 'd3'
 import { themes } from '@/lib/themes'
 import { SIZE_METRICS } from '@/lib/metrics'
 import { hashToIndex, scaleValue } from '@/lib/utils'
-import type { GraphNode, GraphEdge, GraphData, SizeRange, SizeRangeMap } from '@/lib/graph-types'
+import type { GraphNode, GraphEdge, GraphData, SizeRangeMap } from '@/lib/graph-types'
 
 // ─── Bridge Interface ───
 export interface IGraphBridge {
@@ -60,7 +60,6 @@ const LABEL_MAX_ZOOM = 2.0
 const LABEL_NODE_RADIUS_THRESHOLD = 8
 const LABEL_CHAR_WIDTH = 0.62
 const LABEL_PAD_X = 4
-const LABEL_PAD_Y = 2
 const LABEL_HYSTERESIS = 0.2
 const ANIM_DURATION = 400
 const HOVER_LABEL_DELAY = 300
@@ -83,8 +82,8 @@ function getNodeRadius(d: GraphNode, sizeMetric: string, sizeRange: SizeRangeMap
     minVal = range.connected.min
     maxVal = range.connected.max
   } else {
-    minVal = range?.full?.min ?? range?.min ?? 0
-    maxVal = range?.full?.max ?? range?.max ?? 0
+    minVal = range?.full?.min ?? 0
+    maxVal = range?.full?.max ?? 0
   }
 
   const value = d.metrics[metric.key] ?? 0
@@ -104,7 +103,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   const showLabelsRef = useRef(true)
   const simulatingRef = useRef(false)
   const [themeState, setThemeState] = useState(themeRef.current)
-  const [sizeMetricState, setSizeMetricState] = useState(sizeMetricRef.current)
+  const [, setSizeMetricState] = useState(sizeMetricRef.current)
   const themeColorsRef = useRef<Record<string, string>>({})
 
   // ─── Zoom & viewport ───
@@ -142,6 +141,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   const animScaleStartRadiiRef = useRef<Map<string, number>>(new Map())
   const animScaleTargetsRef = useRef<Map<string, number>>(new Map())
   const animStartRef = useRef(0)
+  const animatingRef = useRef(false)
 
   // ─── Interaction (mouse, pan, drag) ───
   const isPanningRef = useRef(false)
@@ -154,6 +154,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   // ─── Render batching ───
   const renderPendingRef = useRef(false)
   const rafIdRef = useRef<number | null>(null)
+  const labelSetDirtyRef = useRef(false)
 
   // ─── Data ref — prevents stale closures in render callbacks ───
   const dataRef = useRef(data)
@@ -192,7 +193,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       .distance(opts.linkDistance ?? 120)
       .strength(opts.linkStrength ?? 0.05)
     if (opts.linkIdAccessor) {
-      linkForce.id((d: GraphNode) => d.id)
+      linkForce.id((d) => (d as GraphNode).id)
     }
 
     const chargeForce = d3.forceManyBody().strength(opts.chargeStrength ?? -150)
@@ -228,7 +229,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   function buildLabelSet() {
     const z = zoomRef.current
     const zoomDelta = Math.abs(z.k - lastLabelZoomRef.current)
-    if (zoomDelta < LABEL_HYSTERESIS && labelVisibleSetRef.current !== null) return
+    if (!labelSetDirtyRef.current && zoomDelta < LABEL_HYSTERESIS && labelVisibleSetRef.current !== null) return
+    labelSetDirtyRef.current = false
     lastLabelZoomRef.current = z.k
 
     if (!showLabelsRef.current || z.k < LABEL_MIN_ZOOM || !dataRef.current) {
@@ -262,8 +264,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     const cellSize = fontSize * 2
     const occupied = new Map<string, true>()
 
-    const cellKey = (wx: number, wy: number) => `${Math.floor(wx / cellSize)},${Math.floor(wy / cellSize)}`
-
     const labelBBox = (n: GraphNode) => {
       const r = cachedRadius(n)
       const fs = labelFontSizeRef.current
@@ -271,8 +271,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       const tw = text.length * fs * LABEL_CHAR_WIDTH + LABEL_PAD_X * 2
       const th = fs
       return {
-        x: n.x - tw / 2,
-        y: n.y - r - 4 / z.k - th,
+        x: (n.x ?? 0) - tw / 2,
+        y: (n.y ?? 0) - r - 4 / z.k - th,
         w: tw,
         h: th,
       }
@@ -320,15 +320,14 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     if (!container || !dataRef.current) return
 
     const z = zoomRef.current
-    const selectedNode = selectedNodeRef.current
     const connectedSet = connectedSetRef.current
 
     for (const n of dataRef.current.nodes) {
       if (!n.visible) continue
 
-      const labelX = z.x + n.x * z.k
-      const r = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSet)
-      const labelY = z.y + n.y * z.k - r * z.k - 8
+      const labelX = z.x + (n.x ?? 0) * z.k
+      const r = n._animRadius !== undefined ? n._animRadius : getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSet)
+      const labelY = z.y + (n.y ?? 0) * z.k - r * z.k - 8
 
       let labelEl = labelElementsRef.current.get(n.id)
       if (!labelEl) {
@@ -374,9 +373,13 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     // Full ranges over visible nodes (changes when filters hide nodes)
     for (const m of SIZE_METRICS) {
-      const values = visibleNodes.map((n: GraphNode) => n.metrics[m.key] || 0).filter((v: number) => v > 0)
-      if (values.length > 0) {
-        sizeRangeRef.current[m.key] = { full: { min: 0, max: Math.max(...values) } }
+      let maxVal = 0
+      for (const n of visibleNodes) {
+        const v = n.metrics[m.key] || 0
+        if (v > maxVal) maxVal = v
+      }
+      if (maxVal > 0) {
+        sizeRangeRef.current[m.key] = { full: { min: 0, max: maxVal } }
       }
     }
 
@@ -385,8 +388,11 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       const connectedNodes = visibleNodes.filter((n: GraphNode) => connectedSetRef.current!.has(n.id))
       if (connectedNodes.length > 0) {
         for (const m of SIZE_METRICS) {
-          const values = connectedNodes.map((n: GraphNode) => n.metrics[m.key] || 0)
-          const maxVal = Math.max(...values)
+          let maxVal = 0
+          for (const n of connectedNodes) {
+            const v = n.metrics[m.key] || 0
+            if (v > maxVal) maxVal = v
+          }
           sizeRangeRef.current[m.key] = {
             full: sizeRangeRef.current[m.key]?.full ?? { min: 0, max: maxVal },
             connected: maxVal > 0 ? { min: 0, max: maxVal } : { min: 0, max: 0 },
@@ -402,8 +408,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    const nCount = dataRef.current?.nodes?.length ?? 0
-    const vCount = dataRef.current?.nodes?.filter((n: GraphNode) => n.visible !== false)?.length ?? 0
     const w = widthRef.current
     const h = heightRef.current
     const z = zoomRef.current
@@ -437,8 +441,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     for (const e of validEdgesRef.current) {
       if (!e.visible || !e.source.visible || !e.target.visible) continue
       ctx.beginPath()
-      ctx.moveTo(e.source.x, e.source.y)
-      ctx.lineTo(e.target.x, e.target.y)
+      ctx.moveTo(e.source.x ?? 0, e.source.y ?? 0)
+      ctx.lineTo(e.target.x ?? 0, e.target.y ?? 0)
       ctx.strokeStyle = edgeColor
       ctx.lineWidth = 0.6 / z.k
       if (connectedEdges && !connectedEdges.has(e)) {
@@ -454,7 +458,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     // Draw nodes
     for (const n of dataRef.current.nodes) {
       if (!n.visible) continue
-      if (isNaN(n.x) || isNaN(n.y)) { n.x = w / 2; n.y = h / 2 }
+      if (n.x == null || n.y == null || isNaN(n.x) || isNaN(n.y)) { n.x = w / 2; n.y = h / 2 }
       const r = n._animRadius !== undefined ? Math.max(0, n._animRadius) : getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
       const color = n._cachedColor ?? getNodeColor(n, themeColorsRef.current)
       const isSelected = selectedNodeRef.current && selectedNodeRef.current.id === n.id
@@ -475,7 +479,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       const c = themeColorsRef.current
       const strokeColor = isSelected
         ? (c['--node-stroke-selected'] || '#fff')
-        : (c['--node-stroke'] || d3.color(color)!.darker(0.8).formatHex())
+        : (n._cachedStroke ?? d3.color(color)!.darker(0.8).formatHex())
       ctx.strokeStyle = strokeColor
       const strokeWidth = parseFloat(c['--node-stroke-width']) || 1
       ctx.lineWidth = (isSelected ? strokeWidth * 2 : strokeWidth) / z.k
@@ -488,55 +492,86 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       }
     }
 
-    // Always update label positions — they follow nodes during pan/drag/sim
-    updateHtmlLabels()
-    ctx.globalAlpha = 1
+    // Update labels every frame during pan/drag/sim, but skip during radius animation
+    // (positions don't change during animation, only radii)
+    if (!animatingRef.current) {
+      updateHtmlLabels()
+    }
     ctx.restore()
-    ctx.globalAlpha = 1
+  }
+
+  // ─── Simulation helper (used by bridge and animation restore) ───
+  function startSimulationInternal() {
+    simulatingRef.current = true
+    if (simulationRef.current) simulationRef.current.stop()
+    const visibleNodes = dataRef.current.nodes.filter((n: GraphNode) => n.visible)
+    const visibleNodeSet = new Set(visibleNodes)
+    const visibleEdges = validEdgesRef.current
+      .filter((e: GraphEdge) => e.visible && visibleNodeSet.has(e.source) && visibleNodeSet.has(e.target))
+      .map((e: GraphEdge) => ({ ...e, source: e.source, target: e.target }))
+    simulationRef.current = createSimulation(visibleNodes, visibleEdges, {
+      alpha: 0.3, alphaDecay: 0, velocityDecay: 0.4,
+      chargeStrength: -150,
+      tick: () => render(),
+    })
   }
 
   // ─── Animation ───
   function startAnimation(dimTarget: number | null) {
     if (animFrameRef.current !== null) cancelAnimationFrame(animFrameRef.current)
+    animatingRef.current = true
 
-    animStartRef.current = performance.now()
-    animDimRef.current = currentDimRef.current
-    animDimTargetRef.current = dimTarget
+    // Stop simulation during selection animation to avoid double-rendering
+    if (simulationRef.current) {
+      simulationRef.current.stop()
+      simulationRef.current = null
+      simulatingRef.current = false
+    }
 
+    // Snapshot old radii synchronously — cheap, needed before state changes
     const oldRadii = new Map<string, number>()
     for (const n of dataRef.current.nodes) {
       if (!n.visible) continue
       oldRadii.set(n.id, n._animRadius ?? getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current))
     }
 
-    // Build connected set for correct target radii
-    connectedSetRef.current = null
-    connectedEdgesRef.current = null
-    if (selectedNodeRef.current) {
-      connectedSetRef.current = new Set([selectedNodeRef.current.id])
-      connectedEdgesRef.current = new Set()
-      for (const e of validEdgesRef.current) {
-        if (e.source.id === selectedNodeRef.current.id || e.target.id === selectedNodeRef.current.id) {
-          connectedSetRef.current.add(e.source.id)
-          connectedSetRef.current.add(e.target.id)
-          connectedEdgesRef.current!.add(e)
+    // Defer all heavy work into RAF so the browser can paint the click frame
+    animFrameRef.current = requestAnimationFrame((now) => {
+      animStartRef.current = now
+      animDimRef.current = currentDimRef.current
+      animDimTargetRef.current = dimTarget
+
+      // Build connected set for correct target radii
+      connectedSetRef.current = null
+      connectedEdgesRef.current = null
+      labelSetDirtyRef.current = true
+      if (selectedNodeRef.current) {
+        connectedSetRef.current = new Set([selectedNodeRef.current.id])
+        connectedEdgesRef.current = new Set()
+        for (const e of validEdgesRef.current) {
+          if (e.source.id === selectedNodeRef.current.id || e.target.id === selectedNodeRef.current.id) {
+            connectedSetRef.current.add(e.source.id)
+            connectedSetRef.current.add(e.target.id)
+            connectedEdgesRef.current.add(e)
+          }
         }
       }
-    }
-    recalcSizeRange()
+      recalcSizeRange()
 
-    animScaleStartRadiiRef.current = new Map()
-    animScaleTargetsRef.current = new Map()
-    for (const n of dataRef.current.nodes) {
-      if (!n.visible) continue
-      const startRadius = oldRadii.get(n.id) ?? getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
-      const targetRadius = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
-      animScaleStartRadiiRef.current.set(n.id, startRadius)
-      animScaleTargetsRef.current.set(n.id, targetRadius)
-      n._animRadius = startRadius
-    }
+      animScaleStartRadiiRef.current = new Map()
+      animScaleTargetsRef.current = new Map()
+      for (const n of dataRef.current.nodes) {
+        if (!n.visible) continue
+        const startRadius = oldRadii.get(n.id) ?? getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
+        const targetRadius = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
+        animScaleStartRadiiRef.current.set(n.id, startRadius)
+        animScaleTargetsRef.current.set(n.id, targetRadius)
+        n._animRadius = startRadius
+      }
 
-    animFrameRef.current = requestAnimationFrame(animStep)
+      updateHtmlLabels()
+      animStep(now)
+    })
   }
 
   function animStep(now: number) {
@@ -570,6 +605,9 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
         currentDimRef.current = animDimTargetRef.current
       }
       animFrameRef.current = null
+      animatingRef.current = false
+      // Update labels once after animation completes
+      updateHtmlLabels()
     }
   }
 
@@ -603,14 +641,15 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       delete n.fy
       delete n.index
     }
-    for (const e of dataRef.current.edges) {
-      delete (e as any).index
-    }
 
     // Compute full size ranges (constant — never changes after init)
     for (const m of SIZE_METRICS) {
-      const values = dataRef.current.nodes.map((n: GraphNode) => n.metrics[m.key] || 0).filter((v: number) => v > 0)
-      if (values.length > 0) sizeRangeRef.current[m.key] = { full: { min: 0, max: Math.max(...values) } }
+      let maxVal = 0
+      for (const n of dataRef.current.nodes) {
+        const v = n.metrics[m.key] || 0
+        if (v > maxVal) maxVal = v
+      }
+      if (maxVal > 0) sizeRangeRef.current[m.key] = { full: { min: 0, max: maxVal } }
     }
 
     // Build node map + precompute color indices
@@ -622,18 +661,18 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       nodeMapRef.current.set(n.id, n)
     }
 
-    // Pre-resolve edges
+    // Pre-resolve edges (RawGraphEdge → GraphEdge)
     validEdgesRef.current = []
-    for (const e of dataRef.current.edges) {
-      e.visible = true
-      const srcId = typeof e.source === 'object' ? e.source.id : e.source
-      const tgtId = typeof e.target === 'object' ? e.target.id : e.target
-      const srcNode = nodeMapRef.current.get(srcId)
-      const tgtNode = nodeMapRef.current.get(tgtId)
+    for (const raw of dataRef.current.edges) {
+      const srcNode = nodeMapRef.current.get(raw.source)
+      const tgtNode = nodeMapRef.current.get(raw.target)
       if (!srcNode || !tgtNode) continue
-      e.source = srcNode
-      e.target = tgtNode
-      validEdgesRef.current.push(e)
+      validEdgesRef.current.push({
+        source: srcNode,
+        target: tgtNode,
+        type: raw.type,
+        visible: true,
+      })
     }
 
     // Initial sizing
@@ -686,7 +725,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     // Manual wheel zoom (replaces d3-zoom to avoid double transform)
     function onWheel(event: WheelEvent) {
       event.preventDefault()
-      const rect = canvas.getBoundingClientRect()
+      const rect = canvas!.getBoundingClientRect()
       const mouseX = event.clientX - rect.left
       const mouseY = event.clientY - rect.top
 
@@ -703,7 +742,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     // Mouse position in world coordinates
     function getMousePos(event: MouseEvent) {
-      const rect = canvas.getBoundingClientRect()
+      const rect = canvas!.getBoundingClientRect()
       const z = zoomRef.current
       return {
         x: (event.clientX - rect.left - z.x) / z.k,
@@ -715,8 +754,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       for (let i = dataRef.current.nodes.length - 1; i >= 0; i--) {
         const n = dataRef.current.nodes[i]
         if (!n.visible) continue
-        const dx = pos.x - n.x
-        const dy = pos.y - n.y
+        const dx = pos.x - (n.x ?? 0)
+        const dy = pos.y - (n.y ?? 0)
         const r = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current) + 5
         if (dx * dx + dy * dy < r * r) return n
       }
@@ -788,7 +827,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
           render()
         }
         hoveredNodeRef.current = node
-        canvas.style.cursor = node ? 'pointer' : 'grab'
+        canvas!.style.cursor = node ? 'pointer' : 'grab'
         if (node) {
           hoverLabelTimeoutRef.current = setTimeout(() => {
             hoverLabelTimeoutRef.current = null
@@ -813,11 +852,11 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
           if (node) {
             selectedNodeRef.current = node
             startAnimation(0.15)
-            onNodeSelect?.(node)
+            requestAnimationFrame(() => onNodeSelect?.(node))
           } else {
             selectedNodeRef.current = null
             startAnimation(1)
-            onNodeDeselect?.()
+            requestAnimationFrame(() => onNodeDeselect?.())
           }
         } else {
           isDraggingRef.current = false
@@ -829,7 +868,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
             node.fx = node.x
             node.fy = node.y
             // Settle after drag
-            if (simulationRef.current) simulationRef.current.stop()
             const visibleNodes = dataRef.current.nodes.filter((n: GraphNode) => n.visible)
             const visibleEdges = validEdgesRef.current.filter((e: GraphEdge) => e.visible)
             simulationRef.current = createSimulation(visibleNodes, visibleEdges, {
@@ -842,7 +880,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
               .on('end', () => {
                 node.fx = null
                 node.fy = null
-                simulationRef.current = null
               })
             setTimeout(() => {
               if (simulationRef.current) {
@@ -857,10 +894,10 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
         }
         draggedNodeRef.current = null
         isDraggingRef.current = false
-      } else if (!wasPanning) {
+      } else if (!wasPanning && selectedNodeRef.current) {
         selectedNodeRef.current = null
         startAnimation(1)
-        onNodeDeselect?.()
+        requestAnimationFrame(() => onNodeDeselect?.())
       }
     }
 
@@ -951,10 +988,12 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     themeColorsRef.current = colors
     labelFontSizeRef.current = theme.labelFontSize
 
-    // Cache resolved color string on each node (avoids hash + CSS lookup per frame)
+    // Cache resolved color + stroke strings on each node (avoids d3.color per frame)
     for (const n of dataRef.current.nodes) {
       const cssVar = `--node-color-${n._colorIdx ?? 0}`
-      n._cachedColor = colors[cssVar] || '#94a3b8'
+      const color = colors[cssVar] || '#94a3b8'
+      n._cachedColor = color
+      n._cachedStroke = d3.color(color)!.darker(0.8).formatHex()
     }
 
     render()
@@ -967,6 +1006,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       for (const n of dataRef.current.nodes) {
         n.visible = visibleIds.has(n.id)
       }
+      labelSetDirtyRef.current = true
       // Don't start animation if nodes haven't been positioned yet (initial layout not done)
       const hasPositions = dataRef.current.nodes.length > 0 && dataRef.current.nodes[0].x !== undefined
       if (hasPositions) {
@@ -974,10 +1014,10 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       }
       if (simulationRef.current) {
         simulationRef.current.stop()
-        startSimulation()
+        startSimulationInternal()
       }
     },
-    setSearchTerm: (term: string) => {
+    setSearchTerm: (_term: string) => {
       // Search is handled by parent via setVisibility
     },
 
@@ -1006,33 +1046,13 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     getLabels: () => showLabelsRef.current,
     setLabels: (show: boolean) => {
       showLabelsRef.current = show
-      setShowLabelsState(show)
+      labelSetDirtyRef.current = true
       deferRender()
     },
 
     // Simulation
     isSimulating: () => simulatingRef.current,
-    startSimulation: () => {
-      simulatingRef.current = true
-      if (simulationRef.current) simulationRef.current.stop()
-      const visibleNodes = dataRef.current.nodes.filter((n: GraphNode) => n.visible)
-      const visibleNodeSet = new Set(visibleNodes)
-      // Re-resolve edges so D3 uses .id to match nodes (not array index)
-      const visibleEdges = validEdgesRef.current
-        .filter((e: GraphEdge) => e.visible && visibleNodeSet.has(e.source) && visibleNodeSet.has(e.target))
-        .map((e: GraphEdge) => ({ ...e, source: e.source, target: e.target }))
-      const cx = visibleNodes.length > 0
-        ? visibleNodes.reduce((s: number, n: GraphNode) => s + (n.x ?? 0), 0) / visibleNodes.length
-        : widthRef.current / 2
-      const cy = visibleNodes.length > 0
-        ? visibleNodes.reduce((s: number, n: GraphNode) => s + (n.y ?? 0), 0) / visibleNodes.length
-        : heightRef.current / 2
-      simulationRef.current = createSimulation(visibleNodes, visibleEdges, {
-        alpha: 0.3, alphaDecay: 0, velocityDecay: 0.4,
-        chargeStrength: -150,
-        tick: () => render(),
-      })
-    },
+    startSimulation: () => startSimulationInternal(),
     stopSimulation: () => {
       simulatingRef.current = false
       if (simulationRef.current) {
@@ -1047,13 +1067,13 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       if (node) {
         selectedNodeRef.current = node
         startAnimation(0.15)
-        onNodeSelect?.(node)
+        requestAnimationFrame(() => onNodeSelect?.(node))
       }
     },
     deselectNode: () => {
       selectedNodeRef.current = null
       startAnimation(1)
-      onNodeDeselect?.()
+      requestAnimationFrame(() => onNodeDeselect?.())
     },
     getSelectedNode: () => selectedNodeRef.current,
 
