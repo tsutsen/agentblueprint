@@ -157,6 +157,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   const animScaleTargetsRef = useRef<Map<string, number>>(new Map())
   const animStartRef = useRef(0)
   const isPanningRef = useRef(false)
+  const initializedRef = useRef(false)
   const panStartRef = useRef({ x: 0, y: 0 })
   const zoomStartRef = useRef({ x: 0, y: 0 })
   const isMouseDownRef = useRef(false)
@@ -441,6 +442,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     // Always recompute — dirty flags are broken
     recalcSizeRange()
+    buildLabelSet()
 
     const edgeColor = getEdgeColor(themeColorsRef.current)
     const currentDim = currentDimRef.current
@@ -588,7 +590,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
   // ─── Initialize graph ───
   useEffect(() => {
-    if (!data) return
+    if (!data || initializedRef.current) return
+    initializedRef.current = true
 
     const container = containerRef.current
     const canvas = canvasRef.current
@@ -999,7 +1002,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       simulationRef.current = createSimulation(visibleNodes, visibleEdges, {
         alpha: 0.3, alphaDecay: 0, velocityDecay: 0.4,
         chargeStrength: -150,
-        linkIdAccessor: true,
         tick: () => render(),
       })
     },
@@ -1067,7 +1069,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     // Render
     triggerRender: () => render(),
-  }), [data, onNodeSelect, onNodeDeselect])
+  }), [onNodeSelect, onNodeDeselect]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div
