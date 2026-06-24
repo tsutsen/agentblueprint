@@ -937,12 +937,19 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       simulatingRef.current = true
       if (simulationRef.current) simulationRef.current.stop()
       const visibleNodes = data.nodes.filter((n: any) => n.visible)
-      const visibleEdges = validEdgesRef.current.filter((e: any) => e.visible)
-      // Anchor to centroid of current positions so simulation doesn't pull nodes to stale canvas-center
-      const cx = visibleNodes.length > 0 ? visibleNodes.reduce((s: number, n: any) => s + n.x, 0) / visibleNodes.length : widthRef.current / 2
-      const cy = visibleNodes.length > 0 ? visibleNodes.reduce((s: number, n: any) => s + n.y, 0) / visibleNodes.length : heightRef.current / 2
+      const visibleNodeSet = new Set(visibleNodes)
+      // Re-resolve edges so D3 uses .id to match nodes (not array index)
+      const visibleEdges = validEdgesRef.current
+        .filter((e: any) => e.visible && visibleNodeSet.has(e.source) && visibleNodeSet.has(e.target))
+        .map((e: any) => ({ ...e, source: e.source, target: e.target }))
+      const cx = visibleNodes.length > 0
+        ? visibleNodes.reduce((s: number, n: any) => s + n.x, 0) / visibleNodes.length
+        : widthRef.current / 2
+      const cy = visibleNodes.length > 0
+        ? visibleNodes.reduce((s: number, n: any) => s + n.y, 0) / visibleNodes.length
+        : heightRef.current / 2
       simulationRef.current = d3.forceSimulation(visibleNodes)
-        .force('link', d3.forceLink(visibleEdges).distance(120).strength(0.05))
+        .force('link', d3.forceLink(visibleEdges).id((d: any) => d.id).distance(120).strength(0.05))
         .force('charge', d3.forceManyBody().strength(-150))
         .force('center', d3.forceCenter(cx, cy).strength(0.02))
         .force('collision', d3.forceCollide().radius(25))
