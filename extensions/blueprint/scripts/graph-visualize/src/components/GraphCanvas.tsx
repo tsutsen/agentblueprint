@@ -131,11 +131,14 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const labelsContainerRef = useRef<HTMLDivElement>(null)
 
-  // Internal state (managed by the graph)
-  const [theme] = useState(() => localStorage.getItem('graph-theme') || 'default')
-  const [sizeMetric, setSizeMetricState] = useState('degree')
-  const [showLabels, setShowLabelsState] = useState(true)
-  const [simulating, setSimulatingState] = useState(false)
+  // Internal state (managed by the graph) — refs for live bridge access
+  const themeRef = useRef(localStorage.getItem('graph-theme') || 'default')
+  const sizeMetricRef = useRef('degree')
+  const showLabelsRef = useRef(true)
+  const simulatingRef = useRef(false)
+  // Also keep state for theme useEffect (triggers re-apply)
+  const [themeState, setThemeState] = useState(themeRef.current)
+  const [sizeMetricState, setSizeMetricState] = useState(sizeMetricRef.current)
 
   // Mutable refs (avoid re-renders during animation)
   const zoomRef = useRef({ x: 0, y: 0, k: 0.3 })
@@ -897,7 +900,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       },
     }
 
-    const colors = themeColors[theme] || themeColors.default
+    const colors = themeColors[themeState] || themeColors.default
     for (const [key, value] of Object.entries(colors)) {
       cs.setProperty(key, value)
     }
@@ -922,34 +925,38 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     },
 
     // Theme
-    getTheme: () => theme,
+    getTheme: () => themeRef.current,
     setTheme: (newTheme: string) => {
+      themeRef.current = newTheme
+      setThemeState(newTheme)
       localStorage.setItem('graph-theme', newTheme)
-      // Re-render will apply new theme via useEffect
+      render()
     },
     updateTheme: () => {
       render()
     },
 
     // Size metric
-    getSizeMetric: () => sizeMetric,
+    getSizeMetric: () => sizeMetricRef.current,
     setSizeMetric: (metric: string) => {
+      sizeMetricRef.current = metric
       setSizeMetricState(metric)
       startAnimation(null)
       render()
     },
 
     // Labels
-    getLabels: () => showLabels,
+    getLabels: () => showLabelsRef.current,
     setLabels: (show: boolean) => {
+      showLabelsRef.current = show
       setShowLabelsState(show)
       render()
     },
 
     // Simulation
-    isSimulating: () => simulating,
+    isSimulating: () => simulatingRef.current,
     startSimulation: () => {
-      setSimulatingState(true)
+      simulatingRef.current = true
       if (simulationRef.current) simulationRef.current.stop()
       const visibleNodes = data.nodes.filter((n: any) => n.visible)
       const visibleEdges = validEdgesRef.current.filter((e: any) => e.visible)
@@ -964,7 +971,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
         .on('tick', () => render())
     },
     stopSimulation: () => {
-      setSimulatingState(false)
+      simulatingRef.current = false
       if (simulationRef.current) {
         simulationRef.current.stop()
         simulationRef.current = null
@@ -1027,7 +1034,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     // Render
     triggerRender: () => render(),
-  }), [data, theme, sizeMetric, showLabels, simulating, onNodeSelect, onNodeDeselect])
+  }), [data, onNodeSelect, onNodeDeselect])
 
   return (
     <div
