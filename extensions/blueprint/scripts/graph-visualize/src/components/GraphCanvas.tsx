@@ -809,7 +809,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     // ─── Cleanup ───
     return () => {
-      svg.on('zoom', null)
+      zoomBehavior.on('zoom', null)
       canvas.removeEventListener('mousedown', onMouseDown)
       canvas.removeEventListener('mousemove', onMouseMove)
       canvas.removeEventListener('mouseup', onMouseUp)
