@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button'
 import { ChevronDown, Maximize2, Minimize2, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import type { MutableRefObject } from 'react'
 
 export interface ControlsProps {
-  bridge: IGraphBridge | null
+  bridgeRef: MutableRefObject<IGraphBridge | null>
   sizeMetric: string
   onSizeMetricChange: (key: string) => void
   currentTheme: string
@@ -15,7 +16,7 @@ export interface ControlsProps {
 }
 
 export function Controls({
-  bridge,
+  bridgeRef,
   sizeMetric,
   onSizeMetricChange,
   currentTheme,
@@ -31,7 +32,7 @@ export function Controls({
               variant="outline"
               size="sm"
               className="h-8 text-xs bg-background backdrop-blur graph-control-btn"
-              onClick={() => bridge?.startSimulation()}
+              onClick={() => bridgeRef.current?.startSimulation()}
             >
               <Maximize2 className="h-3.5 w-3.5 mr-1" />
               Explode
@@ -45,7 +46,7 @@ export function Controls({
               variant="outline"
               size="sm"
               className="h-8 text-xs bg-background backdrop-blur graph-control-btn"
-              onClick={() => bridge?.tighten()}
+              onClick={() => bridgeRef.current?.tighten()}
             >
               <Minimize2 className="h-3.5 w-3.5 mr-1" />
               Tighten
@@ -65,7 +66,7 @@ export function Controls({
               <DropdownMenuItem
                 key={m.key}
                 onClick={() => {
-                  bridge?.setSizeMetric(m.key)
+                  bridgeRef.current?.setSizeMetric(m.key)
                   onSizeMetricChange(m.key)
                 }}
               >
@@ -86,7 +87,7 @@ export function Controls({
               <DropdownMenuItem
                 key={t.key}
                 onClick={() => {
-                  bridge?.setTheme(t.key)
+                  bridgeRef.current?.setTheme(t.key)
                   onThemeChange(t.key)
                 }}
               >
@@ -105,7 +106,7 @@ export function Controls({
               variant="outline"
               size="sm"
               className="h-8 w-8 p-0 bg-background backdrop-blur graph-control-btn"
-              onClick={() => bridge?.zoomIn()}
+              onClick={() => bridgeRef.current?.zoomIn()}
             >
               <ZoomIn className="h-3.5 w-3.5" />
             </Button>
@@ -118,7 +119,7 @@ export function Controls({
               variant="outline"
               size="sm"
               className="h-8 w-8 p-0 bg-background backdrop-blur graph-control-btn"
-              onClick={() => bridge?.zoomOut()}
+              onClick={() => bridgeRef.current?.zoomOut()}
             >
               <ZoomOut className="h-3.5 w-3.5" />
             </Button>
@@ -131,7 +132,7 @@ export function Controls({
               variant="outline"
               size="sm"
               className="h-8 w-8 p-0 bg-background backdrop-blur graph-control-btn"
-              onClick={() => bridge?.resetZoom()}
+              onClick={() => bridgeRef.current?.resetZoom()}
             >
               <RotateCcw className="h-3.5 w-3.5" />
             </Button>

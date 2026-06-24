@@ -240,7 +240,7 @@ function App() {
         {/* Main Canvas Area */}
         <main className="flex-1 relative overflow-hidden">
           <Controls
-            bridge={bridgeRef.current}
+            bridgeRef={bridgeRef}
             sizeMetric={sizeMetric}
             onSizeMetricChange={setSizeMetricState}
             currentTheme={currentTheme}
