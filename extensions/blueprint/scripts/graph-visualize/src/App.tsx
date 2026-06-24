@@ -35,6 +35,10 @@ function App() {
   const [categories, setCategories] = useState<Record<string, { count: number; color: string }>>({})
   const [sortBy, setSortBy] = useState<'name' | 'degree'>('name')
   const [sidebarWidth, setSidebarWidth] = useState(300)
+  const [isSimulating, setIsSimulating] = useState(false)
+  const [showLabels, setShowLabels] = useState(true)
+  const [sizeMetric, setSizeMetricState] = useState('degree')
+  const [currentTheme, setCurrentTheme] = useState('default')
 
   const bridgeRef = useRef<IGraphBridge | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -383,13 +387,14 @@ function App() {
               <label className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 h-8 text-xs font-medium bg-background/90 backdrop-blur border border-input cursor-pointer graph-control-btn">
                 Simulation
                 <Switch
-                  checked={bridgeRef.current?.isSimulating() ?? false}
+                  checked={isSimulating}
                   onCheckedChange={(checked) => {
                     if (checked) {
                       bridgeRef.current?.startSimulation()
                     } else {
                       bridgeRef.current?.stopSimulation()
                     }
+                    setIsSimulating(checked)
                   }}
                 />
               </label>
@@ -398,7 +403,7 @@ function App() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 text-xs bg-background backdrop-blur graph-control-btn">
-                Size: {SIZE_METRICS.find((m) => m.key === bridgeRef.current?.getSizeMetric())?.label}
+                Size: {SIZE_METRICS.find((m) => m.key === sizeMetric)?.label}
                 <ChevronDown className="h-3.5 w-3.5 ml-1" />
               </Button>
             </DropdownMenuTrigger>
@@ -406,7 +411,10 @@ function App() {
               {SIZE_METRICS.map((m) => (
                 <DropdownMenuItem
                   key={m.key}
-                  onClick={() => bridgeRef.current?.setSizeMetric(m.key)}
+                  onClick={() => {
+                    bridgeRef.current?.setSizeMetric(m.key)
+                    setSizeMetricState(m.key)
+                  }}
                 >
                   {m.label}
                 </DropdownMenuItem>
@@ -416,7 +424,7 @@ function App() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 text-xs bg-background backdrop-blur graph-control-btn">
-                Theme: {themes.find((t) => t.key === bridgeRef.current?.getTheme())?.label || 'Default'}
+                Theme: {themes.find((t) => t.key === currentTheme)?.label || 'Default'}
                 <ChevronDown className="h-3.5 w-3.5 ml-1" />
               </Button>
             </DropdownMenuTrigger>
@@ -426,6 +434,7 @@ function App() {
                   key={t.key}
                   onClick={() => {
                     bridgeRef.current?.setTheme(t.key)
+                    setCurrentTheme(t.key)
                   }}
                 >
                   {t.label}
