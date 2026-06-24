@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { GraphCanvas, type IGraphBridge } from '@/components/GraphCanvas'
 import type { GraphData, GraphNode, GraphEdge } from '@/lib/graph-types'
+import { extractShortId } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -16,16 +17,6 @@ import { Switch } from '@/components/ui/switch'
 import { themes } from '@/lib/themes'
 import { SIZE_METRICS } from '@/lib/metrics'
 
-/** Extract clean short ID: PREFIX-NNN (handles TST-NNN-xxx, TST-xxx-NNN, CON-NNN-xxx, FLW-NNN-xxx, and slug-style IDs) */
-function extractShortId(id: string): string {
-  const parts = id.split('-')
-  const numIdx = parts.findIndex(p => /^\d+$/.test(p))
-  if (numIdx >= 0) {
-    return `${parts[0]}-${parts[numIdx]}`
-  }
-  // Slug-style IDs (e.g. "citation-network-builder") — show first two segments
-  return parts.slice(0, 2).join('-')
-}
 
 function App() {
   const [graphData, setGraphData] = useState<GraphData | null>(null)
