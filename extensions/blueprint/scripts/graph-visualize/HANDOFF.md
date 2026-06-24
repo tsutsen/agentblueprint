@@ -19,21 +19,25 @@ scripts/
 ├── generate_tests.py             # (unrelated)
 ├── json_uml_convert.py           # (unrelated)
 └── graph-visualize/              # JavaScript frontend (static files, served by HTTP server)
-    ├── index.html                # Entry point
-    ├── config.js                 # Constants (colors, physics)
-    ├── app.js                    # Bootstrap: loads components, fetches data
-    ├── graph.js                  # Core: force-directed layout, canvas rendering, selection
-    ├── ui.js                     # UI: sidebar, filters, detail panel, node selection
-    ├── graph.css                 # Styles
-    ├── extract-graph-data.js     # (legacy) Node.js alternative data extractor
-    ├── server.js                 # (legacy) Node.js static file server
+    ├── public/
+    │   └── legacy/               # Vanilla D3 canvas (loaded as native ES modules)
+    │       ├── graph.js          # Core: force-directed layout, canvas rendering, selection
+    │       ├── config.js         # Constants (colors, physics)
+    │       ├── graph-wrapper.js  # React ↔ Canvas bridge
+    │       ├── bootstrap.js      # Loads D3 + graph modules before React mounts
+    │       └── ui.js             # UI helpers
+    ├── src/                      # React + shadcn/ui frontend
+    │   ├── App.tsx               # Root layout
+    │   ├── components/           # React components
+    │   ├── lib/                  # Utils, themes
+    │   └── index.css             # Tailwind + shadcn base + canvas styles
+    ├── extract-graph-data.js     # Node.js data extractor
     ├── graph-data.json           # Generated intermediate output
-    ├── components/               # Lazy-loaded HTML fragments
-    │   ├── sidebar.html          # Category filters, node list, search
-    │   ├── canvas.html           # Canvas, controls, detail panel, loading overlay
-    │   └── detail.html           # (duplicate, canvas.html includes this content)
-    ├── theme-*.css               # 6 theme variants
-    └── debug.html                # Debug panel component
+    ├── package.json              # Vite + React + shadcn dependencies
+    ├── vite.config.ts            # Vite configuration
+    ├── tsconfig.json             # TypeScript config
+    ├── README.md
+    └── HANDOFF.md
 ```
 
 ---
@@ -329,15 +333,15 @@ python3 extensions/blueprint/scripts/graph-visualize.py /path/to/artifacts --por
 This runs graph_metrics.py, builds the enriched graph, writes graph-data.json,
 and starts an HTTP server at http://localhost:3001.
 
-### Manual (Python backend + Node.js frontend)
+### Manual (Python backend + Vite frontend)
 
 ```bash
 # Generate data
 python3 extensions/blueprint/scripts/graph_metrics.py --artifacts /path/to/artifacts --dump-graph > graph-visualize/graph-data.json
 
-# Start frontend server
+# Start frontend dev server
 cd extensions/blueprint/scripts/graph-visualize
-node server.js 3001
+npm run dev
 ```
 
 ### Legacy (Node.js only, no metrics)
@@ -345,7 +349,7 @@ node server.js 3001
 ```bash
 cd extensions/blueprint/scripts/graph-visualize
 node extract-graph-data.js /path/to/artifacts  # generates graph-data.json
-node server.js 3001
+node server.js 3001  # legacy server (deprecated, use npm run dev)
 ```
 
 Note: `extract-graph-data.js` only uses Glossary.json and spec glossaryRefs —
@@ -369,10 +373,8 @@ it does NOT build the full architecture graph or compute metrics.
   `maxVal === minVal === 0` by returning `maxRadius`.
 - **Files:** `graph.js` — `recalcSizeRange()`, `scaleValue()`
 
-### Debug logging (currently active)
-- `recalcSizeRange()` logs connected set size and metric ranges
-- `getNodeRadius()` logs radius computation for selected nodes with ≤1 connected node
-- Remove `console.log` statements before production deployment
+### Debug logging
+All `console.log` statements have been removed. Only `console.error` calls remain for actual error handling in `graph.js`.
 
 ### Known limitations
 1. **Static layout** — force-directed simulation runs 200 ticks once at init,
@@ -380,10 +382,9 @@ it does NOT build the full architecture graph or compute metrics.
 2. **No edge labels** — edge types are not displayed on the canvas.
 3. **Detail panel incomplete** — shows basic stats but not full metric details
    (blast radius, risk, etc.) or connected node list.
-4. **Legacy code paths** — `extract-graph-data.js` and `server.js` are Node.js
-   alternatives that don't use the full Python metrics pipeline.
-5. **No hot reload** — changes to JS files require browser hard-refresh (Ctrl+Shift+R).
-6. **Canvas hit detection** — uses squared distance with `+5` padding; may miss
+4. **No hot reload for legacy canvas** — changes to `public/legacy/*.js` require
+   browser hard-refresh (Ctrl+Shift+R). React code hot-reloads normally via Vite.
+5. **Canvas hit detection** — uses squared distance with `+5` padding; may miss
    very small nodes when zoomed out.
 
 ---

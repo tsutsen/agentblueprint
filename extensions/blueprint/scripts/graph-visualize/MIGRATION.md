@@ -203,66 +203,60 @@ shadcn/ui uses CSS variables on `:root` mapped to Tailwind semantic tokens:
 - [x] Keyboard shortcut: K to focus search
 - [x] Zoom in/out buttons (+/−) added
 - [x] Simulation state indicator ("Running" vs "Simulate")
-- [x] Theme switcher wired — 5 themes (Default Light, Dark, Gruvbox, Neon, Retro)
-- [x] `src/lib/themes.ts` — theme definitions with hex→HSL conversion
+- [x] Theme switcher wired — 7 themes (Default Light, Dark, Gruvbox, Gruvbox Light, Neon, Retro, Netrunner)
+- [x] `src/lib/themes.ts` — theme definitions with hex→HSL conversion + usage comments
 - [x] `applyTheme()` sets shadcn CSS variables + canvas-specific edge colors
+
+### Phase 7: Dev Server ✅ DONE
+- [x] `server.js` removed — Vite dev server (`npm run dev`) replaces it
+- [x] `package.json` scripts updated
+- [x] `README.md` and `HANDOFF.md` updated
 
 ---
 
-## Implementation Phases
+## Implementation Phases — All Complete ✅
 
-### Phase 1: Scaffold (1-2 hours)
+All 7 phases have been implemented and merged to master.
 
-- [ ] `npm create vite@latest . -- --template react` (or parallel `ui/` directory)
-- [ ] Install shadcn/ui: `npx shadcn@latest init`
-- [ ] Add required components via `npx shadcn@latest add ...`
-- [ ] Configure Tailwind with shadcn's CSS variable approach
-- [ ] Move existing files to `legacy/` subdirectory for reference
-- [ ] Copy `graph-data.json`, `config.js`, `extract-graph-data.js`, `server.js` unchanged
+### Phase 1: Scaffold ✅
+- Vite + React + TypeScript + Tailwind CSS scaffolded
+- 12 shadcn/ui components created manually
+- TypeScript path aliases configured (`@/*` → `src/*`)
 
-### Phase 2: Canvas Bridge (1-2 hours)
+### Phase 2: Canvas Bridge ✅
+- Native browser ES modules via `public/legacy/`
+- `window.__GRAPH_WRAPPER__` exposes getter/setter functions for mutable state
+- `GraphCanvas.tsx` uses `useEffect` + `ResizeObserver`
+- `IGraphBridge` interface provides typed bridge to React shell
 
-- [ ] Create `lib/graph-bridge.ts` — wrapper around `graph.js` exposing the minimal interface
-- [ ] Create `components/GraphCanvas.tsx` — `<div>` ref + `useEffect` to init/teardown canvas
-- [ ] Wire `onNodeSelect`/`onNodeDeselect` to React state
-- [ ] Verify canvas renders correctly inside React
+### Phase 3: Sidebar ✅
+- Debounced search (250ms) → `setVisibility()`
+- Category filters → `activeCategories` → `setVisibility()`
+- Node list (click → `selectNodeById()` → detail panel)
+- URL state sync via `history.replaceState`
 
-### Phase 3: Sidebar (1 hour)
+### Phase 4: Detail Panel ✅
+- Non-modal fixed panel (canvas remains interactive)
+- Close button (X), keyboard shortcuts (Escape, K)
+- Stats display: connections, blast radius, risk, centrality
+- Connections list with click-to-navigate
 
-- [ ] `components/Sidebar.tsx` with:
-  - `Input` for search
-  - `Checkbox` list for category filters
-  - `ScrollArea` for node list
-- [ ] Wire search + filter state to `graphBridge.setVisibility()`
-- [ ] URL state sync via `useSearchParams`
+### Phase 5: Controls ✅
+- Zoom in/out/reset buttons
+- Simulation toggle
+- Size metric dropdown (degree, blast, risk)
+- Theme dropdown (7 themes)
 
-### Phase 4: Detail Panel (30 min)
+### Phase 6: Polish ✅
+- 7 themes with consistent `hexToHsl()` and usage comments
+- All `console.log` statements removed
+- Control button hover visibility fixed (CSS variable collision resolved)
+- Legacy files cleaned up
 
-- [ ] `components/DetailPanel.tsx` using `Sheet` (side=right)
-- [ ] Display node info: name, category badge (`Badge`), stats
-- [ ] Connections list with click-to-navigate
-
-### Phase 5: Controls (30 min)
-
-- [ ] Top control bar with `Button` components
-- [ ] `DropdownMenu` for size metric selector
-- [ ] `DropdownMenu` for theme selector
-- [ ] Reset zoom + simulate buttons
-
-### Phase 6: Polish (1 hour)
-
-- [ ] Loading state with `Skeleton` overlays
-- [ ] Error handling with `Toast`
-- [ ] Keyboard shortcuts (k for search, escape to deselect)
-- [ ] Responsive adjustments (collapsible sidebar on mobile)
-- [ ] Convert theme files to shadcn variable format
-- [ ] Remove `legacy/` files
-
-### Phase 7: Dev Server (15 min)
-
-- [ ] Replace `server.js` with `npm run dev` (Vite dev server)
-- [ ] Update `package.json` scripts
-- [ ] Update `README.md` and `HANDOFF.md`
+### Phase 7: Dev Server ✅
+- `server.js` removed — Vite dev server (`npm run dev`) replaces it
+- `package.json` scripts updated
+- `README.md` and `HANDOFF.md` updated
 
 ---
 
@@ -271,7 +265,7 @@ shadcn/ui uses CSS variables on `:root` mapped to Tailwind semantic tokens:
 ```
 graph-visualize/
 ├── package.json              # Vite + React + shadcn dependencies
-├── vite.config.js            # Vite configuration
+├── vite.config.ts            # Vite configuration
 ├── tailwind.config.js        # Tailwind + shadcn theme
 ├── postcss.config.js         # PostCSS for Tailwind
 ├── index.html                # Vite entry point
@@ -279,29 +273,25 @@ graph-visualize/
 │
 ├── src/
 │   ├── main.tsx              # React entry
-│   ├── App.tsx               # Root layout: Sidebar + Canvas + Sheets
+│   ├── App.tsx               # Root layout: Sidebar + Canvas + Controls
 │   ├── lib/
-│   │   ├── graph-bridge.ts   # Canvas ↔ React bridge
+│   │   ├── themes.ts         # Theme definitions (hexToHsl + usage comments)
 │   │   └── utils.ts          # shadcn cn() helper
-│   ├── hooks/
-│   │   ├── use-graph.ts      # Graph commands hook
-│   │   ├── use-filters.ts    # Category + search state
-│   │   └── use-theme.ts      # Theme switching
 │   ├── components/
-│   │   ├── ui/               # shadcn components (auto-generated)
-│   │   ├── GraphCanvas.tsx   # Canvas wrapper
-│   │   ├── Sidebar.tsx       # Filters + search + node list
-│   │   ├── DetailPanel.tsx   # shadcn Sheet for node details
-│   │   ├── ControlBar.tsx    # Zoom, simulate, metric, theme
-│   │   └── CategoryFilter.tsx
-│   └── styles/
-│       ├── index.css         # Tailwind + shadcn base + theme vars
-│       └── themes.ts         # Theme color definitions (JS objects)
+│   │   ├── ui/               # shadcn components (Badge, Button, etc.)
+│   │   └── GraphCanvas.tsx   # Canvas wrapper + bridge
+│   └── index.css             # Tailwind + shadcn base + canvas styles
+│
+├── public/
+│   └── legacy/               # Vanilla D3 canvas (loaded as native ES modules)
+│       ├── graph.js          # Core: force-directed layout, canvas rendering
+│       ├── config.js         # Constants (colors, physics)
+│       ├── graph-wrapper.js  # React ↔ Canvas bridge
+│       ├── bootstrap.js      # Loads D3 + graph modules before React mounts
+│       └── ui.js             # UI helpers
 │
 ├── graph-data.json           # Unchanged
 ├── extract-graph-data.js     # Unchanged
-├── config.js                 # TYPE_COLORS, CATEGORY_COLORS (unchanged)
-├── graph.js                  # D3 canvas rendering (unchanged, loaded as vanilla module)
 ├── README.md
 └── HANDOFF.md
 ```

@@ -14,6 +14,7 @@ Visualize glossary term relationships and cross-specification references as an i
 - **Zoom & pan** — scroll to zoom, drag background to pan
 - **Spec nodes** — toggle visibility of specification nodes that connect to terms
 - **Labels toggle** — show/hide term labels
+- **7 themes** — Default Light, Dark, Gruvbox Dark, Gruvbox Light, Neon Dark, Retro Light, Netrunner
 
 ## Quick Start
 
@@ -29,16 +30,29 @@ This reads all `*.json` spec files and `Glossary.json` from the `artifacts/` dir
 ### Serve the visualization
 
 ```bash
-node server.js
+npm install
+npm run dev
 ```
 
-Then open [http://localhost:3000](http://localhost:3000) in your browser.
+Then open [http://localhost:5173](http://localhost:5173) in your browser.
 
-### Custom port
+### Build for production
 
 ```bash
-node server.js 8080
+npm run build
 ```
+
+Output goes to `dist/`. Serve with `npm run preview` or any static file server.
+
+## Architecture
+
+This is a **React shell + Canvas isolate** architecture:
+
+- **React + Vite + shadcn/ui** — sidebar, detail panel, controls, themes (polished UI)
+- **D3.js v7 + Canvas 2D** (`public/legacy/`) — force-directed layout, rendering, animations (preserved as-is)
+- **Bridge** — `window.__GRAPH_WRAPPER__` exposes minimal API between React and the canvas
+
+The D3 canvas rendering is loaded as native browser ES modules, completely untouched by the React build.
 
 ## How it works
 
@@ -46,7 +60,8 @@ node server.js 8080
 2. It extracts `relatedTerms` links from glossary terms
 3. It extracts `glossaryRefs` from every spec section (recursively)
 4. It builds cross-spec edges showing which specs share glossary references
-5. The output `graph-data.json` is consumed by the D3.js visualization
+5. The output `graph-data.json` is consumed by the React app, which passes it to the D3 canvas
+6. The canvas runs a force-directed layout (200 ticks, static) and renders at 60fps
 
 ## Graph data structure
 
