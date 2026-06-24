@@ -48,8 +48,6 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, onBrid
   useEffect(() => { dataRef.current = data }, [data])
   useEffect(() => {
     // Run once on mount — uses dataRef.current which updates via separate effect
-    console.log('[GraphCanvas] Effect running')
-
     let cancelled = false
     setReady(false)
 
@@ -158,26 +156,21 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, onBrid
         triggerRender: () => wrapper.renderGraph(),
       }
 
-      console.log('[GraphCanvas] Bridge set')
       setReady(true)
       onBridgeReady?.()
 
       // Apply initial filters from URL state
       const params = new URLSearchParams(window.location.search)
       const catsParam = params.get('cats')
-      console.log('[GraphCanvas] URL search:', window.location.search, 'catsParam:', catsParam)
       if (catsParam) {
         const cats = new Set(catsParam.split(',').map(c => c.trim()).filter(Boolean))
-        console.log('[GraphCanvas] Parsed cats:', [...cats])
         const visibleIds = new Set<string>()
         for (const node of dataRef.current.nodes) {
           const cat = node.typeCat || node.category || 'other'
           if (cats.has(cat)) visibleIds.add(node.id)
         }
         bridge.current?.setVisibility(visibleIds)
-        console.log('[GraphCanvas] Applied initial filters:', visibleIds.size, 'nodes')
       } else {
-        console.log('[GraphCanvas] No cats param, applying all')
         const allIds = new Set<string>(dataRef.current.nodes.map((n: any) => n.id))
         bridge.current?.setVisibility(allIds)
       }

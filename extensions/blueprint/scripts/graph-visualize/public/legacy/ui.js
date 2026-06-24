@@ -38,7 +38,6 @@ export function initUI() {
     try {
       const color = getComputedStyle(document.documentElement)
         .getPropertyValue(`--node-color-${idx}`).trim()
-      console.log(`[getCatColor] cat=${catKey} hash=${hash} idx=${idx} color=${color}`)
       return color || '#94a3b8'
     } catch { return '#94a3b8' }
   }

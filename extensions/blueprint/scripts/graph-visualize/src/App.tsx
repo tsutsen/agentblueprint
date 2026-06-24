@@ -220,7 +220,6 @@ function App() {
   // Uses searchTerm (not debounced) so it works on initial load
   useEffect(() => {
     if (!graphData || !bridgeReady) return
-    console.log('[App] Applying filters, bridge:', !!bridgeRef.current)
     const visibleIds = new Set<string>()
     const search = searchTerm.toLowerCase().trim()
     for (const node of graphData.nodes) {
@@ -232,7 +231,6 @@ function App() {
         visibleIds.add(node.id)
       }
     }
-    console.log('[App] visibleIds:', visibleIds.size, 'cats:', [...activeCategories])
     bridgeRef.current?.setVisibility(visibleIds)
   }, [graphData, bridgeReady, activeCategories, searchTerm])
 
@@ -241,16 +239,9 @@ function App() {
     if (!graphData || !bridgeReady) return
     const params = new URLSearchParams(window.location.search)
     const nodeId = params.get('node')
-    if (!nodeId) {
-      console.log('[App] No node in URL')
-      return
-    }
+    if (!nodeId) return
     const node = graphData.nodes.find((n: any) => n.id === nodeId)
-    if (!node) {
-      console.log('[App] Node not found:', nodeId, 'total nodes:', graphData.nodes.length)
-      return
-    }
-    console.log('[App] Restoring node from URL:', nodeId, 'found:', !!node)
+    if (!node) return
     // Select the node
     bridgeRef.current?.selectNodeById(nodeId)
   }, [graphData, bridgeReady])

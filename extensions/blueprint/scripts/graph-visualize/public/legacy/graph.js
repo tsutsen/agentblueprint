@@ -839,7 +839,7 @@ function getNodeColor(d) {
   try {
     const color = getComputedStyle(document.documentElement)
       .getPropertyValue(cssVar).trim();
-    if (color) { console.log(`[getNodeColor] cat=${cat} hash=${hash} idx=${idx} color=${color}`); return color; }
+    if (color) { return color; }
   } catch { /* fallback */ }
   return "#94a3b8";
 }
