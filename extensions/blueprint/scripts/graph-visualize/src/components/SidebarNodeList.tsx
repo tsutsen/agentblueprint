@@ -50,7 +50,7 @@ const SidebarNodeItem = memo(function SidebarNodeItem({
           </span>
         </button>
       </TooltipTrigger>
-      <TooltipContent side="right" className="max-w-[300px]">
+      <TooltipContent side="right" sideOffset={8} className="max-w-[300px]">
         {node.name || node.id}
       </TooltipContent>
     </Tooltip>

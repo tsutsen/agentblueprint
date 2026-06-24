@@ -1052,6 +1052,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     // Apply font families
     cs.setProperty('--font-primary', theme.fontFamily)
     cs.setProperty('--font-secondary', theme.fontFamilyMono)
+    cs.setProperty('--font-size-primary', `${theme.fontSizePrimary ?? 14}px`)
+    cs.setProperty('--font-size-secondary', `${theme.fontSizeSecondary ?? 13}px`)
 
     // Apply to DOM
     for (const [key, value] of Object.entries(theme.vars)) {

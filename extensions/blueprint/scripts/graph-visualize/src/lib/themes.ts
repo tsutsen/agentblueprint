@@ -14,6 +14,10 @@ export interface Theme {
   fontFamily: string;
   // Secondary font (e.g. monospace for sidebar, code, detail panel)
   fontFamilyMono: string;
+  // Primary font size (px, default 14)
+  fontSizePrimary?: number;
+  // Secondary font size (px, default 13)
+  fontSizeSecondary?: number;
   // shadcn UI variables (HSL format)
   vars: Record<string, string>;
 
@@ -284,8 +288,9 @@ export const themes: Theme[] = [
   {
     key: "retro",
     label: "Retro Light",
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    fontFamilyMono: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', Consolas, monospace",
+    fontFamily: "'Michroma', 'Coustard', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontFamilyMono: "'Syne Mono', 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', Consolas, monospace",
+    fontSizePrimary: 11,
     vars: {
       "--background": hexToHsl("#fff0f5"),            // page / main canvas background
       "--foreground": hexToHsl("#4b0082"),            // primary text color
@@ -328,8 +333,8 @@ export const themes: Theme[] = [
   {
     key: "netrunner",
     label: "Netrunner",
-    fontFamily: "'Space Grotesk', 'Inter', sans-serif",
-    fontFamilyMono: "'Fira Code', 'JetBrains Mono', Consolas, monospace",
+    fontFamily: "'PT Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace",
+    fontFamilyMono: "'Share Tech', 'Space Grotesk', 'Inter', sans-serif",
     vars: {
       "--background": hexToHsl("#0A0F1F"),            // page / main canvas background
       "--foreground": hexToHsl("#F5F7FA"),            // primary text color
@@ -387,6 +392,8 @@ export function applyTheme(themeKey: string): void {
   // Apply font families
   root.style.setProperty("--font-primary", theme.fontFamily);
   root.style.setProperty("--font-secondary", theme.fontFamilyMono);
+  root.style.setProperty("--font-size-primary", `${theme.fontSizePrimary ?? 14}px`);
+  root.style.setProperty("--font-size-secondary", `${theme.fontSizeSecondary ?? 13}px`);
   // Apply edge color
   root.style.setProperty("--edge-color", theme.edgeColor);
   // Apply 12 node colors

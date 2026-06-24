@@ -27,7 +27,7 @@ export function DetailPanel({ node, connections, onClose, onSelectNode }: Detail
         <div data-testid="detail-header-text" className="flex flex-col gap-1 pr-2 min-w-0 flex-1">
           <span data-testid="detail-node-name" className="text-base font-semibold break-words overflow-wrap-anywhere">{node.name || node.id}</span>
           <div className="flex items-center gap-2">
-            <Badge data-testid="detail-type-badge" variant="secondary" className="text-[10px] uppercase">
+            <Badge data-testid="detail-type-badge" variant="secondary" className="text-[10px] uppercase -ml-1">
               {node.category}
             </Badge>
             <span data-testid="detail-node-id" className="text-xs text-muted-foreground font-mono">
@@ -85,7 +85,7 @@ export function DetailPanel({ node, connections, onClose, onSelectNode }: Detail
                       data-testid={`detail-connection-${conn.id}`}
                       key={conn.id}
                       onClick={() => onSelectNode(conn.id)}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-muted/50 text-left"
+                      className="w-full flex items-center gap-2 px-2 pr-0 py-1.5 rounded text-sm hover:bg-muted/50 text-left"
                     >
                       <span data-testid={`detail-conn-label-${conn.id}`} className="truncate flex-1 min-w-0">{conn.label}</span>
                       <Badge variant="secondary" className="text-[10px] flex-shrink-0">

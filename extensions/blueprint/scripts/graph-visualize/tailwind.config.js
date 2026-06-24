@@ -11,6 +11,16 @@ export default {
         sans: ['var(--font-primary)', 'sans-serif'],
         mono: ['var(--font-secondary)', 'monospace'],
       },
+      fontSize: {
+        xs: ['var(--font-size-primary, 14px)', { lineHeight: '1.5em' }],
+        sm: ['calc(var(--font-size-primary, 14px) * 1.05)', { lineHeight: '1.4em' }],
+        base: ['calc(var(--font-size-primary, 14px) * 1.1)', { lineHeight: '1.3em' }],
+        lg: ['calc(var(--font-size-primary, 14px) * 1.2)', { lineHeight: '1.3em' }],
+        xl: ['calc(var(--font-size-primary, 14px) * 1.3)', { lineHeight: '1.25em' }],
+        '2xl': ['calc(var(--font-size-primary, 14px) * 1.5)', { lineHeight: '1.25em' }],
+        '3xl': ['calc(var(--font-size-primary, 14px) * 1.8)', { lineHeight: '1.2em' }],
+        '4xl': ['calc(var(--font-size-primary, 14px) * 2.25)', { lineHeight: '1.1em' }],
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
