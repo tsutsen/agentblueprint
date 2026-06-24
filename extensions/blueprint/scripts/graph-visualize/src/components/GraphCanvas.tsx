@@ -522,6 +522,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
           connectedEdgesRef.current!.add(e)
         }
       }
+      // connected set built: size = connectedSetRef.current.size
     }
     recalcSizeRange()
 
@@ -870,10 +871,10 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     canvas.addEventListener('wheel', onWheel, { passive: false })
 
     return () => {
-      canvas.removeEventListener('mousedown', onMouseDown)
-      canvas.removeEventListener('mousemove', onMouseMove)
-      canvas.removeEventListener('mouseup', onMouseUp)
-      canvas.removeEventListener('wheel', onWheel)
+      canvas.removeEventListener('mousedown', onMouseDown, { capture: true })
+      canvas.removeEventListener('mousemove', onMouseMove, { capture: true })
+      canvas.removeEventListener('mouseup', onMouseUp, { capture: true })
+      canvas.removeEventListener('wheel', onWheel, { capture: true })
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
