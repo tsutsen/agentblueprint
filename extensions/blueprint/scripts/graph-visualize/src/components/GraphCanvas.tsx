@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback, useImperativeHandle } from 'react'
 import * as d3 from 'd3'
+import { themes } from '@/lib/themes'
 
 // ─── Bridge Interface ───
 export interface IGraphBridge {
@@ -834,70 +835,31 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
   // ─── Apply theme ───
   useEffect(() => {
-    const cs = document.documentElement.style
-    const themeColors: Record<string, Record<string, string>> = {
-      default: {
-        '--node-color-0': '#60a5fa', '--node-color-1': '#34d399', '--node-color-2': '#f472b6',
-        '--node-color-3': '#a78bfa', '--node-color-4': '#fb923c', '--node-color-5': '#2dd4bf',
-        '--node-color-6': '#f87171', '--node-color-7': '#818cf8', '--node-color-8': '#22d3ee',
-        '--node-color-9': '#fbbf24', '--node-color-10': '#4ade80', '--node-color-11': '#e879f9',
-        '--node-stroke': '#1e293b', '--node-stroke-selected': '#fff', '--node-stroke-hover': '#94a3b8',
-        '--node-stroke-width': '1.5', '--edge-color': 'rgba(148, 163, 184, 0.4)',
-      },
-      ocean: {
-        '--node-color-0': '#0ea5e9', '--node-color-1': '#06b6d4', '--node-color-2': '#0284c7',
-        '--node-color-3': '#0891b2', '--node-color-4': '#0d9488', '--node-color-5': '#14b8a6',
-        '--node-color-6': '#38bdf8', '--node-color-7': '#7dd3fc', '--node-color-8': '#bae6fd',
-        '--node-color-9': '#e0f2fe', '--node-color-10': '#0c4a6e', '--node-color-11': '#0369a1',
-        '--node-stroke': '#0c4a6e', '--node-stroke-selected': '#7dd3fc', '--node-stroke-hover': '#38bdf8',
-        '--node-stroke-width': '1.5', '--edge-color': 'rgba(14, 165, 233, 0.3)',
-      },
-      forest: {
-        '--node-color-0': '#22c55e', '--node-color-1': '#16a34a', '--node-color-2': '#15803d',
-        '--node-color-3': '#166534', '--node-color-4': '#84cc16', '--node-color-5': '#65a30d',
-        '--node-color-6': '#a3e635', '--node-color-7': '#4ade80', '--node-color-8': '#86efac',
-        '--node-color-9': '#bbf7d0', '--node-color-10': '#052e16', '--node-color-11': '#14532d',
-        '--node-stroke': '#052e16', '--node-stroke-selected': '#86efac', '--node-stroke-hover': '#4ade80',
-        '--node-stroke-width': '1.5', '--edge-color': 'rgba(34, 197, 94, 0.3)',
-      },
-      sunset: {
-        '--node-color-0': '#f97316', '--node-color-1': '#ef4444', '--node-color-2': '#ec4899',
-        '--node-color-3': '#f59e0b', '--node-color-4': '#fb7185', '--node-color-5': '#f43f5e',
-        '--node-color-6': '#fbbf24', '--node-color-7': '#fb923c', '--node-color-8': '#fde68a',
-        '--node-color-9': '#fecaca', '--node-color-10': '#7c2d12', '--node-color-11': '#881337',
-        '--node-stroke': '#7c2d12', '--node-stroke-selected': '#fecaca', '--node-stroke-hover': '#fbbf24',
-        '--node-stroke-width': '1.5', '--edge-color': 'rgba(249, 115, 22, 0.3)',
-      },
-      purple: {
-        '--node-color-0': '#8b5cf6', '--node-color-1': '#a855f7', '--node-color-2': '#7c3aed',
-        '--node-color-3': '#6d28d9', '--node-color-4': '#c084fc', '--node-color-5': '#e879f9',
-        '--node-color-6': '#d946ef', '--node-color-7': '#f0abfc', '--node-color-8': '#c4b5fd',
-        '--node-color-9': '#ddd6fe', '--node-color-10': '#3b0764', '--node-color-11': '#581c87',
-        '--node-stroke': '#3b0764', '--node-stroke-selected': '#ddd6fe', '--node-stroke-hover': '#c084fc',
-        '--node-stroke-width': '1.5', '--edge-color': 'rgba(139, 92, 246, 0.3)',
-      },
-      monochrome: {
-        '--node-color-0': '#64748b', '--node-color-1': '#475569', '--node-color-2': '#334155',
-        '--node-color-3': '#1e293b', '--node-color-4': '#94a3b8', '--node-color-5': '#cbd5e1',
-        '--node-color-6': '#e2e8f0', '--node-color-7': '#f1f5f9', '--node-color-8': '#0f172a',
-        '--node-color-9': '#475569', '--node-color-10': '#1e293b', '--node-color-11': '#64748b',
-        '--node-stroke': '#0f172a', '--node-stroke-selected': '#e2e8f0', '--node-stroke-hover': '#94a3b8',
-        '--node-stroke-width': '1.5', '--edge-color': 'rgba(100, 116, 139, 0.4)',
-      },
-      neon: {
-        '--node-color-0': '#00ff88', '--node-color-1': '#00ccff', '--node-color-2': '#ff00ff',
-        '--node-color-3': '#ffff00', '--node-color-4': '#ff6600', '--node-color-5': '#ff0088',
-        '--node-color-6': '#00ffcc', '--node-color-7': '#cc00ff', '--node-color-8': '#88ff00',
-        '--node-color-9': '#0088ff', '--node-color-10': '#000000', '--node-color-11': '#ffffff',
-        '--node-stroke': '#000000', '--node-stroke-selected': '#00ff88', '--node-stroke-hover': '#00ccff',
-        '--node-stroke-width': '2', '--edge-color': 'rgba(0, 204, 255, 0.3)',
-      },
-    }
+    const theme = themes.find((t) => t.key === themeState)
+    if (!theme) return
 
-    const colors = themeColors[themeState] || themeColors.default
+    const cs = document.documentElement.style
+    const colors: Record<string, string> = {}
+
+    // Build colors map from theme definition
+    for (let i = 0; i < 12; i++) {
+      colors[`--node-color-${i}`] = theme.nodeColors[i]
+    }
+    colors['--edge-color'] = theme.edgeColor
+    colors['--node-stroke-width'] = theme.nodeStrokeWidth.toString()
+    colors['--node-stroke-selected'] = theme.nodeStrokeSelectedColor || '#fff'
+    colors['--node-stroke-hover'] = theme.nodeStrokeHoverColor || '#fff'
+    // Default node stroke to darker version of first node color
+    colors['--node-stroke'] = theme.nodeStrokeColor || ''
+
+    // Apply to DOM
+    for (const [key, value] of Object.entries(theme.vars)) {
+      cs.setProperty(key, value)
+    }
     for (const [key, value] of Object.entries(colors)) {
       cs.setProperty(key, value)
     }
+
     themeColorsRef.current = colors
     render()
   }, [themeState]) // eslint-disable-line react-hooks/exhaustive-deps
