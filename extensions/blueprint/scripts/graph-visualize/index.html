@@ -11,40 +11,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- Load legacy graph modules (D3 + graph.js) before React mounts -->
-    <!-- Plain <script> (no type="module") bypasses Vite's HTML transformer entirely -->
-    <script>
-      // Expose a readiness promise that React can await
-      window.__GRAPH_READY__ = (async () => {
-        try {
-          console.log('[bootstrap] Loading D3 from CDN...');
-          const d3Module = await import('https://cdn.jsdelivr.net/npm/d3@7/+esm');
-          window.d3 = d3Module;
-          console.log('[bootstrap] D3 loaded');
-
-          // Helper: fetch a .js file, replace relative imports with blob URLs, return Blob URL
-          async function loadModule(path, importMap) {
-            const text = await fetch(path).then(r => r.text());
-            const fixed = text.replace(
-              /from ['"]\.\/([^'"]+)['"]/g,
-              (match, file) => `from '${importMap[file] || match}'`
-            );
-            return URL.createObjectURL(new Blob([fixed], { type: 'application/javascript' }));
-          }
-
-          // Load modules in dependency order
-          const configBlob = await loadModule('/legacy/config.js', {});
-          const graphBlob = await loadModule('/legacy/graph.js', { 'config.js': configBlob });
-          const wrapperBlob = await loadModule('/legacy/graph-wrapper.js', { 'graph.js': graphBlob });
-          await import(wrapperBlob);
-          console.log('[bootstrap] Ready, __GRAPH_WRAPPER__:', !!window.__GRAPH_WRAPPER__);
-          return window.__GRAPH_WRAPPER__;
-        } catch (err) {
-          console.error('[bootstrap] FAILED:', err);
-          throw err;
-        }
-      })();
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
