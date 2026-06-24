@@ -561,6 +561,13 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     needsRecalcRef.current = true
     needsLabelRebuildRef.current = true
 
+    // Immediately compute size ranges and label set so nodes are visible on first render
+    recalcSizeRange()
+    needsRecalcRef.current = false
+    buildLabelSet()
+    needsLabelRebuildRef.current = false
+    labelsDirtyRef.current = true
+
     const container = containerRef.current
     const canvas = canvasRef.current
     if (!container || !canvas) return
