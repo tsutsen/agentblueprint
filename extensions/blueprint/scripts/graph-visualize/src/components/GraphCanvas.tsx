@@ -1085,10 +1085,39 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
         n.visible = visibleIds.has(n.id)
       }
       labelSetDirtyRef.current = true
+      // Snapshot old radii BEFORE recalculating ranges
+      const oldRadii = new Map<string, number>()
+      for (const n of dataRef.current.nodes) {
+        if (n.visible) {
+          oldRadii.set(n.id, n._animRadius ?? getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current))
+        }
+      }
       // Recalculate sizes for visible nodes
       connectedSetRef.current = null
       connectedEdgesRef.current = null
       recalcSizeRange()
+      // Animate radii to new targets after range change
+      animScaleStartRadiiRef.current = new Map()
+      animScaleTargetsRef.current = new Map()
+      let changed = false
+      for (const n of dataRef.current.nodes) {
+        if (!n.visible) continue
+        const startRadius = oldRadii.get(n.id) ?? getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
+        const targetRadius = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
+        if (startRadius !== targetRadius) changed = true
+
+        animScaleStartRadiiRef.current.set(n.id, startRadius)
+        animScaleTargetsRef.current.set(n.id, targetRadius)
+        n._animRadius = startRadius
+      }
+      if (changed) {
+        if (animFrameRef.current !== null) cancelAnimationFrame(animFrameRef.current)
+        animatingRef.current = true
+        animStartRef.current = performance.now()
+        animDimRef.current = 1
+        animDimTargetRef.current = null
+        animFrameRef.current = requestAnimationFrame(animStep)
+      }
       // Restart simulation with updated visibility (preserves user's simulation preference)
       if (simulatingRef.current) {
         startSimulationInternal()
