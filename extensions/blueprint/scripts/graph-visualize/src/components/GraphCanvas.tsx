@@ -28,6 +28,7 @@ export interface IGraphBridge {
   isSimulating(): boolean
   startSimulation(): void
   stopSimulation(): void
+  tighten(): void
 
   // ── Selection (parent commands, canvas fires events) ──
   selectNodeById(id: string): void
@@ -176,6 +177,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
   function createSimulation(nodes: GraphNode[], edges: GraphEdge[], opts: {
     alpha?: number
     alphaDecay?: number
+    alphaMin?: number
     velocityDecay?: number
     chargeStrength?: number
     chargeDistanceMax?: number
@@ -212,6 +214,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       .force('collision', collideForce)
       .alpha(opts.alpha ?? 0.3)
       .alphaDecay(opts.alphaDecay ?? 0)
+      .alphaMin(opts.alphaMin ?? 0)
       .velocityDecay(opts.velocityDecay ?? 0.4)
 
     if (opts.centerX != null && opts.centerY != null) {
@@ -510,9 +513,36 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       .filter((e: GraphEdge) => e.visible && visibleNodeSet.has(e.source) && visibleNodeSet.has(e.target))
       .map((e: GraphEdge) => ({ ...e, source: e.source, target: e.target }))
     simulationRef.current = createSimulation(visibleNodes, visibleEdges, {
-      alpha: 0.3, alphaDecay: 0, velocityDecay: 0.4,
-      chargeStrength: -150,
+      alpha: 1, alphaDecay: 0.08, alphaMin: 0, velocityDecay: 0.2,
+      chargeStrength: -400,
       tick: () => render(),
+    }).on('end', () => {
+      simulatingRef.current = false
+      render()
+    })
+  }
+
+  // ─── Tighten: pull nodes closer together ───
+  function tightenSimulationInternal() {
+    simulatingRef.current = true
+    if (simulationRef.current) simulationRef.current.stop()
+    const visibleNodes = dataRef.current.nodes.filter((n: GraphNode) => n.visible)
+    const visibleNodeSet = new Set(visibleNodes)
+    const visibleEdges = validEdgesRef.current
+      .filter((e: GraphEdge) => e.visible && visibleNodeSet.has(e.source) && visibleNodeSet.has(e.target))
+      .map((e: GraphEdge) => ({ ...e, source: e.source, target: e.target }))
+    const cx = widthRef.current / 2
+    const cy = heightRef.current / 2
+    simulationRef.current = createSimulation(visibleNodes, visibleEdges, {
+      alpha: 1, alphaDecay: 0.1, alphaMin: 0, velocityDecay: 0.4,
+      chargeStrength: -100,
+      linkDistance: 180,
+      linkStrength: 0.15,
+      centerX: cx, centerY: cy, centerStrength: 0.15,
+      tick: () => render(),
+    }).on('end', () => {
+      simulatingRef.current = false
+      render()
     })
   }
 
@@ -796,6 +826,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
         if (simulationRef.current) {
           draggedNodeRef.current.fx = pos.x
           draggedNodeRef.current.fy = pos.y
+          simulationRef.current.alpha(0.1)
         }
         render()
         return
@@ -864,6 +895,8 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
           if (simulationRef.current) {
             node.fx = null
             node.fy = null
+            // Let simulation cool down after drag
+            simulationRef.current.alphaTarget(0)
           } else {
             node.fx = node.x
             node.fy = node.y
@@ -1053,11 +1086,13 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     // Simulation
     isSimulating: () => simulatingRef.current,
     startSimulation: () => startSimulationInternal(),
+    tighten: () => tightenSimulationInternal(),
     stopSimulation: () => {
       simulatingRef.current = false
       if (simulationRef.current) {
         simulationRef.current.stop()
         simulationRef.current = null
+        render()
       }
     },
 

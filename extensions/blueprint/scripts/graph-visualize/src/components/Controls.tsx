@@ -2,15 +2,12 @@ import type { IGraphBridge } from '@/components/GraphCanvas'
 import { themes } from '@/lib/themes'
 import { SIZE_METRICS } from '@/lib/metrics'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { ChevronDown, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
+import { ChevronDown, Maximize2, Minimize2, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 export interface ControlsProps {
   bridge: IGraphBridge | null
-  isSimulating: boolean
-  onSimulationChange: (checked: boolean) => void
   sizeMetric: string
   onSizeMetricChange: (key: string) => void
   currentTheme: string
@@ -19,8 +16,6 @@ export interface ControlsProps {
 
 export function Controls({
   bridge,
-  isSimulating,
-  onSimulationChange,
   sizeMetric,
   onSizeMetricChange,
   currentTheme,
@@ -32,21 +27,31 @@ export function Controls({
       <div className="absolute top-3 left-3 flex items-start gap-1.5 z-10">
         <Tooltip>
           <TooltipTrigger asChild>
-            <label className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 h-8 text-xs font-medium bg-background/90 backdrop-blur border border-input cursor-pointer graph-control-btn">
-              Simulation
-              <Switch
-                checked={isSimulating}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    bridge?.startSimulation()
-                  } else {
-                    bridge?.stopSimulation()
-                  }
-                  onSimulationChange(checked)
-                }}
-              />
-            </label>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs bg-background backdrop-blur graph-control-btn"
+              onClick={() => bridge?.startSimulation()}
+            >
+              <Maximize2 className="h-3.5 w-3.5 mr-1" />
+              Explode
+            </Button>
           </TooltipTrigger>
+          <TooltipContent side="bottom">Run layout simulation (settles then stops)</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs bg-background backdrop-blur graph-control-btn"
+              onClick={() => bridge?.tighten()}
+            >
+              <Minimize2 className="h-3.5 w-3.5 mr-1" />
+              Tighten
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Pull nodes tighter together</TooltipContent>
         </Tooltip>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

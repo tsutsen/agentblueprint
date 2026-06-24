@@ -22,7 +22,6 @@ function App() {
   const [categories, setCategories] = useState<Record<string, { count: number; color: string }>>({})
   const [sortBy, setSortBy] = useState<'name' | 'degree'>('name')
   const [sidebarWidth, setSidebarWidth] = useState(300)
-  const [isSimulating, setIsSimulating] = useState(false)
   const [sizeMetric, setSizeMetricState] = useState('degree')
   const [currentTheme, setCurrentTheme] = useState('default')
 
@@ -34,7 +33,6 @@ function App() {
     if (!bridgeRef.current) return
     setCurrentTheme(bridgeRef.current.getTheme())
     setSizeMetricState(bridgeRef.current.getSizeMetric())
-    setIsSimulating(bridgeRef.current.isSimulating())
   }, [graphData])
 
   // ─── Load graph data (module-level promise, fetched once) ───
@@ -125,7 +123,6 @@ function App() {
   // ─── Node selection ───
   const handleNodeSelect = useCallback((node: GraphNode) => {
     setSelectedNode(node)
-    setIsSimulating(false) // simulation stops on select
     const params = new URLSearchParams(window.location.search)
     params.set('node', node.id)
     history.replaceState(null, '', `?${params.toString()}`)
@@ -244,8 +241,6 @@ function App() {
         <main className="flex-1 relative overflow-hidden">
           <Controls
             bridge={bridgeRef.current}
-            isSimulating={isSimulating}
-            onSimulationChange={setIsSimulating}
             sizeMetric={sizeMetric}
             onSizeMetricChange={setSizeMetricState}
             currentTheme={currentTheme}
