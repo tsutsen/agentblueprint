@@ -136,11 +136,11 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, onBrid
           const w = wrapper.getWidth() || 800
           const h = wrapper.getHeight() || 600
           const z = wrapper.getZoom()
-          const centerGraphX = z.x + w / (2 * z.k)
-          const centerGraphY = z.y + h / (2 * z.k)
+          const centerX = w / 2
+          const centerY = h / 2
           const newK = Math.min(z.k * 1.3, 10)
-          const newX = centerGraphX - w / (2 * newK)
-          const newY = centerGraphY - h / (2 * newK)
+          const newX = centerX - (centerX - z.x) * (newK / z.k)
+          const newY = centerY - (centerY - z.y) * (newK / z.k)
           wrapper.setZoom(newX, newY, newK)
           wrapper.renderGraph()
         },
@@ -148,11 +148,11 @@ export function GraphCanvas({ data, bridge, onNodeSelect, onNodeDeselect, onBrid
           const w = wrapper.getWidth() || 800
           const h = wrapper.getHeight() || 600
           const z = wrapper.getZoom()
-          const centerGraphX = z.x + w / (2 * z.k)
-          const centerGraphY = z.y + h / (2 * z.k)
+          const centerX = w / 2
+          const centerY = h / 2
           const newK = Math.max(z.k / 1.3, 0.1)
-          const newX = centerGraphX - w / (2 * newK)
-          const newY = centerGraphY - h / (2 * newK)
+          const newX = centerX - (centerX - z.x) * (newK / z.k)
+          const newY = centerY - (centerY - z.y) * (newK / z.k)
           wrapper.setZoom(newX, newY, newK)
           wrapper.renderGraph()
         },
