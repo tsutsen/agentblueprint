@@ -590,12 +590,17 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
   // ─── Initialize graph ───
   useEffect(() => {
-    if (!data || initializedRef.current) return
-    initializedRef.current = true
+    if (!data) return
 
     const container = containerRef.current
     const canvas = canvasRef.current
     if (!container || !canvas) return
+
+    // Only run init layout once (StrictMode safety)
+    const isFirstMount = !initializedRef.current
+    initializedRef.current = true
+
+    if (isFirstMount) {
 
     // Clear previous labels
     labelElementsRef.current.clear()
@@ -675,8 +680,12 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     // Initial render
     render()
+  } else {
+    // StrictMode remount — just render with existing positions
+    render()
+  }
 
-    // ─── Manual wheel zoom (replaces d3-zoom to avoid double transform) ───
+  // ─── Manual wheel zoom (replaces d3-zoom to avoid double transform) ───
     function onWheel(event: WheelEvent) {
       event.preventDefault()
       const rect = canvas.getBoundingClientRect()
@@ -928,8 +937,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     }
 
     themeColorsRef.current = colors
-    // Don't call deferRender — CSS vars update instantly, graph re-renders on next interaction
-    // This avoids the freeze that occurs when idle callback fires synchronously
+    render()
   }, [themeState]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Bridge ───
