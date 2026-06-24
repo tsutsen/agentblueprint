@@ -430,7 +430,7 @@ function App() {
         <div className="absolute top-3 left-3 flex items-start gap-1.5 z-10">
           <Tooltip>
             <TooltipTrigger asChild>
-              <label className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 h-8 text-xs font-medium bg-background/90 backdrop-blur border border-input cursor-pointer hover:bg-accent hover:text-accent-foreground">
+              <label className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 h-8 text-xs font-medium bg-background/90 backdrop-blur border border-input cursor-pointer text-foreground hover:!bg-accent hover:!text-accent-foreground">
                 Simulation
                 <Switch
                   checked={simulating}
@@ -448,7 +448,7 @@ function App() {
           </Tooltip>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs bg-background backdrop-blur">
+              <Button variant="outline" size="sm" className="h-8 text-xs bg-background backdrop-blur text-foreground hover:!bg-accent hover:!text-accent-foreground">
                 Size: {SIZE_METRICS.find((m) => m.key === sizeMetric)?.label}
                 <ChevronDown className="h-3.5 w-3.5 ml-1" />
               </Button>
@@ -466,8 +466,7 @@ function App() {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs bg-background backdrop-blur">
-                Theme: {themes.find((t) => t.key === currentTheme)?.label || 'Default'}
+              <Button variant="outline" size="sm" className="h-8 text-xs bg-background backdrop-blur text-foreground hover:!bg-accent hover:!text-accent-foreground">
                 <ChevronDown className="h-3.5 w-3.5 ml-1" />
               </Button>
             </DropdownMenuTrigger>
@@ -495,7 +494,7 @@ function App() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 w-8 p-0 bg-background backdrop-blur"
+                className="h-8 w-8 p-0 bg-background backdrop-blur text-foreground hover:!bg-accent hover:!text-accent-foreground"
                 onClick={() => bridgeRef.current?.zoomIn()}
               >
                 <ZoomIn className="h-3.5 w-3.5" />
@@ -508,7 +507,7 @@ function App() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 w-8 p-0 bg-background backdrop-blur"
+                className="h-8 w-8 p-0 bg-background backdrop-blur text-foreground hover:!bg-accent hover:!text-accent-foreground"
                 onClick={() => bridgeRef.current?.zoomOut()}
               >
                 <ZoomOut className="h-3.5 w-3.5" />
@@ -521,7 +520,7 @@ function App() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 w-8 p-0 bg-background backdrop-blur"
+                className="h-8 w-8 p-0 bg-background backdrop-blur text-foreground hover:!bg-accent hover:!text-accent-foreground"
                 onClick={() => bridgeRef.current?.resetZoom()}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
