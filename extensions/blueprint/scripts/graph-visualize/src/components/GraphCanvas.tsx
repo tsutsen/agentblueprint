@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback, useImperativeHandle } from 'react'
 import * as d3 from 'd3'
 import { themes } from '@/lib/themes'
+import { SIZE_METRICS } from '@/lib/metrics'
 
 // ─── Bridge Interface ───
 export interface IGraphBridge {
@@ -69,11 +70,6 @@ const LABEL_PAD_Y = 2
 const LABEL_HYSTERESIS = 0.2
 const ANIM_DURATION = 400
 const HOVER_LABEL_DELAY = 300
-const METRICS = [
-  { nodeKey: 'blastRadius', rangeKey: 'blast' },
-  { nodeKey: 'degree', rangeKey: 'degree' },
-  { nodeKey: 'risk', rangeKey: 'risk' },
-]
 
 // ─── Helpers ───
 function scaleValue(value: number, minVal: number, maxVal: number, minRadius = 8, maxRadius = 40): number {
@@ -107,8 +103,8 @@ function getNodeRadius(d: any, sizeMetric: string, sizeRange: any, connectedSet:
     return scaleValue(value, 1, 6, 8, 40)
   }
 
-  const rangeKey = sizeMetric ?? 'degree'
-  const range = sizeRange[rangeKey]
+  const metric = SIZE_METRICS.find((m) => m.key === sizeMetric) || SIZE_METRICS[0]
+  const range = sizeRange[metric.key]
   let minVal: number, maxVal: number
   if (range?.connected && connectedSet?.has(d.id)) {
     minVal = range.connected.min
@@ -118,8 +114,7 @@ function getNodeRadius(d: any, sizeMetric: string, sizeRange: any, connectedSet:
     maxVal = range?.full?.max ?? range?.max ?? 0
   }
 
-  const nodeKey = rangeKey === 'blast' ? 'blastRadius' : rangeKey
-  const value = d[nodeKey] ?? 0
+  const value = d[metric.nodeProperty] ?? 0
   return scaleValue(value, minVal, maxVal, 8, 40)
 }
 
@@ -380,14 +375,14 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     if (visibleNodes.length === 0) return
 
     const fullRanges: any = {}
-    for (const m of METRICS) {
-      const values = visibleNodes.map((n: any) => n[m.nodeKey] || 0).filter((v: number) => v > 0)
-      if (values.length > 0) fullRanges[m.rangeKey] = { min: 0, max: Math.max(...values) }
+    for (const m of SIZE_METRICS) {
+      const values = visibleNodes.map((n: any) => n[m.nodeProperty] || 0).filter((v: number) => v > 0)
+      if (values.length > 0) fullRanges[m.key] = { min: 0, max: Math.max(...values) }
     }
 
-    for (const m of METRICS) {
-      if (fullRanges[m.rangeKey]) {
-        sizeRangeRef.current[m.rangeKey] = { full: fullRanges[m.rangeKey] }
+    for (const m of SIZE_METRICS) {
+      if (fullRanges[m.key]) {
+        sizeRangeRef.current[m.key] = { full: fullRanges[m.key] }
       }
     }
 
@@ -395,11 +390,11 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     if (selectedNodeRef.current && connectedSetRef.current) {
       const connectedNodes = visibleNodes.filter((n: any) => connectedSetRef.current!.has(n.id))
       if (connectedNodes.length > 0) {
-        for (const m of METRICS) {
-          const values = connectedNodes.map((n: any) => n[m.nodeKey] || 0)
+        for (const m of SIZE_METRICS) {
+          const values = connectedNodes.map((n: any) => n[m.nodeProperty] || 0)
           const maxVal = Math.max(...values)
-          sizeRangeRef.current[m.rangeKey] = {
-            full: sizeRangeRef.current[m.rangeKey]?.full ?? { min: 0, max: maxVal },
+          sizeRangeRef.current[m.key] = {
+            full: sizeRangeRef.current[m.key]?.full ?? { min: 0, max: maxVal },
             connected: maxVal > 0 ? { min: 0, max: maxVal } : { min: 0, max: 0 },
           }
         }
@@ -605,9 +600,9 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     labelVisibleSetRef.current = null
 
     // Compute size ranges
-    for (const m of METRICS) {
-      const values = data.nodes.map((n: any) => n[m.nodeKey] || 0).filter((v: number) => v > 0)
-      if (values.length > 0) sizeRangeRef.current[m.rangeKey] = { min: 0, max: Math.max(...values) }
+    for (const m of SIZE_METRICS) {
+      const values = data.nodes.map((n: any) => n[m.nodeProperty] || 0).filter((v: number) => v > 0)
+      if (values.length > 0) sizeRangeRef.current[m.key] = { min: 0, max: Math.max(...values) }
     }
 
     // Build node map
