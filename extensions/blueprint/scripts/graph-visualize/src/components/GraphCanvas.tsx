@@ -376,24 +376,12 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     }
   }
 
-  // ─── Recalculate size ranges ───
+  // ─── Compute connected-set size ranges (called on selection change) ───
   function recalcSizeRange() {
     const visibleNodes = dataRef.current.nodes.filter((n: GraphNode) => n.visible !== false)
     if (visibleNodes.length === 0) return
 
-    const fullRanges: SizeRangeMap = {}
-    for (const m of SIZE_METRICS) {
-      const values = visibleNodes.map((n: GraphNode) => n.metrics[m.key] || 0).filter((v: number) => v > 0)
-      if (values.length > 0) fullRanges[m.key] = { min: 0, max: Math.max(...values) }
-    }
-
-    for (const m of SIZE_METRICS) {
-      if (fullRanges[m.key]) {
-        sizeRangeRef.current[m.key] = { full: fullRanges[m.key] }
-      }
-    }
-
-    // Connected-set ranges
+    // Connected-set ranges only — full ranges are computed once at init
     if (selectedNodeRef.current && connectedSetRef.current) {
       const connectedNodes = visibleNodes.filter((n: GraphNode) => connectedSetRef.current!.has(n.id))
       if (connectedNodes.length > 0) {
@@ -440,8 +428,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     // Use cached connected edges (only updated on selection change)
     const connectedEdges = connectedEdgesRef.current
 
-    // Always recompute — dirty flags are broken
-    recalcSizeRange()
     buildLabelSet()
 
     const edgeColor = getEdgeColor(themeColorsRef.current)
@@ -622,10 +608,10 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
       delete (e as any).index
     }
 
-    // Compute size ranges
+    // Compute full size ranges (constant — never changes after init)
     for (const m of SIZE_METRICS) {
       const values = dataRef.current.nodes.map((n: GraphNode) => n.metrics[m.key] || 0).filter((v: number) => v > 0)
-      if (values.length > 0) sizeRangeRef.current[m.key] = { min: 0, max: Math.max(...values) }
+      if (values.length > 0) sizeRangeRef.current[m.key] = { full: { min: 0, max: Math.max(...values) } }
     }
 
     // Build node map
