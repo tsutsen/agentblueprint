@@ -559,12 +559,7 @@ function App() {
                     <span data-testid="detail-stat-risk" className="font-mono text-right">{selectedNode.risk}</span>
                   </div>
                 )}
-                {selectedNode.centrality !== undefined && (
-                  <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
-                    <Label className="text-muted-foreground">Centrality</Label>
-                    <span data-testid="detail-stat-centrality" className="font-mono text-right">{selectedNode.centrality?.toFixed(4)}</span>
-                  </div>
-                )}
+
               </div>
 
               {/* Connections */}

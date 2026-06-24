@@ -69,6 +69,11 @@ const LABEL_PAD_Y = 2
 const LABEL_HYSTERESIS = 0.2
 const ANIM_DURATION = 400
 const HOVER_LABEL_DELAY = 300
+const METRICS = [
+  { nodeKey: 'blastRadius', rangeKey: 'blast' },
+  { nodeKey: 'degree', rangeKey: 'degree' },
+  { nodeKey: 'risk', rangeKey: 'risk' },
+]
 
 // ─── Helpers ───
 function scaleValue(value: number, minVal: number, maxVal: number, minRadius = 8, maxRadius = 40): number {
@@ -374,20 +379,13 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     const visibleNodes = data.nodes.filter((n: any) => n.visible !== false)
     if (visibleNodes.length === 0) return
 
-    const metrics = [
-      { nodeKey: 'blastRadius', rangeKey: 'blast' },
-      { nodeKey: 'degree', rangeKey: 'degree' },
-      { nodeKey: 'risk', rangeKey: 'risk' },
-      { nodeKey: 'centrality', rangeKey: 'centrality' },
-    ]
-
     const fullRanges: any = {}
-    for (const m of metrics) {
+    for (const m of METRICS) {
       const values = visibleNodes.map((n: any) => n[m.nodeKey] || 0).filter((v: number) => v > 0)
       if (values.length > 0) fullRanges[m.rangeKey] = { min: 0, max: Math.max(...values) }
     }
 
-    for (const m of metrics) {
+    for (const m of METRICS) {
       if (fullRanges[m.rangeKey]) {
         sizeRangeRef.current[m.rangeKey] = { full: fullRanges[m.rangeKey] }
       }
@@ -397,7 +395,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     if (selectedNodeRef.current && connectedSetRef.current) {
       const connectedNodes = visibleNodes.filter((n: any) => connectedSetRef.current!.has(n.id))
       if (connectedNodes.length > 0) {
-        for (const m of metrics) {
+        for (const m of METRICS) {
           const values = connectedNodes.map((n: any) => n[m.nodeKey] || 0)
           const maxVal = Math.max(...values)
           sizeRangeRef.current[m.rangeKey] = {
@@ -607,13 +605,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     labelVisibleSetRef.current = null
 
     // Compute size ranges
-    const metrics = [
-      { nodeKey: 'blastRadius', rangeKey: 'blast' },
-      { nodeKey: 'degree', rangeKey: 'degree' },
-      { nodeKey: 'risk', rangeKey: 'risk' },
-      { nodeKey: 'centrality', rangeKey: 'centrality' },
-    ]
-    for (const m of metrics) {
+    for (const m of METRICS) {
       const values = data.nodes.map((n: any) => n[m.nodeKey] || 0).filter((v: number) => v > 0)
       if (values.length > 0) sizeRangeRef.current[m.rangeKey] = { min: 0, max: Math.max(...values) }
     }
