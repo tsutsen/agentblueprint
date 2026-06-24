@@ -1105,7 +1105,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
         const startRadius = oldRadii.get(n.id) ?? getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
         const targetRadius = getNodeRadius(n, sizeMetricRef.current, sizeRangeRef.current, connectedSetRef.current)
         if (startRadius !== targetRadius) changed = true
-
         animScaleStartRadiiRef.current.set(n.id, startRadius)
         animScaleTargetsRef.current.set(n.id, targetRadius)
         n._animRadius = startRadius
