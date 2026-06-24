@@ -390,20 +390,23 @@ function App() {
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => bridgeRef.current?.selectNodeById(node.id)}
-                        className={`w-full min-w-0 max-w-full flex items-center gap-2 px-2 py-1 rounded text-left transition-colors ${
+                        className={`w-full min-w-0 max-w-full text-left rounded transition-colors px-2 py-1 ${
                           selectedNode?.id === node.id
                             ? 'bg-primary/10 text-primary'
                             : 'hover:bg-muted/50'
                         }`}
                       >
-                        <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
-                          {idShort}
-                        </span>
-                        <span className="text-sm text-foreground flex-1 min-w-0 truncate">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
+                            {idShort}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground/60 flex-shrink-0">·</span>
+                          <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
+                            {catDisplay}
+                          </span>
+                        </div>
+                        <span className="text-sm text-foreground truncate block min-w-0">
                           {node.term || node.label || node.id}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0 whitespace-nowrap">
-                          {catDisplay}
                         </span>
                       </button>
                     </TooltipTrigger>
