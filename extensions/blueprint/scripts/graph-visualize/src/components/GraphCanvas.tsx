@@ -178,7 +178,7 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     if (zoomDelta < LABEL_HYSTERESIS && labelVisibleSetRef.current !== null) return
     lastLabelZoomRef.current = z.k
 
-    if (!showLabels || z.k < LABEL_MIN_ZOOM || !data) {
+    if (!showLabelsRef.current || z.k < LABEL_MIN_ZOOM || !data) {
       labelVisibleSetRef.current = null
       return
     }
