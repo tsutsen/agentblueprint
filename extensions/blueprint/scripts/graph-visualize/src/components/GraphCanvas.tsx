@@ -120,53 +120,66 @@ function getNodeRadius(d: any, sizeMetric: string, sizeRange: any, connectedSet:
 
 // ─── Component ───
 export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, className }: GraphCanvasProps) {
+  // ─── DOM refs ───
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const labelsContainerRef = useRef<HTMLDivElement>(null)
 
-  // Internal state (managed by the graph) — refs for live bridge access
+  // ─── Graph state (managed by graph, exposed via bridge) ───
   const themeRef = useRef(localStorage.getItem('graph-theme') || 'default')
   const sizeMetricRef = useRef('degree')
   const showLabelsRef = useRef(true)
   const simulatingRef = useRef(false)
-  // Also keep state for theme useEffect (triggers re-apply)
   const [themeState, setThemeState] = useState(themeRef.current)
   const [sizeMetricState, setSizeMetricState] = useState(sizeMetricRef.current)
-  // Live theme colors for render (avoids getComputedStyle staleness)
   const themeColorsRef = useRef<Record<string, string>>({})
 
-  // Mutable refs (avoid re-renders during animation)
+  // ─── Zoom & viewport ───
   const zoomRef = useRef({ x: 0, y: 0, k: 0.3 })
+  const widthRef = useRef(800)
+  const heightRef = useRef(600)
+  const resizeRAFRef = useRef<number | null>(null)
+
+  // ─── Selection & hover ───
   const selectedNodeRef = useRef<any>(null)
   const hoveredNodeRef = useRef<any>(null)
   const hoveredLabelNodeRef = useRef<any>(null)
   const connectedSetRef = useRef<Set<string> | null>(null)
-  const sizeRangeRef = useRef<any>({})
-  const simulationRef = useRef<d3.Simulation<any, any> | null>(null)
-  const animFrameRef = useRef<number | null>(null)
+  const connectedEdgesRef = useRef<Set<any> | null>(null)
+
+  // ─── Data & layout ───
   const validEdgesRef = useRef<any[]>([])
   const nodeMapRef = useRef<Map<string, any>>(new Map())
+  const sizeRangeRef = useRef<any>({})
+  const simulationRef = useRef<d3.Simulation<any, any> | null>(null)
+  const initializedRef = useRef(false)
+  const currentDimRef = useRef(1)
+
+  // ─── Labels ───
   const labelElementsRef = useRef<Map<string, HTMLDivElement>>(new Map())
   const labelVisibleSetRef = useRef<Set<string> | null>(null)
   const lastLabelZoomRef = useRef(0)
   const hoverLabelTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const currentDimRef = useRef(1)
+
+  // ─── Animation (dimension + radius transitions) ───
+  const animFrameRef = useRef<number | null>(null)
   const animDimRef = useRef(1)
   const animDimTargetRef = useRef<number | null>(null)
   const animScaleStartRadiiRef = useRef<Map<string, number>>(new Map())
   const animScaleTargetsRef = useRef<Map<string, number>>(new Map())
   const animStartRef = useRef(0)
+
+  // ─── Interaction (mouse, pan, drag) ───
   const isPanningRef = useRef(false)
-  const initializedRef = useRef(false)
   const panStartRef = useRef({ x: 0, y: 0 })
   const zoomStartRef = useRef({ x: 0, y: 0 })
   const isMouseDownRef = useRef(false)
   const draggedNodeRef = useRef<any>(null)
   const isDraggingRef = useRef(false)
+
+  // ─── Render batching ───
   const renderPendingRef = useRef(false)
   const rafIdRef = useRef<number | null>(null)
-  // Cached connected set — only updated on selection change
-  const connectedEdgesRef = useRef<Set<any> | null>(null)
 
   // Deferred render — batches rapid calls into a single RAF
   function deferRender() {
@@ -231,10 +244,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
 
     return sim
   }
-
-  const widthRef = useRef(800)
-  const heightRef = useRef(600)
-  const resizeRAFRef = useRef<number | null>(null)
 
   // ─── Build label set (progressive disclosure) ───
   function buildLabelSet() {
