@@ -31,18 +31,18 @@
     },
     "entId": {
       "type": "string",
-      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
-      "description": "Unique identifier for ent"
+      "description": "Entity identifier (ENT-NNN-entityName).",
+      "pattern": "^ENT-\\d{3}-[a-z][a-z0-9-]*$"
     },
     "relId": {
       "type": "string",
-      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
-      "description": "Unique identifier for rel"
+      "description": "Relationship identifier (REL-NNN-relationshipName).",
+      "pattern": "^REL-\\d{3}-[a-z][a-z0-9-]*$"
     },
     "primId": {
       "type": "string",
-      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
-      "description": "Unique identifier for prim"
+      "description": "Primitive type identifier (PRIM-NNN-primitiveName).",
+      "pattern": "^PRIM-\\d{3}-[a-z][a-z0-9-]*$"
     }
   },
   "properties": {
@@ -72,8 +72,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "description": "Unique identifier for this primitive type"
+            "$ref": "#/definitions/primId",
+            "description": "Unique identifier for this primitive type."
           },
           "name": {
             "type": "string",
@@ -213,7 +213,8 @@
                   "description": "What this field represents and how it is used."
                 },
                 "example": {
-                  "description": "A concrete example value. Used in test spec and documentation."
+                  "description": "A concrete example value. Used in test spec and documentation.",
+                  "type": ["string", "number", "boolean", "object", "array", "null"]
                 },
                 "primaryKey": {
                   "type": "boolean",
@@ -348,7 +349,7 @@
             "description": "What this relationship represents between the two entities."
           },
           "id": {
-            "type": "string",
+            "$ref": "#/definitions/relId",
             "description": "Unique identifier for this relationship."
           }
         }
@@ -359,7 +360,7 @@
     "artifacts/DataSpec.md",
     "artifacts/DataSpec.json"
   ],
-  "dependencies": {
+  "specDependencies": {
     "goalSpec": {
       "required": true
     },

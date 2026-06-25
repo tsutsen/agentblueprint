@@ -111,15 +111,15 @@
   "definitions": {
     "glId": {
       "type": "string",
-      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
-      "description": "Unique identifier for a glossary term"
+      "description": "Glossary term identifier (GL-NNN).",
+      "pattern": "^GL-\\d{3}$"
     }
   },
   "outputFiles": [
     "artifacts/Glossary.md",
     "artifacts/Glossary.json"
   ],
-  "dependencies": {
+  "specDependencies": {
     "goalSpec": {
       "required": true
     }

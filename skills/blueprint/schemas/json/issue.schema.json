@@ -4,6 +4,7 @@
   "description": "A single vertical slice decomposed from an Epic. Each issue cuts end-to-end through all relevant integration layers and is independently implementable.",
   "type": "object",
   "required": [
+    "schemaVersion",
     "artifact",
     "id",
     "title",
@@ -67,6 +68,11 @@
     }
   },
   "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the Issue schema this document conforms to. Must be '1.0.0'.",
+      "const": "1.0.0"
+    },
     "artifact": {
       "type": "string",
       "const": "Issue",
@@ -165,7 +171,7 @@
     "tasks/epics/EP-NNN/IS-NNN/IS-NNN.md",
     "tasks/epics/EP-NNN/IS-NNN/IS-NNN.json"
   ],
-  "dependencies": {
+  "specDependencies": {
     "taskPlan": {
       "required": true
     },

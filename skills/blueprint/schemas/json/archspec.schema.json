@@ -23,10 +23,12 @@
     },
     "reqId": {
       "type": "string",
+      "description": "Functional requirement identifier, format REQ-NNN (3-digit zero-padded).",
       "pattern": "^REQ-\\d{3}$"
     },
     "nfrId": {
       "type": "string",
+      "description": "Non-functional requirement identifier, format NFR-NNN (3-digit zero-padded).",
       "pattern": "^NFR-\\d{3}$"
     },
     "glId": {
@@ -36,18 +38,18 @@
     },
     "compId": {
       "type": "string",
-      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
-      "description": "Unique identifier for comp"
+      "description": "Component identifier, format COMP-NNN-componentName.",
+      "pattern": "^COMP-\\d{3}-[a-z][a-z0-9-]*$"
     },
     "flowId": {
       "type": "string",
-      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
-      "description": "Unique identifier for flow"
+      "description": "Data flow identifier, format FLOW-NNN-flowName.",
+      "pattern": "^FLOW-\\d{3}-[a-z][a-z0-9-]*$"
     },
     "conId": {
       "type": "string",
-      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
-      "description": "Unique identifier for con"
+      "description": "Constraint identifier, format CON-NNN (3-digit zero-padded).",
+      "pattern": "^CON-\\d{3}$"
     }
   },
   "properties": {
@@ -188,7 +190,7 @@
               "minLength": 5
             }
           },
-          "dependencies": {
+          "specDependencies": {
             "type": "array",
             "description": "Component IDs this component depends on. Must reference real component IDs in this spec.",
             "items": {
@@ -239,14 +241,16 @@
           },
           "entityRefs": {
             "type": "array",
+            "description": "ENT-NNN-slug IDs from DataSpec entities this component works with.",
             "items": {
-              "type": "string"
-            },
-            "description": "ENT-NNN-slug IDs from DataSpec entities this component works with"
+              "type": "string",
+              "pattern": "^ENT-\\d{3}-[a-z][a-z0-9-]*$"
+            }
           },
           "status": {
             "type": "string",
-            "description": "Lifecycle status of this component."
+            "description": "Lifecycle status of this component.",
+            "enum": ["draft", "review", "confirmed", "implemented", "deprecated"]
           }
         }
       }
@@ -417,7 +421,7 @@
     "artifacts/ArchitectureSpec.md",
     "artifacts/ArchitectureSpec.json"
   ],
-  "dependencies": {
+  "specDependencies": {
     "goalSpec": {
       "required": true
     },

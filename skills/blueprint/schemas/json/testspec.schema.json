@@ -79,8 +79,8 @@
     },
     "fcId": {
       "type": "string",
-      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
-      "description": "Unique identifier for a function coverage entry"
+      "description": "Function coverage entry identifier, format FC-NNN (3-digit zero-padded).",
+      "pattern": "^FC-\\d{3}$"
     }
   },
   "properties": {
@@ -192,14 +192,6 @@
           "description": {
             "type": "string",
             "description": "Plain-language description of what this coverage entry captures"
-          },
-          "code": {
-            "type": "string",
-            "description": "SCREAMING_SNAKE_CASE error code from ApiSpec."
-          },
-          "returnType": {
-            "type": "string",
-            "description": "The return type of the error."
           }
         }
       }
@@ -322,15 +314,8 @@
           },
           "status": {
             "type": "string",
-            "description": "Lifecycle status of this test case."
-          },
-          "code": {
-            "type": "string",
-            "description": "SCREAMING_SNAKE_CASE error code from ApiSpec."
-          },
-          "returnType": {
-            "type": "string",
-            "description": "The return type of the error."
+            "description": "Lifecycle status of this test case.",
+            "enum": ["draft", "review", "confirmed", "implemented", "deprecated"]
           }
         }
       }
@@ -340,7 +325,7 @@
     "artifacts/TestSpec.md",
     "artifacts/TestSpec.json"
   ],
-  "dependencies": {
+  "specDependencies": {
     "goalSpec": {
       "required": true
     },

@@ -71,8 +71,13 @@
     },
     "fnId": {
       "type": "string",
-      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
-      "description": "Unique identifier for an API function"
+      "description": "Function ID from ApiSpec. Format: FN-camelCase, e.g. 'FN-createUser'.",
+      "pattern": "^FN-[a-z][A-Za-z0-9]*$"
+    },
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier (GL-NNN).",
+      "pattern": "^GL-\\d{3}$"
     }
   },
   "properties": {
@@ -235,18 +240,6 @@
               "type": "string",
               "pattern": "^NFR-\\d{3}$"
             }
-          },
-          "type": {
-            "type": "string",
-            "description": "The type of the function parameter or return value."
-          },
-          "required": {
-            "type": "string",
-            "description": "Whether this parameter is required."
-          },
-          "example": {
-            "type": "string",
-            "description": "A concrete example value for this field."
           }
         }
       }
@@ -256,7 +249,8 @@
       "description": "Glossary term IDs (GL-NNN) referenced in this API spec.",
       "items": {
         "$ref": "#/definitions/glId"
-      }
+      },
+      "uniqueItems": true
     },
     "apiSpecVersion": {
       "type": "string",
@@ -273,7 +267,7 @@
     "artifacts/ApiSpec.md",
     "artifacts/ApiSpec.json"
   ],
-  "dependencies": {
+  "specDependencies": {
     "goalSpec": {
       "required": true
     },

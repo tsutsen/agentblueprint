@@ -49,13 +49,13 @@
     },
     "usId": {
       "type": "string",
-      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
-      "description": "Unique identifier for us"
+      "description": "User story identifier, format US-NNN (3-digit zero-padded).",
+      "pattern": "^US-\\d{3}$"
     },
     "ngId": {
       "type": "string",
-      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
-      "description": "Unique identifier for ng"
+      "description": "Non-goal identifier, format NG-NNN (3-digit zero-padded).",
+      "pattern": "^NG-\\d{3}$"
     }
   },
   "properties": {
@@ -206,12 +206,18 @@
             }
           },
           "reqRefs": {
-            "type": "string",
-            "description": "REQ-NNN-slug IDs from GoalSpec that this requirement implements."
+            "type": "array",
+            "description": "REQ-NNN IDs from GoalSpec that this requirement implements. Use for REQ→REQ traceability.",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            }
           },
           "nfrRefs": {
-            "type": "string",
-            "description": "NFR-NNN-slug IDs from GoalSpec that this requirement is related to."
+            "type": "array",
+            "description": "NFR-NNN IDs from GoalSpec that this requirement is related to. Use for REQ→NFR traceability.",
+            "items": {
+              "$ref": "#/definitions/nfrId"
+            }
           }
         }
       }
@@ -463,16 +469,18 @@
             }
           },
           "id": {
-            "type": "string",
-            "description": "Unique identifier for this non-goal"
+            "$ref": "#/definitions/ngId",
+            "description": "Unique identifier for this non-goal."
           },
           "name": {
             "type": "string",
-            "description": "Short descriptive name summarizing this non-goal"
+            "description": "Short descriptive name summarizing this non-goal.",
+            "minLength": 1
           },
           "description": {
             "type": "string",
-            "description": "Plain-language description of why this capability is excluded"
+            "description": "Plain-language description of why this capability is excluded.",
+            "minLength": 10
           }
         }
       }
@@ -482,5 +490,5 @@
     "artifacts/GoalSpec.md",
     "artifacts/GoalSpec.json"
   ],
-  "dependencies": {}
+  "specDependencies": {}
 }

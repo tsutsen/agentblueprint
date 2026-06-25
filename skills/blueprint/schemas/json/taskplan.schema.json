@@ -208,7 +208,7 @@
               "minLength": 10
             }
           },
-          "dependencies": {
+          "specDependencies": {
             "type": "object",
             "description": "Blocking relationships between epics.",
             "additionalProperties": false,
@@ -246,7 +246,7 @@
     "tasks/PLAN.md",
     "tasks/epics/"
   ],
-  "dependencies": {
+  "specDependencies": {
     "goalSpec": {
       "required": true
     },

@@ -163,19 +163,31 @@
   ],
   "nonGoals": [
     {
+      "id": "NG-001",
+      "name": "Multi-user access control",
       "capability": "Multi-user access control",
+      "description": "The system will not support multiple users or account management in this release.",
       "reason": "Deferred to a future version; single-developer use only for this release."
     },
     {
+      "id": "NG-002",
+      "name": "Web-based management UI",
       "capability": "Web-based management UI",
+      "description": "No web interface will be provided; configuration is done via CLI and config files.",
       "reason": "Out of scope; CLI and config file are sufficient for the target user."
     },
     {
+      "id": "NG-003",
+      "name": "Model fine-tuning or training",
       "capability": "Fine-tuning or training of models",
+      "description": "The gateway will not modify or train models; it only routes to existing backends.",
       "reason": "Out of scope; gateway routes to existing backends, does not modify them."
     },
     {
+      "id": "NG-004",
+      "name": "Cross-provider billing and cost tracking",
       "capability": "Billing and cost tracking across cloud providers",
+      "description": "Detailed cost tracking and billing integration is not included in this release.",
       "reason": "Deferred; cost visibility is a logging concern handled in a later version."
     }
   ]

@@ -64,72 +64,72 @@ interface DepDef {
   required: boolean;      // Whether loading fails if missing
 }
 
-const DEPS: Record<string, { schema: string; dependencies: DepDef[] }> = {
-  goal: {
-    schema: "GoalSpec.md",
-    dependencies: [],
-  },
-  glossary: {
-    schema: "Glossary.md",
-    dependencies: [
-      { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
-    ],
-  },
-  design: {
-    schema: "DesignSpec.md",
-    dependencies: [
-      { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
-      { name: "Glossary", jsonPath: "artifacts/Glossary.json", mdPath: "artifacts/Glossary.md", required: true },
-    ],
-  },
-  arch: {
-    schema: "ArchitectureSpec.md",
-    dependencies: [
-      { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
-      { name: "Glossary", jsonPath: "artifacts/Glossary.json", mdPath: "artifacts/Glossary.md", required: true },
-    ],
-  },
-  data: {
-    schema: "DataSpec.md",
-    dependencies: [
-      { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
-      { name: "Architecture", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
-    ],
-  },
-  api: {
-    schema: "ApiSpec.md",
-    dependencies: [
-      { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
-      { name: "Architecture", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
-      { name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md", required: true },
-    ],
-  },
-  test: {
-    schema: "TestSpec.md",
-    dependencies: [
-      { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
-      { name: "ApiSpec", jsonPath: "artifacts/ApiSpec.json", mdPath: "artifacts/ApiSpec.md", required: true },
-      { name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md", required: true },
-    ],
-  },
-  plan: {
-    schema: "TaskPlan.md",
-    dependencies: [
-      { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required: true },
-      { name: "Design", jsonPath: "artifacts/DesignSpec.json", mdPath: "artifacts/DesignSpec.md", required: true },
-      { name: "Architecture", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required: true },
-      { name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md", required: true },
-      { name: "ApiSpec", jsonPath: "artifacts/ApiSpec.json", mdPath: "artifacts/ApiSpec.md", required: true },
-      { name: "TestSpec", jsonPath: "artifacts/TestSpec.json", mdPath: "artifacts/TestSpec.md", required: true },
-    ],
-  },
-  issues: {
-    schema: "Issue.md",
-    dependencies: [
-      { name: "TaskPlan", jsonPath: "", mdPath: "tasks/PLAN.md", required: false },
-    ],
-  },
+/**
+ * Mapping from schema specDependencies keys to DEPS format.
+ * Single source of truth: DEPS is derived from these + schema specDependencies.
+ */
+const SCHEMA_NAME_MAP: Record<string, { key: string; schemaFile: string; schemaFileName: string }> = {
+  goal: { key: "GoalSpec", schemaFile: "GoalSpec.md", schemaFileName: "goalspec.schema.json" },
+  glossary: { key: "Glossary", schemaFile: "Glossary.md", schemaFileName: "glossary.schema.json" },
+  design: { key: "DesignSpec", schemaFile: "DesignSpec.md", schemaFileName: "designspec.schema.json" },
+  arch: { key: "ArchitectureSpec", schemaFile: "ArchitectureSpec.md", schemaFileName: "archspec.schema.json" },
+  data: { key: "DataSpec", schemaFile: "DataSpec.md", schemaFileName: "dataspec.schema.json" },
+  api: { key: "ApiSpec", schemaFile: "ApiSpec.md", schemaFileName: "apispec.schema.json" },
+  test: { key: "TestSpec", schemaFile: "TestSpec.md", schemaFileName: "testspec.schema.json" },
+  plan: { key: "TaskPlan", schemaFile: "TaskPlan.md", schemaFileName: "taskplan.schema.json" },
+  issues: { key: "Issue", schemaFile: "Issue.md", schemaFileName: "issue.schema.json" },
 };
+
+/**
+ * Map a schema dependency name (e.g. "goalSpec", "glossary") to a DepDef.
+ * Falls back to a default path pattern when the name is unknown.
+ */
+function schemaDepToDepDef(depName: string, required: boolean): DepDef {
+  const nameMap: Record<string, DepDef> = {
+    goalSpec: { name: "GoalSpec", jsonPath: "artifacts/GoalSpec.json", mdPath: "artifacts/GoalSpec.md", required },
+    glossary: { name: "Glossary", jsonPath: "artifacts/Glossary.json", mdPath: "artifacts/Glossary.md", required },
+    designSpec: { name: "Design", jsonPath: "artifacts/DesignSpec.json", mdPath: "artifacts/DesignSpec.md", required },
+    architectureSpec: { name: "Architecture", jsonPath: "artifacts/ArchitectureSpec.json", mdPath: "artifacts/ArchitectureSpec.md", required },
+    dataSpec: { name: "DataSpec", jsonPath: "artifacts/DataSpec.json", mdPath: "artifacts/DataSpec.md", required },
+    apiSpec: { name: "ApiSpec", jsonPath: "artifacts/ApiSpec.json", mdPath: "artifacts/ApiSpec.md", required },
+    testSpec: { name: "TestSpec", jsonPath: "artifacts/TestSpec.json", mdPath: "artifacts/TestSpec.md", required },
+    taskPlan: { name: "TaskPlan", jsonPath: "", mdPath: "tasks/PLAN.md", required },
+    epic: { name: "Epic", jsonPath: "", mdPath: "tasks/epics/", required },
+  };
+  return nameMap[depName] ?? { name: depName, jsonPath: "", mdPath: "", required };
+}
+
+/**
+ * Build the DEPS object by reading specDependencies from schema files.
+ * Falls back to hardcoded defaults if schema files can't be read.
+ */
+function loadDepsFromSchemas(): Record<string, { schema: string; dependencies: DepDef[] }> {
+  const schemasDir = path.join(__dirname, "..", "..", "skills", "blueprint", "schemas", "json");
+  const result: Record<string, { schema: string; dependencies: DepDef[] }> = {};
+
+  for (const [key, info] of Object.entries(SCHEMA_NAME_MAP)) {
+    const schemaPath = path.join(schemasDir, info.schemaFileName);
+    let deps: DepDef[] = [];
+
+    try {
+      const raw = fs.readFileSync(schemaPath, "utf-8");
+      const schema = JSON.parse(raw);
+      const specDeps = (schema as Record<string, any>).specDependencies ?? {};
+      for (const [depName, depInfo] of Object.entries(specDeps)) {
+        const required = (depInfo as Record<string, any>).required !== false;
+        deps.push(schemaDepToDepDef(depName, required));
+      }
+    } catch {
+      // Schema file missing or unreadable — deps stay empty
+    }
+
+    result[key] = { schema: info.schemaFile, dependencies: deps };
+  }
+
+  return result;
+}
+
+const DEPS = loadDepsFromSchemas();
 
 // ── Tool: load_artifact ──────────────────────────────────────────────────────
 

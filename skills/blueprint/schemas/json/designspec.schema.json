@@ -42,10 +42,12 @@
     },
     "reqId": {
       "type": "string",
+      "description": "Functional requirement identifier, format REQ-NNN (3-digit zero-padded).",
       "pattern": "^REQ-\\d{3}$"
     },
     "usId": {
       "type": "string",
+      "description": "User story identifier, format US-NNN (3-digit zero-padded).",
       "pattern": "^US-\\d{3}$"
     },
     "fnId": {
@@ -55,14 +57,17 @@
     },
     "uxacId": {
       "type": "string",
+      "description": "UX acceptance criterion identifier, format UXAC-NNN (3-digit zero-padded).",
       "pattern": "^UXAC-\\d{3}$"
     },
     "vdrId": {
       "type": "string",
+      "description": "Visual design requirement identifier, format VDR-NNN (3-digit zero-padded).",
       "pattern": "^VDR-\\d{3}$"
     },
     "arId": {
       "type": "string",
+      "description": "Accessibility requirement identifier, format AR-NNN (3-digit zero-padded).",
       "pattern": "^AR-\\d{3}$"
     },
     "namedRequirement": {
@@ -76,7 +81,8 @@
       "properties": {
         "id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "description": "Identifier for this named requirement."
         },
         "name": {
           "type": "string",
@@ -132,18 +138,18 @@
     },
     "dgId": {
       "type": "string",
-      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
-      "description": "Unique identifier for dg"
+      "description": "Design goal identifier, format DG-NNN (3-digit zero-padded).",
+      "pattern": "^DG-\\d{3}$"
     },
     "spcId": {
       "type": "string",
-      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
-      "description": "Unique identifier for spc"
+      "description": "Screen spec identifier, format SPC-NNN (3-digit zero-padded).",
+      "pattern": "^SPC-\\d{3}$"
     },
     "patId": {
       "type": "string",
-      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
-      "description": "Unique identifier for pat"
+      "description": "Interaction pattern identifier, format PAT-NNN (3-digit zero-padded).",
+      "pattern": "^PAT-\\d{3}$"
     }
   },
   "properties": {
@@ -217,8 +223,11 @@
             "description": "Lifecycle status of this design goal."
           },
           "reqRefs": {
-            "type": "string",
-            "description": "REQ-NNN-slug IDs from GoalSpec that this goal addresses."
+            "type": "array",
+            "description": "REQ-NNN IDs from GoalSpec that this goal addresses.",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            }
           }
         }
       }
@@ -528,18 +537,22 @@
           },
           "ujRefs": {
             "type": "array",
+            "description": "UJ-NNN IDs from DesignSpec user journeys that use this screen.",
             "items": {
-              "type": "string"
-            },
-            "description": "UJ-NNN-slug IDs from DesignSpec user journeys that use this screen"
+              "type": "string",
+              "pattern": "^UJ-\\d{3}$"
+            }
           },
           "notes": {
             "type": "string",
             "description": "Optional clarifying context for this screen."
           },
           "reqRefs": {
-            "type": "string",
-            "description": "REQ-NNN-slug IDs from GoalSpec that this screen implements."
+            "type": "array",
+            "description": "REQ-NNN IDs from GoalSpec that this screen implements.",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            }
           }
         }
       }
@@ -676,13 +689,10 @@
             }
           },
           "id": {
-            "type": "string",
-            "description": "Unique identifier for this screen spec"
+            "$ref": "#/definitions/spcId",
+            "description": "Unique identifier for this screen spec."
           },
-          "action": {
-            "type": "string",
-            "description": "The user action this interaction responds to."
-          },
+
           "notes": {
             "type": "string",
             "description": "Optional clarifying context for this screen spec."
@@ -749,10 +759,7 @@
             "type": "string",
             "description": "Optional clarifying context for this pattern."
           },
-          "action": {
-            "type": "string",
-            "description": "The action this pattern enables."
-          },
+
           "usageNotes": {
             "type": "string",
             "description": "How and when to use this pattern."
@@ -927,11 +934,13 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Unique identifier for this design token"
+            "description": "Unique identifier for this design token, format DT-NNN-tokenName.",
+            "pattern": "^DT-\\d{3}-[a-z][a-z0-9-]*$"
           },
           "name": {
             "type": "string",
-            "description": "Token name, e.g. \"color-primary\", \"spacing-md\""
+            "description": "Token name, e.g. \"color-primary\", \"spacing-md\".",
+            "minLength": 1
           },
           "category": {
             "type": "string",
@@ -952,14 +961,16 @@
           },
           "description": {
             "type": "string",
-            "description": "When and how this token should be used"
+            "description": "When and how this token should be used.",
+            "minLength": 10
           },
           "glossaryRefs": {
             "type": "array",
+            "description": "GL-NNN identifiers for related glossary terms.",
             "items": {
-              "type": "string"
-            },
-            "description": "GL-NNN identifiers for related glossary terms"
+              "type": "string",
+              "pattern": "^GL-\\d{3}$"
+            }
           }
         },
         "required": [
@@ -975,7 +986,7 @@
     "artifacts/DesignSpec.md",
     "artifacts/DesignSpec.json"
   ],
-  "dependencies": {
+  "specDependencies": {
     "goalSpec": {
       "required": true
     },
