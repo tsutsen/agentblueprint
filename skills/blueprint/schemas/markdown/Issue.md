@@ -39,182 +39,61 @@ existing IS-NNN before creating new issues.
 
 ## Issue File Structure
 
-### Front Matter (YAML)
+Each issue has two files: `IS-NNN.md` (human-readable) and `IS-NNN.json` (machine-readable).
+
+### Front Matter (YAML in `.md`, fields only in `.json`)
 
 ```yaml
 ---
 artifact: Issue
-id: IS-<NNN>
-title: <short title>
-type: <AFK | HITL>
-status: <not_started | in_progress | needs_review | complete>
-epic: <EP-NNN>
-blocked_by:
-  - <IS-NNN>        # or empty list []
-milestone: <M1 | M2 | ...>
-titleGlossaryRefs:
-  - GL-NNN          # glossary terms in title; [] if none
+id: IS-<NNN>           # IS-NNN (3-digit zero-padded)
+title: <short title>   # action-oriented
+type: AFK | HITL       # Prefer AFK; HITL only when human judgment is required
+status: not_started | in_progress | needs_review | complete
+epic: EP-<NNN>         # 3-digit zero-padded
+blocked_by: [IS-NNN]   # or []
+milestone: M1 | M2 | ...
+titleGlossaryRefs: [GL-NNN]  # [] if none
 inScope:
-  - description: <scope item description>
-    glossaryRefs:
-      - GL-NNN      # glossary terms in this item; [] if none
+  - description: <scope item>
+    glossaryRefs: [GL-NNN]
 outOfScope:
-  - description: <excluded item description>
-    glossaryRefs:
-      - GL-NNN      # glossary terms in this item; [] if none
+  - description: <excluded item>
+    glossaryRefs: [GL-NNN]
 acceptanceCriteria:
   - description: <verifiable criterion>
-    glossaryRefs:
-      - GL-NNN      # glossary terms in this criterion; [] if none
-created: <YYYY-MM-DD>
-updated: <YYYY-MM-DD>
+    glossaryRefs: [GL-NNN]
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
 ---
 ```
 
-**Field definitions:**
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `artifact` | string | Yes | Always `"Issue"` |
-| `id` | string | Yes | Format `IS-NNN` (3-digit zero-padded) |
-| `title` | string | Yes | Short, action-oriented title |
-| `type` | string | Yes | `AFK` (agent can implement without human interaction) or `HITL` (requires human input at some point) |
-| `status` | string | Yes | `not_started`, `in_progress`, `needs_review`, or `complete` |
-| `epic` | string | Yes | Format `EP-NNN` (3-digit zero-padded) |
-| `blocked_by` | array | Yes | List of IS-NNN strings; `[]` if none |
-| `milestone` | string | Yes | Format `M1`, `M2`, ... |
-| `titleGlossaryRefs` | array | No | GL-NNN identifiers for domain concepts in the title |
-| `inScope` | array | No | Structured scope items, each with `description` and `glossaryRefs` |
-| `outOfScope` | array | No | Structured out-of-scope items, each with `description` and `glossaryRefs` |
-| `acceptanceCriteria` | array | No | Structured acceptance criteria, each with `description` and `glossaryRefs` |
-| `created` | string | Yes | Date string `YYYY-MM-DD` |
-| `updated` | string | Yes | Date string `YYYY-MM-DD` |
-
-**Type definitions:**
-
-| Type | Meaning |
-|------|---------|
-| `AFK` | Can be implemented and merged by an agent without human interaction. |
-| `HITL` | Requires human input at some point — design decision, review gate, external dependency. |
-
-Prefer `AFK` over `HITL`. Only mark `HITL` when human judgment is genuinely
-required, not just because the task is complex.
-
-### Body (Markdown)
+### Body (Markdown in `.md` only)
 
 ```markdown
 # IS-NNN: <title>
 
 ## What to build
-
-<Concise description of this vertical slice. Describe end-to-end behaviour,
-not layer-by-layer implementation. A completed slice is independently
-demoable or verifiable.>
-
-<Include specific file paths or code snippets only when a prototype produced
-a decision-encoding snippet — state machine, reducer, schema, type shape.
-If included, note it came from a prototype and trim to the decision-rich
-parts only.>
+<End-to-end behaviour description. Do not describe layer-by-layer implementation.>
 
 ## Acceptance criteria
-
-- [ ] <independently verifiable criterion>
-- [ ] <independently verifiable criterion>
+- [ ] <Independently verifiable criterion>
+- [ ] <Independently verifiable criterion>
 
 ## Blocked by
-
 <IS-NNN reference, or "None — can start immediately.">
 ```
 
-**Body section rules:**
-
-- **What to build**: Describe end-to-end behaviour. Do not describe
-  layer-by-layer implementation. Each slice must deliver a narrow but
-  complete path through every relevant layer.
-- **Acceptance criteria**: Each criterion must be independently verifiable
-  and binary (pass/fail) where possible. Describes observable behaviour,
-  not implementation.
-- **Blocked by**: Must reference real IS-NNN identifiers that exist in the
-  same epic folder, or state "None — can start immediately."
-
----
-
-## Issue JSON Structure
-
-Each issue has a parallel JSON file (`IS-NNN.json`) with the same data:
-
-```json
-{
-  "artifact": "Issue",
-  "id": "IS-001",
-  "title": "Create research session with input validation",
-  "type": "AFK",
-  "status": "not_started",
-  "epic": "EP-001",
-  "blocked_by": [],
-  "milestone": "M1",
-  "titleGlossaryRefs": ["GL-001", "GL-004"],
-  "inScope": [
-    {
-      "description": "Session creation with free-text research question",
-      "glossaryRefs": ["GL-001", "GL-004"]
-    }
-  ],
-  "outOfScope": [
-    {
-      "description": "Session sharing or collaboration",
-      "glossaryRefs": ["GL-001"]
-    }
-  ],
-  "acceptanceCriteria": [
-    {
-      "description": "User can create a session by entering a free-text research question",
-      "glossaryRefs": ["GL-001", "GL-004"]
-    }
-  ],
-  "created": "2026-06-15",
-  "updated": "2026-06-15"
-}
-```
-
-The JSON file contains only the front matter fields — no body content.
-The body content lives exclusively in the `.md` file.
-
-**Scope item structure:**
-
-```json
-{
-  "description": "<scope item description>",
-  "glossaryRefs": ["GL-NNN", ...]
-}
-```
-
-Each scope item (inScope/outOfScope) and each acceptance criterion has its
-description and inline `glossaryRefs`. The linter validates that domain
-concepts in the description have corresponding GL-NNN references.
+**Rules:**
+- **What to build**: Describe end-to-end behaviour. Each slice must deliver a narrow but complete path through every relevant layer.
+- **Acceptance criteria**: Each must be independently verifiable and binary (pass/fail) where possible.
+- **Blocked by**: Must reference real IS-NNN identifiers in the same epic folder, or state "None — can start immediately."
 
 ---
 
 ## Process Override
 
 This artifact uses a custom flow instead of the standard blueprint flow.
-
-### Step 1 — Load epic
-
-Determine the epic ID from the command argument (e.g., `EP-001` from
-`/skill:blueprint issues EP-001`).
-
-Load the following:
-
-- `tasks/PLAN.md` — milestone context
-- `tasks/epics/EP-NNN/EP-NNN-slug.md` — the target epic (required; abort if not found)
-- `tasks/epics/EP-NNN/` — scan for existing IS-NNN directories to find highest issue ID
-- `artifacts/Glossary.md` — domain vocabulary (if present)
-- `artifacts/ArchitectureSpec.json` — architectural constraints (if present)
-
-Report the highest existing issue ID (next new issue will be IS-NNN+1).
-
-If the epic is not found, abort and ask the user to run `/skill:blueprint plan` first.
 
 ### Step 2 — Lint issues
 
@@ -323,39 +202,6 @@ If validation fails, show the errors to the user and suggest fixes. Do not
 modify the JSON without explicit user approval. After user confirms, apply
 the fix and re-validate.
 
-### Step 8 — Handoff
-
-Summarize the issues created and suggest next steps:
-
-```
-issues complete for EP-NNN: <epic title>
-Issues created:
-  IS-NNN  <title>  [AFK]
-  IS-NNN  <title>  [HITL]
-  ...
-Total: X issues (Y AFK, Z HITL)
-Next steps:
-  - Run /skill:blueprint issues EP-NNN for other epics that are ready
-  - Pick up any AFK issue and begin implementation
-```
-
-Do not automatically invoke any other skill or open any session.
-
 ---
 
-## Validation Rules
 
-Enforce these rules when writing and validating issues:
-
-1. **ID sequencing**: Issue IDs are sequential and project-global. Never
-   restart from IS-001 per epic. Always continue from the highest existing
-   IS-NNN.
-2. **Dependency consistency**: Every `blocked_by` reference must point to a
-   real IS-NNN file that exists in the same epic folder.
-3. **Epic coverage**: Every epic acceptance criterion must be addressed by
-   at least one issue. Flag any criterion that has no covering issue.
-4. **Epic scope**: No issue objective may implement a GoalSpec non-goal.
-5. **File naming**: Issue files must follow the pattern `IS-NNN.md` and
-   `IS-NNN.json` inside the `IS-NNN/` directory.
-6. **HITL/AFK**: Prefer AFK. Only mark HITL when human judgment is genuinely
-   required.

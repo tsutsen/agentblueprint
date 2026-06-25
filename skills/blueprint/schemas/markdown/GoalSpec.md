@@ -86,26 +86,20 @@ If the user states a vague or compound requirement, surface it immediately:
 
 ### Non-Functional Requirements
 
-Quality attributes and operational constraints. NFRs describe *how well*
-the system performs, not *what* it does.
+Quality attributes describing *how well* the system performs. Must use
+Planguage format. If the user provides a vague NFR, prompt for Scale and
+Meter before recording.
 
-Each NFR may also have:
-* **glossaryRefs** (array of GL-NNN): Domain concepts in the scale/meter descriptions
-
-**You MUST use Planguage format for every NFR. Do not accept free-form
-NFR descriptions. If the user provides a vague NFR (e.g. "should be fast"),
-prompt them to provide Scale and Meter before recording it.**
-
-Each NFR must have a unique identifier in format `NFR-NNN-slug` (NFR-001-response-time).
+Each NFR must have a unique identifier in format `NFR-NNN-slug`.
 
 ```
 NFR-<NNN>
-Category:  <see categories below>
+Category:  <Performance | Security | Reliability | ...>
 Scale:     <what is measured and in what unit>
 Meter:     <how it will be measured — tool, condition, methodology>
-Must:      <minimum acceptable; below this the system fails>
-Plan:      <realistic target the team is aiming for>
-Wish:      <ideal outcome if conditions allow>
+Must:      <minimum acceptable>
+Plan:      <realistic target>
+Wish:      <ideal outcome>
 ```
 
 Example:
@@ -119,12 +113,8 @@ Plan:      < 500ms
 Wish:      < 200ms
 ```
 
-Categories:
-
-If the user cannot define Scale or Meter, record the best available
-description and flag it: "(Scale/Meter TBD — needs measurement before
-implementation)". If only one level is available, record it as Must and
-flag Plan and Wish as TBD.
+If Scale or Meter is unavailable, flag it as TBD. If only one level is
+available, record it as Must.
 
 ---
 

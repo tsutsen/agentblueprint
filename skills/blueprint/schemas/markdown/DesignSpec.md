@@ -6,32 +6,10 @@ version: 4.0.0
 
 # Design Spec
 
-## Purpose
-
-Defines the user experience, interaction model, and visual design requirements
-of the system.
-
-The Design Spec serves as the contract between product requirements and
-implementation.
-
-It answers:
-
-* What should users see?
-* What should users be able to do?
-* How should workflows feel?
-* How should information be presented?
-
+Defines the user experience, interaction model, and visual design requirements.
 It does NOT define implementation details.
 
 ---
-
----
-
-## Outputs
-
-* ArchitectureSpec
-* TaskPlan
-* TestSpec
 
 ---
 

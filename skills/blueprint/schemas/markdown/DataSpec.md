@@ -30,122 +30,35 @@ The DataSpec does NOT define:
 ## Clarification Phase
 
 **⚠ DO NOT create a data model immediately.** Before proposing any entities,
-relationships, or fields, you MUST go through a structured clarification process.
+relationships, or fields, go through a structured clarification process.
 A data model built on unverified assumptions will cascade errors into ApiSpec
 and TestSpec.
 
-### Step 1: List All Assumptions
+1. **List assumptions** — Load `ArchitectureSpec.json` and `GoalSpec.json`.
+   Extract component names (potential entities), domain nouns from
+   requirements, and implied relationships. Present them to the user for
+   validation: confirm, correct, or add.
 
-Load `artifacts/ArchitectureSpec.json` and `artifacts/GoalSpec.json`. Extract:
-- Component names from ArchitectureSpec (potential entities)
-- Domain nouns from functional requirements in GoalSpec
-- Any relationships implied by the architecture
+2. **Clarify ambiguous terms** — When the user uses different terms that
+   might refer to the same concept (e.g., "user" vs "customer"), ask
+   explicitly. Do not assume.
 
-**Then ask the user to validate every assumption:**
+3. **Clarify cardinality** — For every relationship, ask about cardinality:
+   `1→1`, `1→0..1`, `1→*`, or `*→*`. For many-to-many, ask whether to
+   create an association entity and what fields it should have.
 
-```
-Based on the architecture and requirements, I have the following assumptions
-about the data model. Please confirm, correct, or add:
+4. **Enum vs entity** — For each enumerated type, ask whether it should be
+   an enum (simple values) or an entity (methods, relationships). Default
+   to enum.
 
-1. Entities: [list each entity with a one-line description]
-   - Is this entity correct? Should it be renamed? Should any be added/removed?
-2. Domain terms: [list terms like "user" vs "customer"]
-   - Do these refer to the same entity or different ones?
-3. Relationships: [list implied relationships]
-   - Are these correct? Are any missing?
-```
+5. **Field details** — For each entity, confirm: required fields, primary key
+   (default: first field or field ending with `Id`), and example values.
 
-### Step 2: Clarify Ambiguous Terms
+6. **Relationship labels** — For every relationship, ask the user for a
+   meaningful verb label (e.g., "places", "contains", "belongs to").
 
-When the user uses different terms that might refer to the same concept
-(e.g., "user" in one requirement, "customer" in another), **explicitly ask**:
-
-```
-"You mentioned 'user' in [requirement X] and 'customer' in [requirement Y].
-Are these the same entity, or are they different?"
-```
-
-Do not assume they are the same. Do not assume they are different. Ask.
-
-### Step 3: Clarify Relationship Cardinality
-
-For every relationship between entities, **ask the user about cardinality**:
-
-```
-Relationship: [EntityA] → [EntityB]
-
-Cardinality options:
-- 1 → 1: Each A has exactly one B, each B has exactly one A
-- 1 → 0..1: Each A has zero or one B
-- 1 → *: Each A has zero or more B's, each B belongs to exactly one A
-- * → *: Many-to-many (requires an association entity)
-
-Which applies here?"
-```
-
-### Step 4: Clarify Many-to-Many Relationships
-
-When the user describes a many-to-many relationship (e.g., "Orders have many
-Products" and "Products appear in many Orders"), **explicitly ask**:
-
-```
-"[EntityA] and [EntityB] have a many-to-many relationship. This requires an
-association entity (e.g., 'OrderItem' for Order ↔ Product). Should I create
-one? What fields should it have?"
-```
-
-### Step 5: Clarify Enum vs Entity Decisions
-
-For each enumerated type, **ask the user**:
-
-```
-"[Type] has values: [list values]. Should this be:
-- An enum (simple list of values, no methods)?
-- An entity (has methods, relationships, or complex behavior)?"
-```
-
-**Default to enum** unless the user indicates the type needs methods,
-relationships, or complex behavior.
-
-### Step 6: Clarify Field-Level Details
-
-For each entity, **ask the user**:
-
-```
-Entity: [EntityName]
-
-Fields:
-- [FieldName] ([Type]): [description]
-  - Is this field required? (default: yes)
-  - What is the primary key? (default: first field or field ending with 'Id')
-  - Can you give an example value?"
-```
-
-### Step 7: Clarify Relationship Labels
-
-For every relationship, **ask the user for a meaningful label**:
-
-```
-Relationship: [EntityA] → [EntityB]
-
-What verb describes this relationship? (e.g., 'places', 'contains', 'belongs to')
-This becomes the label on the relationship arrow."
-```
-
-### Step 8: Final Validation
-
-Before proceeding to create the data model, **summarize all decisions** and
-ask the user to confirm:
-
-```
-Here is the complete data model summary. Please confirm:
-
-Entities: [list with key fields]
-Relationships: [list with type, cardinality, label]
-Enums: [list with values]
-
-Any changes before I finalize?"
-```
+7. **Final validation** — Summarize all decisions (entities, relationships,
+   enums) and ask the user to confirm before proceeding.
 
 ---
 
@@ -214,35 +127,13 @@ Each entity must have:
 
 **Inheritance (`extends`):**
 
-When an entity extends another, the diagram generator will render a
-UML inheritance arrow (`--|>` in PlantUML, `<|--` in Mermaid, `--|>` in D2).
-The parent entity will also be rendered in the same visibility group.
+When an entity extends another, the diagram generator will render a UML
+inheritance arrow (`--|>` in PlantUML, `<|--` in Mermaid).
 
-**Abstract entities:**
-
-An `abstract` entity cannot be instantiated directly — it exists only as
-a base class for other entities. Use abstract entities when:
-
-* Multiple entities share common fields (e.g., `AuditEntity` with `createdAt`, `updatedAt`)
-* You have a clear "is-a" hierarchy (e.g., `Payment` → `CreditCardPayment`, `BankTransferPayment`)
-* You want to enforce that only subclasses are used in relationships
-
-**Rules for abstract entities:**
-
-* Abstract entities should NOT have composition/aggregation relationships as targets
-  (they are base classes, not leaf types that can be "owned").
-* Abstract entities SHOULD have association/dependency relationships (they can reference other types).
-* All concrete (non-abstract) entities that extend an abstract entity must be listed explicitly.
-* When a field references an abstract entity type, it means the field can be any of the
-  concrete subclasses (e.g., `payment: Payment` where `Payment` is abstract and has
-  `CreditCardPayment` and `BankTransferPayment` as subclasses).
-
-**Ask the user:**
-
-```
-"[Entity] is marked as abstract. Is this correct? Are there concrete
-subclasses that should be listed?"
-```
+**Abstract entities** cannot be instantiated directly — they exist only as
+base classes. Use when multiple entities share common fields or you have a
+clear "is-a" hierarchy. Abstract entities should NOT be targets of
+composition/aggregation relationships.
 
 ---
 
@@ -296,44 +187,27 @@ test forces reasoning about actual ownership semantics.
 
 ### Cross-Spec Consistency
 
-The DataSpec is the **source of truth** for all types used across ApiSpec
-and TestSpec. Changes to DataSpec types must be reflected in all dependent
-specs.
+DataSpec is the **source of truth** for all types used across ApiSpec and
+TestSpec. When a type changes in DataSpec, run the linter to identify all
+affected references and update ApiSpec/TestSpec accordingly.
 
 **Rules:**
 
-  (e.g., if DataSpec has `User`, ApiSpec must use `User`, not `user` or `Users`).
-  DataSpec (e.g., `string` not `String`, `number` not `Number`).
-* **When a type changes in DataSpec, check all dependent specs** —
-  ApiSpec, TestSpec, and any other spec that references the type.
-
-**Type change workflow:**
-
-1. Make the change in DataSpec.
-2. Run the linter to identify all affected references.
-3. Update ApiSpec function signatures and parameter types.
-4. Update TestSpec test cases that reference the changed types.
-5. Regenerate all diagrams.
-6. Run the full lint suite to verify consistency.
-
-**Ask the user:**
-
-```
-"This type change affects [N] references across [M] specs. Should I
-update all of them, or should some references be kept for backward
-compatibility?"
-```
+* Type names must match exactly (e.g., `User` not `user` or `Users`).
+* Primitives must match JSON Schema casing (`string` not `String`).
+* Always run the full lint suite after type changes.
 
 #### Relationship Notation
 
-When defining relationships between entities, use the following conventions:
+Use the **deletion test** (see Relationships section) to determine type.
+For visual notation conventions:
 
-| Relationship | Smell | Notation | Key Rule | Keywords |
-|---|---|---|---|---|
-| Association | "uses / knows" | Solid line + open arrow (→) | Both exist independently. A holds a reference to B. Weakest structural link. | uses, knows about, communicates with, linked to, talks to, references, points to, maintains a reference to, holds a reference to, interacts with, delegates to, notifies, subscribes to, observes, publishes to, queries, retrieves from, is associated with |
-| Inheritance | "is a" | Solid line + open triangle (▷) | Child IS-A Parent. Child extends or specializes the parent class. | is a, extends, inherits from, specializes, is a type / kind of, is a subtype of, is a subclass of, is a variant of, is a form of, is a specific type of, is a derived class of, is a specialization of |
-| Aggregation | "has a (weak)" | Open diamond on whole side (◇—) | Part can exist without the Whole. Whole "has" the Part. Shared ownership. | has, contains, consists of, is part of, belongs to, includes, comprises, groups, collects, maintains a list of, maintains a set of, maintains a collection of, is an element of |
-| Composition | "owns (strong)" | Filled diamond on whole side (◆—) | Part CANNOT exist without the Whole. Whole creates and destroys the Part. | owns, is composed of, manages, controls, is responsible for, creates and owns, destroys, manages the lifecycle of, is the lifecycle owner of, instantiates, is the aggregate root of, is the parent of, is the container of, is responsible for creation and destruction, is a part of |
-| Dependency | "needs temporarily" | Dashed line + open arrow (- - →) | A uses B only momentarily (e.g. method param, local var). No stored reference. | depends on, calls, uses temporarily, creates locally, imports, receives as parameter, receives as argument, uses as local variable, references as parameter, references as argument, uses as a local variable, references as a local variable, instantiates locally, invokes, throws, catches |
+| Relationship | Smell | Notation |
+|---|---|---|
+| Association | "uses / knows" | Solid line + open arrow (→) |
+| Inheritance | "is a" | Solid line + open triangle (▷) |
+| Aggregation | "has a (weak)" | Open diamond on whole side (◇—) |
+| Composition | "owns (strong)" | Filled diamond on whole side (◆—) |
+| Dependency | "needs temporarily" | Dashed line + open arrow (- - →) |
 
 

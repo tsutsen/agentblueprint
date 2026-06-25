@@ -26,58 +26,24 @@ EP-NNN` to decompose each epic into independently-grabbable issues.
 
 ### Phase 1 — Silent analysis
 
-Before presenting anything to the user, analyse the loaded artifacts silently.
+Before presenting anything to the user, analyse the loaded artifacts:
 
-**From GoalSpec extract:**
-- All functional and non-functional requirements (by ID where present)
-- All user stories
-- Success criteria — these anchor milestone boundaries
-- Non-goals — these constrain what epics may cover
+| Source | Extract |
+|--------|---------|
+| GoalSpec | FRs, NFRs, user stories, success criteria, non-goals |
+| DesignSpec | Product capabilities, user-facing behaviours |
+| ArchitectureSpec | Components, boundaries, integration points, cross-cutting concerns |
+| DataSpec | Entity relationships, migration-heavy entities, integrity constraints |
+| ApiSpec | API surface area, external dependencies, versioning concerns |
+| TestSpec | Test coverage needs, integration scenarios, perf/security requirements |
 
-**From DesignSpec extract:**
-- Major product capabilities and feature areas
-- User-facing behaviours that group naturally into deliverables
+**Derive epics:** group related requirements into candidate epics. Each epic
+must cover at least one requirement. Foundational epics (data model, auth,
+infra) come before feature epics. Identify blocking relationships.
 
-**From ArchitectureSpec extract:**
-- Major system components and their boundaries
-- Integration points that imply sequencing constraints
-- Cross-cutting concerns (auth, data model, infrastructure) that must
-  precede feature work — these become foundational epics
-
-**From DataSpec extract:**
-- Entity relationships and data model complexity
-- Migration-heavy entities that require dedicated setup epics
-- Data integrity constraints that influence epic ordering
-
-**From ApiSpec extract:**
-- API surface area (endpoints, resources) that groups into delivery epics
-- External integrations or third-party dependencies that imply blocking
-  relationships
-- API versioning or backward-compatibility concerns
-
-**From TestSpec extract:**
-- Test coverage requirements that may need dedicated setup or infrastructure
-  epics
-- Integration test scenarios that span multiple components — these may
-  indicate epic boundaries
-- Performance or security test requirements that imply foundational epics
-  before feature work
-
-**Derive a proposed epic structure:**
-- Group related requirements and capabilities into candidate epics
-- Each epic must cover at least one requirement — no orphan epics
-- Every requirement must appear in at least one epic — no orphan requirements
-- Foundational epics (data model, auth, infrastructure) come before feature epics
-- Identify blocking relationships between epics
-- Flag any requirement that does not fit cleanly into any proposed epic
-
-**Derive a proposed milestone structure:**
-- Use GoalSpec success criteria as milestone anchors — each criterion
-  should be demonstrable at some milestone
-- Group epics into milestones by dependency order and deliverable value
-- Each milestone must produce a demonstrable outcome, not just completed tasks
-- Aim for 3–5 milestones; adjust if scope clearly warrants more or fewer
-- Every epic must belong to exactly one milestone
+**Derive milestones:** use success criteria as anchors. Aim for 3–5
+milestones, each producing a demonstrable outcome. Every epic belongs to
+exactly one milestone.
 
 ### Phase 2 — Present and refine
 
@@ -178,55 +144,21 @@ Validation (enforce before writing):
 
 ### Epic file sections
 
-Each `tasks/epics/EP-<NNN>/EP-<NNN>-<slug>.md` contains the following sections.
-Guidance for each is below.
+Each `tasks/epics/EP-<NNN>/EP-<NNN>-<slug>.md` contains:
 
 #### Objective
-What this epic delivers and why.
-Must answer: what capability does completing this epic produce, and which
-requirements does it address?
-Should NOT describe implementation details or task breakdown.
-
-Good: "Enables users to upload PDF documents and receive structured text output."
-Bad: "Implement the PDF parser using PyMuPDF and store results in Postgres."
-
-**titleGlossaryRefs** (array of GL-NNN): Glossary terms the epic's title and objective reference.
-**inScopeGlossaryRefs** (array of GL-NNN): Glossary terms referenced in inScope items.
-**outOfScopeGlossaryRefs** (array of GL-NNN): Glossary terms referenced in outOfScope items.
+What capability this epic delivers and which requirements it addresses.
+Should NOT describe implementation details.
 
 #### Scope
-Explicit boundary of this epic.
-* In scope: capabilities and behaviours included
-* Out of scope: related work intentionally deferred or excluded
-
-Out-of-scope items are instructions to breakdown — they tell it what NOT to
-generate issues for. Be specific. Vague scope produces scope creep.
-
-Scope items may have **glossaryRefs** (array of GL-NNN): Domain concepts in each scope item.
-
-Good out-of-scope: "Batch upload of multiple PDFs — deferred to EP-004."
-Bad out-of-scope: "Advanced features."
+In scope: capabilities included. Out of scope: related work deferred.
+Be specific — vague scope produces scope creep.
 
 #### Acceptance Criteria
-Objective conditions that mark this epic complete.
-* Each criterion must be independently verifiable
-* Binary (pass/fail) where possible
-* Describes observable behaviour, not implementation
-
-Good: "User can upload a PDF up to 100MB and receive extracted text within 10s."
-Bad: "PDF parsing works correctly."
+Independently verifiable, binary (pass/fail) conditions describing observable behaviour.
 
 #### Dependencies
-* Blocked by: epics that must complete before this one can start
-* Blocks: epics that cannot start until this one is complete
-* If none: state explicitly "None."
+Blocked by / blocks epics. If none: "None."
 
 #### Notes
-Open questions, risks, or context for whoever implements this epic.
-Use for:
-* Unresolved design questions breakdown should surface during issue creation
-* Known risks or constraints
-* References to relevant ADRs or KnowledgeBase entries
-* Prototype findings or spikes
-
-May be empty if nothing to record.
+Open questions, risks, references. May be empty.

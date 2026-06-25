@@ -143,30 +143,12 @@ After all tests are written, verify traceability:
 
 ## Rules
 
-**Rule 1: Trace to contract.**
-Every test must reference which contract clause it verifies. If no clause
-can be identified, the test should not exist.
-
-**Rule 2: Concrete values only.**
-Write `input: userId = "usr_48291"`, not `input: a valid userId`.
-The verifier must be able to trace the input through the logic without ambiguity.
-
-**Rule 3: Error paths are mandatory.**
-Every documented error condition must have a test. No exceptions.
-
-**Rule 4: No implementation detail.**
-Tests specify *what* the output must be, not *how* the function produces it.
-
-**Rule 5: No combinatorial explosion.**
-Identify the minimal set: one happy path, each distinct edge case, each
-distinct error condition. Prefer 4–8 tests per function over 20+.
-
-**Rule 6: Out-of-scope declaration.**
-Each function's test block must include an explicit list of behaviours the
-tests do NOT verify. This prevents false failures during verification.
-
-Each out-of-scope item is a structured object: `{description: string, glossaryRefs: GL-NNN[]}`.
-If the description contains a glossary term, include it in `glossaryRefs`.
+1. **Trace to contract** — Every test must reference a contract clause.
+2. **Concrete values** — Write `userId = "usr_48291"`, not `a valid userId`.
+3. **Error paths mandatory** — Every documented error must have a test.
+4. **No implementation detail** — Tests specify *what*, not *how*.
+5. **Minimal set** — Prefer 4–8 tests per function over 20+.
+6. **Out-of-scope** — Each function must list behaviours tests do NOT verify.
 
 ---
 
