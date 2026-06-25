@@ -28,8 +28,10 @@ updated: {{ updated }}
 
 {% for flow in dataFlow -%}
 ### {{ flow.name }}
-
+{% if flow.description -%}
 {{ flow.description }}
+
+{% endif -%}
 {% if flow.reqRefs -%}
 **reqRefs:** {{ flow.reqRefs | join(', ') | format_id_refs }}
 
@@ -48,21 +50,9 @@ updated: {{ updated }}
 {% if constraints -%}
 ## Constraints
 
+| ID | Name | Description | Rationale | nfrRefs | glossaryRefs |
+|---|---|---|---|---|---|
 {% for constraint in constraints -%}
-### {{ constraint.name }}
-
-{{ constraint.description | format_id_refs }}
-{% if constraint.rationale -%}
-**Rationale:** {{ constraint.rationale }}
-
-{% endif -%}
-{% if constraint.nfrRefs -%}
-**nfrRefs:** {{ constraint.nfrRefs | join(', ') | format_id_refs }}
-
-{% endif -%}
-{% if constraint.glossaryRefs -%}
-**glossaryRefs:** {{ constraint.glossaryRefs | format_glossary_refs }}
-
-{% endif -%}
+| {{ constraint.id }} | {{ constraint.name }} | {{ constraint.description | format_id_refs }}{% if constraint.rationale %} | {{ constraint.rationale }}{% endif %}{% if constraint.nfrRefs %} | {{ constraint.nfrRefs | join(', ') | format_id_refs }}{% endif %}{% if constraint.glossaryRefs %} | {{ constraint.glossaryRefs | format_glossary_refs }}{% endif %} |
 {% endfor -%}
 {% endif -%}
