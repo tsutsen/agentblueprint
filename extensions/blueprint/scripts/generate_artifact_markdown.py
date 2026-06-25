@@ -924,6 +924,8 @@ def render_template(artifact_type: str, data: dict, json_path: str,
     def format_id_refs(text):
         """Wrap all ID references in backticks: REQ-001, NFR-002, TST-003, FN-063, GL-008, etc."""
         import re
+        if isinstance(text, list):
+            return ', '.join(f'`{r}`' for r in text)
         return re.sub(r'\b([A-Z]{1,4}-\d{3,})\b', r'`\1`', str(text))
 
     env.filters['format_json'] = format_json

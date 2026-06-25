@@ -45,6 +45,15 @@ updated: {{ updated }}
 {% if nfr.wish %}
 | **Wish** | {{ nfr.wish }} |
 {% endif %}
+{% if nfr.glossaryRefs -%}
+| **glossaryRefs** | {{ nfr.glossaryRefs | format_glossary_refs }} |
+{% endif -%}
+{% if nfr.conRefs -%}
+| **conRefs** | {{ nfr.conRefs | format_id_refs }} |
+{% endif -%}
+{% if nfr.notes -%}
+| **Notes** | {{ nfr.notes }} |
+{% endif -%}
 
 {% endfor -%}
 ---
