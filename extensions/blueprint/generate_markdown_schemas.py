@@ -522,7 +522,7 @@ def main():
     parser.add_argument(
         "--output-dir",
         default=None,
-        help="Path to schemas/markdown directory (default: auto-detect)",
+        help="Path to instructions directory (default: auto-detect)",
     )
     args = parser.parse_args()
 

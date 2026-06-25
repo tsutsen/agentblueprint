@@ -411,10 +411,10 @@ function resolvePackagePaths(cwd: string) {
   const paths = {
     // Development mode: .pi/extensions/blueprint/
     devExtDir: path.resolve(cwd, ".pi/extensions/blueprint"),
-    devSchemasSrc: path.resolve(cwd, ".pi/skills/blueprint/schemas/markdown"),
+    devSchemasSrc: path.resolve(cwd, ".pi/skills/blueprint/instructions"),
     // Installed package mode: node_modules/@agentblueprint/blueprint/
     pkgExtDir: path.resolve(cwd, "node_modules/@agentblueprint/blueprint/extensions/blueprint"),
-    pkgSchemasSrc: path.resolve(cwd, "node_modules/@agentblueprint/blueprint/skills/blueprint/schemas/markdown"),
+    pkgSchemasSrc: path.resolve(cwd, "node_modules/@agentblueprint/blueprint/skills/blueprint/instructions"),
   };
 
   // Prefer development mode if .pi/ exists

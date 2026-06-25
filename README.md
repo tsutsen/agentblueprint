@@ -99,7 +99,7 @@ AgentBlueprint/
 
 Each spec has two files:
 
-- **Markdown schema** (`skills/blueprint/schemas/markdown/`) — reference documentation, generated Markdown adopts JSON schema structure
+- **Markdown schema** (`skills/blueprint/instructions/`) — reference documentation, generated Markdown adopts JSON schema structure
 - **JSON schema** (`skills/blueprint/schemas/json/`) — machine-validation schema, source of truth for structure
 
 ### Linters

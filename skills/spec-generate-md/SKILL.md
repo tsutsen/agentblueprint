@@ -25,7 +25,7 @@ args:
 
 1. Reads each `*.schema.json` file from `skills/blueprint/schemas/json/`
 2. Extracts all properties, types, constraints, enums, and descriptions
-3. Generates a corresponding `*.md` file in `skills/blueprint/schemas/markdown/`
+3. Generates a corresponding `*.md` file in `skills/blueprint/instructions/`
 4. Each generated markdown includes:
    - Frontmatter with artifact name and type
    - Title and description from JSON schema
