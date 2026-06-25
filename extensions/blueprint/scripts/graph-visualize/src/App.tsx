@@ -27,6 +27,8 @@ function App() {
 
   const bridgeRef = useRef<IGraphBridge | null>(null)
   const resizeRef = useRef<HTMLDivElement>(null)
+  const sidebarWidthRef = useRef(sidebarWidth)
+  sidebarWidthRef.current = sidebarWidth // keep ref in sync
 
   // ─── Sync canvas state → parent UI on mount ───
   useEffect(() => {
@@ -183,16 +185,19 @@ function App() {
       document.body.style.userSelect = ''
     }
 
-    handle.addEventListener('mousedown', (e) => {
+    const onMouseDown = (e: MouseEvent) => {
       startX = e.clientX
-      startWidth = sidebarWidth
+      startWidth = sidebarWidthRef.current
       document.addEventListener('mousemove', onMouseMove)
       document.addEventListener('mouseup', onMouseUp)
       document.body.style.cursor = 'col-resize'
       document.body.style.userSelect = 'none'
       e.preventDefault()
-    })
-  }, [sidebarWidth])
+    }
+
+    handle.addEventListener('mousedown', onMouseDown)
+    return () => handle.removeEventListener('mousedown', onMouseDown)
+  }, [])
 
   // ─── Visible + sorted nodes ───
   const visibleIds = graphData ? getVisibleNodeIds(graphData, activeCategories, debouncedSearch) : new Set()

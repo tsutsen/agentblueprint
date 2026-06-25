@@ -847,7 +847,6 @@ export function GraphCanvas({ data, bridgeRef, onNodeSelect, onNodeDeselect, cla
     }
 
     function onMouseMove(event: MouseEvent) {
-      event.stopPropagation()
       const pos = getMousePos(event)
 
       if (draggedNodeRef.current) {
