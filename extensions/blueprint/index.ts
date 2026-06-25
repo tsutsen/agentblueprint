@@ -3,7 +3,6 @@ import path from "node:path";
 import { registerInitWorkspace } from "./tools/init-workspace";
 import { registerLoadArtifact } from "./tools/load-artifact";
 import { registerLint } from "./tools/lint";
-import { registerUpdateFrontmatter } from "./tools/update-frontmatter";
 import { registerWriteSection } from "./tools/write-section";
 import { registerHandoff } from "./tools/handoff";
 import { registerGenerateTests } from "./tools/generate-tests";
@@ -19,7 +18,6 @@ export default function (pi: ExtensionAPI) {
   registerInitWorkspace(pi);
   registerLoadArtifact(pi);
   registerLint(pi, extDir);
-  registerUpdateFrontmatter(pi);
   registerWriteSection(pi);
   registerHandoff(pi);
   registerGenerateTests(pi, extDir);
