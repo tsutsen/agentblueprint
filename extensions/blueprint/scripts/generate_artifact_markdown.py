@@ -928,8 +928,18 @@ def render_template(artifact_type: str, data: dict, json_path: str,
             return ', '.join(f'`{r}`' for r in text)
         return re.sub(r'\b([A-Z]{1,4}-\d{3,})\b', r'`\1`', str(text))
 
+    def clean_flow_name(name):
+        """Remove embedded ID references from flow names for clean display."""
+        import re
+        # Remove (**REQ-024**) pattern
+        cleaned = re.sub(r'\s*\(\*\*[A-Z]{1,4}-\d{3,}+\*\*\)', '', name)
+        # Remove (REQ-024) pattern
+        cleaned = re.sub(r'\s*\([A-Z]{1,4}-\d{3,}\)', '', cleaned)
+        return cleaned.strip()
+
     env.filters['format_json'] = format_json
     env.filters['format_id_refs'] = format_id_refs
+    env.filters['clean_flow_name'] = clean_flow_name
     template = env.from_string(template_str)
 
     # Prepare context for template

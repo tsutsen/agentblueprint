@@ -27,7 +27,7 @@ updated: {{ updated }}
 ## Data Flow
 
 {% for flow in dataFlow -%}
-### {{ flow.name }}
+### {{ flow.name | clean_flow_name }}
 {% if flow.description -%}
 {{ flow.description }}
 
