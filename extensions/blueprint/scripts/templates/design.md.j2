@@ -36,11 +36,10 @@ updated: {{ updated }}
 
 {% for step in journey.steps -%}
 {{ loop.index }}. {{ step.action }}
-
 {% endfor -%}
 {% if journey.desiredOutcome -%}
-*End:* {{ journey.desiredOutcome | format_id_refs }}
 
+*End:* {{ journey.desiredOutcome | format_id_refs }}
 {% endif -%}
 
 {% endfor -%}
