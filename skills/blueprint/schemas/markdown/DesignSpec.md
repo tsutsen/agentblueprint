@@ -130,6 +130,7 @@ For each screen:
 * **Outputs** (optional) — data the screen displays
 * **US refs** (optional) — `US-NNN-slug` IDs this screen helps fulfil
 * **fnRefs** (optional) — `FN-NNN-slug` IDs from ApiSpec that this screen's interactions exercise
+* **ujRefs** (optional) — `UJ-NNN-slug` IDs from DesignSpec user journeys that use this screen
 * **glossaryRefs** (array of GL-NNN): Domain concepts in the screen's purpose description
 
 ---
@@ -256,6 +257,26 @@ args:
 
 This overwrites the Markdown file with content derived from the JSON.
 The JSON is the single source of truth; the Markdown is derived.
+
+---
+
+### Design Tokens
+
+Reusable visual values that define consistency across the product. Tokens replace
+hardcoded values in screen specs and styles.
+
+Each token must have:
+* **ID** — format `TKN-NNN-slug`, e.g. `TKN-001-color-primary`
+* **Name** — descriptive name, e.g. `color-primary`, `spacing-md`, `font-size-lg`
+* **Category** — one of: `color`, `typography`, `spacing`, `border-radius`, `shadow`, `opacity`, `z-index`
+* **Value** — the actual value, e.g. `#1a73e8`, `16px`, `0.5`
+* **Description** (optional) — when and how this token should be used
+* **glossaryRefs** (optional) — GL-NNN identifiers for related terms
+
+Examples:
+* `TKN-001-color-primary`: `#1a73e8` — Primary brand color, used for buttons and links
+* `TKN-002-spacing-md`: `16px` — Medium spacing, used for padding between sections
+* `TKN-003-font-size-lg`: `18px` — Large text, used for headings
 
 ---
 

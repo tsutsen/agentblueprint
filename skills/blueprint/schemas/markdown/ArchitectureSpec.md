@@ -63,6 +63,7 @@ Each component must have:
 * **REQ refs** (optional) — `REQ-NNN-slug` IDs from GoalSpec this component satisfies
 * **NFR refs** (optional) — `NFR-NNN-slug` IDs from GoalSpec this component is responsible for
 * **fnRefs** (optional) — `FN-NNN-slug` IDs from ApiSpec that this component owns
+* **entityRefs** (optional) — `ENT-NNN-slug` IDs from DataSpec entities this component works with
 * **Visibility** — `external` (exposed to callers) or `internal`
 * **glossaryRefs** (array of GL-NNN): Glossary terms the component's concepts map to
 

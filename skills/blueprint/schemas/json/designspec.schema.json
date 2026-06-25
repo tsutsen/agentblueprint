@@ -20,7 +20,8 @@
     "visualDesignRequirements",
     "designSystem",
     "accessibilityRequirements",
-    "uxAcceptanceCriteria"
+    "uxAcceptanceCriteria",
+    "designTokens"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -503,6 +504,13 @@
             "items": {
               "$ref": "#/definitions/glId"
             }
+          },
+          "ujRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "UJ-NNN-slug IDs from DesignSpec user journeys that use this screen"
           }
         }
       }
@@ -840,6 +848,57 @@
             "description": "How this criterion will be verified, e.g. 'manual walkthrough', 'automated UI test'."
           }
         }
+      }
+    },
+    "designTokens": {
+      "type": "array",
+      "description": "Design tokens that define visual consistency across the product",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this design token"
+          },
+          "name": {
+            "type": "string",
+            "description": "Token name, e.g. \"color-primary\", \"spacing-md\""
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "color",
+              "typography",
+              "spacing",
+              "border-radius",
+              "shadow",
+              "opacity",
+              "z-index"
+            ],
+            "description": "The design dimension this token belongs to"
+          },
+          "value": {
+            "type": "string",
+            "description": "The token value, e.g. \"#1a73e8\", \"16px\", \"0.5\""
+          },
+          "description": {
+            "type": "string",
+            "description": "When and how this token should be used"
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "GL-NNN identifiers for related glossary terms"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "category",
+          "value"
+        ]
       }
     }
   }

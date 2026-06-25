@@ -276,6 +276,13 @@
             "items": {
               "$ref": "#/definitions/glId"
             }
+          },
+          "conRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "CON-NNN-slug IDs from ArchitectureSpec constraints that stem from this NFR"
           }
         }
       }

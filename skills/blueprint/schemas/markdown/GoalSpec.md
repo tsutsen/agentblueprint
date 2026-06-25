@@ -99,7 +99,9 @@ If the user states a vague or compound requirement, surface it immediately:
 Quality attributes and operational constraints. NFRs describe *how well*
 the system performs, not *what* it does.
 
-Each NFR may also have **glossaryRefs** (array of GL-NNN): Domain concepts in the scale/meter descriptions.
+Each NFR may also have:
+* **glossaryRefs** (array of GL-NNN): Domain concepts in the scale/meter descriptions
+* **conRefs** (optional) — `CON-NNN-slug` IDs from ArchitectureSpec constraints that stem from this NFR
 
 **You MUST use Planguage format for every NFR. Do not accept free-form
 NFR descriptions. If the user provides a vague NFR (e.g. "should be fast"),

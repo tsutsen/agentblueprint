@@ -233,6 +233,13 @@
           },
           "notes": {
             "type": "string"
+          },
+          "entityRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "ENT-NNN-slug IDs from DataSpec entities this component works with"
           }
         }
       }
