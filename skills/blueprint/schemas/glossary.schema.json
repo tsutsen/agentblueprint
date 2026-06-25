@@ -38,6 +38,16 @@
         ],
         "additionalProperties": false,
         "properties": {
+          "term": {
+            "type": "string",
+            "description": "Name of this glossary term. Required.",
+            "minLength": 1
+          },
+          "definition": {
+            "type": "string",
+            "description": "Definition of this glossary term. Required.",
+            "minLength": 10
+          },
           "name": {
             "type": "string",
             "description": "Name of this glossary term. Synonym for 'term' \u2014 use for graph visualization consistency. If omitted, falls back to 'term'.",
