@@ -400,8 +400,9 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
         elif artifact_type == "glossary" and prop_name == "terms":
             lines.append("## Terms\n")
             for term in value:
-                term_name = term.get("term", "")
-                definition = term.get("definition", "")
+                # Schema says term/definition, but JSON uses name/description as synonyms
+                term_name = term.get("term", term.get("name", ""))
+                definition = term.get("definition", term.get("description", ""))
                 examples = term.get("examples", [])
                 synonyms = term.get("synonyms", [])
                 related = term.get("relatedTerms", [])
