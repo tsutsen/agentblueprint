@@ -17,7 +17,6 @@ The set of primitive type names used as field types:
 
 {% for prim in primitives -%}
 - `{{ prim.id }}`
-
 {% endfor -%}
 ## Enums
 
@@ -40,24 +39,27 @@ The set of primitive type names used as field types:
 
 {{ entity.description }}
 {% if entity.abstract -%}
+
 *Abstract entity*
 
 {% endif -%}
 {% if entity.extends -%}
+
 *Extends: {{ entity.extends }}*
 
 {% endif -%}
 {% if entity.visibility != "public" -%}
+
 *Visibility: {{ entity.visibility }}*
 
 {% endif -%}
 {% if entity.fields -%}
+
 | Field | Type | Required | Description |
 |---|---|---|---|
 {% for field in entity.fields -%}
 | `{{ field.name }}` | {{ field.type }} | {% if field.required %}Yes{% else %}No{% endif %} | {{ field.description | format_id_refs }}{% if field.example %} (e.g. `{{ field.example }}`){% endif %} |
 {% endfor -%}
-
 {% endif -%}
 {% if entity.methods -%}
 Methods:
@@ -71,8 +73,8 @@ Methods:
 ## Relationships
 
 {% for rel in relationships -%}
-### {{ rel.label or rel.from + ' → ' + rel.to }}
+### {{ rel.id }} — {{ rel.label or rel.from + ' → ' + rel.to }}
 
-{{ rel.description }}
+**{{ rel.from }}** {{ rel.type }}→ **{{ rel.to }}** ({{ rel.cardinality.fromLabel }}:{{ rel.cardinality.toLabel }})
 
 {% endfor -%}
