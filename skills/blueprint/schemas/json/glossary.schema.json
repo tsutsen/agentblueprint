@@ -114,5 +114,14 @@
       "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
       "description": "Unique identifier for a glossary term"
     }
+  },
+  "outputFiles": [
+    "artifacts/Glossary.md",
+    "artifacts/Glossary.json"
+  ],
+  "dependencies": {
+    "goalSpec": {
+      "required": true
+    }
   }
 }

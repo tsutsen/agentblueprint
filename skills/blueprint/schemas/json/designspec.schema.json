@@ -901,5 +901,17 @@
         ]
       }
     }
+  },
+  "outputFiles": [
+    "artifacts/DesignSpec.md",
+    "artifacts/DesignSpec.json"
+  ],
+  "dependencies": {
+    "goalSpec": {
+      "required": true
+    },
+    "glossary": {
+      "required": true
+    }
   }
 }

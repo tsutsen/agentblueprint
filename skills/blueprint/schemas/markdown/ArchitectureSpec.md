@@ -17,19 +17,7 @@ The ArchitectureSpec does NOT define:
 
 ---
 
-## Output Format
-
-This artifact produces two files:
-
-- `artifacts/ArchitectureSpec.md` — human-readable document
-- `artifacts/ArchitectureSpec.json` — machine-readable, conforming to `schemas/archspec.schema.json`
-
 ---
-
-## Inputs
-
-* GoalSpec (`artifacts/GoalSpec.json`) — required
-* Glossary (`artifacts/Glossary.json`) — optional
 
 ---
 
@@ -120,7 +108,6 @@ Examples:
 After the interview is complete and the JSON artifact has been written via
 `write_section`, the Markdown file must be regenerated from the JSON to
 ensure zero drift between formats.
-
 
 ```
 tool: generate_artifact_markdown

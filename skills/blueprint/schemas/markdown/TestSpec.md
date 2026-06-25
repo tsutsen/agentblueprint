@@ -21,20 +21,7 @@ The TestSpec does NOT define:
 
 ---
 
-## Output Format
-
-This artifact produces two files:
-
-- `artifacts/TestSpec.md` — human-readable document
-- `artifacts/TestSpec.json` — machine-readable, conforming to `schemas/testspec.schema.json`
-
 ---
-
-## Inputs
-
-* GoalSpec (`artifacts/GoalSpec.json`) — required
-* ApiSpec (`artifacts/ApiSpec.json`) — required
-* DataSpec (`artifacts/DataSpec.json`) — required
 
 ---
 
@@ -230,7 +217,6 @@ After the interview is complete and the JSON artifact has been written via
 `write_section`, the Markdown file must be regenerated from the JSON to
 ensure zero drift between formats.
 
-
 ```
 tool: generate_artifact_markdown
 args:
@@ -246,8 +232,6 @@ The JSON is the single source of truth; the Markdown is derived.
 ## Linting
 
 After producing `artifacts/TestSpec.json`, run linting in this order:
-
-
 
 ```
 args:

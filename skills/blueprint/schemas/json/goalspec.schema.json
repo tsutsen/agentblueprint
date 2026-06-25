@@ -461,5 +461,10 @@
         }
       }
     }
-  }
+  },
+  "outputFiles": [
+    "artifacts/GoalSpec.md",
+    "artifacts/GoalSpec.json"
+  ],
+  "dependencies": {}
 }

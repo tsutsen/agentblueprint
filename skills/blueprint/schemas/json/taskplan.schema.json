@@ -129,7 +129,9 @@
           "glossaryRefs": {
             "type": "array",
             "description": "Glossary term IDs (GL-NNN) that this epic's title and objective reference. Links domain concepts from the glossary to implementation planning.",
-            "items": { "$ref": "#/definitions/glId" }
+            "items": {
+              "$ref": "#/definitions/glId"
+            }
           },
           "status": {
             "$ref": "#/definitions/epicStatus",
@@ -175,7 +177,9 @@
               "inScopeGlossaryRefs": {
                 "type": "array",
                 "description": "Glossary term IDs (GL-NNN) referenced in inScope items.",
-                "items": { "$ref": "#/definitions/glId" }
+                "items": {
+                  "$ref": "#/definitions/glId"
+                }
               },
               "outOfScope": {
                 "type": "array",
@@ -189,7 +193,9 @@
               "outOfScopeGlossaryRefs": {
                 "type": "array",
                 "description": "Glossary term IDs (GL-NNN) referenced in outOfScope items.",
-                "items": { "$ref": "#/definitions/glId" }
+                "items": {
+                  "$ref": "#/definitions/glId"
+                }
               }
             }
           },
@@ -234,6 +240,30 @@
           }
         }
       }
+    }
+  },
+  "outputFiles": [
+    "tasks/PLAN.md",
+    "tasks/epics/"
+  ],
+  "dependencies": {
+    "goalSpec": {
+      "required": true
+    },
+    "designSpec": {
+      "required": true
+    },
+    "architectureSpec": {
+      "required": true
+    },
+    "dataSpec": {
+      "required": true
+    },
+    "apiSpec": {
+      "required": true
+    },
+    "testSpec": {
+      "required": true
     }
   }
 }

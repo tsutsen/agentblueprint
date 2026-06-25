@@ -25,19 +25,7 @@ It does NOT define implementation details.
 
 ---
 
-## Output Format
-
-This artifact produces two files:
-
-- `artifacts/DesignSpec.md` — human-readable document
-- `artifacts/DesignSpec.json` — machine-readable, conforming to `schemas/designspec.schema.json`
-
 ---
-
-## Inputs
-
-* GoalSpec (`artifacts/GoalSpec.json`) — required
-* Glossary (`artifacts/Glossary.json`) — required
 
 ## Outputs
 
@@ -246,7 +234,6 @@ A developer unfamiliar with the project can:
 After the interview is complete and the JSON artifact has been written via
 `write_section`, the Markdown file must be regenerated from the JSON to
 ensure zero drift between formats.
-
 
 ```
 tool: generate_artifact_markdown

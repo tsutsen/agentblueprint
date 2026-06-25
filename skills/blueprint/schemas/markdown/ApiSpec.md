@@ -22,20 +22,7 @@ The ApiSpec does NOT define:
 
 ---
 
-## Output Format
-
-This artifact produces two files:
-
-- `artifacts/ApiSpec.md` — human-readable document
-- `artifacts/ApiSpec.json` — machine-readable, conforming to `schemas/apispec.schema.json`
-
 ---
-
-## Inputs
-
-* GoalSpec (`artifacts/GoalSpec.json`) — required
-* ArchitectureSpec (`artifacts/ArchitectureSpec.json`) — required
-* DataSpec (`artifacts/DataSpec.json`) — required
 
 ---
 
@@ -124,7 +111,6 @@ All errors must be resolved before handoff. In particular:
 * Every `entity` reference must exist in DataSpec
 * Every DataSpec entity method `apiRef` must resolve to a function in this spec
 
-
 ---
 
 ## Output
@@ -132,7 +118,6 @@ All errors must be resolved before handoff. In particular:
 After the interview is complete and the JSON artifact has been written via
 `write_section`, the Markdown file must be regenerated from the JSON to
 ensure zero drift between formats.
-
 
 ```
 tool: generate_artifact_markdown

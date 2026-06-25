@@ -23,7 +23,9 @@
     },
     "scopeItem": {
       "type": "object",
-      "required": ["description"],
+      "required": [
+        "description"
+      ],
       "properties": {
         "description": {
           "type": "string",
@@ -43,7 +45,9 @@
     },
     "acceptanceCriterion": {
       "type": "object",
-      "required": ["description"],
+      "required": [
+        "description"
+      ],
       "properties": {
         "description": {
           "type": "string",
@@ -136,19 +140,37 @@
     },
     "inScope": {
       "type": "array",
-      "items": {"$ref": "#/definitions/scopeItem"},
+      "items": {
+        "$ref": "#/definitions/scopeItem"
+      },
       "description": "Specific deliverables and behaviors this issue covers (subset of parent epic scope)."
     },
     "outOfScope": {
       "type": "array",
-      "items": {"$ref": "#/definitions/scopeItem"},
+      "items": {
+        "$ref": "#/definitions/scopeItem"
+      },
       "description": "Things explicitly excluded from this issue to prevent scope creep."
     },
     "acceptanceCriteria": {
       "type": "array",
-      "items": {"$ref": "#/definitions/acceptanceCriterion"},
+      "items": {
+        "$ref": "#/definitions/acceptanceCriterion"
+      },
       "description": "Verifiable acceptance criteria for this issue."
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "outputFiles": [
+    "tasks/epics/EP-NNN/IS-NNN/IS-NNN.md",
+    "tasks/epics/EP-NNN/IS-NNN/IS-NNN.json"
+  ],
+  "dependencies": {
+    "taskPlan": {
+      "required": true
+    },
+    "epic": {
+      "required": true
+    }
+  }
 }

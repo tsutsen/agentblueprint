@@ -241,5 +241,20 @@
       "description": "Total number of functions defined.",
       "readOnly": true
     }
+  },
+  "outputFiles": [
+    "artifacts/ApiSpec.md",
+    "artifacts/ApiSpec.json"
+  ],
+  "dependencies": {
+    "goalSpec": {
+      "required": true
+    },
+    "architectureSpec": {
+      "required": true
+    },
+    "dataSpec": {
+      "required": true
+    }
   }
 }

@@ -404,5 +404,17 @@
         }
       }
     }
+  },
+  "outputFiles": [
+    "artifacts/ArchitectureSpec.md",
+    "artifacts/ArchitectureSpec.json"
+  ],
+  "dependencies": {
+    "goalSpec": {
+      "required": true
+    },
+    "glossary": {
+      "required": false
+    }
   }
 }

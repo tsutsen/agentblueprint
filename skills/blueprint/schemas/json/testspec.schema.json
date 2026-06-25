@@ -306,5 +306,20 @@
         }
       }
     }
+  },
+  "outputFiles": [
+    "artifacts/TestSpec.md",
+    "artifacts/TestSpec.json"
+  ],
+  "dependencies": {
+    "goalSpec": {
+      "required": true
+    },
+    "apiSpec": {
+      "required": true
+    },
+    "dataSpec": {
+      "required": true
+    }
   }
 }

@@ -23,42 +23,7 @@ The DataSpec does NOT define:
 
 ---
 
-## Output Format
-
-This artifact produces two files:
-
-- `artifacts/DataSpec.md` — human-readable document
-- `artifacts/DataSpec.json` — machine-readable, conforming to `schemas/dataspec.schema.json`
-
-### Diagram Generation
-
-After finalizing the DataSpec JSON, regenerate all diagrams by calling the
-`generate_diagrams` tool:
-
-```
-tool: generate_diagrams
-args:
-  dataSpecPath: artifacts/Data.json
-  formats: all
-  outputDir: diagrams
-```
-
-This produces:
-- `diagrams/plantuml_data_diagram.puml` — PlantUML class diagram
-- `diagrams/mermaid_data_diagram.md` — Mermaid class diagram (embeds in Markdown)
-- `diagrams/drawio_data_diagram.drawio` — draw.io XML (import at app.diagrams.net)
-- `diagrams/dbml_data_diagram.dbml` — DBML (import at dbdiagram.io)
-- `diagrams/d2_data_diagram.d2` — D2 diagram (render with `d2 Data.d2`)
-
-**Regenerate after every DataSpec change.** Diagrams are derived artifacts
-and must always match the JSON source of truth.
-
 ---
-
-## Inputs
-
-* GoalSpec (`artifacts/GoalSpec.json`) — required
-* ArchitectureSpec (`artifacts/ArchitectureSpec.json`) — required
 
 ---
 
@@ -402,9 +367,6 @@ When defining relationships between entities, use the following conventions:
 | Composition | "owns (strong)" | Filled diamond on whole side (◆—) | Part CANNOT exist without the Whole. Whole creates and destroys the Part. | owns, is composed of, manages, controls, is responsible for, creates and owns, destroys, manages the lifecycle of, is the lifecycle owner of, instantiates, is the aggregate root of, is the parent of, is the container of, is responsible for creation and destruction, is a part of |
 | Dependency | "needs temporarily" | Dashed line + open arrow (- - →) | A uses B only momentarily (e.g. method param, local var). No stored reference. | depends on, calls, uses temporarily, creates locally, imports, receives as parameter, receives as argument, uses as local variable, references as parameter, references as argument, uses as a local variable, references as a local variable, instantiates locally, invokes, throws, catches |
 
-
-
-
 ---
 
 ## Output
@@ -412,7 +374,6 @@ When defining relationships between entities, use the following conventions:
 After the interview is complete and the JSON artifact has been written via
 `write_section`, the Markdown file must be regenerated from the JSON to
 ensure zero drift between formats.
-
 
 ```
 tool: generate_artifact_markdown

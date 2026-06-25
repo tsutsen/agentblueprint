@@ -17,16 +17,6 @@ with assumptions. If uncertain, ask.
 
 ---
 
-## Output Format
-
-This artifact produces two files:
-
-- `artifacts/GoalSpec.md` — human-readable document (this format)
-- `artifacts/GoalSpec.json` — machine-readable, conforming to `schemas/goalspec.schema.json`
-
-The JSON file is the authoritative dependency for downstream artifacts.
-Always produce and validate it before handoff.
-
 ---
 
 ## Before the interview
@@ -218,7 +208,6 @@ Format:
 After the interview is complete and `artifacts/GoalSpec.json` has been
 written via `write_section`, the Markdown file must be regenerated from
 the JSON to ensure zero drift between formats.
-
 
 ```
 tool: generate_artifact_markdown
