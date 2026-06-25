@@ -304,7 +304,7 @@ def run_lint(
     # JSON Schema validation (auto-generated from schema)
     if schema_path:
         schema = json.loads(Path(schema_path).read_text())
-        schema_issues = SchemaValidator(schema).validate(spec)
+        schema_issues = SchemaValidator(schema).validate(glossary)
         for issue in schema_issues:
             result.add(issue.severity, issue.category, issue.message, issue.hint)
 
