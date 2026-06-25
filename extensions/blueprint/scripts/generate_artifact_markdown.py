@@ -355,12 +355,17 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                     title_text = category
                 lines.append(f"### {id_} — {title_text}")
                 lines.append(f"Category: {category}")
+                lines.append("")
                 lines.append(f"Scale: {scale}")
+                lines.append("")
                 lines.append(f"Meter: {meter}")
+                lines.append("")
                 lines.append(f"Must: {must}")
                 if plan:
+                    lines.append("")
                     lines.append(f"Plan: {plan}")
                 if wish:
+                    lines.append("")
                     lines.append(f"Wish: {wish}")
                 lines.append("")
             lines.append("---\n")
