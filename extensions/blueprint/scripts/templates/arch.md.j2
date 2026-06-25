@@ -18,13 +18,12 @@ updated: {{ updated }}
 {% endif -%}
 ## Components
 
+| Component | Purpose | Dependencies |
+|---|---|---|
 {% for comp in components -%}
-### {{ comp.name }}
-- **Purpose:** {{ comp.purpose }}
-- **Responsibilities:** {{ comp.responsibilities | join('; ') | format_id_refs }}
-- **Dependencies:** {{ comp.dependencies | join(', ') }}
-
+| {{ comp.name }} | {{ comp.purpose }} | {{ comp.dependencies | join(', ') }} |
 {% endfor -%}
+
 ## Responsibilities
 
 {% for section in responsibilities -%}
@@ -47,18 +46,45 @@ updated: {{ updated }}
 {{ apiContract }}
 
 {% endif -%}
-{% if dataFlow -%}
 ## Data Flow
 
-{{ dataFlow }}
+{% for flow in dataFlow -%}
+### {{ flow.name }}
+
+{{ flow.description }}
+{% if flow.reqRefs -%}
+**reqRefs:** {{ flow.reqRefs | join(', ') | format_id_refs }}
 
 {% endif -%}
+{% if flow.glossaryRefs -%}
+**glossaryRefs:** {{ flow.glossaryRefs | format_glossary_refs }}
+
+{% endif -%}
+| Step | Component | Action | Data |
+|---|---|---|---|
+{% for step in flow.steps -%}
+| {{ loop.index }} | {{ step.componentRef }} | {{ step.action }} | {{ step.dataRef }} |
+{% endfor -%}
+
+{% endfor -%}
 {% if constraints -%}
 ## Constraints
 
 {% for constraint in constraints -%}
-### {{ constraint.title }}
-{{ constraint.description | format_id_refs }}
+### {{ constraint.name }}
 
+{{ constraint.description | format_id_refs }}
+{% if constraint.rationale -%}
+**Rationale:** {{ constraint.rationale }}
+
+{% endif -%}
+{% if constraint.nfrRefs -%}
+**nfrRefs:** {{ constraint.nfrRefs | join(', ') | format_id_refs }}
+
+{% endif -%}
+{% if constraint.glossaryRefs -%}
+**glossaryRefs:** {{ constraint.glossaryRefs | format_glossary_refs }}
+
+{% endif -%}
 {% endfor -%}
 {% endif -%}
