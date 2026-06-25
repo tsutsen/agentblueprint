@@ -904,8 +904,18 @@ def render_template(artifact_type: str, data: dict, json_path: str,
     def format_glossary_refs(refs):
         """Format glossary refs as backtick-quoted: `GL-001`, `GL-002`"""
         return ', '.join(f'`{r}`' for r in refs)
+
+    def format_inputs(inputs):
+        """Format inputs as 'name: type' strings."""
+        if not inputs:
+            return ""
+        return ', '.join(
+            f"{inp['name']}: {inp['type']}" if isinstance(inp, dict) else str(inp)
+            for inp in inputs
+        )
     
     env.filters['format_glossary_refs'] = format_glossary_refs
+    env.filters['format_inputs'] = format_inputs
     template = env.from_string(template_str)
 
     # Prepare context for template

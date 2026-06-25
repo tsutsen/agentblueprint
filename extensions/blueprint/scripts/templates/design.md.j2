@@ -10,118 +10,138 @@ updated: {{ updated }}
 
 # Design Specification
 
-{% if designGoals %}
+{% if designGoals -%}
 ## Design Goals
 
-{% for goal in designGoals %}
-{{ loop.index }}. **{{ goal }}**
-{% endfor %}
-{% endif %}
-{% if personas %}
+{% for goal in designGoals -%}
+{{ loop.index }}. **{{ goal.goal or goal.description }}**{% if goal.rationale %} — {{ goal.rationale }}{% endif %}
+
+{% endfor -%}
+{% endif -%}
+{% if personas -%}
 ## User Personas
 
-{% for persona in personas %}
-### {{ persona.label }} — {{ persona.name }}
-{% if persona.goals %}
-- **Goals:** {{ persona.goals }}
-{% endif %}
-{% if persona.painPoints %}
-- **Pain Points:** {{ persona.painPoints }}
-{% endif %}
-{% if persona.technicalSkillLevel %}
+{% for persona in personas -%}
+### {{ persona.label or loop.index }} — {{ persona.name }}
+{% if persona.goals -%}
+- **Goals:** {{ persona.goals | join('; ') }}
+
+{% endif -%}
+{% if persona.painPoints -%}
+- **Pain Points:** {{ persona.painPoints | join('; ') }}
+
+{% endif -%}
+{% if persona.technicalSkillLevel -%}
 - **Technical Skill Level:** {{ persona.technicalSkillLevel }}
-{% endif %}
-{% endfor %}
-{% endif %}
-{% if userJourneys %}
+
+{% endif -%}
+
+{% endfor -%}
+{% endif -%}
+{% if userJourneys -%}
 ## User Journeys
 
-{% for journey in userJourneys %}
-### Journey {{ loop.index }} — {{ journey.title }}
+{% for journey in userJourneys -%}
+### Journey {{ loop.index }} — {{ journey.name }}
 
-{% for step in journey.steps %}
-{{ loop.index }}. {{ step }}
-{% endfor %}
-{% endfor %}
-{% endif %}
-{% if informationArchitecture %}
+{% for step in journey.steps -%}
+{{ loop.index }}. {{ step.action }}
+
+{% endfor -%}
+{% if journey.desiredOutcome -%}
+*End:* {{ journey.desiredOutcome }}
+
+{% endif -%}
+
+{% endfor -%}
+{% endif -%}
+{% if informationArchitecture -%}
 ## Information Architecture
 
 ```
 {{ informationArchitecture }}
 ```
-{% endif %}
-{% if screenInventory %}
+
+{% endif -%}
+{% if screenInventory -%}
 ## Screen Inventory
 
 | Screen | Purpose | Key Elements |
 |---|---|---|
-{% for screen in screenInventory %}
+{% for screen in screenInventory -%}
 | {{ screen.name }} | {{ screen.purpose }} | {{ screen.keyElements }} |
-{% endfor %}
-{% endif %}
-{% if screenSpecs %}
+
+{% endfor -%}
+{% endif -%}
+{% if screenSpecs -%}
 ## Screen Specifications
 
-{% for screen in screenSpecs %}
+{% for screen in screenSpecs -%}
 ### {{ screen.name }}
 
 {{ screen.description }}
 
-{% endfor %}
-{% endif %}
-{% if interactionPatterns %}
+{% endfor -%}
+{% endif -%}
+{% if interactionPatterns -%}
 ## Interaction Patterns
 
-{% for pattern in interactionPatterns %}
+{% for pattern in interactionPatterns -%}
 ### {{ pattern.name }}
 
 {{ pattern.description }}
-{% endfor %}
-{% endif %}
-{% if visualDesignRequirements %}
+
+{% endfor -%}
+{% endif -%}
+{% if visualDesignRequirements -%}
 ## Visual Design Requirements
 
-{% for req in visualDesignRequirements %}
+{% for req in visualDesignRequirements -%}
 - {{ req }}
-{% endfor %}
-{% endif %}
-{% if designSystem %}
+
+{% endfor -%}
+{% endif -%}
+{% if designSystem -%}
 ## Design System
 
-{% if designSystem.colors %}
+{% if designSystem.colors -%}
 ### Colors
-{% for color in designSystem.colors %}
+{% for color in designSystem.colors -%}
 - **{{ color.name }}**: {{ color.value }} — {{ color.description }}
-{% endfor %}
-{% endif %}
-{% if designSystem.typography %}
+
+{% endfor -%}
+{% endif -%}
+{% if designSystem.typography -%}
 ### Typography
-{% for font in designSystem.typography %}
+{% for font in designSystem.typography -%}
 - **{{ font.name }}**: {{ font.description }}
-{% endfor %}
-{% endif %}
-{% endif %}
-{% if accessibilityRequirements %}
+
+{% endfor -%}
+{% endif -%}
+{% endif -%}
+{% if accessibilityRequirements -%}
 ## Accessibility Requirements
 
-{% for req in accessibilityRequirements %}
+{% for req in accessibilityRequirements -%}
 - {{ req }}
-{% endfor %}
-{% endif %}
-{% if uxAcceptanceCriteria %}
+
+{% endfor -%}
+{% endif -%}
+{% if uxAcceptanceCriteria -%}
 ## UX Acceptance Criteria
 
-{% for criterion in uxAcceptanceCriteria %}
+{% for criterion in uxAcceptanceCriteria -%}
 - {{ criterion }}
-{% endfor %}
-{% endif %}
-{% if designTokens %}
+
+{% endfor -%}
+{% endif -%}
+{% if designTokens -%}
 ## Design Tokens
 
-{% for token in designTokens %}
+{% for token in designTokens -%}
 ### {{ token.name }}
 - **Value:** {{ token.value }}
 - **Usage:** {{ token.usage }}
-{% endfor %}
-{% endif %}
+
+{% endfor -%}
+{% endif -%}

@@ -15,34 +15,37 @@ updated: {{ updated }}
 
 {{ module }}
 
-{% if summary %}
+{% if summary -%}
 ## Summary
 
-{% for item in summary %}
+{% for item in summary -%}
 - {{ item }}
-{% endfor %}
-{% endif %}
+
+{% endfor -%}
+{% endif -%}
 ## Test Cases
 
-{% for component in tests %}
+{% for component in tests -%}
 ### {{ component.name }}
 
-{% for test_group in component.testGroups %}
+{% for test_group in component.testGroups -%}
 #### `{{ test_group.name }}`
 
 **{{ test_group.type }}:**
 
-{% for test in test_group.tests %}
+{% for test in test_group.tests -%}
 - **{{ test.id }}**: {{ test.description }}
   - Input: `{{ test.input }}`
   - Expected: `{{ test.expected }}`
   - Clause: {{ test.clause }}
-{% endfor %}
-{% if test_group.outOfScope %}
+
+{% endfor -%}
+{% if test_group.outOfScope -%}
 
 **Out of scope:** {{ test_group.outOfScope }}
-{% endif %}
 
-{% endfor %}
-{% endfor %}
-{% endfor %}
+{% endif -%}
+
+{% endfor -%}
+{% endfor -%}
+{% endfor -%}

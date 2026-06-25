@@ -17,21 +17,23 @@ updated: {{ updated }}
 
 ## Functions
 
-{% for component in functions %}
-### {{ component.name }}
+{% for fn in functions -%}
+### {{ fn.name }}
 
-| Function | Entity | Inputs | Output | Description |
-|---|---|---|---|---|
-{% for fn in component.functions %}
-| `{{ fn.name }}` | {{ fn.entity }} | {{ fn.inputs | join(', ') }} | {{ fn.output }} | {{ fn.description }} |
-{% endfor %}
-{% endfor %}
-{% if errorCodes %}
-## Error Codes
+| Field | Value |
+|---|---|
+| **Entity** | {{ fn.entity }} |
+| **Inputs** | {{ fn.inputs | format_inputs }} |
+| **Output** | {{ fn.output['type'] }}{% if fn.output['description'] %} — {{ fn.output['description'] }}{% endif %} |
+| **Description** | {{ fn.description }} |
+{% if fn.errors -%}
+| **Errors** |
+{% for err in fn.errors -%}
+| `{{ err.code }}` | {{ err.condition }} |
+{% endfor -%}
+{% endif -%}
+{% if fn.glossaryRefs -%}
+| **glossaryRefs** | {{ fn.glossaryRefs | format_glossary_refs }} |
+{% endif -%}
 
-| Error Code | Function | Condition |
-|---|---|---|
-{% for err in errorCodes %}
-| {{ err.code }} | {{ err.function }} | {{ err.condition }} |
-{% endfor %}
-{% endif %}
+{% endfor -%}

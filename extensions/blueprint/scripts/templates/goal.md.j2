@@ -23,8 +23,10 @@ updated: {{ updated }}
 ## Functional Requirements
 
 {% for fr in functionalRequirements -%}
-- **{{ fr.id }}**: {{ fr.description }}{% if fr.actor %} *(Actor: {{ fr.actor }})*{% endif %}{% if fr.glossaryRefs %}
-  **glossaryRefs:** {{ fr.glossaryRefs | format_glossary_refs }}{% endif %}
+- **{{ fr.id }}**: {{ fr.description }}{% if fr.actor %} *(Actor: {{ fr.actor }})*{% endif %}
+{% if fr.glossaryRefs %}
+  **glossaryRefs:** {{ fr.glossaryRefs | format_glossary_refs }}
+{% endif %}
 
 {% endfor -%}
 ---
@@ -50,9 +52,13 @@ Wish: {{ nfr.wish }}
 ## User Stories
 
 {% for us in userStories -%}
-- **{{ us.id }}**: {{ us.capability }}{% if not us.capability.strip().startswith('As a') %}, so that {{ us.outcome }}.{% endif %}{% if us.reqRefs %}
-  → {{ us.reqRefs | join(', ') }}{% endif %}{% if us.glossaryRefs %}
-  **glossaryRefs:** {{ us.glossaryRefs | format_glossary_refs }}{% endif %}
+- **{{ us.id }}**: {% if us.capability.strip().startswith('As a') %}{{ us.capability }}{% if us.outcome %}, so that {{ us.outcome }}.{% endif %}{% else %}As a {{ us.actor or 'User' }}, I want to {{ us.capability }}{% if us.outcome %}, so that {{ us.outcome }}.{% endif %}{% endif %}
+{% if us.reqRefs %}
+  → {{ us.reqRefs | join(', ') }}
+{% endif %}
+{% if us.glossaryRefs %}
+  **glossaryRefs:** {{ us.glossaryRefs | format_glossary_refs }}
+{% endif %}
 
 {% endfor -%}
 ---
@@ -60,9 +66,13 @@ Wish: {{ nfr.wish }}
 ## Success Criteria
 
 {% for sc in successCriteria -%}
-- **{{ sc.id }}**: {{ sc.description }}{% if sc.verificationMethod %} *(Verification: {{ sc.verificationMethod }})*{% endif %}{% if sc.refs.reqRefs %}
-  → {{ sc.refs.reqRefs | join(', ') }}{% endif %}{% if sc.refs.nfrRefs %}
-  → {{ sc.refs.nfrRefs | join(', ') }}{% endif %}
+- **{{ sc.id }}**: {{ sc.description }}{% if sc.verificationMethod %} *(Verification: {{ sc.verificationMethod }})*{% endif %}
+{% if sc.refs.reqRefs %}
+  → {{ sc.refs.reqRefs | join(', ') }}
+{% endif %}
+{% if sc.refs.nfrRefs %}
+  → {{ sc.refs.nfrRefs | join(', ') }}
+{% endif %}
 
 {% endfor -%}
 ---

@@ -10,44 +10,66 @@ updated: {{ updated }}
 
 # Architecture Specification
 
+{% if overview -%}
 ## System Overview
 
-{{ overview }}
+{{ overview.summary }}
 
+{% if overview.subsystems -%}
+{% for sub in overview.subsystems -%}
+{{ loop.index }}. **{{ sub.name }}** — {{ sub.purpose }}
+
+{% endfor -%}
+{% endif -%}
+{% if overview.pipelineDescription -%}
+
+{{ overview.pipelineDescription }}
+
+{% endif -%}
+{% endif -%}
 ## Components
 
-{% for comp in components %}
+{% for comp in components -%}
 ### {{ comp.name }}
 - **Purpose:** {{ comp.purpose }}
-- **Responsibilities:** {{ comp.responsibilities }}
+- **Responsibilities:** {{ comp.responsibilities | join('; ') }}
 - **Dependencies:** {{ comp.dependencies | join(', ') }}
-{% endfor %}
+
+{% endfor -%}
 ## Responsibilities
 
-{% for section in responsibilities %}
+{% for section in responsibilities -%}
 ### {{ section.component }} owns:
-{% for resp in section.responsibilities %}
+{% for resp in section.responsibilities -%}
 - {{ resp }}
-{% endfor %}
-{% endfor %}
+
+{% endfor -%}
+
+{% endfor -%}
+{% if dataModel -%}
 ## Data Model
 
-{% if dataModel %}
 {{ dataModel }}
-{% endif %}
+
+{% endif -%}
+{% if apiContract -%}
 ## API Contract
 
-{% if apiContract %}
 {{ apiContract }}
-{% endif %}
+
+{% endif -%}
+{% if dataFlow -%}
 ## Data Flow
 
-{% if dataFlow %}
 {{ dataFlow }}
-{% endif %}
+
+{% endif -%}
+{% if constraints -%}
 ## Constraints
 
-{% for constraint in constraints %}
+{% for constraint in constraints -%}
 ### {{ constraint.title }}
 {{ constraint.description }}
-{% endfor %}
+
+{% endfor -%}
+{% endif -%}

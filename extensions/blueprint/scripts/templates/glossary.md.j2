@@ -14,25 +14,27 @@ updated: {{ updated }}
 
 | Term | Definition |
 |---|---|
-{% for term in terms %}
+{% for term in terms -%}
 | **{{ term.name }}** | {{ term.definition }} |
-{% endfor %}
+
+{% endfor -%}
 ## Full Term Details
 
-{% for term in terms %}
+{% for term in terms -%}
 ### {{ term.name }} ({{ term.id }})
 
 - **Definition**: {{ term.definition }}
-{% if term.category %}
+{% if term.category -%}
 - **Category**: {{ term.category }}
-{% endif %}
-{% if term.relatedTerms %}
+{% endif -%}
+{% if term.relatedTerms -%}
 - **Related Terms**: {{ term.relatedTerms | join(', ') }}
-{% endif %}
-{% if term.examples %}
+{% endif -%}
+{% if term.examples -%}
 - **Examples**: {{ term.examples | join(', ') }}
-{% endif %}
-{% if term.synonyms %}
+{% endif -%}
+{% if term.synonyms -%}
 - **Synonyms**: {{ term.synonyms | join(', ') }}
-{% endif %}
-{% endfor %}
+{% endif -%}
+
+{% endfor -%}

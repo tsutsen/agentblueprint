@@ -15,57 +15,64 @@ updated: {{ updated }}
 
 The set of primitive type names used as field types:
 
-{% for prim in primitives %}
-- `{{ prim }}`
-{% endfor %}
+{% for prim in primitives -%}
+- `{{ prim.id }}`
+
+{% endfor -%}
 ## Enums
 
-{% for enum in enums %}
-### {{ enum.name }}
+{% for et in enums -%}
+### {{ et.name }}
 
-{{ enum.description }}
+{{ et.description }}
 
 | Value | Description |
 |---|---|
-{% for val in enum.values %}
+{% for val in et['values'] -%}
 | {{ val.name }} | {{ val.description }} |
-{% endfor %}
-{% endfor %}
+{% endfor -%}
+
+{% endfor -%}
 ## Entities
 
-{% for entity in entities %}
+{% for entity in entities -%}
 ### {{ entity.name }}
 
 {{ entity.description }}
-{% if entity.abstract %}
+{% if entity.abstract -%}
 *Abstract entity*
-{% endif %}
-{% if entity.extends %}
+
+{% endif -%}
+{% if entity.extends -%}
 *Extends: {{ entity.extends }}*
-{% endif %}
-{% if entity.visibility != "public" %}
+
+{% endif -%}
+{% if entity.visibility != "public" -%}
 *Visibility: {{ entity.visibility }}*
-{% endif %}
-{% if entity.fields %}
+
+{% endif -%}
+{% if entity.fields -%}
 | Field | Type | Required | Description |
 |---|---|---|---|
-{% for field in entity.fields %}
+{% for field in entity.fields -%}
 | `{{ field.name }}` | {{ field.type }} | {% if field.required %}Yes{% else %}No{% endif %} | {{ field.description }}{% if field.example %} (e.g. `{{ field.example }}`){% endif %} |
-{% endfor %}
-{% endif %}
-{% if entity.methods %}
+{% endfor -%}
+
+{% endif -%}
+{% if entity.methods -%}
 Methods:
 
-{% for method in entity.methods %}
+{% for method in entity.methods -%}
 - `{{ method.name }}` → `{{ method.apiRef }}` — {{ method.description }}
-{% endfor %}
-{% endif %}
-{% endfor %}
+
+{% endfor -%}
+{% endif -%}
+{% endfor -%}
 ## Relationships
 
-{% for rel in relationships %}
+{% for rel in relationships -%}
 ### {{ rel.label or rel.from + ' → ' + rel.to }}
 
 {{ rel.description }}
 
-{% endfor %}
+{% endfor -%}
