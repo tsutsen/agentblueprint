@@ -24,28 +24,6 @@ updated: {{ updated }}
 | {{ comp.name }} | {{ comp.purpose }} | {{ comp.dependencies | join(', ') }} |
 {% endfor -%}
 
-## Responsibilities
-
-{% for section in responsibilities -%}
-### {{ section.component }} owns:
-{% for resp in section.responsibilities -%}
-- {{ resp | format_id_refs }}
-
-{% endfor -%}
-
-{% endfor -%}
-{% if dataModel -%}
-## Data Model
-
-{{ dataModel }}
-
-{% endif -%}
-{% if apiContract -%}
-## API Contract
-
-{{ apiContract }}
-
-{% endif -%}
 ## Data Flow
 
 {% for flow in dataFlow -%}
