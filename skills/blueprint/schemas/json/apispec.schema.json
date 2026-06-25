@@ -29,16 +29,21 @@
           "pattern": "^[a-z][A-Za-z0-9]*$"
         },
         "type": {
-          "$ref": "#/definitions/typeRef"
+          "$ref": "#/definitions/typeRef",
+          "description": "The type of this parameter. Must resolve to a primitive, entity, or enum in DataSpec."
         },
         "required": {
           "type": "boolean",
-          "default": true
+          "default": true,
+          "description": "Whether this parameter is required. Default: true."
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description of this input parameter."
         },
-        "example": {}
+        "example": {
+          "description": "A concrete example value for this parameter."
+        }
       }
     },
     "errorCondition": {
@@ -129,7 +134,7 @@
           },
           "inputs": {
             "type": "array",
-            "description": "Input parameters. May be empty for zero-argument functions.",
+            "description": "List of input parameters.",
             "items": {
               "$ref": "#/definitions/parameterObject"
             }
@@ -146,18 +151,25 @@
                 "$ref": "#/definitions/typeRef"
               },
               "description": {
-                "type": "string"
+                "type": "string",
+                "description": "Description of the return value."
               },
-              "example": {},
+              "example": {
+                "description": "A concrete example of the return value."
+              },
               "name": {
                 "type": "string",
                 "description": "Name of the output variable/field."
+              },
+              "Type": {
+                "type": "string",
+                "description": "Must resolve to a type in DataSpec, or void."
               }
             }
           },
           "errors": {
             "type": "array",
-            "description": "All documented error conditions. Every error must be covered by a test.",
+            "description": "All documented error conditions.",
             "items": {
               "$ref": "#/definitions/errorCondition"
             }
@@ -168,7 +180,8 @@
               "public",
               "internal"
             ],
-            "default": "public"
+            "default": "public",
+            "description": "Whether this function is exposed externally or internal only."
           },
           "pure": {
             "type": "boolean",
@@ -220,6 +233,18 @@
               "type": "string",
               "pattern": "^NFR-\\d{3}$"
             }
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the function parameter or return value."
+          },
+          "required": {
+            "type": "string",
+            "description": "Whether this parameter is required."
+          },
+          "example": {
+            "type": "string",
+            "description": "A concrete example value for this field."
           }
         }
       }

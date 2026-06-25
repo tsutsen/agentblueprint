@@ -138,7 +138,8 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/reqId"
+            "$ref": "#/definitions/reqId",
+            "description": "Unique identifier for this requirement."
           },
           "name": {
             "type": "string",
@@ -180,7 +181,7 @@
           },
           "notes": {
             "type": "string",
-            "description": "Optional clarifying context. Must not contain implementation decisions."
+            "description": "Optional clarifying context. Must not contain implementation details."
           },
           "fnRefs": {
             "type": "array",
@@ -203,6 +204,14 @@
             "items": {
               "$ref": "#/definitions/glId"
             }
+          },
+          "reqRefs": {
+            "type": "string",
+            "description": "REQ-NNN-slug IDs from GoalSpec that this requirement implements."
+          },
+          "nfrRefs": {
+            "type": "string",
+            "description": "NFR-NNN-slug IDs from GoalSpec that this requirement is related to."
           }
         }
       }
@@ -222,7 +231,8 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/nfrId"
+            "$ref": "#/definitions/nfrId",
+            "description": "Unique identifier for this NFR."
           },
           "name": {
             "type": "string",
@@ -268,7 +278,8 @@
             "description": "Ideal outcome if conditions allow. Use 'TBD' if unknown."
           },
           "notes": {
-            "type": "string"
+            "type": "string",
+            "description": "Optional clarifying context for this NFR."
           },
           "glossaryRefs": {
             "type": "array",
@@ -304,7 +315,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Unique story identifier.",
+            "description": "Unique identifier for this user story.",
             "pattern": "^US-\\d{3}$"
           },
           "name": {
@@ -340,7 +351,8 @@
             }
           },
           "notes": {
-            "type": "string"
+            "type": "string",
+            "description": "Optional clarifying context for this user story."
           },
           "glossaryRefs": {
             "type": "array",
@@ -366,7 +378,8 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/scId"
+            "$ref": "#/definitions/scId",
+            "description": "Unique identifier for this success criterion."
           },
           "name": {
             "type": "string",
@@ -402,7 +415,8 @@
             "description": "How this criterion will be verified \u2014 automated test, manual check, load test, etc."
           },
           "notes": {
-            "type": "string"
+            "type": "string",
+            "description": "Optional clarifying context for this success criterion."
           },
           "glossaryRefs": {
             "type": "array",

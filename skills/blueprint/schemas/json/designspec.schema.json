@@ -175,7 +175,8 @@
         "confirmed",
         "superseded"
       ],
-      "default": "draft"
+      "default": "draft",
+      "description": "Lifecycle status of this design element. One of: draft, confirmed, deprecated."
     },
     "designGoals": {
       "type": "array",
@@ -191,7 +192,8 @@
         "properties": {
           "id": {
             "type": "string",
-            "pattern": "^DG-\\d{3}$"
+            "pattern": "^DG-\\d{3}$",
+            "description": "Unique identifier for this design goal."
           },
           "goal": {
             "type": "string",
@@ -207,7 +209,16 @@
             "description": "Longer description of this design goal and how it will be achieved."
           },
           "rationale": {
-            "type": "string"
+            "type": "string",
+            "description": "Why this design goal matters for this project."
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status of this design goal."
+          },
+          "reqRefs": {
+            "type": "string",
+            "description": "REQ-NNN-slug IDs from GoalSpec that this goal addresses."
           }
         }
       }
@@ -275,7 +286,8 @@
             ]
           },
           "notes": {
-            "type": "string"
+            "type": "string",
+            "description": "Optional clarifying context for this persona."
           },
           "glossaryRefs": {
             "type": "array",
@@ -330,7 +342,7 @@
           },
           "reqRefs": {
             "type": "array",
-            "description": "REQ-IDs from GoalSpec that this journey exercises end-to-end. Use for UJ\u2192REQ traceability. At least one must be present.",
+            "description": "REQ-NNN-slug IDs from GoalSpec that this journey exercises end-to-end.",
             "minItems": 1,
             "items": {
               "$ref": "#/definitions/reqId"
@@ -398,6 +410,10 @@
             "items": {
               "$ref": "#/definitions/glId"
             }
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional clarifying context for this journey."
           }
         }
       }
@@ -486,7 +502,7 @@
           },
           "usRefs": {
             "type": "array",
-            "description": "US-IDs this screen helps fulfil.",
+            "description": "US-NNN-slug IDs this screen helps fulfil.",
             "items": {
               "$ref": "#/definitions/usId"
             }
@@ -511,6 +527,14 @@
               "type": "string"
             },
             "description": "UJ-NNN-slug IDs from DesignSpec user journeys that use this screen"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional clarifying context for this screen."
+          },
+          "reqRefs": {
+            "type": "string",
+            "description": "REQ-NNN-slug IDs from GoalSpec that this screen implements."
           }
         }
       }
@@ -649,6 +673,14 @@
           "id": {
             "type": "string",
             "description": "Unique identifier for this screen spec"
+          },
+          "action": {
+            "type": "string",
+            "description": "The user action this interaction responds to."
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional clarifying context for this screen spec."
           }
         }
       }
@@ -704,6 +736,18 @@
                 }
               }
             }
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional clarifying context for this pattern."
+          },
+          "action": {
+            "type": "string",
+            "description": "The action this pattern enables."
+          },
+          "usageNotes": {
+            "type": "string",
+            "description": "How and when to use this pattern."
           }
         }
       }
@@ -721,6 +765,10 @@
             "properties": {
               "id": {
                 "pattern": "^VDR-\\d{3}$"
+              },
+              "rationale": {
+                "type": "string",
+                "description": "Why this visual design requirement matters."
               }
             }
           }
@@ -792,6 +840,10 @@
             "properties": {
               "id": {
                 "pattern": "^AR-\\d{3}$"
+              },
+              "rationale": {
+                "type": "string",
+                "description": "Why this accessibility requirement matters."
               }
             }
           }
@@ -846,6 +898,10 @@
           "verificationMethod": {
             "type": "string",
             "description": "How this criterion will be verified, e.g. 'manual walkthrough', 'automated UI test'."
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional clarifying context for this criterion."
           }
         }
       }

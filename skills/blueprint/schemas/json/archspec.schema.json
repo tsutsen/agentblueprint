@@ -74,7 +74,8 @@
         "confirmed",
         "superseded"
       ],
-      "default": "draft"
+      "default": "draft",
+      "description": "Lifecycle status of this component. One of: draft, confirmed, deprecated."
     },
     "goalSpecVersion": {
       "type": "string",
@@ -232,7 +233,8 @@
             }
           },
           "notes": {
-            "type": "string"
+            "type": "string",
+            "description": "Optional clarifying context for this component."
           },
           "entityRefs": {
             "type": "array",
@@ -240,6 +242,10 @@
               "type": "string"
             },
             "description": "ENT-NNN-slug IDs from DataSpec entities this component works with"
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status of this component."
           }
         }
       }

@@ -164,9 +164,6 @@ first completing the clarification phase.**
 The set of primitive type definitions used as field types.
 
 Each primitive must have:
-* **ID** — format `PRIM-NNN-slug`, e.g. `PRIM-001-string`
-* **Name** — the primitive type name (e.g. `string`, `number`, `boolean`, `array`, `object`, `null`)
-* **Description** — what this primitive represents
 
 Defaults: `string`, `number`, `boolean`, `null`, `any`.
 
@@ -182,11 +179,7 @@ defined in this spec.
 Enumerated types used across entities and API contracts.
 
 Each enum must have:
-* **ID** — format `ENUM-NNN-slug`, e.g. `ENUM-001-evidencetype`
-* **Name** — PascalCase, e.g. `OrderStatus`
 * **Description** (optional)
-* **Values** — each with:
-  * **Name** — SCREAMING_SNAKE_CASE, e.g. `PENDING`
   * **Description** (optional)
 
 **Rules:**
@@ -202,27 +195,14 @@ Each enum must have:
 All domain entities (classes) in the system.
 
 Each entity must have:
-* **ID** — format `ENT-NNN-slug`, e.g. `ENT-001-researchsession`
-* **Name** — PascalCase, unique, e.g. `User`, `OrderItem`
-* **Description** — what this entity represents in the domain
 * **glossaryRefs** (array of GL-NNN): Glossary terms the entity maps to. The entity name itself should have a corresponding glossary entry.
-* **Fields** — each with:
-  * **Name** — camelCase, e.g. `createdAt`, `userId`
-  * **Type** — a primitive, entity name, enum name, or array thereof
     (e.g. `string`, `User`, `OrderStatus`, `OrderItem[]`)
-  * **Required** — boolean, default true
   * **Description** (optional)
-  * **Example** (optional) — a concrete example value
-  * **primaryKey** (optional) — true if this field is the primary key.
     Only one field per entity should be marked. If not set, the first field
     or a field ending with `Id`/`id` is assumed to be the primary key.
     **Required:** must contain `id` in its name (e.g. `id`, `userId`, `orderId`).
   * **glossaryRefs** (array of GL-NNN): Domain concepts in the field's description
-* **Methods** (optional) — functions this entity exposes. Each method must
   reference a function ID in ApiSpec via `apiRef`.
-* **Abstract** (optional) — true if this entity cannot be instantiated directly
-* **Extends** (optional) — parent entity name for inheritance
-* **Visibility** — `public` or `internal`
 
 **Rules:**
 
@@ -231,7 +211,6 @@ Each entity must have:
 * If a field has an entity type, a relationship must exist between them.
 * Every `extends` reference must name a real entity in this spec.
 * `abstract` entities should not have composition/aggregation relationships as targets (they are base classes, not leaf types).
-* **Every entity must have a primary key field** — the first field, or a field ending with `Id`/`id`, must contain `id` in its name (e.g. `id`, `userId`, `orderId`). This is required for diagram generators and DBML output.
 
 **Inheritance (`extends`):**
 
@@ -272,17 +251,11 @@ subclasses that should be listed?"
 Directional relationships between entities.
 
 Each relationship must have:
-* **ID** — format `REL-NNN-slug`, e.g. `REL-001-researchsession-researchbrief`
-* **From** — source entity name
-* **To** — target entity name
-* **Type** — one of:
   * `association` — general link
   * `composition` — target cannot exist without source
   * `aggregation` — target can exist independently
   * `dependency` — source uses target but does not own it
   * `realization` — source implements target interface
-* **Cardinality** (optional) — labels on each end, e.g. `1` to `0..*`
-* **Label** (optional) — verb on the arrow, e.g. `places`, `contains`
 
 **Rules:**
 
@@ -329,12 +302,8 @@ specs.
 
 **Rules:**
 
-* **Entity names must match exactly** — case-sensitive, no variations
   (e.g., if DataSpec has `User`, ApiSpec must use `User`, not `user` or `Users`).
-* **Enum names must match exactly** — same case-sensitivity rule.
-* **Primitive names must match exactly** — use the primitives defined in
   DataSpec (e.g., `string` not `String`, `number` not `Number`).
-* **Array notation must be consistent** — use `Type[]` notation everywhere.
 * **When a type changes in DataSpec, check all dependent specs** —
   ApiSpec, TestSpec, and any other spec that references the type.
 

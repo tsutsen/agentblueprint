@@ -91,7 +91,6 @@ the system performs, not *what* it does.
 
 Each NFR may also have:
 * **glossaryRefs** (array of GL-NNN): Domain concepts in the scale/meter descriptions
-* **conRefs** (optional) — `CON-NNN-slug` IDs from ArchitectureSpec constraints that stem from this NFR
 
 **You MUST use Planguage format for every NFR. Do not accept free-form
 NFR descriptions. If the user provides a vague NFR (e.g. "should be fast"),
@@ -121,12 +120,6 @@ Wish:      < 200ms
 ```
 
 Categories:
-* **Performance** — latency, throughput, resource usage
-* **Reliability** — uptime, error rate, recovery time
-* **Security** — auth, data protection, attack surface
-* **Scalability** — load limits, growth headroom
-* **Maintainability** — code quality targets, test coverage, documentation
-* **Portability** — supported platforms, environments, runtimes
 
 If the user cannot define Scale or Meter, record the best available
 description and flag it: "(Scale/Meter TBD — needs measurement before

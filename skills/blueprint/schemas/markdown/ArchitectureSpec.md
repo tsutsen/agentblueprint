@@ -29,7 +29,6 @@ without implementation knowledge.
 Includes:
 
 * A summary paragraph: 2–4 sentences on structure, major subsystems, and interactions
-* **Subsystems** — named groupings of components, each with a purpose
 
 Every component must belong to a subsystem.
 
@@ -41,18 +40,8 @@ Defines major architectural units.
 
 Each component must have:
 
-* **ID** — format `COMP-NNN-slug`, e.g. `COMP-001-session-manager`
-* **Name** — human-readable
-* **Purpose** — one sentence: what this component exists to do
-* **Responsibilities** — exclusive behaviours owned by this component.
   No two components may claim the same responsibility.
-* **Dependencies** — IDs of other components this one depends on.
   Must reference real component IDs in this spec.
-* **REQ refs** (optional) — `REQ-NNN-slug` IDs from GoalSpec this component satisfies
-* **NFR refs** (optional) — `NFR-NNN-slug` IDs from GoalSpec this component is responsible for
-* **fnRefs** (optional) — `FN-NNN-slug` IDs from ApiSpec that this component owns
-* **entityRefs** (optional) — `ENT-NNN-slug` IDs from DataSpec entities this component works with
-* **Visibility** — `external` (exposed to callers) or `internal`
 * **glossaryRefs** (array of GL-NNN): Glossary terms the component's concepts map to
 
 **Rules:**
@@ -70,12 +59,7 @@ Describes movement of information through the system as named, ordered flows.
 
 Each flow must have:
 
-* **ID** — format `FLOW-NNN-slug`, e.g. `FLOW-001-session-creation`
-* **Name** — human-readable
-* **Description** (optional) — prose summary
-* **REQ refs** (optional) — `REQ-NNN` IDs this flow implements
 * **glossaryRefs** (array of GL-NNN): Glossary terms the flow's concepts map to
-* **Steps** — ordered list of at least 2 steps, each naming:
   * The **component** performing the step (must reference a real component ID)
   * The **action** performed
   * The **data** moving through (optional reference to a DataSpec entity)

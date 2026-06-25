@@ -44,30 +44,11 @@ All functions exposed by this module.
 
 Each function must have:
 
-* **ID** — stable unique identifier in format `FN-NNN-slug`,
   e.g. `FN-001-createUser`, `FN-002-cancelOrder`
-* **Name** — camelCase function name as it appears in code
-* **Description** — one sentence: what this function does
-* **Entity** (optional) — the entity from DataSpec this function primarily
   operates on. Must name a real entity.
-* **Inputs** — list of parameters, each with:
-  * **Name** — camelCase
-  * **Type** — must resolve to a primitive, entity, or enum in DataSpec
-  * **Required** — boolean, default true
   * **Description** (optional)
-  * **Example** — a concrete example value
-* **Output** — the return value:
-  * **Type** — must resolve to a type in DataSpec, or `void`
   * **Description** (optional)
   * **Example** (optional)
-* **Errors** — all documented error conditions, each with:
-  * **Code** — SCREAMING_SNAKE_CASE error code, e.g. `NOT_FOUND`
-  * **Condition** — when this error is thrown
-  * **Return type** — what the caller receives
-* **Visibility** — `public` or `internal`
-* **Pure** — boolean: true if no side effects (same input → same output always)
-* **Priority** — `P0` (must have), `P1` (should have), or `P2` (nice to have)
-* **Status** — lifecycle status (e.g. `draft`, `confirmed`, `deprecated`)
 * **reqRefs** (array of REQ-NNN-slug): GoalSpec functional requirements this function implements
 * **nfrRefs** (array of NFR-NNN-slug): GoalSpec non-functional requirements this function helps satisfy
 

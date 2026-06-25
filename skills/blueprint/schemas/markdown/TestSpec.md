@@ -36,11 +36,6 @@ Cover the primary successful execution path.
 
 Each test must have:
 
-* **ID** — format `TST-NNN-slug`, e.g. `TST-001-create-session-with-valid-input`
-* **Description** — the scenario being tested
-* **Input** — concrete example values (not placeholders)
-* **Expected Output** — exact value or shape
-* **Contract Clause** — which part of the contract this verifies
 * **glossaryRefs** (array of GL-NNN): Domain concepts in the test's description and contractClause
 
 #### Edge Case Tests
@@ -57,9 +52,6 @@ Cover every documented error condition from ApiSpec. Each error code on
 every function must have at least one test.
 
 Each error test must additionally have:
-
-* **Error Code** — the `code` from ApiSpec (e.g. `NOT_FOUND`)
-* **Expected Return** — what the caller receives
 
 **Rule:** A function with documented error conditions that has no error path
 tests is incomplete. This is an error, not a warning.

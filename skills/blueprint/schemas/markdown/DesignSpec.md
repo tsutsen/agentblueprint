@@ -58,12 +58,6 @@ in GoalSpec functional requirements and user stories.
 
 For each persona:
 
-* **ID** — format `PSN-NNN-slug`, e.g. `PSN-001-dr-mira-chen`
-* **Name** — human name for the persona
-* **Role** — actor role, must match a GoalSpec actor
-* **Goals** — what this persona is trying to accomplish
-* **Pain Points** — current frustrations this system addresses
-* **Technical Skill Level** — one of: non-technical, basic, intermediate, advanced, expert
 * **glossaryRefs** (array of GL-NNN): Glossary terms the persona's role maps to
 
 ---
@@ -110,15 +104,6 @@ Screen IDs are in format `SCR-NNN-slug`, e.g. `SCR-001-landing-page`.
 
 For each screen:
 
-* **ID** — kebab-case, unique
-* **Name** — human-readable
-* **Purpose** — one sentence: what the user accomplishes here
-* **Primary Actions** — the main things a user can do
-* **Inputs** (optional) — data the user provides
-* **Outputs** (optional) — data the screen displays
-* **US refs** (optional) — `US-NNN-slug` IDs this screen helps fulfil
-* **fnRefs** (optional) — `FN-NNN-slug` IDs from ApiSpec that this screen's interactions exercise
-* **ujRefs** (optional) — `UJ-NNN-slug` IDs from DesignSpec user journeys that use this screen
 * **glossaryRefs** (array of GL-NNN): Domain concepts in the screen's purpose description
 
 ---
@@ -130,14 +115,8 @@ have a screen spec.
 
 For each screen spec:
 
-* **Screen ref** — must match a screen ID in the inventory
-* **Layout** — spatial arrangement of elements
-* **Wireframe** (optional) — ASCII sketch of the low-fidelity layout
-* **Components** — UI components present, each referencing the design system
   and any interaction pattern IDs that apply
   * Each component may have **glossaryRefs** (array of GL-NNN): Concepts in the component's purpose description
-* **States** — all distinct states: at minimum empty, loaded, error
-* **Interactions** — trigger → system response pairs, referencing pattern IDs
 
 ---
 
@@ -171,9 +150,6 @@ Reusable UI building blocks that define consistency across the product.
 
 For each component:
 
-* **Name** — e.g. Button, Card, Dialog
-* **Purpose** — what it communicates or enables
-* **Variants** (optional) — named variants, e.g. primary, destructive
 * **Usage notes** (optional)
 
 Screen spec components should reference design system names.
@@ -253,12 +229,6 @@ Reusable visual values that define consistency across the product. Tokens replac
 hardcoded values in screen specs and styles.
 
 Each token must have:
-* **ID** — format `TKN-NNN-slug`, e.g. `TKN-001-color-primary`
-* **Name** — descriptive name, e.g. `color-primary`, `spacing-md`, `font-size-lg`
-* **Category** — one of: `color`, `typography`, `spacing`, `border-radius`, `shadow`, `opacity`, `z-index`
-* **Value** — the actual value, e.g. `#1a73e8`, `16px`, `0.5`
-* **Description** (optional) — when and how this token should be used
-* **glossaryRefs** (optional) — GL-NNN identifiers for related terms
 
 Examples:
 * `TKN-001-color-primary`: `#1a73e8` — Primary brand color, used for buttons and links

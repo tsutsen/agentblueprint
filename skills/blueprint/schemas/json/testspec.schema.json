@@ -117,7 +117,8 @@
         "confirmed",
         "superseded"
       ],
-      "default": "draft"
+      "default": "draft",
+      "description": "Lifecycle status of this test. One of: draft, confirmed, deprecated."
     },
     "verificationStatus": {
       "type": "string",
@@ -151,15 +152,18 @@
           },
           "happyPathCount": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Number of happy path tests for this function."
           },
           "edgeCaseCount": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Number of edge case tests for this function."
           },
           "errorPathCount": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Number of error path tests for this function."
           },
           "outOfScope": {
             "type": "array",
@@ -187,6 +191,14 @@
           "description": {
             "type": "string",
             "description": "Plain-language description of what this coverage entry captures"
+          },
+          "code": {
+            "type": "string",
+            "description": "SCREAMING_SNAKE_CASE error code from ApiSpec."
+          },
+          "returnType": {
+            "type": "string",
+            "description": "The return type of the error."
           }
         }
       }
@@ -208,7 +220,8 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/testId"
+            "$ref": "#/definitions/testId",
+            "description": "Unique identifier for this test case."
           },
           "name": {
             "type": "string",
@@ -220,7 +233,8 @@
             "description": "The function this test exercises. Must match a function ID in ApiSpec."
           },
           "category": {
-            "$ref": "#/definitions/testCategory"
+            "$ref": "#/definitions/testCategory",
+            "description": "Test category: happy_path, edge_case, or error_path."
           },
           "description": {
             "type": "string",
@@ -302,6 +316,18 @@
             "items": {
               "$ref": "#/definitions/nfrId"
             }
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status of this test case."
+          },
+          "code": {
+            "type": "string",
+            "description": "SCREAMING_SNAKE_CASE error code from ApiSpec."
+          },
+          "returnType": {
+            "type": "string",
+            "description": "The return type of the error."
           }
         }
       }

@@ -30,28 +30,14 @@ asking them to enumerate terms from scratch.
 Defines project vocabulary.
 
 Each term must include:
-* **ID** — format `GL-NNN`, e.g. `GL-001`
-* **Name** — exactly as it appears in other specs. Case-sensitive.
-* **Description** — precise and unambiguous. Must not use the term itself
   in its own definition. Must be at least one full sentence.
-* **Examples** (optional) — concrete instances that clarify the definition.
-* **Synonyms** (optional) — other names for this term used in the project.
   Synonyms must NOT have their own glossary entry.
-* **Related Terms** (optional) — GL-NNN identifiers of other terms in this glossary
   that are closely related. Must reference terms that exist.
-* **Category** (optional) — one of: `domain`, `technical`, `security`, `ui`.
-* **reqRefs** (optional) — REQ-NNN-slug IDs from GoalSpec that reference this term.
-* **fnRefs** (optional) — FN-NNN-slug IDs from ApiSpec that use this term.
 
 **Description Rules:**
 
-* **No self-reference** — the term must not appear in its own description.
-* **No file paths or schema names** — describe the concept abstractly, not by file reference.
-* **No "related to" / "refers to" starters** — these belong in the `relatedTerms` field.
   Start with what the term IS (e.g., "A structured piece of information..." not "Related to
   extraction, this is...").
-* **At least one full sentence** — aim for 8-50 words.
-* **No circular descriptions** — term A must not be described using term B if
   term B is described using term A (direct or transitive).
 * **Synonyms must not also have independent entries.**
 * **Every term referenced as a `relatedTerm` must exist in this glossary.**
