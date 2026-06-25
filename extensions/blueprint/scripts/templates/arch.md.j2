@@ -18,10 +18,10 @@ updated: {{ updated }}
 {% endif -%}
 ## Components
 
-| Component | Purpose | Dependencies |
-|---|---|---|
+| ID | Name | Purpose | reqRefs | nfrRefs | Dependencies |
+|---|---|---|---|---|---|
 {% for comp in components -%}
-| {{ comp.name }} | {{ comp.purpose }} | {{ comp.dependencies | join(', ') }} |
+| {{ comp.id }} | {{ comp.name }} | {{ comp.purpose }} | {{ comp.reqRefs | join(', ') | format_id_refs if comp.reqRefs else '' }} | {{ comp.nfrRefs | join(', ') | format_id_refs if comp.nfrRefs else '' }} | {{ comp.dependencies | join(', ') }} |
 {% endfor -%}
 
 ## Data Flow
