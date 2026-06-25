@@ -1,0 +1,75 @@
+---
+artifact: Goal Specification
+{% if status %}
+status: {{ status }}
+{% endif %}
+{% if updated %}
+updated: {{ updated }}
+{% endif %}
+---
+
+# Goal Specification
+
+{% if objective %}
+## Project Objective
+
+{{ objective.statement }}
+
+{% if objective.glossaryRefs %}
+**glossaryRefs:** {{ objective.glossaryRefs | format_glossary_refs }}
+{% endif %}
+
+{% endif %}
+## Functional Requirements
+
+{% for fr in functionalRequirements -%}
+- **{{ fr.id }}**: {{ fr.description }}{% if fr.actor %} *(Actor: {{ fr.actor }})*{% endif %}{% if fr.glossaryRefs %}
+  **glossaryRefs:** {{ fr.glossaryRefs | format_glossary_refs }}{% endif %}
+
+{% endfor -%}
+---
+
+## Non-Functional Requirements
+
+{% for nfr in nonFunctionalRequirements -%}
+### {{ nfr.id }} — {{ nfr.description or nfr.scale or nfr.category }}
+Category: {{ nfr.category }}
+Scale: {{ nfr.scale }}
+Meter: {{ nfr.meter }}
+Must: {{ nfr.must }}
+{% if nfr.plan %}
+Plan: {{ nfr.plan }}
+{% endif %}
+{% if nfr.wish %}
+Wish: {{ nfr.wish }}
+{% endif %}
+
+{% endfor -%}
+---
+
+## User Stories
+
+{% for us in userStories -%}
+- **{{ us.id }}**: {{ us.capability }}{% if not us.capability.strip().startswith('As a') %}, so that {{ us.outcome }}.{% endif %}{% if us.reqRefs %}
+  → {{ us.reqRefs | join(', ') }}{% endif %}{% if us.glossaryRefs %}
+  **glossaryRefs:** {{ us.glossaryRefs | format_glossary_refs }}{% endif %}
+
+{% endfor -%}
+---
+
+## Success Criteria
+
+{% for sc in successCriteria -%}
+- **{{ sc.id }}**: {{ sc.description }}{% if sc.verificationMethod %} *(Verification: {{ sc.verificationMethod }})*{% endif %}{% if sc.refs.reqRefs %}
+  → {{ sc.refs.reqRefs | join(', ') }}{% endif %}{% if sc.refs.nfrRefs %}
+  → {{ sc.refs.nfrRefs | join(', ') }}{% endif %}
+
+{% endfor -%}
+---
+
+## Non-Goals
+
+{% for ng in nonGoals -%}
+- **{{ ng.capability }}** — {{ ng.reason }}{% if ng.glossaryRefs %} *(glossaryRefs: {{ ng.glossaryRefs | format_glossary_refs }})*{% endif %}
+
+{% endfor -%}

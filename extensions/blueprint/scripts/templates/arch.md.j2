@@ -1,0 +1,53 @@
+---
+artifact: ArchitectureSpec
+{% if status %}
+status: {{ status }}
+{% endif %}
+{% if updated %}
+updated: {{ updated }}
+{% endif %}
+---
+
+# Architecture Specification
+
+## System Overview
+
+{{ overview }}
+
+## Components
+
+{% for comp in components %}
+### {{ comp.name }}
+- **Purpose:** {{ comp.purpose }}
+- **Responsibilities:** {{ comp.responsibilities }}
+- **Dependencies:** {{ comp.dependencies | join(', ') }}
+{% endfor %}
+## Responsibilities
+
+{% for section in responsibilities %}
+### {{ section.component }} owns:
+{% for resp in section.responsibilities %}
+- {{ resp }}
+{% endfor %}
+{% endfor %}
+## Data Model
+
+{% if dataModel %}
+{{ dataModel }}
+{% endif %}
+## API Contract
+
+{% if apiContract %}
+{{ apiContract }}
+{% endif %}
+## Data Flow
+
+{% if dataFlow %}
+{{ dataFlow }}
+{% endif %}
+## Constraints
+
+{% for constraint in constraints %}
+### {{ constraint.title }}
+{{ constraint.description }}
+{% endfor %}

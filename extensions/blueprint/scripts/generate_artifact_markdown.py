@@ -19,6 +19,12 @@ import sys
 from pathlib import Path
 from typing import Any, Optional
 
+try:
+    from jinja2 import Template
+    HAS_JINJA2 = True
+except ImportError:
+    HAS_JINJA2 = False
+
 # Mapping from artifact type to JSON schema file name
 ARTIFACT_TYPE_MAP = {
     "goal": ("goalspec.schema.json", "GoalSpec", "Goal Specification"),
@@ -874,10 +880,53 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
     return "\n".join(lines)
 
 
-def generate_artifact_markdown(artifact_type: str, data: dict, json_path: str,
-                                schemas_dir: str, artifacts_dir: str,
-                                output_path: Optional[str] = None) -> str:
-    """Generate markdown from artifact JSON data."""
+def render_template(artifact_type: str, data: dict, json_path: str,
+                     schemas_dir: str, artifacts_dir: str,
+                     output_path: Optional[str] = None) -> str:
+    """Generate markdown from artifact JSON data using Jinja2 templates."""
+    script_dir = Path(__file__).resolve().parent
+    templates_dir = script_dir / "templates"
+
+    template_file = templates_dir / f"{artifact_type}.md.j2"
+    print(f"DEBUG: template_file={template_file}, exists={template_file.exists()}")
+    if not template_file.exists():
+        # Fall back to schema-driven rendering
+        print(f"DEBUG: Falling back to schema-driven rendering")
+        return render_schema_driven(artifact_type, data, json_path, schemas_dir, artifacts_dir, output_path)
+
+    with open(template_file, "r") as f:
+        template_str = f.read()
+
+    # Create template with custom filters
+    from jinja2 import Environment, FileSystemLoader
+    env = Environment(loader=FileSystemLoader(str(templates_dir)), trim_blocks=True, lstrip_blocks=True)
+    
+    def format_glossary_refs(refs):
+        """Format glossary refs as backtick-quoted: `GL-001`, `GL-002`"""
+        return ', '.join(f'`{r}`' for r in refs)
+    
+    env.filters['format_glossary_refs'] = format_glossary_refs
+    template = env.from_string(template_str)
+
+    # Prepare context for template
+    context = {
+        "artifact_type": artifact_type,
+        "status": data.get("status"),
+        "updated": data.get("updated"),
+    }
+
+    # Add all top-level properties from the JSON data
+    for key, value in data.items():
+        if key not in ("status", "updated", "version", "schemaVersion", "_meta"):
+            context[key] = value
+
+    return template.render(**context)
+
+
+def render_schema_driven(artifact_type: str, data: dict, json_path: str,
+                          schemas_dir: str, artifacts_dir: str,
+                          output_path: Optional[str] = None) -> str:
+    """Generate markdown from artifact JSON data using schema-driven rendering."""
     # Get schema info
     schema_name, md_name, artifact_name = ARTIFACT_TYPE_MAP[artifact_type]
 
@@ -895,6 +944,14 @@ def generate_artifact_markdown(artifact_type: str, data: dict, json_path: str,
     body = render_schema_properties(data, schema, artifact_type)
 
     return frontmatter + body
+
+
+def generate_artifact_markdown(artifact_type: str, data: dict, json_path: str,
+                                schemas_dir: str, artifacts_dir: str,
+                                output_path: Optional[str] = None) -> str:
+    """Generate markdown from artifact JSON data."""
+    # Try template rendering first, fall back to schema-driven
+    return render_template(artifact_type, data, json_path, schemas_dir, artifacts_dir, output_path)
 
 
 def main():

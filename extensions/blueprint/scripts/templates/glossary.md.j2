@@ -1,0 +1,38 @@
+---
+artifact: Glossary
+{% if status %}
+status: {{ status }}
+{% endif %}
+{% if updated %}
+updated: {{ updated }}
+{% endif %}
+---
+
+# Glossary
+
+## Terms
+
+| Term | Definition |
+|---|---|
+{% for term in terms %}
+| **{{ term.name }}** | {{ term.definition }} |
+{% endfor %}
+## Full Term Details
+
+{% for term in terms %}
+### {{ term.name }} ({{ term.id }})
+
+- **Definition**: {{ term.definition }}
+{% if term.category %}
+- **Category**: {{ term.category }}
+{% endif %}
+{% if term.relatedTerms %}
+- **Related Terms**: {{ term.relatedTerms | join(', ') }}
+{% endif %}
+{% if term.examples %}
+- **Examples**: {{ term.examples | join(', ') }}
+{% endif %}
+{% if term.synonyms %}
+- **Synonyms**: {{ term.synonyms | join(', ') }}
+{% endif %}
+{% endfor %}

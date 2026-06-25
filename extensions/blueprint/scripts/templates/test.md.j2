@@ -1,0 +1,48 @@
+---
+{% if status %}
+status: {{ status }}
+{% endif %}
+{% if updated %}
+updated: {{ updated }}
+{% endif %}
+---
+
+# TestSpec
+
+{{ description }}
+
+## Module
+
+{{ module }}
+
+{% if summary %}
+## Summary
+
+{% for item in summary %}
+- {{ item }}
+{% endfor %}
+{% endif %}
+## Test Cases
+
+{% for component in tests %}
+### {{ component.name }}
+
+{% for test_group in component.testGroups %}
+#### `{{ test_group.name }}`
+
+**{{ test_group.type }}:**
+
+{% for test in test_group.tests %}
+- **{{ test.id }}**: {{ test.description }}
+  - Input: `{{ test.input }}`
+  - Expected: `{{ test.expected }}`
+  - Clause: {{ test.clause }}
+{% endfor %}
+{% if test_group.outOfScope %}
+
+**Out of scope:** {{ test_group.outOfScope }}
+{% endif %}
+
+{% endfor %}
+{% endfor %}
+{% endfor %}

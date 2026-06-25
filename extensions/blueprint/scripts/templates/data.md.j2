@@ -1,0 +1,71 @@
+---
+{% if status %}
+status: {{ status }}
+{% endif %}
+{% if updated %}
+updated: {{ updated }}
+{% endif %}
+---
+
+# DataSpec
+
+{{ description }}
+
+## Primitives
+
+The set of primitive type names used as field types:
+
+{% for prim in primitives %}
+- `{{ prim }}`
+{% endfor %}
+## Enums
+
+{% for enum in enums %}
+### {{ enum.name }}
+
+{{ enum.description }}
+
+| Value | Description |
+|---|---|
+{% for val in enum.values %}
+| {{ val.name }} | {{ val.description }} |
+{% endfor %}
+{% endfor %}
+## Entities
+
+{% for entity in entities %}
+### {{ entity.name }}
+
+{{ entity.description }}
+{% if entity.abstract %}
+*Abstract entity*
+{% endif %}
+{% if entity.extends %}
+*Extends: {{ entity.extends }}*
+{% endif %}
+{% if entity.visibility != "public" %}
+*Visibility: {{ entity.visibility }}*
+{% endif %}
+{% if entity.fields %}
+| Field | Type | Required | Description |
+|---|---|---|---|
+{% for field in entity.fields %}
+| `{{ field.name }}` | {{ field.type }} | {% if field.required %}Yes{% else %}No{% endif %} | {{ field.description }}{% if field.example %} (e.g. `{{ field.example }}`){% endif %} |
+{% endfor %}
+{% endif %}
+{% if entity.methods %}
+Methods:
+
+{% for method in entity.methods %}
+- `{{ method.name }}` → `{{ method.apiRef }}` — {{ method.description }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+## Relationships
+
+{% for rel in relationships %}
+### {{ rel.label or rel.from + ' → ' + rel.to }}
+
+{{ rel.description }}
+
+{% endfor %}

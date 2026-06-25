@@ -1,0 +1,127 @@
+---
+artifact: DesignSpec
+{% if status %}
+status: {{ status }}
+{% endif %}
+{% if updated %}
+updated: {{ updated }}
+{% endif %}
+---
+
+# Design Specification
+
+{% if designGoals %}
+## Design Goals
+
+{% for goal in designGoals %}
+{{ loop.index }}. **{{ goal }}**
+{% endfor %}
+{% endif %}
+{% if personas %}
+## User Personas
+
+{% for persona in personas %}
+### {{ persona.label }} — {{ persona.name }}
+{% if persona.goals %}
+- **Goals:** {{ persona.goals }}
+{% endif %}
+{% if persona.painPoints %}
+- **Pain Points:** {{ persona.painPoints }}
+{% endif %}
+{% if persona.technicalSkillLevel %}
+- **Technical Skill Level:** {{ persona.technicalSkillLevel }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if userJourneys %}
+## User Journeys
+
+{% for journey in userJourneys %}
+### Journey {{ loop.index }} — {{ journey.title }}
+
+{% for step in journey.steps %}
+{{ loop.index }}. {{ step }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if informationArchitecture %}
+## Information Architecture
+
+```
+{{ informationArchitecture }}
+```
+{% endif %}
+{% if screenInventory %}
+## Screen Inventory
+
+| Screen | Purpose | Key Elements |
+|---|---|---|
+{% for screen in screenInventory %}
+| {{ screen.name }} | {{ screen.purpose }} | {{ screen.keyElements }} |
+{% endfor %}
+{% endif %}
+{% if screenSpecs %}
+## Screen Specifications
+
+{% for screen in screenSpecs %}
+### {{ screen.name }}
+
+{{ screen.description }}
+
+{% endfor %}
+{% endif %}
+{% if interactionPatterns %}
+## Interaction Patterns
+
+{% for pattern in interactionPatterns %}
+### {{ pattern.name }}
+
+{{ pattern.description }}
+{% endfor %}
+{% endif %}
+{% if visualDesignRequirements %}
+## Visual Design Requirements
+
+{% for req in visualDesignRequirements %}
+- {{ req }}
+{% endfor %}
+{% endif %}
+{% if designSystem %}
+## Design System
+
+{% if designSystem.colors %}
+### Colors
+{% for color in designSystem.colors %}
+- **{{ color.name }}**: {{ color.value }} — {{ color.description }}
+{% endfor %}
+{% endif %}
+{% if designSystem.typography %}
+### Typography
+{% for font in designSystem.typography %}
+- **{{ font.name }}**: {{ font.description }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% if accessibilityRequirements %}
+## Accessibility Requirements
+
+{% for req in accessibilityRequirements %}
+- {{ req }}
+{% endfor %}
+{% endif %}
+{% if uxAcceptanceCriteria %}
+## UX Acceptance Criteria
+
+{% for criterion in uxAcceptanceCriteria %}
+- {{ criterion }}
+{% endfor %}
+{% endif %}
+{% if designTokens %}
+## Design Tokens
+
+{% for token in designTokens %}
+### {{ token.name }}
+- **Value:** {{ token.value }}
+- **Usage:** {{ token.usage }}
+{% endfor %}
+{% endif %}
