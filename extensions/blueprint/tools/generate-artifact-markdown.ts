@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import path from "node:path";
-import { resolvePkgResource } from "../utils";
+import { execFilePromise, resolvePkgResource } from "../utils";
 
 export function registerGenerateArtifactMarkdown(pi: ExtensionAPI, extDir: string) {
   pi.registerTool({
@@ -26,26 +26,27 @@ export function registerGenerateArtifactMarkdown(pi: ExtensionAPI, extDir: strin
       const jsonFullPath = path.resolve(ctx.cwd, jsonPath);
       const outPath = outputPath ? path.resolve(ctx.cwd, outputPath) : undefined;
 
-      const cmd = [
-        process.execPath,
-        resolvePkgResource(extDir, "extensions/blueprint/scripts/generate_artifact_markdown.py"),
+      const script = resolvePkgResource(extDir, "extensions/blueprint/scripts/generate_artifact_markdown.py");
+      const args = [
         "--type", artifactType,
         "--json", jsonFullPath,
         ...(outPath ? ["--output", outPath] : []),
-      ].join(" ");
+      ];
 
-      let stderr = "";
       try {
-        const { stdout, stderr: shStderr } = await ctx.sh(cmd);
-        stderr = shStderr;
+        const { stdout, stderr } = await execFilePromise("python", args, {
+          cwd: ctx.cwd,
+          timeout: 30000,
+        });
         return {
           content: [{ type: "text", text: stdout.trim() }],
           details: { success: true },
         };
       } catch (err: any) {
+        const stderrMsg = err.stderr || "";
         return {
-          content: [{ type: "text", text: `generate_artifact_markdown failed:\n${stderr || err.message}` }],
-          details: { success: false, error: stderr || err.message },
+          content: [{ type: "text", text: `generate_artifact_markdown failed:\n${stderrMsg || err.message}` }],
+          details: { success: false, error: stderrMsg || err.message },
           isError: true,
         };
       }
