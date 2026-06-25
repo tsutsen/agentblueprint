@@ -22,12 +22,10 @@ updated: {{ updated }}
 {% endif %}
 ## Functional Requirements
 
+| ID | Description | Actor | glossaryRefs |
+|---|---|---|---|
 {% for fr in functionalRequirements -%}
-- **{{ fr.id }}**: {{ fr.description | format_id_refs }}{% if fr.actor %} *(Actor: {{ fr.actor }})*{% endif %}
-{% if fr.glossaryRefs %}
-  **glossaryRefs:** {{ fr.glossaryRefs | format_glossary_refs }}
-{% endif %}
-
+| {{ fr.id }} | {{ fr.description | format_id_refs }}{% if fr.actor %} | {{ fr.actor }} | {% endif %}{% if fr.glossaryRefs %} {{ fr.glossaryRefs | format_glossary_refs }} {% endif %} |
 {% endfor -%}
 ---
 
