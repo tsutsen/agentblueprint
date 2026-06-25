@@ -131,7 +131,7 @@ def render_simple_object(obj: dict) -> str:
     lines = []
     for key, value in obj.items():
         label = key.replace("_", " ").title()
-        lines.append(f"- **{label}**: {render_value(value)}")
+        lines.append(f"- {label}: {render_value(value)}")
     return "\n".join(lines)
 
 
@@ -153,26 +153,26 @@ def render_array(items: list, prop_schema: Optional[dict] = None) -> str:
                 id_ = item.get("id", "")
                 desc = item.get("description", "")
                 if desc:
-                    lines.append(f"- **{id_}**: {desc}")
+                    lines.append(f"- {id_}: {desc}")
                 else:
-                    lines.append(f"- **{id_}**")
+                    lines.append(f"- {id_}")
         elif "name" in first_item and "description" in first_item:
             for item in items:
                 name = item.get("name", "")
                 desc = item.get("description", "")
                 if desc:
-                    lines.append(f"- **{name}**: {desc}")
+                    lines.append(f"- {name}: {desc}")
                 else:
-                    lines.append(f"- **{name}**")
+                    lines.append(f"- {name}")
         elif "term" in first_item and "definition" in first_item:
             # Glossary terms
             for item in items:
                 name = item.get("term", "")
                 definition = item.get("definition", "")
                 if definition:
-                    lines.append(f"- **{name}**: {definition}")
+                    lines.append(f"- {name}: {definition}")
                 else:
-                    lines.append(f"- **{name}**")
+                    lines.append(f"- {name}")
         else:
             # Generic list of objects
             for item in items:
@@ -192,7 +192,7 @@ def render_object(obj: dict, prop_schema: Optional[dict] = None) -> str:
         return obj["statement"]
     if "term" in obj and "definition" in obj:
         # Term-like object
-        return f"**{obj['term']}**: {obj['definition']}"
+        return f"{obj['term']}: {obj['definition']}"
     # Check if this is a simple key-value object
     if all(isinstance(v, (str, int, float, bool)) for v in obj.values()):
         return render_simple_object(obj)
@@ -205,16 +205,16 @@ def render_object(obj: dict, prop_schema: Optional[dict] = None) -> str:
                 value = obj[prop_name]
                 rendered = render_value(value, prop_schema=prop_def)
                 if rendered:
-                    lines.append(f"- **{label}**: {rendered}")
+                    lines.append(f"- {label}: {rendered}")
     else:
         for key, value in obj.items():
             if isinstance(value, (str, int, float, bool)):
                 label = key.replace("_", " ").title()
-                lines.append(f"- **{label}**: {render_value(value)}")
+                lines.append(f"- {label}: {render_value(value)}")
             elif isinstance(value, (list, dict)):
                 rendered = render_value(value)
                 if rendered:
-                    lines.append(f"- **{key}**:\n{rendered}")
+                    lines.append(f"- {key}:\n{rendered}")
     return "\n".join(lines) if lines else ""
 
 
@@ -314,7 +314,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                 lines.append(value["statement"])
                 lines.append("")
                 if value.get("glossaryRefs"):
-                    lines.append(f"**glossaryRefs:** {', '.join(f'`{r}`' for r in value['glossaryRefs'])}")
+                    lines.append(f"glossaryRefs: {', '.join(f'`{r}`' for r in value['glossaryRefs'])}")
                     lines.append("")
             else:
                 lines.append(rendered)
@@ -327,12 +327,12 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                 description = fr.get("description", "")
                 actor = fr.get("actor", "")
                 glossary_refs = fr.get("glossaryRefs", [])
-                line = f"- **{id_}**: {description}"
+                line = f"- {id_}: {description}"
                 if actor:
-                    line += f" *(Actor: {actor})*"
+                    line += f" (Actor: {actor})"
                 lines.append(line)
                 if glossary_refs:
-                    lines.append(f"  **glossaryRefs:** {', '.join(f'`{r}`' for r in glossary_refs)}")
+                    lines.append(f"  glossaryRefs: {', '.join(f'`{r}`' for r in glossary_refs)}")
             lines.append("")
             lines.append("---\n")
 
@@ -379,13 +379,13 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                 outcome = us.get("outcome", "")
                 req_refs = us.get("reqRefs", [])
                 if capability.strip().startswith("As a"):
-                    lines.append(f"- **{id_}**: {capability}, so that {outcome}.")
+                    lines.append(f"- {id_}: {capability}, so that {outcome}.")
                 else:
-                    lines.append(f"- **{id_}**: As a {actor}, I want to {capability}, so that {outcome}.")
+                    lines.append(f"- {id_}: As a {actor}, I want to {capability}, so that {outcome}.")
                 if req_refs:
                     lines.append(f"  → {', '.join(req_refs)}")
                 if us.get("glossaryRefs"):
-                    lines.append(f"  **glossaryRefs:** {', '.join(f'`{r}`' for r in us['glossaryRefs'])}")
+                    lines.append(f"  glossaryRefs: {', '.join(f'`{r}`' for r in us['glossaryRefs'])}")
             lines.append("")
             lines.append("---\n")
 
@@ -396,9 +396,9 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                 description = sc.get("description", "")
                 verification = sc.get("verificationMethod", "")
                 refs = sc.get("refs", {})
-                line = f"- **{id_}**: {description}"
+                line = f"- {id_}: {description}"
                 if verification:
-                    line += f" *(Verification: {verification})*"
+                    line += f" (Verification: {verification})"
                 lines.append(line)
                 if refs.get("reqRefs"):
                     lines.append(f"  → {', '.join(refs['reqRefs'])}")
@@ -412,7 +412,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
             for ng in value:
                 capability = ng.get("capability", "")
                 reason = ng.get("reason", "")
-                line = f"- **{capability}** — {reason}"
+                line = f"- {capability} — {reason}"
                 if ng.get("glossaryRefs"):
                     line += f" *(glossaryRefs: {', '.join(f'`{r}`' for r in ng['glossaryRefs'])})*"
                 lines.append(line)
@@ -433,18 +433,18 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                 lines.append(definition)
                 lines.append("")
                 if synonyms:
-                    lines.append(f"**Synonyms:** {', '.join(synonyms)}")
+                    lines.append(f"Synonyms: {', '.join(synonyms)}")
                     lines.append("")
                 if examples:
-                    lines.append("**Examples:**")
+                    lines.append("Examples:")
                     for ex in examples:
                         lines.append(f"- {ex}")
                     lines.append("")
                 if related:
-                    lines.append(f"**Related:** {', '.join(related)}")
+                    lines.append(f"Related: {', '.join(related)}")
                     lines.append("")
                 if category:
-                    lines.append(f"**Category:** {category}")
+                    lines.append(f"Category: {category}")
                     lines.append("")
                 lines.append("---\n")
 
@@ -488,7 +488,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                         lines.append(f"| `{fname}` | `{ftype}` | {'Yes' if required else 'No'} | {fdesc} |")
                     lines.append("")
                 if methods:
-                    lines.append("**Methods:**\n")
+                    lines.append("Methods:\n")
                     for method in methods:
                         mname = method.get("name", "")
                         api_ref = method.get("apiRef", "")
@@ -515,7 +515,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                     "realization": "--|>",
                 }
                 icon = type_icons.get(rel_type, "→")
-                line = f"- **{from_}** ({from_label}) {icon} ({to_label}) **{to}**"
+                line = f"- {from_} ({from_label}) {icon} ({to_label}) {to}"
                 if label:
                     line += f" (*{label}*)"
                 lines.append(line)
@@ -568,7 +568,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                     if nfr_refs:
                         lines.append(f"*NFR refs:* {', '.join(nfr_refs)}")
                         lines.append("")
-                    lines.append(f"*Visibility:* {visibility}")
+                    lines.append(f"Visibility: {visibility}")
                     lines.append("")
 
         elif artifact_type == "arch" and prop_name == "dataFlows":
@@ -585,7 +585,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                     component = step.get("component", "")
                     action = step.get("action", "")
                     data_ = step.get("data", "")
-                    lines.append(f"{i}. **{component}**: {action}")
+                    lines.append(f"{i}. {component}: {action}")
                     if data_:
                         lines.append(f"   Data: {data_}")
                 lines.append("")
@@ -607,7 +607,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
             for goal in value:
                 id_ = goal.get("id", "")
                 description = goal.get("description", "")
-                lines.append(f"- **{id_}**: {description}")
+                lines.append(f"- {id_}: {description}")
             lines.append("")
 
         elif artifact_type == "design" and prop_name == "userPersonas":
@@ -620,12 +620,12 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                 lines.append(f"### {name}\n")
                 lines.append(f"*Role:* {role}\n")
                 if goals_p:
-                    lines.append("**Goals:**\n")
+                    lines.append("Goals:\n")
                     for g in goals_p:
                         lines.append(f"- {g}")
                     lines.append("")
                 if pain_points:
-                    lines.append("**Pain Points:**\n")
+                    lines.append("Pain Points:\n")
                     for p in pain_points:
                         lines.append(f"- {p}")
                     lines.append("")
@@ -646,7 +646,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                 for i, step in enumerate(steps, 1):
                     actor = step.get("actor", "")
                     action = step.get("action", "")
-                    lines.append(f"{i}. **{actor}**: {action}")
+                    lines.append(f"{i}. {actor}: {action}")
                 lines.append("")
 
         elif artifact_type == "design" and prop_name == "screenInventory":
@@ -661,7 +661,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                     lines.append(purpose)
                     lines.append("")
                 if actions:
-                    lines.append("**Primary Actions:**\n")
+                    lines.append("Primary Actions:\n")
                     for a in actions:
                         lines.append(f"- {a}")
                     lines.append("")
@@ -683,9 +683,9 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                     lines.append(description)
                     lines.append("")
                 if entity:
-                    lines.append(f"*Entity:* {entity}\n")
+                    lines.append(f"Entity: {entity}\n")
                 if inputs:
-                    lines.append("**Inputs:**\n")
+                    lines.append("Inputs:\n")
                     for inp in inputs:
                         iname = inp.get("name", "")
                         itype = inp.get("type", "")
@@ -699,16 +699,16 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                 if output:
                     otype = output.get("type", "")
                     odesc = output.get("description", "")
-                    lines.append(f"**Output:** `{otype}` — {odesc}\n")
+                    lines.append(f"Output: `{otype}` — {odesc}\n")
                 if errors:
-                    lines.append("**Errors:**\n")
+                    lines.append("Errors:\n")
                     for err in errors:
                         code = err.get("code", "")
                         condition = err.get("condition", "")
                         return_type = err.get("returnType", "")
                         lines.append(f"- `{code}`: {condition} (returns `{return_type}`)")
                     lines.append("")
-                lines.append(f"*Pure:* {pure} | *Visibility:* {visibility}\n")
+                lines.append(f"Pure: {pure} | Visibility: {visibility}\n")
 
         elif artifact_type == "test" and prop_name == "functionCoverage":
             lines.append("## Function Coverage\n")
@@ -723,31 +723,31 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                     lines.append("")
                 happy = [t for t in tests if t.get("category") == "happy"]
                 if happy:
-                    lines.append("**Happy Path:**\n")
+                    lines.append("Happy Path:\n")
                     for test in happy:
                         id_ = test.get("id", "")
                         desc = test.get("description", "")
-                        lines.append(f"- **{id_}**: {desc}")
+                        lines.append(f"- {id_}: {desc}")
                     lines.append("")
                 edge = [t for t in tests if t.get("category") == "edge"]
                 if edge:
-                    lines.append("**Edge Cases:**\n")
+                    lines.append("Edge Cases:\n")
                     for test in edge:
                         id_ = test.get("id", "")
                         desc = test.get("description", "")
-                        lines.append(f"- **{id_}**: {desc}")
+                        lines.append(f"- {id_}: {desc}")
                     lines.append("")
                 errors = [t for t in tests if t.get("category") == "error"]
                 if errors:
-                    lines.append("**Error Paths:**\n")
+                    lines.append("Error Paths:\n")
                     for test in errors:
                         id_ = test.get("id", "")
                         desc = test.get("description", "")
                         error_code = test.get("errorCode", "")
-                        lines.append(f"- **{id_}**: {desc} *(Error: {error_code})*")
+                        lines.append(f"- {id_}: {desc} (Error: {error_code})")
                     lines.append("")
                 if out_of_scope:
-                    lines.append("**Out of Scope:**\n")
+                    lines.append("Out of Scope:\n")
                     for item in out_of_scope:
                         desc = item.get("description", "") if isinstance(item, dict) else item
                         lines.append(f"- {desc}")
@@ -799,17 +799,17 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                     in_scope = scope.get("inScope", [])
                     out_of_scope = scope.get("outOfScope", [])
                     if in_scope:
-                        lines.append("**In Scope:**\n")
+                        lines.append("In Scope:\n")
                         for item in in_scope:
                             lines.append(f"- {item}")
                         lines.append("")
                     if out_of_scope:
-                        lines.append("**Out of Scope:**\n")
+                        lines.append("Out of Scope:\n")
                         for item in out_of_scope:
                             lines.append(f"- {item}")
                         lines.append("")
                 if acceptance:
-                    lines.append("**Acceptance Criteria:**\n")
+                    lines.append("Acceptance Criteria:\n")
                     for ac in acceptance:
                         lines.append(f"- [ ] {ac}")
                     lines.append("")
