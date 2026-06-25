@@ -67,7 +67,6 @@ updated: {{ updated }}
 |---|---|---|---|---|
 {% for screen in screenInventory -%}
 | {{ screen.id }} | {{ screen.name }} | {{ screen.purpose }} | {{ screen.primaryActions | join('; ') }} | {{ screen.usRefs | join(', ') | format_id_refs if screen.usRefs else '' }} |
-
 {% endfor -%}
 {% endif -%}
 {% if screenSpecs -%}
