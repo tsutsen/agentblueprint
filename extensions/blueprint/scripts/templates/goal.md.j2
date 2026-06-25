@@ -30,31 +30,10 @@ updated: {{ updated }}
 
 ## Non-Functional Requirements
 
+| ID | Category | Scale | Meter | Must | Plan | Wish | glossaryRefs | conRefs | Notes |
+|---|---|---|---|---|---|---|---|---|---|
 {% for nfr in nonFunctionalRequirements -%}
-### {{ nfr.id }} — {{ nfr.description or nfr.scale or nfr.category }}
-
-| Field | Value |
-|---|---|
-| **Category** | {{ nfr.category }} |
-| **Scale** | {{ nfr.scale }} |
-| **Meter** | {{ nfr.meter }} |
-| **Must** | {{ nfr.must }} |
-{% if nfr.plan %}
-| **Plan** | {{ nfr.plan }} |
-{% endif %}
-{% if nfr.wish %}
-| **Wish** | {{ nfr.wish }} |
-{% endif %}
-{% if nfr.glossaryRefs -%}
-| **glossaryRefs** | {{ nfr.glossaryRefs | format_glossary_refs }} |
-{% endif -%}
-{% if nfr.conRefs -%}
-| **conRefs** | {{ nfr.conRefs | format_id_refs }} |
-{% endif -%}
-{% if nfr.notes -%}
-| **Notes** | {{ nfr.notes }} |
-{% endif -%}
-
+| {{ nfr.id }} | {{ nfr.category }} | {{ nfr.scale }} | {{ nfr.meter }} | {{ nfr.must }}{% if nfr.plan %} | {{ nfr.plan }}{% endif %}{% if nfr.wish %} | {{ nfr.wish }}{% endif %}{% if nfr.glossaryRefs %} | {{ nfr.glossaryRefs | format_glossary_refs }}{% endif %}{% if nfr.conRefs %} | {{ nfr.conRefs | format_id_refs }}{% endif %}{% if nfr.notes %} | {{ nfr.notes }}{% endif %} |
 {% endfor -%}
 
 ## User Stories
