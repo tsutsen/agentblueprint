@@ -2,7 +2,7 @@ import type { IGraphBridge } from '@/components/GraphCanvas'
 import { themes } from '@/lib/themes'
 import { SIZE_METRICS } from '@/lib/metrics'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, Maximize2, Minimize2, ZoomIn, ZoomOut, Expand } from 'lucide-react'
+import { ChevronDown, Maximize2, Minimize2, ZoomIn, ZoomOut, Frame } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { MutableRefObject } from 'react'
@@ -134,7 +134,7 @@ export function Controls({
               className="h-8 w-8 p-0 bg-background backdrop-blur graph-control-btn"
               onClick={() => bridgeRef.current?.resetZoom()}
             >
-              <Expand className="h-3.5 w-3.5" />
+              <Frame className="h-3.5 w-3.5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top">Fit all nodes</TooltipContent>
