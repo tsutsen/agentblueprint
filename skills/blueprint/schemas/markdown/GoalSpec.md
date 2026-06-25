@@ -194,16 +194,4 @@ Each non-goal must:
 Format:
 * <Capability> — <reason>.
 
----
 
-## Linting
-
-After producing `artifacts/GoalSpec.json`, run:
-
-```
-python extensions/blueprint/linters/lint_goalspec.py artifacts/GoalSpec.json \
-  --schema schemas/goalspec.schema.json --json
-```
-
-All errors must be resolved before handoff. Warnings should be reviewed
-with the user but do not block handoff.

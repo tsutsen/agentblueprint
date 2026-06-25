@@ -85,17 +85,4 @@ Examples:
   service dependencies for local-only operation.
 * CON-002: The external API interface must be OpenAI-compatible.
 
----
 
-## Linting
-
-After producing `artifacts/ArchitectureSpec.json`, run:
-
-```
-python extensions/blueprint/linters/lint_archspec.py artifacts/ArchitectureSpec.json \
-  --schema schemas/archspec.schema.json \
-  --goal   artifacts/GoalSpec.json \
-  --json
-```
-
-All errors must be resolved before handoff.

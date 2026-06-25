@@ -217,17 +217,4 @@ Examples:
 * `TKN-002-spacing-md`: `16px` — Medium spacing, used for padding between sections
 * `TKN-003-font-size-lg`: `18px` — Large text, used for headings
 
----
 
-## Linting
-
-After producing `artifacts/DesignSpec.json`, run:
-
-```
-python extensions/blueprint/linters/lint_designspec.py artifacts/DesignSpec.json \
-  --schema schemas/designspec.schema.json \
-  --goal   artifacts/GoalSpec.json \
-  --json
-```
-
-All errors must be resolved before handoff.

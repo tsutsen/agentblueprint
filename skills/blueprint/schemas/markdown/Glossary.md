@@ -53,22 +53,4 @@ Each term must include:
 * `security` — Authentication, authorization, access control.
 * `ui` — Screen, interface, and presentation terms (panels, dashboards, dialogs).
 
----
 
-## Linting
-
-After producing `artifacts/Glossary.json`, run:
-
-```
-python extensions/blueprint/linters/lint_glossary.py artifacts/Glossary.json \
-  --schema schemas/glossary.schema.json \
-  --goal   artifacts/GoalSpec.json \
-  --arch   artifacts/ArchitectureSpec.json \
-  --data   artifacts/DataSpec.json \
-  --api    artifacts/ApiSpec.json \
-  --json
-```
-
-Skip any `--flag` whose file does not yet exist.
-
-All errors must be resolved before handoff.
