@@ -310,13 +310,14 @@ def run_lint(
 
     # 
     # Project match — goalspec/archspec/designspec use "project"; dataspec/apispec use "module"
+    glossary_project = glossary.get("project")
     for label, spec in other_specs.items():
         if not spec:
             continue
         spec_name = spec.get("project") or spec.get("module")
-        if spec_name and spec_name != glossary["project"]:
+        if spec_name and glossary_project and spec_name != glossary_project:
             result.add("error", "project_match",
-                f"Project mismatch: glossary='{glossary['project']}' {label}='{spec_name}'.",
+                f"Project mismatch: glossary='{glossary_project}' {label}='{spec_name}'.",
                 hint="All specs must have identical project/module values.")
 
     # Structural checks
