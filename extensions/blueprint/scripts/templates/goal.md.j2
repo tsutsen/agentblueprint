@@ -38,33 +38,24 @@ updated: {{ updated }}
 
 ## User Stories
 
+| ID | Story | reqRefs | glossaryRefs |
+|---|---|---|---|
 {% for us in userStories -%}
-- **{{ us.id }}**: {% if us.capability.strip().startswith('As a') %}{{ us.capability | format_id_refs }}{% if us.outcome %}, so that {{ us.outcome }}.{% endif %}{% else %}As a {{ us.actor or 'User' }}, I want to {{ us.capability | format_id_refs }}{% if us.outcome %}, so that {{ us.outcome }}.{% endif %}{% endif %}
-{% if us.reqRefs %}
-  → {{ us.reqRefs | join(', ') | format_id_refs }}
-{% endif %}
-{% if us.glossaryRefs %}
-  **glossaryRefs:** {{ us.glossaryRefs | format_glossary_refs }}
-{% endif %}
-
+| {{ us.id }} | {% if us.capability.strip().startswith('As a') %}{{ us.capability | format_id_refs }}{% if us.outcome %}, so that {{ us.outcome }}.{% endif %}{% else %}As a {{ us.actor or 'User' }}, I want to {{ us.capability | format_id_refs }}{% if us.outcome %}, so that {{ us.outcome }}.{% endif %}{% endif %}{% if us.reqRefs %} | {{ us.reqRefs | join(', ') | format_id_refs }}{% endif %}{% if us.glossaryRefs %} | {{ us.glossaryRefs | format_glossary_refs }}{% endif %} |
 {% endfor -%}
 
 ## Success Criteria
 
+| ID | Description | Verification | reqRefs | nfrRefs |
+|---|---|---|---|---|
 {% for sc in successCriteria -%}
-- **{{ sc.id }}**: {{ sc.description | format_id_refs }}{% if sc.verificationMethod %} *(Verification: {{ sc.verificationMethod }})*{% endif %}
-{% if sc.refs.reqRefs %}
-  → {{ sc.refs.reqRefs | join(', ') | format_id_refs }}
-{% endif %}
-{% if sc.refs.nfrRefs %}
-  → {{ sc.refs.nfrRefs | join(', ') | format_id_refs }}
-{% endif %}
-
+| {{ sc.id }} | {{ sc.description | format_id_refs }}{% if sc.verificationMethod %} | {{ sc.verificationMethod }}{% endif %}{% if sc.refs.reqRefs %} | {{ sc.refs.reqRefs | join(', ') | format_id_refs }}{% endif %}{% if sc.refs.nfrRefs %} | {{ sc.refs.nfrRefs | join(', ') | format_id_refs }}{% endif %} |
 {% endfor -%}
 
 ## Non-Goals
 
+| Capability | Reason | glossaryRefs |
+|---|---|---|
 {% for ng in nonGoals -%}
-- **{{ ng.capability }}** — {{ ng.reason | format_id_refs }}{% if ng.glossaryRefs %} *(glossaryRefs: {{ ng.glossaryRefs | format_glossary_refs }})*{% endif %}
-
+| {{ ng.capability }} | {{ ng.reason | format_id_refs }}{% if ng.glossaryRefs %} | {{ ng.glossaryRefs | format_glossary_refs }}{% endif %} |
 {% endfor -%}
