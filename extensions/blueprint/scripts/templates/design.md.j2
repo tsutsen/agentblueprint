@@ -66,10 +66,10 @@ updated: {{ updated }}
 {% if screenInventory -%}
 ## Screen Inventory
 
-| Screen | Purpose | Key Elements |
-|---|---|---|
+| ID | Screen | Purpose | primaryActions | usRefs |
+|---|---|---|---|---|
 {% for screen in screenInventory -%}
-| {{ screen.name }} | {{ screen.purpose }} | {{ screen.keyElements }} |
+| {{ screen.id }} | {{ screen.name }} | {{ screen.purpose }} | {{ screen.primaryActions | join('; ') }} | {{ screen.usRefs | join(', ') | format_id_refs if screen.usRefs else '' }} |
 
 {% endfor -%}
 {% endif -%}
@@ -77,9 +77,34 @@ updated: {{ updated }}
 ## Screen Specifications
 
 {% for screen in screenSpecs -%}
-### {{ screen.name }}
+### {{ screen.screenRef or screen.id }}
 
-{{ screen.description }}
+{{ screen.layout }}
+
+{% if screen.components -%}
+#### Components
+
+{% for comp in screen.components -%}
+- **{{ comp.name }}**: {{ comp.purpose }}{% if comp.designSystemRef %} — {{ comp.designSystemRef }}{% endif %}
+
+{% endfor -%}
+{% endif -%}
+{% if screen.states -%}
+#### States
+
+{% for state in screen.states -%}
+- **{{ state.name }}**: {{ state.description }}
+
+{% endfor -%}
+{% endif -%}
+{% if screen.interactions -%}
+#### Interactions
+
+{% for interaction in screen.interactions -%}
+- **Trigger:** {{ interaction.trigger }} → **Response:** {{ interaction.response }}{% if interaction.patternRef %} — {{ interaction.patternRef }}{% endif %}
+
+{% endfor -%}
+{% endif -%}
 
 {% endfor -%}
 {% endif -%}
@@ -97,33 +122,49 @@ updated: {{ updated }}
 ## Visual Design Requirements
 
 {% for req in visualDesignRequirements -%}
-- {{ req | format_id_refs }}
+### {{ req.id }} — {{ req.name }}
+
+{{ req.description }}
+{% if req.rationale -%}
+**Rationale:** {{ req.rationale }}
+
+{% endif -%}
 
 {% endfor -%}
 {% endif -%}
 {% if designSystem -%}
 ## Design System
 
-{% if designSystem.colors -%}
-### Colors
-{% for color in designSystem.colors -%}
-- **{{ color.name }}**: {{ color.value }} — {{ color.description }}
+{{ designSystem.baseStyle }}
+
+{% if designSystem.components -%}
+### Components
+
+{% for comp in designSystem.components -%}
+- **{{ comp.name }}**: {{ comp.purpose }}{% if comp.variants %} — {{ comp.variants | join(', ') }}{% endif %}
 
 {% endfor -%}
 {% endif -%}
-{% if designSystem.typography -%}
-### Typography
-{% for font in designSystem.typography -%}
-- **{{ font.name }}**: {{ font.description }}
+{% if designSystem.notes -%}
+**Notes:** {{ designSystem.notes }}
 
-{% endfor -%}
+{% endif -%}
+{% if designSystem.glossaryRefs -%}
+**glossaryRefs:** {{ designSystem.glossaryRefs | format_glossary_refs }}
+
 {% endif -%}
 {% endif -%}
 {% if accessibilityRequirements -%}
 ## Accessibility Requirements
 
 {% for req in accessibilityRequirements -%}
-- {{ req | format_id_refs }}
+### {{ req.id }} — {{ req.name }}
+
+{{ req.description }}
+{% if req.rationale -%}
+**Rationale:** {{ req.rationale }}
+
+{% endif -%}
 
 {% endfor -%}
 {% endif -%}
@@ -131,17 +172,27 @@ updated: {{ updated }}
 ## UX Acceptance Criteria
 
 {% for criterion in uxAcceptanceCriteria -%}
-- {{ criterion | format_id_refs }}
+### {{ criterion.id }} — {{ criterion.name }}
+
+{{ criterion.description }}
+{% if criterion.verificationMethod -%}
+**Verification:** {{ criterion.verificationMethod }}
+
+{% endif -%}
+{% if criterion.refs -%}
+**refs:** {{ criterion.refs | join(', ') | format_id_refs }}
+
+{% endif -%}
 
 {% endfor -%}
 {% endif -%}
 {% if designTokens -%}
 ## Design Tokens
 
+| ID | Name | Category | Value | Description |
+|---|---|---|---|---|
 {% for token in designTokens -%}
-### {{ token.name }}
-- **Value:** {{ token.value }}
-- **Usage:** {{ token.usage }}
-
+| {{ token.id }} | {{ token.name }} | {{ token.category }} | {{ token.value }} | {{ token.description }} |
 {% endfor -%}
+
 {% endif -%}
