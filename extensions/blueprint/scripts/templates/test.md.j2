@@ -36,10 +36,10 @@ updated: {{ updated }}
 | **Expected** | {{ test.expectedOutput }} |
 | **Clause** | {{ test.contractClause }} |
 {% if test.reqRefs -%}
-| **reqRefs** | {{ test.reqRefs | join(', ') }} |
+| **reqRefs** | {{ test.reqRefs | join(', ') | format_id_refs }} |
 {% endif -%}
 {% if test.nfrRefs -%}
-| **nfrRefs** | {{ test.nfrRefs | join(', ') }} |
+| **nfrRefs** | {{ test.nfrRefs | join(', ') | format_id_refs }} |
 {% endif -%}
 {% if test.glossaryRefs -%}
 | **glossaryRefs** | {{ test.glossaryRefs | format_glossary_refs }} |

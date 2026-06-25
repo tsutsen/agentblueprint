@@ -21,7 +21,7 @@ updated: {{ updated }}
 {% for comp in components -%}
 ### {{ comp.name }}
 - **Purpose:** {{ comp.purpose }}
-- **Responsibilities:** {{ comp.responsibilities | join('; ') }}
+- **Responsibilities:** {{ comp.responsibilities | join('; ') | format_id_refs }}
 - **Dependencies:** {{ comp.dependencies | join(', ') }}
 
 {% endfor -%}
@@ -30,7 +30,7 @@ updated: {{ updated }}
 {% for section in responsibilities -%}
 ### {{ section.component }} owns:
 {% for resp in section.responsibilities -%}
-- {{ resp }}
+- {{ resp | format_id_refs }}
 
 {% endfor -%}
 
@@ -58,7 +58,7 @@ updated: {{ updated }}
 
 {% for constraint in constraints -%}
 ### {{ constraint.title }}
-{{ constraint.description }}
+{{ constraint.description | format_id_refs }}
 
 {% endfor -%}
 {% endif -%}

@@ -25,7 +25,7 @@ updated: {{ updated }}
 | **Entity** | {{ fn.entity }} |
 | **Inputs** | {{ fn.inputs | format_inputs }} |
 | **Output** | {{ fn.output['type'] }}{% if fn.output['description'] %} — {{ fn.output['description'] }}{% endif %} |
-| **Description** | {{ fn.description }} |
+| **Description** | {{ fn.description | format_id_refs }} |
 {% if fn.errors -%}
 | **Errors** |
 {% for err in fn.errors -%}

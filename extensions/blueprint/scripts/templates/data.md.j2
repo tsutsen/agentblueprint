@@ -55,7 +55,7 @@ The set of primitive type names used as field types:
 | Field | Type | Required | Description |
 |---|---|---|---|
 {% for field in entity.fields -%}
-| `{{ field.name }}` | {{ field.type }} | {% if field.required %}Yes{% else %}No{% endif %} | {{ field.description }}{% if field.example %} (e.g. `{{ field.example }}`){% endif %} |
+| `{{ field.name }}` | {{ field.type }} | {% if field.required %}Yes{% else %}No{% endif %} | {{ field.description | format_id_refs }}{% if field.example %} (e.g. `{{ field.example }}`){% endif %} |
 {% endfor -%}
 
 {% endif -%}
@@ -63,7 +63,7 @@ The set of primitive type names used as field types:
 Methods:
 
 {% for method in entity.methods -%}
-- `{{ method.name }}` → `{{ method.apiRef }}` — {{ method.description }}
+- `{{ method.name }}` → `{{ method.apiRef }}` — {{ method.description | format_id_refs }}
 
 {% endfor -%}
 {% endif -%}

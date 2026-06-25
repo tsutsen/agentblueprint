@@ -14,7 +14,7 @@ updated: {{ updated }}
 ## Design Goals
 
 {% for goal in designGoals -%}
-{{ loop.index }}. **{{ goal.goal or goal.description }}**{% if goal.rationale %} — {{ goal.rationale }}{% endif %}
+{{ loop.index }}. **{{ goal.goal or goal.description }}**{% if goal.rationale %} — {{ goal.rationale | format_id_refs }}{% endif %}
 
 {% endfor -%}
 {% endif -%}
@@ -24,11 +24,11 @@ updated: {{ updated }}
 {% for persona in personas -%}
 ### {{ persona.label or loop.index }} — {{ persona.name }}
 {% if persona.goals -%}
-- **Goals:** {{ persona.goals | join('; ') }}
+- **Goals:** {{ persona.goals | join('; ') | format_id_refs }}
 
 {% endif -%}
 {% if persona.painPoints -%}
-- **Pain Points:** {{ persona.painPoints | join('; ') }}
+- **Pain Points:** {{ persona.painPoints | join('; ') | format_id_refs }}
 
 {% endif -%}
 {% if persona.technicalSkillLevel -%}
@@ -49,7 +49,7 @@ updated: {{ updated }}
 
 {% endfor -%}
 {% if journey.desiredOutcome -%}
-*End:* {{ journey.desiredOutcome }}
+*End:* {{ journey.desiredOutcome | format_id_refs }}
 
 {% endif -%}
 
@@ -97,7 +97,7 @@ updated: {{ updated }}
 ## Visual Design Requirements
 
 {% for req in visualDesignRequirements -%}
-- {{ req }}
+- {{ req | format_id_refs }}
 
 {% endfor -%}
 {% endif -%}
@@ -123,7 +123,7 @@ updated: {{ updated }}
 ## Accessibility Requirements
 
 {% for req in accessibilityRequirements -%}
-- {{ req }}
+- {{ req | format_id_refs }}
 
 {% endfor -%}
 {% endif -%}
@@ -131,7 +131,7 @@ updated: {{ updated }}
 ## UX Acceptance Criteria
 
 {% for criterion in uxAcceptanceCriteria -%}
-- {{ criterion }}
+- {{ criterion | format_id_refs }}
 
 {% endfor -%}
 {% endif -%}
