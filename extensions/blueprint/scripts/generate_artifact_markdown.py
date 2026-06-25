@@ -124,6 +124,17 @@ def render_value(value: Any, indent: int = 0, prop_schema: Optional[dict] = None
     return str(value)
 
 
+def render_simple_object(obj: dict) -> str:
+    """Render a simple key-value dict with each field on its own line."""
+    if not obj:
+        return ""
+    lines = []
+    for key, value in obj.items():
+        label = key.replace("_", " ").title()
+        lines.append(f"- **{label}**: {render_value(value)}")
+    return "\n".join(lines)
+
+
 def render_array(items: list, prop_schema: Optional[dict] = None) -> str:
     """Render an array as markdown."""
     if not items:
@@ -175,13 +186,6 @@ def render_object(obj: dict, prop_schema: Optional[dict] = None) -> str:
     """Render an object as markdown."""
     if not obj:
         return ""
-    lines = []
-    # Check if this is a simple key-value object
-    if all(isinstance(v, (str, int, float, bool)) for v in obj.values()):
-        for key, value in obj.items():
-            label = get_property_description({"name": key})
-            lines.append(f"- **{label}**: {render_value(value)}")
-        return "\n".join(lines)
     # Check if it's a nested object with known structure
     if "statement" in obj:
         # Objective-like object
@@ -189,7 +193,11 @@ def render_object(obj: dict, prop_schema: Optional[dict] = None) -> str:
     if "term" in obj and "definition" in obj:
         # Term-like object
         return f"**{obj['term']}**: {obj['definition']}"
+    # Check if this is a simple key-value object
+    if all(isinstance(v, (str, int, float, bool)) for v in obj.values()):
+        return render_simple_object(obj)
     # Generic nested object
+    lines = []
     if prop_schema and "properties" in prop_schema:
         for prop_name, prop_def in prop_schema["properties"].items():
             if prop_name in obj:
@@ -201,13 +209,13 @@ def render_object(obj: dict, prop_schema: Optional[dict] = None) -> str:
     else:
         for key, value in obj.items():
             if isinstance(value, (str, int, float, bool)):
-                label = get_property_description({"name": key})
+                label = key.replace("_", " ").title()
                 lines.append(f"- **{label}**: {render_value(value)}")
             elif isinstance(value, (list, dict)):
                 rendered = render_value(value)
                 if rendered:
                     lines.append(f"- **{key}**:\n{rendered}")
-    return "\n".join(lines)
+    return "\n".join(lines) if lines else ""
 
 
 def generate_frontmatter(artifact_type: str, data: dict, schema: dict) -> str:
@@ -270,7 +278,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
         for key, value in data.items():
             if key in FRONTMATTER_SKIP or key.startswith("_"):
                 continue
-            rendered = render_value(value)
+            rendered = render_simple_object(value) if isinstance(value, dict) else render_value(value)
             if rendered:
                 # Use the key as a simple header, not the schema description
                 label = key.replace("_", " ").title()
@@ -340,9 +348,9 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                 plan = nfr.get("plan", "")
                 wish = nfr.get("wish", "")
                 if description:
-                    title_text = description[:60] + ("..." if len(description) > 60 else "")
+                    title_text = description
                 elif scale:
-                    title_text = scale[:60] + ("..." if len(scale) > 60 else "")
+                    title_text = scale
                 else:
                     title_text = category
                 lines.append(f"### {id_} — {title_text}")
