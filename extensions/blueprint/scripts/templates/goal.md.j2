@@ -35,15 +35,18 @@ updated: {{ updated }}
 
 {% for nfr in nonFunctionalRequirements -%}
 ### {{ nfr.id }} — {{ nfr.description or nfr.scale or nfr.category }}
-Category: {{ nfr.category }}
-Scale: {{ nfr.scale }}
-Meter: {{ nfr.meter }}
-Must: {{ nfr.must }}
+
+| Field | Value |
+|---|---|
+| **Category** | {{ nfr.category }} |
+| **Scale** | {{ nfr.scale }} |
+| **Meter** | {{ nfr.meter }} |
+| **Must** | {{ nfr.must }} |
 {% if nfr.plan %}
-Plan: {{ nfr.plan }}
+| **Plan** | {{ nfr.plan }} |
 {% endif %}
 {% if nfr.wish %}
-Wish: {{ nfr.wish }}
+| **Wish** | {{ nfr.wish }} |
 {% endif %}
 
 {% endfor -%}
