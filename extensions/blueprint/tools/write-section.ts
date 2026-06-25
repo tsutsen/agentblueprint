@@ -8,29 +8,28 @@ export function registerWriteSection(pi: ExtensionAPI) {
     name: "write_section",
     label: "Write Section",
     description:
-      "Write a confirmed artifact section to JSON during the interview. " +
-      "The JSON is the single source of truth — Markdown is derived later " +
-      "via generate_artifact_markdown. Records when the JSON is ready for " +
-      "markdown generation with a `ready` flag and `readyAt` timestamp.",
+      "Write the complete JSON artifact to disk during the interview. " +
+      "Call this after every section is confirmed — pass the full accumulated " +
+      "JSON object. This ensures data is persisted incrementally: if the session " +
+      "crashes, the latest JSON on disk can be loaded to resume. " +
+      "The JSON is the single source of truth — Markdown is derived later via " +
+      "generate_artifact_markdown.",
     parameters: Type.Object({
       filePath: Type.String({
         description: "Output file path (e.g. artifacts/GoalSpec.json)",
       }),
       section: Type.String({
-        description: "Section name (e.g. Project Objective, Non-Goals)",
+        description: "Section name just confirmed (e.g. Project Objective, Non-Goals). Used for logging.",
       }),
       content: Type.String({
         description: "The validated section content to write.",
       }),
-      jsonContent: Type.Optional(Type.Object({}, {
-        description: "Complete JSON object for the entire artifact. Written to the .json file. The blueprint skill accumulates this across sections.",
-      })),
-      ready: Type.Optional(Type.Boolean({
-        description: "Whether the JSON is ready for markdown generation. Set true when all sections are complete.",
-      })),
+      jsonContent: Type.Object({}, {
+        description: "Complete accumulated JSON object for the entire artifact. Must include all previously confirmed sections plus the new one. This is written atomically to disk.",
+      }),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-      const { filePath, section, content, jsonContent, ready } = params;
+      const { filePath, section, content, jsonContent } = params;
       const fullPath = path.resolve(ctx.cwd, filePath);
       const dir = path.dirname(fullPath);
       const now = new Date().toISOString();
@@ -39,37 +38,22 @@ export function registerWriteSection(pi: ExtensionAPI) {
         fs.mkdirSync(dir, { recursive: true });
       }
 
-      let jsonPath: string | null = null;
-      let jsonWritten = false;
-      if (jsonContent) {
-        jsonPath = fullPath.replace(/\.md$/, '.json');
-        if (ready) {
-          jsonContent.ready = true;
-          jsonContent.readyAt = now;
-        }
-        fs.writeFileSync(jsonPath, JSON.stringify(jsonContent, null, 2) + '\n');
-        jsonWritten = true;
-      }
+      // Add metadata to the JSON
+      jsonContent._meta = jsonContent._meta || {};
+      jsonContent._meta.updated = now;
+      jsonContent._meta.updatedSection = section;
 
-      if (!jsonWritten) {
-        return {
-          content: [{ type: "text", text: `ERROR: write_section requires jsonContent. The JSON is the single source of truth; Markdown is derived later.` }],
-          details: { success: false },
-          isError: true,
-        };
-      }
-
-      const written = fs.readFileSync(jsonPath, "utf-8");
-      const revalidated = JSON.parse(written);
+      const jsonPath = fullPath.replace(/\.md$/, '.json');
+      fs.writeFileSync(jsonPath, JSON.stringify(jsonContent, null, 2) + '\n');
 
       return {
         content: [{
           type: "text",
           text: `Section written: ${section}\n` +
             `  JSON: ${jsonPath}\n` +
-            `  Ready: ${revalidated.ready === true}`,
+            `  Updated: ${now}`,
         }],
-        details: { success: true, section, jsonPath, ready: revalidated.ready },
+        details: { success: true, section, jsonPath, updated: now },
       };
     },
   });

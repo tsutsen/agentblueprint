@@ -159,20 +159,21 @@ Proceed silently.
 
 ### Step 3 — Orientation
 
-Read the artifact's markdown file (e.g., `artifacts/GoalSpec.md`) if it exists.
-Inspect its frontmatter fields: `status`, `sections_complete`, `sections_pending`.
+Check whether the JSON artifact file exists on disk (e.g., `artifacts/GoalSpec.json`).
 
-- **File absent:** proceed normally.
-- **`status: in_progress`:** report which sections are complete and pending.
-  Ask: resume from first pending section, or restart? Wait for answer.
-- **`status: needs_review` or `status: complete`:** warn that the artifact is already finished.
-  Ask: re-open for revision, or abort? Wait for answer.
+- **File absent:** proceed normally — this is a fresh start.
+- **File present:** load the JSON and inspect `_meta.updatedSection` to determine
+  the last confirmed section. Report the artifact name, its sections, which
+  sections have content (by checking which top-level fields are populated),
+  and any missing dependencies.
 
 Output before the first interview question:
 
 - artifact being produced and its sections
 - dependencies loaded; any missing
-- sections already complete (if resuming)
+- last confirmed section (if resuming)
+
+If resuming, ask: "Resume from the last confirmed section, or restart from the beginning?" Wait for the user's answer.
 
 ---
 
@@ -195,7 +196,7 @@ Resume from: <FirstPendingSection> (omit if fresh start)
 The blueprint skill constructs this task from the results of Steps 1–3:
 - **Dependencies** come from `load_artifact` result
 - **Sections** come from the schema loaded in Step 1
-- **Resume point** comes from the artifact state checked in Step 3
+- **Resume point** comes from Step 3 (JSON `_meta.updatedSection`)
 
 The interview skill generates structured questions from the schema. The blueprint
 skill uses dependency content (JSON parsed or Markdown text) as context when
@@ -205,8 +206,10 @@ asking questions that reference another artifact.
 
 ### Step 5 — Section persistence
 
-After each section is confirmed, write it to the JSON artifact using the
-`write_section` tool:
+After each section is confirmed, write the **complete accumulated JSON** to
+disk using the `write_section` tool. This is critical: the JSON is persisted
+incrementally so that if the session crashes, the latest state on disk can
+be loaded to resume.
 
 ```
 tool: write_section
@@ -214,19 +217,23 @@ args:
   filePath: artifacts/<ArtifactType>.json
   section: <SectionName>
   content: <validated section content>
-  jsonContent: { ... complete JSON object ... }
-  ready: true
+  jsonContent: { ... complete accumulated JSON ... }
 ```
 
-`write_section` writes the JSON artifact. The JSON is the single source of
-truth — Markdown is derived later via `generate_artifact_markdown`.
+**How to build `jsonContent`:**
 
-Set `ready: true` when all sections are complete. The tool records a
-`ready` flag and `readyAt` timestamp on the JSON for the markdown generation
-step to check.
+1. **Fresh start:** start with an empty object `{}` and merge each confirmed
+   section's data into it.
+2. **Resuming:** load the existing JSON from disk first, then merge the new
+   section's data on top of it.
+3. **Pass the full accumulated object** — not just the new section. The tool
+   writes the entire JSON atomically.
 
-On success, show the JSON path and ready status:
-"Section written: <SectionName>. JSON: <path>. Ready: true."
+The JSON is the single source of truth — Markdown is derived later via
+`generate_artifact_markdown`.
+
+On success, show the JSON path and updated timestamp:
+"Section written: <SectionName>. JSON: <path>."
 
 On revision request: re-interview affected sections, rewrite, re-verify.
 

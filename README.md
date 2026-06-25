@@ -426,8 +426,7 @@ project/
 |------|-----------|---------|
 | `init_workspace` | `force?` | Creates directories, pre-creates artifact files, installs deps |
 | `load_artifact` | `artifactType` | Loads schema + dependencies, prefers JSON, validates required deps |
-| `write_section` | `filePath, section, content, jsonContent, ready?` | Writes JSON artifact (single source of truth); sets `ready`/`readyAt` when complete |
-| `update_frontmatter` | `filePath, status, sections_complete, sections_pending` | Updates artifact frontmatter (status, sections, date) |
+| `write_section` | `filePath, section, content, jsonContent` | Writes the complete accumulated JSON to disk (incremental persistence during interview) |
 | `lint` | `artifacts?[], mode?, epic?, epicsDir?` | Structural linting (`assess` for decisions, `raw` for full report) |
 | `handoff` | `{}` | Checks artifact availability against DEPS, produces handoff table |
 | `generate_tests` | `apiSpecPath?, goalSpecPath?, testSpecPath?, reqMappingPath?` | Auto-generate TestSpec from ApiSpec (happy/edge/error paths, reqRefs) |
