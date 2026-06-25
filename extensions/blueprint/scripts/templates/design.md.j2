@@ -154,16 +154,12 @@ updated: {{ updated }}
 {% if accessibilityRequirements -%}
 ## Accessibility Requirements
 
+| ID | Name | Description | Rationale |
+|---|---|---|---|
 {% for req in accessibilityRequirements -%}
-### {{ req.id }} — {{ req.name }}
-
-{{ req.description }}
-{% if req.rationale -%}
-**Rationale:** {{ req.rationale }}
-
-{% endif -%}
-
+| {{ req.id }} | {{ req.name }} | {{ req.description | format_id_refs }} | {{ req.rationale }} |
 {% endfor -%}
+
 {% endif -%}
 {% if uxAcceptanceCriteria -%}
 ## UX Acceptance Criteria
