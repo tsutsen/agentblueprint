@@ -76,25 +76,24 @@ updated: {{ updated }}
 ### {{ screen.screenRef or screen.id }}
 
 {{ screen.layout }}
-
 {% if screen.components -%}
-#### Components
 
+#### Components
 {% for comp in screen.components -%}
 - **{{ comp.name }}**: {{ comp.purpose }}{% if comp.designSystemRef %} — {{ comp.designSystemRef }}{% endif %}
 
 {% endfor -%}
 {% endif -%}
 {% if screen.states -%}
-#### States
 
+#### States
 {% for state in screen.states -%}
 - **{{ state.name }}**: {{ state.description }}
 {% endfor -%}
 {% endif -%}
 {% if screen.interactions -%}
-#### Interactions
 
+#### Interactions
 {% for interaction in screen.interactions -%}
 - **Trigger:** {{ interaction.trigger }} → **Response:** {{ interaction.response }}{% if interaction.patternRef %} — {{ interaction.patternRef }}{% endif %}
 
