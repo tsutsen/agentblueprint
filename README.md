@@ -31,6 +31,7 @@ AgentBlueprint/
 │   └── blueprint/
 │       ├── index.ts          ← registers all tools
 │       ├── scripts/          ← automation scripts
+│       │   ├── generate_artifact_markdown.py
 │       │   ├── generate_tests.py
 │       │   └── json_uml_convert.py
 │       └── linters/          ← spec validation linters

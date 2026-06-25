@@ -28,7 +28,7 @@ export function registerGenerateArtifactMarkdown(pi: ExtensionAPI, extDir: strin
 
       const cmd = [
         process.execPath,
-        resolvePkgResource(extDir, "extensions/blueprint/generate_artifact_markdown.py"),
+        resolvePkgResource(extDir, "extensions/blueprint/scripts/generate_artifact_markdown.py"),
         "--type", artifactType,
         "--json", jsonFullPath,
         ...(outPath ? ["--output", outPath] : []),
