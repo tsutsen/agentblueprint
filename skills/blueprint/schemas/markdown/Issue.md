@@ -359,3 +359,13 @@ Enforce these rules when writing and validating issues:
    `IS-NNN.json` inside the `IS-NNN/` directory.
 6. **HITL/AFK**: Prefer AFK. Only mark HITL when human judgment is genuinely
    required.
+
+### Confirmation gate
+
+Before proceeding to implementation, confirm all issues are ready:
+
+> "Here are all the issues for this epic. Please review each issue's
+> objective, acceptance criteria, and dependencies. Confirm they are
+> ready for implementation, or let me know what needs to change."
+
+This gate is mandatory. Do not skip it.

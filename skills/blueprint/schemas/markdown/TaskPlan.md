@@ -230,3 +230,13 @@ Use for:
 * Prototype findings or spikes
 
 May be empty if nothing to record.
+
+### Confirmation gate
+
+Before proceeding to Issues, confirm the task plan with the user:
+
+> "Here is the task plan. Please review all epics, milestones, and
+> dependencies. Confirm this is complete before we proceed — changes
+> after this point will require revisiting issue decompositions."
+
+This gate is mandatory. Do not skip it.

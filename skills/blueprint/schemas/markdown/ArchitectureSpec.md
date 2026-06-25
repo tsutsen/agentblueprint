@@ -85,4 +85,15 @@ Examples:
   service dependencies for local-only operation.
 * CON-002: The external API interface must be OpenAI-compatible.
 
+### Confirmation gate
+
+Before proceeding to DataSpec, confirm the full architecture spec with the
+user:
+
+> "Here is the architecture specification. Please review all components,
+> data flows, and constraints. Confirm this is complete before we proceed
+> — changes after this point will require revisiting downstream specs."
+
+This gate is mandatory. Do not skip it.
+
 

@@ -217,4 +217,15 @@ Examples:
 * `TKN-002-spacing-md`: `16px` — Medium spacing, used for padding between sections
 * `TKN-003-font-size-lg`: `18px` — Large text, used for headings
 
+### Confirmation gate
+
+Before proceeding to TaskPlan, confirm the full design spec with the user:
+
+> "Here is the design specification. Please review all screens, journeys,
+> interaction patterns, and visual requirements. Confirm this is complete
+> before we proceed — changes after this point will require revisiting
+> the task plan."
+
+This gate is mandatory. Do not skip it.
+
 
