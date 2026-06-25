@@ -230,19 +230,3 @@ Use for:
 * Prototype findings or spikes
 
 May be empty if nothing to record.
-## Output
-
-After the interview is complete and the JSON artifact has been written via
-`write_section`, the Markdown file must be regenerated from the JSON to
-ensure zero drift between formats.
-
-
- ```
-tool: generate_artifact_markdown
-args:
-  artifactType: <type>
-  jsonPath: artifacts/<Type>.json
- ```
-
-This overwrites the Markdown file with content derived from the JSON.
-The JSON is the single source of truth; the Markdown is derived.

@@ -148,7 +148,8 @@
         "additionalProperties": false,
         "properties": {
           "fnRef": {
-            "$ref": "#/definitions/fnRef"
+            "$ref": "#/definitions/fnRef",
+            "description": "The function this coverage entry summarizes. Must match a function ID in ApiSpec."
           },
           "happyPathCount": {
             "type": "integer",
@@ -280,10 +281,12 @@
             "additionalProperties": false,
             "properties": {
               "code": {
-                "type": "string"
+                "type": "string",
+                "description": "The error code the caller receives (e.g. NOT_FOUND, UNAUTHORIZED)."
               },
               "returnType": {
-                "type": "string"
+                "type": "string",
+                "description": "The type of the error object or exception the caller receives."
               },
               "messageContains": {
                 "type": "string",

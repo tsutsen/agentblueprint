@@ -293,7 +293,7 @@
             "items": {
               "type": "string"
             },
-            "description": "CON-NNN-slug IDs from ArchitectureSpec constraints that stem from this NFR"
+            "description": "CON-NNN-slug IDs from ArchitectureSpec constraints that stem from this NFR."
           }
         }
       }
@@ -344,7 +344,7 @@
           },
           "reqRefs": {
             "type": "array",
-            "description": "REQ-IDs this story motivates. Must not be empty.",
+            "description": "REQ-NNN-slug IDs from GoalSpec functional requirements this user story motivates.",
             "minItems": 1,
             "items": {
               "$ref": "#/definitions/reqId"
@@ -398,12 +398,14 @@
             "properties": {
               "reqRefs": {
                 "type": "array",
+                "description": "REQ-NNN IDs from GoalSpec functional requirements this success criterion verifies.",
                 "items": {
                   "$ref": "#/definitions/reqId"
                 }
               },
               "nfrRefs": {
                 "type": "array",
+                "description": "NFR-NNN IDs from GoalSpec non-functional requirements this success criterion measures.",
                 "items": {
                   "$ref": "#/definitions/nfrId"
                 }

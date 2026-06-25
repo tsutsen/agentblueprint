@@ -240,7 +240,8 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/personaId"
+            "$ref": "#/definitions/personaId",
+            "description": "Unique kebab-case identifier for this persona (e.g. 'power-developer')."
           },
           "name": {
             "type": "string",
@@ -318,11 +319,13 @@
         "properties": {
           "id": {
             "type": "string",
-            "pattern": "^UJ-\\d{3}$"
+            "pattern": "^UJ-\\d{3}$",
+            "description": "Unique identifier for this user journey (e.g. 'UJ-001')."
           },
           "name": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Short descriptive name for this user journey."
           },
           "description": {
             "type": "string",
@@ -435,7 +438,8 @@
           }
         },
         "notes": {
-          "type": "string"
+          "type": "string",
+          "description": "Optional clarifying context for the information architecture."
         },
         "glossaryRefs": {
           "type": "array",
@@ -461,7 +465,8 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/screenId"
+            "$ref": "#/definitions/screenId",
+            "description": "Unique kebab-case identifier for this screen (e.g. 'library-screen')."
           },
           "name": {
             "type": "string",
@@ -698,11 +703,13 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/patternId"
+            "$ref": "#/definitions/patternId",
+            "description": "Unique kebab-case identifier for this interaction pattern (e.g. 'keyboard-navigation')."
           },
           "name": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Short descriptive name for this interaction pattern."
           },
           "description": {
             "type": "string",
@@ -732,7 +739,8 @@
                   "description": "Key combination, e.g. 'Ctrl+K', 'Escape'."
                 },
                 "action": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "What the key combination does when pressed."
                 }
               }
             }
@@ -817,13 +825,15 @@
                 }
               },
               "usageNotes": {
-                "type": "string"
+                "type": "string",
+                "description": "Guidance on when and how to use this design system component."
               }
             }
           }
         },
         "notes": {
-          "type": "string"
+          "type": "string",
+          "description": "Optional clarifying context for the design system."
         }
       }
     },
@@ -864,7 +874,8 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/uxacId"
+            "$ref": "#/definitions/uxacId",
+            "description": "Unique identifier for this UX acceptance criterion (e.g. 'UXAC-001')."
           },
           "name": {
             "type": "string",
@@ -883,12 +894,14 @@
             "properties": {
               "usRefs": {
                 "type": "array",
+                "description": "US-NNN IDs from GoalSpec user stories this criterion relates to.",
                 "items": {
                   "$ref": "#/definitions/usId"
                 }
               },
               "reqRefs": {
                 "type": "array",
+                "description": "REQ-NNN IDs from GoalSpec functional requirements this criterion measures.",
                 "items": {
                   "$ref": "#/definitions/reqId"
                 }

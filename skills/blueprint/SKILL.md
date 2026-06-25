@@ -269,9 +269,6 @@ args:
 This overwrites `artifacts/<ArtifactType>.md` with content derived from
 the JSON. The Markdown is now guaranteed to match the JSON exactly.
 
-If the schema file for this artifact type contains a `## Output` section
-with specific instructions, follow those instead.
-
 ---
 
 ### Step 8 — Handoff

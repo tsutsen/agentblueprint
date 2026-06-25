@@ -196,23 +196,6 @@ Format:
 
 ---
 
-## Output
-
-After the interview is complete and `artifacts/GoalSpec.json` has been
-written via `write_section`, the Markdown file must be regenerated from
-the JSON to ensure zero drift between formats.
-
-```
-tool: generate_artifact_markdown
-args:
-  artifactType: goal
-  jsonPath: artifacts/GoalSpec.json
-```
-
-This overwrites `artifacts/GoalSpec.md` with content derived from the
-JSON artifact. The JSON is the single source of truth; the Markdown is
-derived.
-
 ## Linting
 
 After producing `artifacts/GoalSpec.json`, run:

@@ -162,7 +162,8 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/componentId"
+            "$ref": "#/definitions/componentId",
+            "description": "Unique kebab-case identifier for this component (e.g. 'search-service')."
           },
           "name": {
             "type": "string",
@@ -234,7 +235,7 @@
           },
           "notes": {
             "type": "string",
-            "description": "Optional clarifying context for this component."
+            "description": "Optional clarifying context for this component that does not fit other fields."
           },
           "entityRefs": {
             "type": "array",
@@ -354,7 +355,8 @@
                   "description": "Optional: name of the entity or payload moving through this step."
                 },
                 "notes": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Optional clarifying context for this data flow step."
                 }
               }
             }

@@ -205,24 +205,6 @@ A developer unfamiliar with the project can:
 
 ---
 
-## Output
-
-After the interview is complete and the JSON artifact has been written via
-`write_section`, the Markdown file must be regenerated from the JSON to
-ensure zero drift between formats.
-
-```
-tool: generate_artifact_markdown
-args:
-  artifactType: design
-  jsonPath: artifacts/DesignSpec.json
-```
-
-This overwrites the Markdown file with content derived from the JSON.
-The JSON is the single source of truth; the Markdown is derived.
-
----
-
 ### Design Tokens
 
 Reusable visual values that define consistency across the product. Tokens replace

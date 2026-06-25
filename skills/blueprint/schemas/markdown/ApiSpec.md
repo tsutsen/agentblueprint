@@ -92,20 +92,4 @@ All errors must be resolved before handoff. In particular:
 * Every `entity` reference must exist in DataSpec
 * Every DataSpec entity method `apiRef` must resolve to a function in this spec
 
----
 
-## Output
-
-After the interview is complete and the JSON artifact has been written via
-`write_section`, the Markdown file must be regenerated from the JSON to
-ensure zero drift between formats.
-
-```
-tool: generate_artifact_markdown
-args:
-  artifactType: api
-  jsonPath: artifacts/ApiSpec.json
-```
-
-This overwrites the Markdown file with content derived from the JSON.
-The JSON is the single source of truth; the Markdown is derived.

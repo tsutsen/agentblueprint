@@ -359,20 +359,3 @@ Enforce these rules when writing and validating issues:
    `IS-NNN.json` inside the `IS-NNN/` directory.
 6. **HITL/AFK**: Prefer AFK. Only mark HITL when human judgment is genuinely
    required.
-
-## Output
-
-After the interview is complete and the JSON artifact has been written via
-`write_section`, the Markdown file must be regenerated from the JSON to
-ensure zero drift between formats.
-
-
- ```
-tool: generate_artifact_markdown
-args:
-  artifactType: <type>
-  jsonPath: artifacts/<Type>.json
- ```
-
-This overwrites the Markdown file with content derived from the JSON.
-The JSON is the single source of truth; the Markdown is derived.
