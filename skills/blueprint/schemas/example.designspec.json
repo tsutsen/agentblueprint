@@ -1,0 +1,549 @@
+{
+  "version": "1.0.0",
+  "schemaVersion": "4.0.0",
+  "project": "LLMGateway",
+  "goalSpecVersion": "1.0.0",
+  "status": "draft",
+  "designGoals": [
+    {
+      "id": "DG-001",
+      "goal": "Zero configuration friction \u2014 a developer must be able to submit a first query within two minutes of installation.",
+      "rationale": "Adoption fails if setup is complex. The gateway must feel invisible.",
+      "name": "Zero configuration friction \u2014 a developer must be ",
+      "description": "Zero configuration friction \u2014 a developer must be able to submit a first query within two minutes of installation."
+    },
+    {
+      "id": "DG-002",
+      "goal": "Routing decisions must be inspectable without leaving the terminal.",
+      "rationale": "Developers distrust black boxes. Visibility builds confidence.",
+      "name": "Routing decisions must be inspectable without leav",
+      "description": "Routing decisions must be inspectable without leaving the terminal."
+    },
+    {
+      "id": "DG-003",
+      "goal": "All interactions must be operable without a mouse.",
+      "rationale": "Target users are developers who live in the terminal and keyboard-driven editors.",
+      "name": "All interactions must be operable without a mouse.",
+      "description": "All interactions must be operable without a mouse."
+    }
+  ],
+  "personas": [
+    {
+      "id": "power-developer",
+      "name": "Leon",
+      "role": "developer",
+      "goals": [
+        "Submit queries without thinking about which model to use.",
+        "Understand why a query was routed to a specific backend.",
+        "Override routing quickly when testing a specific model."
+      ],
+      "painPoints": [
+        "Manually switching between tools for different query types.",
+        "No visibility into which model handled a request or how long it took.",
+        "Configuration scattered across multiple tools."
+      ],
+      "technicalSkillLevel": "expert",
+      "notes": "Primary persona. Comfortable with CLI, config files, and log inspection.",
+      "description": "developer who wants to Submit queries without thinking about which model to use., Understand why a query was routed to a specific backend., Override routing quickly when testing a specific model. and is frustrated by Manually switching between tools for different query types., No visibility into which model handled a request or how long it took., Configuration scattered across multiple tools.."
+    }
+  ],
+  "userJourneys": [
+    {
+      "id": "UJ-001",
+      "name": "Submit first query",
+      "personaRef": "power-developer",
+      "usRefs": [
+        "US-001"
+      ],
+      "startingState": "Gateway is running. Developer has an OpenAI-compatible client configured to point at the gateway.",
+      "steps": [
+        {
+          "actor": "user",
+          "action": "Sends a query via their existing client tool.",
+          "screenRef": "status-view"
+        },
+        {
+          "actor": "system",
+          "action": "Classifies the query and routes to the best available backend."
+        },
+        {
+          "actor": "system",
+          "action": "Returns response in OpenAI-compatible format."
+        },
+        {
+          "actor": "user",
+          "action": "Receives response in their client tool with no visible difference from direct backend use."
+        }
+      ],
+      "desiredOutcome": "Developer receives a response without having selected a backend manually.",
+      "description": "End-to-end workflow: Gateway is running. Developer has an OpenAI-compatible client configured to point at the gateway.. Desired outcome: Developer receives a response without having selected a backend manually.."
+    },
+    {
+      "id": "UJ-002",
+      "name": "Inspect routing history",
+      "personaRef": "power-developer",
+      "usRefs": [
+        "US-003"
+      ],
+      "startingState": "Several queries have been processed. Developer wants to understand routing decisions.",
+      "steps": [
+        {
+          "actor": "user",
+          "action": "Runs the log inspection command.",
+          "screenRef": "log-view"
+        },
+        {
+          "actor": "system",
+          "action": "Displays a table of recent queries with backend, latency, and status."
+        },
+        {
+          "actor": "user",
+          "action": "Filters the log by backend or time range."
+        },
+        {
+          "actor": "system",
+          "action": "Displays the filtered result set."
+        }
+      ],
+      "desiredOutcome": "Developer can see exactly which backend handled each query and how long it took.",
+      "description": "End-to-end workflow: Several queries have been processed. Developer wants to understand routing decisions.. Desired outcome: Developer can see exactly which backend handled each query and how long it took.."
+    },
+    {
+      "id": "UJ-003",
+      "name": "Force a specific backend",
+      "personaRef": "power-developer",
+      "usRefs": [
+        "US-004"
+      ],
+      "startingState": "Developer wants to test a specific backend directly.",
+      "steps": [
+        {
+          "actor": "user",
+          "action": "Passes a backend override flag in their query."
+        },
+        {
+          "actor": "system",
+          "action": "Bypasses classification and routes directly to the specified backend."
+        },
+        {
+          "actor": "system",
+          "action": "Returns response and logs the override."
+        }
+      ],
+      "desiredOutcome": "Query is handled by the specified backend without changing global configuration.",
+      "description": "End-to-end workflow: Developer wants to test a specific backend directly.. Desired outcome: Query is handled by the specified backend without changing global configuration.."
+    },
+    {
+      "id": "UJ-004",
+      "name": "Configure backends",
+      "personaRef": "power-developer",
+      "usRefs": [
+        "US-002"
+      ],
+      "startingState": "Developer wants to add or reprioritise backends.",
+      "steps": [
+        {
+          "actor": "user",
+          "action": "Edits the configuration file in their editor.",
+          "screenRef": "config-view"
+        },
+        {
+          "actor": "system",
+          "action": "Detects configuration file change and reloads without restart."
+        },
+        {
+          "actor": "system",
+          "action": "Confirms reload via a log message."
+        }
+      ],
+      "desiredOutcome": "New backend configuration is active without restarting the gateway.",
+      "description": "End-to-end workflow: Developer wants to add or reprioritise backends.. Desired outcome: New backend configuration is active without restarting the gateway.."
+    }
+  ],
+  "informationArchitecture": {
+    "root": [
+      {
+        "name": "Status",
+        "screenRef": "status-view"
+      },
+      {
+        "name": "Log",
+        "screenRef": "log-view"
+      },
+      {
+        "name": "Config",
+        "screenRef": "config-view"
+      }
+    ],
+    "notes": "All views are CLI surfaces, not graphical screens. Navigation is via subcommands, not menus."
+  },
+  "screenInventory": [
+    {
+      "id": "status-view",
+      "name": "Status View",
+      "purpose": "Show the developer the current state of the gateway and all configured backends at a glance.",
+      "primaryActions": [
+        "View backend availability",
+        "View current config summary",
+        "View recent query count"
+      ],
+      "outputs": [
+        "Backend list with status",
+        "Active config path",
+        "Uptime and query count"
+      ],
+      "usRefs": [
+        "US-001"
+      ],
+      "description": "Show the developer the current state of the gateway and all configured backends at a glance."
+    },
+    {
+      "id": "log-view",
+      "name": "Log View",
+      "purpose": "Browse and filter the history of queries processed by the gateway.",
+      "primaryActions": [
+        "View query history",
+        "Filter by backend",
+        "Filter by time range"
+      ],
+      "outputs": [
+        "Query log table with backend, latency, status"
+      ],
+      "usRefs": [
+        "US-003"
+      ],
+      "description": "Browse and filter the history of queries processed by the gateway."
+    },
+    {
+      "id": "config-view",
+      "name": "Config View",
+      "purpose": "Inspect the currently loaded backend configuration.",
+      "primaryActions": [
+        "View active backends",
+        "View priority order",
+        "View last reload time"
+      ],
+      "outputs": [
+        "Backend list with priority",
+        "Config file path",
+        "Last reload timestamp"
+      ],
+      "usRefs": [
+        "US-002"
+      ],
+      "description": "Inspect the currently loaded backend configuration."
+    }
+  ],
+  "screenSpecs": [
+    {
+      "screenRef": "status-view",
+      "layout": "Single-column terminal output. Header line shows gateway version and uptime. Body shows backend table. Footer shows query count and last activity.",
+      "wireframe": "LLMGateway v1.0.0 \u2014 uptime 2h14m\n\nBACKENDS\n  \u25cf local/qwen3-27b      [available]  priority 1\n  \u25cf cloud/anthropic      [available]  priority 2\n  \u25cb local/llama-3-8b     [offline]    priority 3\n\nQueries processed: 47  |  Last query: 12s ago",
+      "components": [
+        {
+          "name": "Backend status table",
+          "purpose": "Shows each configured backend, its availability, and its priority.",
+          "designSystemRef": "StatusTable"
+        },
+        {
+          "name": "Gateway header",
+          "purpose": "Shows version and uptime so the developer knows the process is healthy.",
+          "designSystemRef": "Header"
+        },
+        {
+          "name": "Activity footer",
+          "purpose": "Shows total query count and recency so the developer knows the gateway is receiving traffic.",
+          "designSystemRef": "Footer"
+        }
+      ],
+      "states": [
+        {
+          "name": "healthy",
+          "description": "At least one backend is available. All components display normally."
+        },
+        {
+          "name": "degraded",
+          "description": "Some backends are offline. Offline backends shown with \u25cb indicator and muted text."
+        },
+        {
+          "name": "no-backends",
+          "description": "All backends are offline or unconfigured. Warning message shown. Query processing suspended."
+        }
+      ],
+      "interactions": [
+        {
+          "trigger": "Developer runs `gateway status`",
+          "response": "Gateway prints the status view to stdout and exits.",
+          "patternRef": "command-output"
+        },
+        {
+          "trigger": "Developer runs `gateway status --watch`",
+          "response": "Gateway refreshes the status view in-place every 2 seconds until interrupted.",
+          "patternRef": "watch-mode"
+        }
+      ]
+    },
+    {
+      "screenRef": "log-view",
+      "layout": "Paginated table output. Each row is one query. Columns: timestamp, backend, latency, status, query preview.",
+      "wireframe": "QUERY LOG  (showing 20 of 47)\n\nTIME         BACKEND           LATENCY  STATUS  QUERY\n2m ago       local/qwen3-27b   1.2s     ok      Refactor this function to...\n5m ago       cloud/anthropic   0.8s     ok      What is the capital of...\n12m ago      local/qwen3-27b   2.1s     ok      Write a test for...\n\n[n] next page  [p] prev page  [q] quit",
+      "components": [
+        {
+          "name": "Query log table",
+          "purpose": "Shows a paginated list of past queries with routing metadata.",
+          "designSystemRef": "DataTable",
+          "patternRefs": [
+            "pagination",
+            "keyboard-navigation"
+          ]
+        },
+        {
+          "name": "Filter bar",
+          "purpose": "Allows the developer to narrow the log by backend or time range.",
+          "designSystemRef": "FilterBar"
+        }
+      ],
+      "states": [
+        {
+          "name": "populated",
+          "description": "Queries exist. Table shows most recent first."
+        },
+        {
+          "name": "empty",
+          "description": "No queries have been processed yet. Explanatory message shown."
+        },
+        {
+          "name": "filtered",
+          "description": "A filter is active. Active filter shown above the table."
+        }
+      ],
+      "interactions": [
+        {
+          "trigger": "Developer presses n",
+          "response": "Log advances to the next page.",
+          "patternRef": "pagination"
+        },
+        {
+          "trigger": "Developer runs `gateway log --backend local/qwen3-27b`",
+          "response": "Log view pre-filtered to the specified backend.",
+          "patternRef": "command-output"
+        }
+      ]
+    },
+    {
+      "screenRef": "config-view",
+      "layout": "Single-column output showing active backends in priority order, config file path, and last reload timestamp.",
+      "wireframe": "ACTIVE CONFIG  (/home/leon/.config/llmgateway/config.toml)\nLast reloaded: 14 minutes ago\n\nBACKENDS (priority order)\n  1. local/qwen3-27b    http://localhost:8080\n  2. cloud/anthropic    https://api.anthropic.com\n  3. local/llama-3-8b   http://localhost:8081",
+      "components": [
+        {
+          "name": "Config header",
+          "purpose": "Shows the active config file path and last reload time.",
+          "designSystemRef": "Header"
+        },
+        {
+          "name": "Backend priority list",
+          "purpose": "Shows backends in the order the router will try them.",
+          "designSystemRef": "OrderedList"
+        }
+      ],
+      "states": [
+        {
+          "name": "loaded",
+          "description": "Valid config is active. All backends shown."
+        },
+        {
+          "name": "error",
+          "description": "Config failed to parse. Error message and file path shown. Previous valid config remains active."
+        }
+      ],
+      "interactions": [
+        {
+          "trigger": "Developer runs `gateway config`",
+          "response": "Config view printed to stdout.",
+          "patternRef": "command-output"
+        }
+      ]
+    }
+  ],
+  "interactionPatterns": [
+    {
+      "id": "command-output",
+      "name": "Command Output",
+      "description": "A command runs, prints its output to stdout, and exits with code 0 on success or non-zero on failure. Output is human-readable by default and machine-parseable with --json flag.",
+      "examples": [
+        "gateway status",
+        "gateway log",
+        "gateway config"
+      ]
+    },
+    {
+      "id": "watch-mode",
+      "name": "Watch Mode",
+      "description": "A command runs continuously, refreshing its output in-place at a fixed interval. Interrupted by Ctrl+C. Exit code 0 on clean interrupt.",
+      "examples": [
+        "gateway status --watch"
+      ],
+      "keyboardShortcuts": [
+        {
+          "keys": "Ctrl+C",
+          "action": "Exit watch mode cleanly."
+        }
+      ]
+    },
+    {
+      "id": "pagination",
+      "name": "Pagination",
+      "description": "Long output is split into pages. User navigates with keyboard. Current page and total shown in footer.",
+      "examples": [
+        "gateway log"
+      ],
+      "keyboardShortcuts": [
+        {
+          "keys": "n",
+          "action": "Next page."
+        },
+        {
+          "keys": "p",
+          "action": "Previous page."
+        },
+        {
+          "keys": "q",
+          "action": "Quit paginated view."
+        }
+      ]
+    },
+    {
+      "id": "keyboard-navigation",
+      "name": "Keyboard Navigation",
+      "description": "All interactive views are fully operable without a mouse. Every action has a keyboard binding.",
+      "examples": [
+        "Log view pagination",
+        "Filter application"
+      ]
+    }
+  ],
+  "visualDesignRequirements": [
+    {
+      "id": "VDR-001",
+      "description": "All output must render correctly in a standard 80-column terminal without line wrapping.",
+      "rationale": "Developers use split-pane terminals and small windows.",
+      "name": "All output must render correctly in a standard 80-..."
+    },
+    {
+      "id": "VDR-002",
+      "description": "Status indicators must use both colour and symbol so they are readable in monochrome terminals and by colour-blind users.",
+      "rationale": "Accessibility and compatibility. \u25cf for available, \u25cb for offline.",
+      "name": "Status indicators must use both colour and symbol..."
+    },
+    {
+      "id": "VDR-003",
+      "description": "All views must render correctly in both light and dark terminal themes.",
+      "rationale": "Developers use varied terminal colour schemes.",
+      "name": "All views must render correctly in both light and..."
+    }
+  ],
+  "designSystem": {
+    "baseStyle": "Terminal / CLI \u2014 monospaced, minimal, ANSI colour optional",
+    "components": [
+      {
+        "name": "Header",
+        "purpose": "Identifies the view and shows contextual metadata such as version or file path.",
+        "usageNotes": "First line of every view. Bold text. No decoration."
+      },
+      {
+        "name": "StatusTable",
+        "purpose": "Shows a list of named entities with a status indicator, label, and metadata columns.",
+        "variants": [
+          "available",
+          "offline",
+          "unknown"
+        ],
+        "usageNotes": "Use \u25cf for available, \u25cb for offline. Align columns with fixed-width spacing."
+      },
+      {
+        "name": "DataTable",
+        "purpose": "Shows tabular data with named columns and paginated rows.",
+        "usageNotes": "Column headers bold. Alternating row dimming optional. Truncate long values with ellipsis."
+      },
+      {
+        "name": "FilterBar",
+        "purpose": "Shows the currently active filter above a table.",
+        "usageNotes": "Only visible when a filter is active. Format: 'Filter: <key>=<value>'."
+      },
+      {
+        "name": "OrderedList",
+        "purpose": "Shows items with explicit numeric priority.",
+        "usageNotes": "Two-space indent. Number followed by dot and name."
+      },
+      {
+        "name": "Footer",
+        "purpose": "Shows summary counts, navigation hints, or keyboard shortcuts at the bottom of a view.",
+        "usageNotes": "Dimmed text. Separated from body by a blank line."
+      }
+    ]
+  },
+  "accessibilityRequirements": [
+    {
+      "id": "AR-001",
+      "description": "Every interactive action must be triggerable via keyboard with no mouse required.",
+      "reqRefs": [
+        "REQ-001"
+      ],
+      "name": "Every interactive action must be triggerable via k..."
+    },
+    {
+      "id": "AR-002",
+      "description": "Status indicators must not rely on colour alone to convey meaning.",
+      "rationale": "Required for colour-blind users and monochrome terminals.",
+      "name": "Status indicators must not rely on colour alone to..."
+    },
+    {
+      "id": "AR-003",
+      "description": "All output must be parseable by screen readers when --json flag is used.",
+      "rationale": "Machine-readable output doubles as accessible output for screen reader users piping to assistive tools.",
+      "name": "All output must be parseable by screen readers whe..."
+    }
+  ],
+  "uxAcceptanceCriteria": [
+    {
+      "id": "UXAC-001",
+      "description": "A developer can submit a first query within 2 minutes of installation with no backend manually specified.",
+      "refs": {
+        "usRefs": [
+          "US-001"
+        ]
+      },
+      "verificationMethod": "Timed manual walkthrough from fresh install."
+    },
+    {
+      "id": "UXAC-002",
+      "description": "The log view shows backend, latency, and status for every past query with no additional commands.",
+      "refs": {
+        "usRefs": [
+          "US-003"
+        ]
+      },
+      "verificationMethod": "Manual inspection after processing 5 test queries."
+    },
+    {
+      "id": "UXAC-003",
+      "description": "All views are fully navigable using only keyboard input.",
+      "refs": {
+        "reqRefs": [
+          "REQ-001"
+        ]
+      },
+      "verificationMethod": "Manual walkthrough of all views without touching the mouse."
+    },
+    {
+      "id": "UXAC-004",
+      "description": "A backend override flag routes the query to the specified backend without modifying the config file.",
+      "refs": {
+        "usRefs": [
+          "US-004"
+        ]
+      },
+      "verificationMethod": "Manual test: override flag used, log inspected to confirm correct backend."
+    }
+  ]
+}

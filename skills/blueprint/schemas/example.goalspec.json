@@ -1,0 +1,194 @@
+{
+  "version": "1.0.0",
+  "schemaVersion": "4.0.0",
+  "project": "LLMGateway",
+  "status": "draft",
+  "objective": {
+    "statement": "A local-first tool that routes developer queries to the most capable available LLM based on task complexity, minimising latency and cost.",
+    "for": "Developers running local and cloud LLM backends simultaneously.",
+    "problem": "Developers must manually decide which LLM to use per task, switching tools and accepting unnecessary latency or cost for simple queries.",
+    "confirmedAfterCompletion": false
+  },
+  "functionalRequirements": [
+    {
+      "id": "REQ-001",
+      "actor": "developer",
+      "description": "Developer can submit a query and receive a response routed to an appropriate backend.",
+      "notes": "Routing decision is invisible to the developer unless they opt into verbose mode."
+    },
+    {
+      "id": "REQ-002",
+      "actor": "developer",
+      "description": "Developer can configure which backends are available and their priority order."
+    },
+    {
+      "id": "REQ-003",
+      "actor": "developer",
+      "description": "Developer can view a log of past queries, which backend handled each, and response latency."
+    },
+    {
+      "id": "REQ-004",
+      "actor": "developer",
+      "description": "Developer can force a specific backend for a query by passing an explicit override flag."
+    },
+    {
+      "id": "REQ-005",
+      "actor": "gateway",
+      "description": "Gateway falls back to the next available backend if the preferred backend is unavailable."
+    }
+  ],
+  "nonFunctionalRequirements": [
+    {
+      "id": "NFR-001",
+      "category": "Performance",
+      "scale": "Routing overhead in milliseconds added to a query round-trip",
+      "meter": "Measured locally with a no-op backend at 50 sequential queries",
+      "must": "< 50ms",
+      "plan": "< 20ms",
+      "wish": "< 5ms",
+      "name": "Performance",
+      "description": "Performance requirement: < 50ms"
+    },
+    {
+      "id": "NFR-002",
+      "category": "Reliability",
+      "scale": "Percentage of queries that fail due to gateway error (not backend error)",
+      "meter": "Error rate measured over 1000 consecutive queries in integration test",
+      "must": "< 1%",
+      "plan": "< 0.1%",
+      "wish": "0%",
+      "name": "Reliability",
+      "description": "Reliability requirement: < 1%"
+    },
+    {
+      "id": "NFR-003",
+      "category": "Portability",
+      "scale": "Supported operating systems without code changes",
+      "meter": "Manual smoke test on each platform after each release",
+      "must": "Linux x86_64",
+      "plan": "Linux x86_64 and macOS arm64",
+      "wish": "TBD \u2014 Windows support under evaluation",
+      "name": "Portability",
+      "description": "Portability requirement: Linux x86_64"
+    }
+  ],
+  "userStories": [
+    {
+      "id": "US-001",
+      "actor": "developer",
+      "capability": "submit a query without specifying a backend",
+      "outcome": "I can focus on my task instead of managing which model to use",
+      "reqRefs": [
+        "REQ-001",
+        "REQ-005"
+      ],
+      "description": "As a developer, I want to submit a query without specifying a backend so that I can focus on my task instead of managing which model to use"
+    },
+    {
+      "id": "US-002",
+      "actor": "developer",
+      "capability": "configure backend priority from a config file",
+      "outcome": "I can adjust routing behaviour without modifying code",
+      "reqRefs": [
+        "REQ-002"
+      ],
+      "description": "As a developer, I want to configure backend priority from a config file so that I can adjust routing behaviour without modifying code"
+    },
+    {
+      "id": "US-003",
+      "actor": "developer",
+      "capability": "inspect which backend handled each of my past queries",
+      "outcome": "I can understand routing decisions and tune my configuration",
+      "reqRefs": [
+        "REQ-003"
+      ],
+      "description": "As a developer, I want to inspect which backend handled each of my past queries so that I can understand routing decisions and tune my configuration"
+    },
+    {
+      "id": "US-004",
+      "actor": "developer",
+      "capability": "force a specific backend for a single query",
+      "outcome": "I can test a backend directly without changing my configuration",
+      "reqRefs": [
+        "REQ-004"
+      ],
+      "description": "As a developer, I want to force a specific backend for a single query so that I can test a backend directly without changing my configuration"
+    }
+  ],
+  "successCriteria": [
+    {
+      "id": "SC-001",
+      "description": "A query submitted without a backend override is routed and returns a response with no manual backend selection required.",
+      "refs": {
+        "reqRefs": [
+          "REQ-001"
+        ]
+      },
+      "verificationMethod": "Automated integration test with two configured backends."
+    },
+    {
+      "id": "SC-002",
+      "description": "When the preferred backend is down, the gateway routes to the next configured backend and the query succeeds.",
+      "refs": {
+        "reqRefs": [
+          "REQ-005"
+        ]
+      },
+      "verificationMethod": "Integration test with primary backend disabled."
+    },
+    {
+      "id": "SC-003",
+      "description": "Routing overhead does not exceed 50ms on the reference machine at 50 sequential queries.",
+      "refs": {
+        "nfrRefs": [
+          "NFR-001"
+        ]
+      },
+      "verificationMethod": "Latency benchmark with no-op backend."
+    },
+    {
+      "id": "SC-004",
+      "description": "All REQ-001 through REQ-005 pass their acceptance tests.",
+      "refs": {
+        "reqRefs": [
+          "REQ-001",
+          "REQ-002",
+          "REQ-003",
+          "REQ-004",
+          "REQ-005"
+        ]
+      },
+      "verificationMethod": "Full acceptance test suite."
+    }
+  ],
+  "nonGoals": [
+    {
+      "id": "NG-001",
+      "name": "Multi-user access control",
+      "capability": "Multi-user access control",
+      "description": "The system will not support multiple users or account management in this release.",
+      "reason": "Deferred to a future version; single-developer use only for this release."
+    },
+    {
+      "id": "NG-002",
+      "name": "Web-based management UI",
+      "capability": "Web-based management UI",
+      "description": "No web interface will be provided; configuration is done via CLI and config files.",
+      "reason": "Out of scope; CLI and config file are sufficient for the target user."
+    },
+    {
+      "id": "NG-003",
+      "name": "Model fine-tuning or training",
+      "capability": "Fine-tuning or training of models",
+      "description": "The gateway will not modify or train models; it only routes to existing backends.",
+      "reason": "Out of scope; gateway routes to existing backends, does not modify them."
+    },
+    {
+      "id": "NG-004",
+      "name": "Cross-provider billing and cost tracking",
+      "capability": "Billing and cost tracking across cloud providers",
+      "description": "Detailed cost tracking and billing integration is not included in this release.",
+      "reason": "Deferred; cost visibility is a logging concern handled in a later version."
+    }
+  ]
+}

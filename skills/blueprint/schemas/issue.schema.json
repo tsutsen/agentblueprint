@@ -1,0 +1,182 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Issue",
+  "description": "A single vertical slice decomposed from an Epic. Each issue cuts end-to-end through all relevant integration layers and is independently implementable.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "artifact",
+    "id",
+    "title",
+    "type",
+    "status",
+    "epic",
+    "blocked_by",
+    "milestone",
+    "created",
+    "updated"
+  ],
+  "definitions": {
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier. Format: GL-NNN (3-digit zero-padded).",
+      "pattern": "^GL-\\d{3}$"
+    },
+    "scopeItem": {
+      "type": "object",
+      "required": [
+        "description"
+      ],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Description of the scope item."
+        },
+        "glossaryRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/glId"
+          },
+          "description": "Glossary term identifiers (GL-NNN) referenced in this scope item.",
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "acceptanceCriterion": {
+      "type": "object",
+      "required": [
+        "description"
+      ],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The acceptance criterion description."
+        },
+        "glossaryRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/glId"
+          },
+          "description": "Glossary term identifiers (GL-NNN) referenced in this acceptance criterion.",
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the Issue schema this document conforms to. Must be '1.0.0'.",
+      "const": "1.0.0"
+    },
+    "artifact": {
+      "type": "string",
+      "const": "Issue",
+      "description": "Always 'Issue'."
+    },
+    "id": {
+      "type": "string",
+      "description": "Issue identifier. Format: IS-NNN (3-digit zero-padded, project-global, sequential).",
+      "pattern": "^IS-\\d{3}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 120,
+      "description": "Short, action-oriented title."
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "AFK",
+        "HITL"
+      ],
+      "description": "AFK: agent can implement without human interaction. HITL: requires human input at some point."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "needs_review",
+        "complete"
+      ],
+      "description": "Current status of the issue."
+    },
+    "epic": {
+      "type": "string",
+      "description": "Parent epic identifier. Format: EP-NNN (3-digit zero-padded).",
+      "pattern": "^EP-\\d{3}$"
+    },
+    "blocked_by": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^IS-\\d{3}$"
+      },
+      "description": "List of IS-NNN identifiers that block this issue. Empty array if none.",
+      "uniqueItems": true
+    },
+    "milestone": {
+      "type": "string",
+      "description": "Milestone identifier. Format: M1, M2, etc.",
+      "pattern": "^M\\d+$"
+    },
+    "created": {
+      "type": "string",
+      "description": "Issue creation date. Format: YYYY-MM-DD.",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "updated": {
+      "type": "string",
+      "description": "Last update date. Format: YYYY-MM-DD.",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "titleGlossaryRefs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/glId"
+      },
+      "description": "Glossary term identifiers (GL-NNN) referenced in this issue's title.",
+      "uniqueItems": true
+    },
+    "inScope": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/scopeItem"
+      },
+      "description": "Specific deliverables and behaviors this issue covers (subset of parent epic scope)."
+    },
+    "outOfScope": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/scopeItem"
+      },
+      "description": "Things explicitly excluded from this issue to prevent scope creep."
+    },
+    "acceptanceCriteria": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/acceptanceCriterion"
+      },
+      "description": "Verifiable acceptance criteria for this issue."
+    }
+  },
+  "additionalProperties": false,
+  "outputFiles": [
+    "tasks/epics/EP-NNN/IS-NNN/IS-NNN.md",
+    "tasks/epics/EP-NNN/IS-NNN/IS-NNN.json"
+  ],
+  "specDependencies": {
+    "taskPlan": {
+      "required": true
+    },
+    "epic": {
+      "required": true
+    }
+  }
+}

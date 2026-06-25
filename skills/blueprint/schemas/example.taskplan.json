@@ -1,0 +1,241 @@
+{
+  "version": "1.0.0",
+  "schemaVersion": "1.0.0",
+  "project": "LLMGateway",
+  "status": "draft",
+  "milestones": [
+    {
+      "id": "M1",
+      "name": "Core routing engine",
+      "outcome": "A developer can submit a query and receive a response routed to a backend without any configuration.",
+      "epics": ["EP-001", "EP-002", "EP-003"]
+    },
+    {
+      "id": "M2",
+      "name": "Backend management and configuration",
+      "outcome": "A developer can configure, inspect, and override backends via CLI.",
+      "epics": ["EP-004", "EP-005"]
+    },
+    {
+      "id": "M3",
+      "name": "Observability and log inspection",
+      "outcome": "A developer can inspect query history and routing decisions from the terminal.",
+      "epics": ["EP-006", "EP-007"]
+    }
+  ],
+  "epics": [
+    {
+      "id": "EP-001",
+      "title": "Implement query classifier",
+      "status": "not_started",
+      "milestone": "M1",
+      "requirements": ["REQ-001"],
+      "summary": "Analyse query content and assign a complexity tier to inform routing decisions.",
+      "objective": "Enable the gateway to classify queries into simple, moderate, and complex tiers.",
+      "scope": {
+        "inScope": [
+          "Keyword-based complexity analysis",
+          "Three-tier classification (simple, moderate, complex)",
+          "Classification must complete within 10ms"
+        ],
+        "outOfScope": [
+          "ML-based classification — deferred to future version",
+          "Context-aware classification — out of scope for now"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Simple queries (greetings, short answers) are classified as SIMPLE",
+        "Moderate queries (code snippets, multi-step tasks) are classified as MODERATE",
+        "Complex queries (full application requests) are classified as COMPLEX",
+        "Classification completes in under 10ms for 50 sequential queries"
+      ],
+      "dependencies": {
+        "blockedBy": [],
+        "blocks": ["EP-002", "EP-003"]
+      },
+      "notes": ""
+    },
+    {
+      "id": "EP-002",
+      "title": "Implement router core",
+      "status": "not_started",
+      "milestone": "M1",
+      "requirements": ["REQ-001", "REQ-005"],
+      "summary": "Select the appropriate backend for a query based on classification, availability, and configured priority.",
+      "objective": "Route queries to the best available backend with automatic fallback.",
+      "scope": {
+        "inScope": [
+          "Priority-based backend selection",
+          "Automatic fallback to next available backend",
+          "Classification-aware routing (complex queries skip simple-only backends)"
+        ],
+        "outOfScope": [
+          "Load balancing across backends — deferred",
+          "Circuit breaker pattern — deferred"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Query is routed to the highest priority available backend",
+        "When preferred backend is down, query is routed to the next available backend",
+        "Complex queries are not routed to backends that cannot handle them"
+      ],
+      "dependencies": {
+        "blockedBy": ["EP-001"],
+        "blocks": ["EP-003"]
+      },
+      "notes": ""
+    },
+    {
+      "id": "EP-003",
+      "title": "Implement OpenAI-compatible API server",
+      "status": "not_started",
+      "milestone": "M1",
+      "requirements": ["REQ-001"],
+      "summary": "Expose an HTTP interface compatible with OpenAI Chat Completions API.",
+      "objective": "Allow existing developer tools to connect to the gateway without modification.",
+      "scope": {
+        "inScope": [
+          "HTTP server on configurable port",
+          "OpenAI Chat Completions endpoint (/v1/chat/completions)",
+          "Request parsing and response formatting"
+        ],
+        "outOfScope": [
+          "OpenAI Embeddings endpoint — out of scope",
+          "OpenAI Completions endpoint (legacy) — out of scope"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Existing OpenAI-compatible client connects to gateway without reconfiguration",
+        "Query submitted via the gateway endpoint is routed and response returned in OpenAI format",
+        "Gateway adds minimal latency (< 50ms) to the round-trip"
+      ],
+      "dependencies": {
+        "blockedBy": ["EP-002"],
+        "blocks": []
+      },
+      "notes": ""
+    },
+    {
+      "id": "EP-004",
+      "title": "Implement backend configuration",
+      "status": "not_started",
+      "milestone": "M2",
+      "requirements": ["REQ-002"],
+      "summary": "Load, validate, and hot-reload backend configuration from a TOML file.",
+      "objective": "Allow developers to configure backends without code changes.",
+      "scope": {
+        "inScope": [
+          "TOML configuration file parsing",
+          "Backend validation (required fields, URL format)",
+          "File watching for hot-reload",
+          "Default configuration generation on first run"
+        ],
+        "outOfScope": [
+          "GUI configuration tool — out of scope",
+          "Multi-file configuration — out of scope"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Default configuration file is generated on first run with sensible defaults",
+        "Invalid configuration is rejected with a clear error message",
+        "Configuration changes are detected and applied without restarting the gateway"
+      ],
+      "dependencies": {
+        "blockedBy": [],
+        "blocks": ["EP-005"]
+      },
+      "notes": ""
+    },
+    {
+      "id": "EP-005",
+      "title": "Implement backend override flag",
+      "status": "not_started",
+      "milestone": "M2",
+      "requirements": ["REQ-004"],
+      "summary": "Allow developers to force a specific backend for a single query via an override flag.",
+      "objective": "Enable direct testing of specific backends without changing configuration.",
+      "scope": {
+        "inScope": [
+          "Override flag in the API request",
+          "Validation that override backend ID exists",
+          "Bypass classification when override is provided"
+        ],
+        "outOfScope": [
+          "Persistent override (config-level) — out of scope",
+          "Override for batch queries — out of scope"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Query with override flag is routed to the specified backend",
+        "Invalid override backend ID returns INVALID_OVERRIDE error",
+        "Override does not affect global configuration"
+      ],
+      "dependencies": {
+        "blockedBy": ["EP-004"],
+        "blocks": []
+      },
+      "notes": ""
+    },
+    {
+      "id": "EP-006",
+      "title": "Implement query log persistence",
+      "status": "not_started",
+      "milestone": "M3",
+      "requirements": ["REQ-003"],
+      "summary": "Persist query history including routing decisions, backend used, and response latency.",
+      "objective": "Provide a durable record of all queries for inspection and debugging.",
+      "scope": {
+        "inScope": [
+          "Structured log entry creation per query",
+          "Local file-based storage (JSON lines)",
+          "Log retention with size-based rotation",
+          "Timestamp recording for each query"
+        ],
+        "outOfScope": [
+          "Database-backed storage — out of scope",
+          "Log shipping to external systems — deferred"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Every completed query produces a log entry",
+        "Log entries include backend used, latency, and outcome",
+        "Log file rotation prevents unbounded disk growth"
+      ],
+      "dependencies": {
+        "blockedBy": ["EP-003"],
+        "blocks": ["EP-007"]
+      },
+      "notes": ""
+    },
+    {
+      "id": "EP-007",
+      "title": "Implement log inspection CLI",
+      "status": "not_started",
+      "milestone": "M3",
+      "requirements": ["REQ-003"],
+      "summary": "Browse and filter query history from the terminal.",
+      "objective": "Allow developers to understand routing decisions and tune configuration.",
+      "scope": {
+        "inScope": [
+          "Paginated log view with keyboard navigation",
+          "Filter by backend and time range",
+          "Display backend, latency, status, and query preview"
+        ],
+        "outOfScope": [
+          "Log export to CSV/JSON — deferred",
+          "Graphical log viewer — out of scope"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Developer can view recent queries with backend, latency, and status",
+        "Log view is fully navigable with keyboard (n, p, q)",
+        "Filtering by backend shows only matching entries"
+      ],
+      "dependencies": {
+        "blockedBy": ["EP-006"],
+        "blocks": []
+      },
+      "notes": ""
+    }
+  ]
+}

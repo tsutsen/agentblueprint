@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "glossary.schema.json",
+  "title": "Glossary",
+  "description": "Project vocabulary. Defines all domain terms used across specs. Version 2.0.0.",
+  "type": "object",
+  "required": [
+    "version",
+    "schemaVersion",
+    "project",
+    "terms"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "const": "2.0.0"
+    },
+    "project": {
+      "type": "string",
+      "description": "Must match project name across all other specs.",
+      "minLength": 1
+    },
+    "terms": {
+      "type": "array",
+      "description": "All domain terms. Each must be independently understandable.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "term",
+          "definition"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of this glossary term. Synonym for 'term' \u2014 use for graph visualization consistency. If omitted, falls back to 'term'.",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of this glossary term. Synonym for 'definition' \u2014 use for graph visualization consistency. If omitted, falls back to 'definition'.",
+            "minLength": 10
+          },
+          "examples": {
+            "type": "array",
+            "description": "Optional concrete examples that clarify the definition.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "synonyms": {
+            "type": "array",
+            "description": "Other names for this term used in the project. Synonyms should not have their own entry.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "relatedTerms": {
+            "type": "array",
+            "description": "GL-NNN identifiers of other terms in this glossary that are closely related.",
+            "items": {
+              "type": "string",
+              "pattern": "^GL-\\d{3}$"
+            }
+          },
+          "category": {
+            "type": "string",
+            "description": "Required. Grouping tag for the term.",
+            "enum": [
+              "domain",
+              "technical",
+              "security",
+              "ui"
+            ]
+          },
+          "reqRefs": {
+            "type": "array",
+            "description": "REQ-IDs from GoalSpec that reference this term. Populated during requirement writing. Use for GL\u2192REQ traceability.",
+            "items": {
+              "type": "string",
+              "pattern": "^REQ-\\d{3}$"
+            }
+          },
+          "fnRefs": {
+            "type": "array",
+            "description": "FN-IDs from ApiSpec that use this term. Populated during API design. Use for GL\u2192FN traceability.",
+            "items": {
+              "type": "string",
+              "pattern": "^FN-[a-z][A-Za-z0-9]*$"
+            }
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique glossary term identifier. Format: GL-NNN (3-digit zero-padded, sequential).",
+            "pattern": "^GL-\\d{3}$"
+          }
+        }
+      },
+      "uniqueItems": true
+    }
+  },
+  "definitions": {
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier (GL-NNN).",
+      "pattern": "^GL-\\d{3}$"
+    }
+  },
+  "outputFiles": [
+    "artifacts/Glossary.md",
+    "artifacts/Glossary.json"
+  ],
+  "specDependencies": {
+    "goalSpec": {
+      "required": true
+    }
+  }
+}

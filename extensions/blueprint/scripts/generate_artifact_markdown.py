@@ -475,7 +475,7 @@ def main():
     parser.add_argument(
         "--schemas-dir",
         default=None,
-        help="Path to schemas/json directory (default: auto-detect)",
+        help="Path to schemas directory (default: auto-detect)",
     )
     parser.add_argument(
         "--artifacts-dir",
@@ -487,7 +487,7 @@ def main():
     # Auto-detect paths
     script_dir = Path(__file__).resolve().parent
     if args.schemas_dir is None:
-        schemas_dir = str(script_dir.parent.parent.parent / "skills" / "blueprint" / "schemas" / "json")
+        schemas_dir = str(script_dir.parent.parent.parent / "skills" / "blueprint" / "schemas")
     else:
         schemas_dir = args.schemas_dir
 

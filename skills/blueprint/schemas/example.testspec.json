@@ -1,0 +1,396 @@
+{
+  "version": "1.0.0",
+  "schemaVersion": "3.0.0",
+  "project": "LLMGateway",
+  "apiSpecVersion": "1.0.0",
+  "dataSpecVersion": "1.0.0",
+  "status": "draft",
+  "verificationStatus": "pending",
+  "functionCoverage": [
+    {
+      "fnRef": "FN-routeQuery",
+      "happyPathCount": 2,
+      "edgeCaseCount": 1,
+      "errorPathCount": 2,
+      "outOfScope": [
+        {
+          "description": "Backend health check polling interval \u2014 implementation detail.",
+          "glossaryRefs": []
+        },
+        {
+          "description": "Classifier model loading \u2014 not part of the routing contract.",
+          "glossaryRefs": []
+        }
+      ]
+    },
+    {
+      "fnRef": "FN-cancelQuery",
+      "happyPathCount": 1,
+      "edgeCaseCount": 0,
+      "errorPathCount": 2,
+      "outOfScope": [
+        {
+          "description": "Graceful shutdown of in-flight backend request \u2014 implementation detail.",
+          "glossaryRefs": []
+        },
+        {
+          "description": "Notification to caller that query was cancelled \u2014 not part of the function contract.",
+          "glossaryRefs": []
+        }
+      ]
+    },
+    {
+      "fnRef": "FN-getBackend",
+      "happyPathCount": 1,
+      "edgeCaseCount": 0,
+      "errorPathCount": 1,
+      "outOfScope": [
+        {
+          "description": "Caching behaviour \u2014 not part of the contract.",
+          "glossaryRefs": []
+        },
+        {
+          "description": "Backend availability refresh \u2014 handled by backend-pool.",
+          "glossaryRefs": []
+        }
+      ]
+    },
+    {
+      "fnRef": "FN-listBackends",
+      "happyPathCount": 1,
+      "edgeCaseCount": 1,
+      "errorPathCount": 0,
+      "outOfScope": [
+        {
+          "description": "Sorting algorithm for priority ordering \u2014 implementation detail.",
+          "glossaryRefs": []
+        },
+        {
+          "description": "Pagination for large backend lists \u2014 not in scope.",
+          "glossaryRefs": []
+        }
+      ]
+    },
+    {
+      "fnRef": "FN-getQueryHistory",
+      "happyPathCount": 1,
+      "edgeCaseCount": 1,
+      "errorPathCount": 0,
+      "outOfScope": [
+        {
+          "description": "Log retention policy \u2014 handled by config-loader.",
+          "glossaryRefs": []
+        },
+        {
+          "description": "Full-text search on log entries \u2014 deferred to future version.",
+          "glossaryRefs": []
+        }
+      ]
+    },
+    {
+      "fnRef": "FN-getQuery",
+      "happyPathCount": 1,
+      "edgeCaseCount": 0,
+      "errorPathCount": 1,
+      "outOfScope": [
+        {
+          "description": "Caching behaviour \u2014 not part of the contract.",
+          "glossaryRefs": []
+        },
+        {
+          "description": "Soft-deleted query visibility \u2014 not documented in ApiSpec.",
+          "glossaryRefs": []
+        }
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "id": "TST-routeQuery-001",
+      "fnRef": "FN-routeQuery",
+      "category": "happy-path",
+      "description": "Routes a simple query to the highest priority available backend.",
+      "input": {
+        "content": "What is 2+2?"
+      },
+      "expectedOutput": {
+        "id": "qry_001",
+        "status": "COMPLETED",
+        "content": "What is 2+2?"
+      },
+      "expectedOutputType": "Query",
+      "contractClause": "Routes a query to the most appropriate backend based on classification and availability.",
+      "reqRefs": [
+        "REQ-001"
+      ]
+    },
+    {
+      "id": "TST-routeQuery-002",
+      "fnRef": "FN-routeQuery",
+      "category": "happy-path",
+      "description": "Routes a query to a specific backend when overrideBackendId is provided.",
+      "input": {
+        "content": "Translate to French",
+        "overrideBackendId": "bck_cloud_001"
+      },
+      "expectedOutput": {
+        "id": "qry_002",
+        "status": "COMPLETED",
+        "overrideBackendId": "bck_cloud_001"
+      },
+      "expectedOutputType": "Query",
+      "contractClause": "Bypasses classification when overrideBackendId is provided.",
+      "reqRefs": [
+        "REQ-001"
+      ],
+      "nfrRefs": [
+        "NFR-002"
+      ]
+    },
+    {
+      "id": "TST-routeQuery-003",
+      "fnRef": "FN-routeQuery",
+      "category": "edge-case",
+      "description": "Routes a complex query to the most capable available backend.",
+      "input": {
+        "content": "Write a full web application with authentication and database integration"
+      },
+      "expectedOutput": {
+        "id": "qry_003",
+        "status": "COMPLETED"
+      },
+      "expectedOutputType": "Query",
+      "contractClause": "Complex queries are routed to the most capable backend.",
+      "reqRefs": [
+        "REQ-013"
+      ]
+    },
+    {
+      "id": "TST-routeQuery-004",
+      "fnRef": "FN-routeQuery",
+      "category": "error-path",
+      "description": "Throws NO_BACKENDS_AVAILABLE when no backends are available.",
+      "input": {
+        "content": "Hello"
+      },
+      "errorCode": "NO_BACKENDS_AVAILABLE",
+      "expectedError": {
+        "code": "NO_BACKENDS_AVAILABLE",
+        "returnType": "ServiceUnavailableError"
+      },
+      "contractClause": "Throws NO_BACKENDS_AVAILABLE when no backends are currently available."
+    },
+    {
+      "id": "TST-routeQuery-005",
+      "fnRef": "FN-routeQuery",
+      "category": "error-path",
+      "description": "Throws INVALID_OVERRIDE when overrideBackendId does not match any configured backend.",
+      "input": {
+        "content": "Hello",
+        "overrideBackendId": "bck_nonexistent"
+      },
+      "errorCode": "INVALID_OVERRIDE",
+      "expectedError": {
+        "code": "INVALID_OVERRIDE",
+        "returnType": "ValidationError"
+      },
+      "contractClause": "Throws INVALID_OVERRIDE when the overrideBackendId does not match any configured backend."
+    },
+    {
+      "id": "TST-cancelQuery-001",
+      "fnRef": "FN-cancelQuery",
+      "category": "happy-path",
+      "description": "Cancels an in-flight PENDING query and returns it with FAILED status.",
+      "input": {
+        "queryId": "qry_001"
+      },
+      "expectedOutput": {
+        "id": "qry_001",
+        "status": "FAILED"
+      },
+      "expectedOutputType": "Query",
+      "contractClause": "Cancels an in-flight query and returns it with FAILED status.",
+      "reqRefs": [
+        "REQ-001"
+      ]
+    },
+    {
+      "id": "TST-cancelQuery-002",
+      "fnRef": "FN-cancelQuery",
+      "category": "error-path",
+      "description": "Throws NOT_FOUND when the query ID does not exist.",
+      "input": {
+        "queryId": "qry_nonexistent"
+      },
+      "errorCode": "NOT_FOUND",
+      "expectedError": {
+        "code": "NOT_FOUND",
+        "returnType": "NotFoundError"
+      },
+      "contractClause": "Throws NOT_FOUND when no query exists with this ID."
+    },
+    {
+      "id": "TST-cancelQuery-003",
+      "fnRef": "FN-cancelQuery",
+      "category": "error-path",
+      "description": "Throws ALREADY_COMPLETED when the query has already finished.",
+      "input": {
+        "queryId": "qry_completed"
+      },
+      "errorCode": "ALREADY_COMPLETED",
+      "expectedError": {
+        "code": "ALREADY_COMPLETED",
+        "returnType": "ConflictError"
+      },
+      "contractClause": "Throws ALREADY_COMPLETED when the query has already completed or been cancelled."
+    },
+    {
+      "id": "TST-getBackend-001",
+      "fnRef": "FN-getBackend",
+      "category": "happy-path",
+      "description": "Returns the backend matching the given ID.",
+      "input": {
+        "backendId": "bck_001"
+      },
+      "expectedOutput": {
+        "id": "bck_001",
+        "name": "Ollama Local",
+        "type": "LOCAL",
+        "isActive": true
+      },
+      "expectedOutputType": "Backend",
+      "contractClause": "Fetches a backend by ID and returns the matching Backend.",
+      "reqRefs": [
+        "REQ-002"
+      ]
+    },
+    {
+      "id": "TST-getBackend-002",
+      "fnRef": "FN-getBackend",
+      "category": "error-path",
+      "description": "Throws NOT_FOUND when no backend exists with the given ID.",
+      "input": {
+        "backendId": "bck_nonexistent"
+      },
+      "errorCode": "NOT_FOUND",
+      "expectedError": {
+        "code": "NOT_FOUND",
+        "returnType": "NotFoundError"
+      },
+      "contractClause": "Throws NOT_FOUND when no backend exists with this ID."
+    },
+    {
+      "id": "TST-listBackends-001",
+      "fnRef": "FN-listBackends",
+      "category": "happy-path",
+      "description": "Returns all configured backends sorted by priority.",
+      "input": {},
+      "expectedOutput": [
+        {
+          "id": "bck_001",
+          "name": "Ollama Local",
+          "type": "LOCAL",
+          "isActive": true
+        },
+        {
+          "id": "bck_002",
+          "name": "Anthropic",
+          "type": "CLOUD",
+          "isActive": true
+        }
+      ],
+      "expectedOutputType": "Backend[]",
+      "contractClause": "Lists all configured backends with their availability status.",
+      "reqRefs": [
+        "REQ-002"
+      ]
+    },
+    {
+      "id": "TST-listBackends-002",
+      "fnRef": "FN-listBackends",
+      "category": "edge-case",
+      "description": "Returns an empty array when no backends are configured.",
+      "input": {},
+      "expectedOutput": [],
+      "expectedOutputType": "Backend[]",
+      "contractClause": "Returns an empty array when no backends are configured."
+    },
+    {
+      "id": "TST-getQueryHistory-001",
+      "fnRef": "FN-getQueryHistory",
+      "category": "happy-path",
+      "description": "Returns the 20 most recent query log entries.",
+      "input": {
+        "limit": 20
+      },
+      "expectedOutput": [
+        {
+          "id": "log_001",
+          "queryId": "qry_001",
+          "backendId": "bck_001",
+          "latencyMs": 1200,
+          "createdAt": "2025-06-15T10:30:01Z"
+        }
+      ],
+      "expectedOutputType": "LogEntry[]",
+      "contractClause": "Retrieves past query log entries sorted by most recent first.",
+      "reqRefs": [
+        "REQ-003"
+      ]
+    },
+    {
+      "id": "TST-getQueryHistory-002",
+      "fnRef": "FN-getQueryHistory",
+      "category": "edge-case",
+      "description": "Returns only entries for the specified backend when backendId filter is provided.",
+      "input": {
+        "limit": 10,
+        "backendId": "bck_001"
+      },
+      "expectedOutput": [
+        {
+          "id": "log_001",
+          "queryId": "qry_001",
+          "backendId": "bck_001",
+          "latencyMs": 1200
+        }
+      ],
+      "expectedOutputType": "LogEntry[]",
+      "contractClause": "Entries are filtered by backendId when provided."
+    },
+    {
+      "id": "TST-getQuery-001",
+      "fnRef": "FN-getQuery",
+      "category": "happy-path",
+      "description": "Returns the query matching the given ID.",
+      "input": {
+        "queryId": "qry_001"
+      },
+      "expectedOutput": {
+        "id": "qry_001",
+        "content": "What is 2+2?",
+        "status": "COMPLETED"
+      },
+      "expectedOutputType": "Query",
+      "contractClause": "Fetches a query by ID and returns the matching Query.",
+      "reqRefs": [
+        "REQ-003"
+      ]
+    },
+    {
+      "id": "TST-getQuery-002",
+      "fnRef": "FN-getQuery",
+      "category": "error-path",
+      "description": "Throws NOT_FOUND when no query exists with the given ID.",
+      "input": {
+        "queryId": "qry_nonexistent"
+      },
+      "errorCode": "NOT_FOUND",
+      "expectedError": {
+        "code": "NOT_FOUND",
+        "returnType": "NotFoundError"
+      },
+      "contractClause": "Throws NOT_FOUND when no query exists with this ID."
+    }
+  ]
+}

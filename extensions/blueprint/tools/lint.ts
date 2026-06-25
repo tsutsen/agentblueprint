@@ -35,7 +35,7 @@ export function registerLint(pi: ExtensionAPI, extDir: string) {
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
       const linter = path.join(extDir, "linters/lint_all.py");
-      const suiteFile = resolvePkgResource(extDir, 'skills/blueprint/schemas/json/suite.json');
+      const suiteFile = resolvePkgResource(extDir, 'skills/blueprint/schemas/suite.json');
       const mode = params.mode || "assess";
 
       if (!fs.existsSync(linter)) {
@@ -62,7 +62,7 @@ export function registerLint(pi: ExtensionAPI, extDir: string) {
         );
 
         const lintersDir = path.resolve(extDir, "linters");
-        const schemasDir = resolvePkgResource(extDir, 'skills/blueprint/schemas/json');
+        const schemasDir = resolvePkgResource(extDir, 'skills/blueprint/schemas');
 
         let args: string[];
         if (actualArtifacts.length > 0) {

@@ -1,0 +1,997 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "designspec.schema.json",
+  "title": "DesignSpec",
+  "description": "User experience, interaction model, and visual design requirements. Contract between product requirements and implementation. Version 4.0.0.",
+  "type": "object",
+  "required": [
+    "version",
+    "schemaVersion",
+    "project",
+    "goalSpecVersion",
+    "status",
+    "designGoals",
+    "personas",
+    "userJourneys",
+    "informationArchitecture",
+    "screenInventory",
+    "screenSpecs",
+    "interactionPatterns",
+    "visualDesignRequirements",
+    "designSystem",
+    "accessibilityRequirements",
+    "uxAcceptanceCriteria",
+    "designTokens"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "screenId": {
+      "type": "string",
+      "description": "kebab-case screen identifier, e.g. 'library-screen', 'search-panel'.",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "patternId": {
+      "type": "string",
+      "description": "kebab-case interaction pattern identifier, e.g. 'keyboard-navigation'.",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "personaId": {
+      "type": "string",
+      "description": "kebab-case persona identifier, e.g. 'power-developer'.",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "reqId": {
+      "type": "string",
+      "description": "Functional requirement identifier, format REQ-NNN (3-digit zero-padded).",
+      "pattern": "^REQ-\\d{3}$"
+    },
+    "usId": {
+      "type": "string",
+      "description": "User story identifier, format US-NNN (3-digit zero-padded).",
+      "pattern": "^US-\\d{3}$"
+    },
+    "fnId": {
+      "type": "string",
+      "description": "Function ID from ApiSpec. Format: FN-camelCase, e.g. 'FN-createUser'.",
+      "pattern": "^FN-[a-z][A-Za-z0-9]*$"
+    },
+    "uxacId": {
+      "type": "string",
+      "description": "UX acceptance criterion identifier, format UXAC-NNN (3-digit zero-padded).",
+      "pattern": "^UXAC-\\d{3}$"
+    },
+    "vdrId": {
+      "type": "string",
+      "description": "Visual design requirement identifier, format VDR-NNN (3-digit zero-padded).",
+      "pattern": "^VDR-\\d{3}$"
+    },
+    "arId": {
+      "type": "string",
+      "description": "Accessibility requirement identifier, format AR-NNN (3-digit zero-padded).",
+      "pattern": "^AR-\\d{3}$"
+    },
+    "namedRequirement": {
+      "type": "object",
+      "description": "A verifiable design requirement with a stable ID.",
+      "required": [
+        "id",
+        "description"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identifier for this named requirement."
+        },
+        "name": {
+          "type": "string",
+          "description": "Short descriptive name summarizing this requirement.",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "description": "The requirement in plain language. Must be verifiable \u2014 avoid subjective terms.",
+          "minLength": 10
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "reqRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/reqId"
+          }
+        }
+      }
+    },
+    "iaNode": {
+      "type": "object",
+      "description": "A node in the information architecture tree.",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Label as it appears in navigation.",
+          "minLength": 1
+        },
+        "screenRef": {
+          "$ref": "#/definitions/screenId",
+          "description": "Screen ID this node navigates to. Required for leaf nodes."
+        },
+        "children": {
+          "type": "array",
+          "description": "Child nodes. If present, this is a grouping node \u2014 screenRef should be omitted.",
+          "items": {
+            "$ref": "#/definitions/iaNode"
+          }
+        }
+      }
+    },
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier (GL-NNN).",
+      "pattern": "^GL-\\d{3}$"
+    },
+    "dgId": {
+      "type": "string",
+      "description": "Design goal identifier, format DG-NNN (3-digit zero-padded).",
+      "pattern": "^DG-\\d{3}$"
+    },
+    "spcId": {
+      "type": "string",
+      "description": "Screen spec identifier, format SPC-NNN (3-digit zero-padded).",
+      "pattern": "^SPC-\\d{3}$"
+    },
+    "patId": {
+      "type": "string",
+      "description": "Interaction pattern identifier, format PAT-NNN (3-digit zero-padded).",
+      "pattern": "^PAT-\\d{3}$"
+    }
+  },
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Semver version of this designspec document instance.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the DesignSpec schema this document conforms to. Must be '4.0.0'.",
+      "const": "4.0.0"
+    },
+    "project": {
+      "type": "string",
+      "description": "Must match the project name in the corresponding GoalSpec.",
+      "minLength": 1
+    },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this design was produced against.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "review",
+        "confirmed",
+        "superseded"
+      ],
+      "default": "draft",
+      "description": "Lifecycle status of this design element. One of: draft, confirmed, deprecated."
+    },
+    "designGoals": {
+      "type": "array",
+      "description": "High-level UX objectives. Each must describe a desired user experience quality, not an implementation approach.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "goal"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^DG-\\d{3}$",
+            "description": "Unique identifier for this design goal."
+          },
+          "goal": {
+            "type": "string",
+            "description": "A UX quality the design must achieve.",
+            "minLength": 5
+          },
+          "name": {
+            "type": "string",
+            "description": "Short descriptive name summarizing this design goal."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this design goal and how it will be achieved."
+          },
+          "rationale": {
+            "type": "string",
+            "description": "Why this design goal matters for this project."
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status of this design goal."
+          },
+          "reqRefs": {
+            "type": "array",
+            "description": "REQ-NNN IDs from GoalSpec that this goal addresses.",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            }
+          }
+        }
+      }
+    },
+    "personas": {
+      "type": "array",
+      "description": "Descriptions of target users. Persona roles must be consistent with actors in the GoalSpec.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "role",
+          "goals",
+          "painPoints",
+          "technicalSkillLevel"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/personaId",
+            "description": "Unique kebab-case identifier for this persona (e.g. 'power-developer')."
+          },
+          "name": {
+            "type": "string",
+            "description": "Human name for the persona, e.g. 'Leon'.",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "A brief description of this persona's role, context, and motivations."
+          },
+          "role": {
+            "type": "string",
+            "description": "The actor role this persona represents. Should match an actor named in GoalSpec.",
+            "minLength": 1
+          },
+          "goals": {
+            "type": "array",
+            "description": "What this persona is trying to accomplish.",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            }
+          },
+          "painPoints": {
+            "type": "array",
+            "description": "Current frustrations this system addresses.",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            }
+          },
+          "technicalSkillLevel": {
+            "type": "string",
+            "description": "The persona's technical ability level.",
+            "enum": [
+              "non-technical",
+              "basic",
+              "intermediate",
+              "advanced",
+              "expert"
+            ]
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional clarifying context for this persona."
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) that this persona's role maps to. Use for cross-spec traceability with actors in GoalSpec.",
+            "items": {
+              "$ref": "#/definitions/glId"
+            }
+          }
+        }
+      }
+    },
+    "userJourneys": {
+      "type": "array",
+      "description": "End-to-end workflows from the user's perspective. Each must reference a GoalSpec user story.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "personaRef",
+          "usRefs",
+          "startingState",
+          "steps",
+          "desiredOutcome"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^UJ-\\d{3}$",
+            "description": "Unique identifier for this user journey (e.g. 'UJ-001')."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Short descriptive name for this user journey."
+          },
+          "description": {
+            "type": "string",
+            "description": "A brief description of this user journey. May restate startingState and desiredOutcome in one sentence."
+          },
+          "personaRef": {
+            "$ref": "#/definitions/personaId",
+            "description": "The persona this journey belongs to."
+          },
+          "usRefs": {
+            "type": "array",
+            "description": "US-IDs from GoalSpec this journey implements. Must not be empty.",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/definitions/usId"
+            }
+          },
+          "reqRefs": {
+            "type": "array",
+            "description": "REQ-NNN-slug IDs from GoalSpec that this journey exercises end-to-end.",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/definitions/reqId"
+            }
+          },
+          "fnRefs": {
+            "type": "array",
+            "description": "FN-IDs from ApiSpec that this journey exercises. Populated during implementation planning. Use for UJ\u2192FN traceability.",
+            "items": {
+              "$ref": "#/definitions/fnId"
+            }
+          },
+          "startingState": {
+            "type": "string",
+            "description": "What the user and system state are at the beginning of this journey.",
+            "minLength": 5
+          },
+          "steps": {
+            "type": "array",
+            "description": "Ordered steps alternating user actions and system responses.",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "required": [
+                "actor",
+                "action"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "actor": {
+                  "type": "string",
+                  "description": "Who performs this step.",
+                  "enum": [
+                    "user",
+                    "system"
+                  ]
+                },
+                "action": {
+                  "type": "string",
+                  "description": "What they do or what happens.",
+                  "minLength": 3
+                },
+                "screenRef": {
+                  "$ref": "#/definitions/screenId",
+                  "description": "Screen the user is on during this step, if applicable."
+                },
+                "glossaryRefs": {
+                  "type": "array",
+                  "description": "Glossary term IDs (GL-NNN) referenced in this step's action description.",
+                  "items": {
+                    "$ref": "#/definitions/glId"
+                  }
+                }
+              }
+            }
+          },
+          "desiredOutcome": {
+            "type": "string",
+            "description": "The end state the user has reached when the journey succeeds.",
+            "minLength": 5
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) referenced in this journey.",
+            "items": {
+              "$ref": "#/definitions/glId"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional clarifying context for this journey."
+          }
+        }
+      }
+    },
+    "informationArchitecture": {
+      "type": "object",
+      "description": "Navigation structure of the application. Leaf nodes must reference screen IDs.",
+      "required": [
+        "root"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "type": "array",
+          "description": "Top-level navigation nodes.",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/iaNode"
+          }
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional clarifying context for the information architecture."
+        },
+        "glossaryRefs": {
+          "type": "array",
+          "description": "Glossary term IDs (GL-NNN) referenced in the information architecture.",
+          "items": {
+            "$ref": "#/definitions/glId"
+          }
+        }
+      }
+    },
+    "screenInventory": {
+      "type": "array",
+      "description": "All screens and views in the system. Screen IDs are the shared key referenced throughout the spec.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "purpose",
+          "primaryActions"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/screenId",
+            "description": "Unique kebab-case identifier for this screen (e.g. 'library-screen')."
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable screen name.",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of the screen's purpose and behavior. If omitted, 'purpose' is used as fallback."
+          },
+          "purpose": {
+            "type": "string",
+            "description": "One sentence: what the user accomplishes on this screen.",
+            "minLength": 10
+          },
+          "primaryActions": {
+            "type": "array",
+            "description": "The main things a user can do on this screen.",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 2
+            }
+          },
+          "inputs": {
+            "type": "array",
+            "description": "Data or content the user provides on this screen.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "outputs": {
+            "type": "array",
+            "description": "Data or content the screen produces or displays.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "usRefs": {
+            "type": "array",
+            "description": "US-NNN-slug IDs this screen helps fulfil.",
+            "items": {
+              "$ref": "#/definitions/usId"
+            }
+          },
+          "fnRefs": {
+            "type": "array",
+            "description": "FN-IDs from ApiSpec that this screen's interactions exercise. Populated during implementation planning. Use for SCR\u2192FN traceability.",
+            "items": {
+              "$ref": "#/definitions/fnId"
+            }
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) referenced in the screen's purpose description.",
+            "items": {
+              "$ref": "#/definitions/glId"
+            }
+          },
+          "ujRefs": {
+            "type": "array",
+            "description": "UJ-NNN IDs from DesignSpec user journeys that use this screen.",
+            "items": {
+              "type": "string",
+              "pattern": "^UJ-\\d{3}$"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional clarifying context for this screen."
+          },
+          "reqRefs": {
+            "type": "array",
+            "description": "REQ-NNN IDs from GoalSpec that this screen implements.",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            }
+          }
+        }
+      }
+    },
+    "screenSpecs": {
+      "type": "array",
+      "description": "Detailed specifications for each screen. Must cover every screen in the inventory.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "screenRef",
+          "layout",
+          "components",
+          "states",
+          "id"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "screenRef": {
+            "$ref": "#/definitions/screenId",
+            "description": "Must match a screen ID in the screen inventory."
+          },
+          "layout": {
+            "type": "string",
+            "description": "Description of the spatial arrangement of elements on this screen.",
+            "minLength": 10
+          },
+          "wireframe": {
+            "type": "string",
+            "description": "ASCII sketch or description of the low-fidelity layout. Not intended to define final visuals."
+          },
+          "components": {
+            "type": "array",
+            "description": "UI components present on this screen.",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "purpose"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Component name, e.g. 'Query field', 'Results list'.",
+                  "minLength": 1
+                },
+                "purpose": {
+                  "type": "string",
+                  "description": "What this component does for the user.",
+                  "minLength": 5
+                },
+                "designSystemRef": {
+                  "type": "string",
+                  "description": "Name of the design system component this maps to, if applicable."
+                },
+                "patternRefs": {
+                  "type": "array",
+                  "description": "Interaction pattern IDs that apply to this component.",
+                  "items": {
+                    "$ref": "#/definitions/patternId"
+                  }
+                },
+                "glossaryRefs": {
+                  "type": "array",
+                  "description": "Glossary term IDs (GL-NNN) referenced in this component's purpose description.",
+                  "items": {
+                    "$ref": "#/definitions/glId"
+                  }
+                }
+              }
+            }
+          },
+          "states": {
+            "type": "array",
+            "description": "All distinct visual/interaction states this screen can be in.",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "description"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "State name, e.g. 'empty', 'loading', 'error', 'results'.",
+                  "minLength": 1
+                },
+                "description": {
+                  "type": "string",
+                  "description": "What the screen looks like and how it behaves in this state.",
+                  "minLength": 5
+                }
+              }
+            }
+          },
+          "interactions": {
+            "type": "array",
+            "description": "User interactions available on this screen.",
+            "items": {
+              "type": "object",
+              "required": [
+                "trigger",
+                "response"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "trigger": {
+                  "type": "string",
+                  "description": "What the user does, e.g. 'Presses Enter in query field'.",
+                  "minLength": 3
+                },
+                "response": {
+                  "type": "string",
+                  "description": "What the system does in response.",
+                  "minLength": 3
+                },
+                "patternRef": {
+                  "$ref": "#/definitions/patternId",
+                  "description": "Interaction pattern this follows, if applicable."
+                }
+              }
+            }
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) referenced in this screen spec.",
+            "items": {
+              "$ref": "#/definitions/glId"
+            }
+          },
+          "id": {
+            "$ref": "#/definitions/spcId",
+            "description": "Unique identifier for this screen spec."
+          },
+
+          "notes": {
+            "type": "string",
+            "description": "Optional clarifying context for this screen spec."
+          }
+        }
+      }
+    },
+    "interactionPatterns": {
+      "type": "array",
+      "description": "Reusable interaction rules defined once and referenced throughout screen specs.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/patternId",
+            "description": "Unique kebab-case identifier for this interaction pattern (e.g. 'keyboard-navigation')."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Short descriptive name for this interaction pattern."
+          },
+          "description": {
+            "type": "string",
+            "description": "How this pattern behaves from the user's perspective.",
+            "minLength": 10
+          },
+          "examples": {
+            "type": "array",
+            "description": "Concrete instances of this pattern in the UI.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "keyboardShortcuts": {
+            "type": "array",
+            "description": "Keyboard shortcuts associated with this pattern.",
+            "items": {
+              "type": "object",
+              "required": [
+                "keys",
+                "action"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "keys": {
+                  "type": "string",
+                  "description": "Key combination, e.g. 'Ctrl+K', 'Escape'."
+                },
+                "action": {
+                  "type": "string",
+                  "description": "What the key combination does when pressed."
+                }
+              }
+            }
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional clarifying context for this pattern."
+          },
+
+          "usageNotes": {
+            "type": "string",
+            "description": "How and when to use this pattern."
+          }
+        }
+      }
+    },
+    "visualDesignRequirements": {
+      "type": "array",
+      "description": "Appearance constraints. Must describe requirements, not artistic preferences.",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/definitions/namedRequirement"
+          },
+          {
+            "properties": {
+              "id": {
+                "pattern": "^VDR-\\d{3}$"
+              },
+              "rationale": {
+                "type": "string",
+                "description": "Why this visual design requirement matters."
+              }
+            }
+          }
+        ]
+      }
+    },
+    "designSystem": {
+      "type": "object",
+      "description": "Reusable UI building blocks that define consistency across the product.",
+      "required": [
+        "components"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "baseStyle": {
+          "type": "string",
+          "description": "The visual style foundation, e.g. 'Adwaita', 'Material', 'custom'."
+        },
+        "components": {
+          "type": "array",
+          "description": "Named reusable UI components.",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "purpose"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Component name, e.g. 'Button', 'Card', 'Dialog'.",
+                "minLength": 1
+              },
+              "purpose": {
+                "type": "string",
+                "description": "What this component communicates or enables.",
+                "minLength": 5
+              },
+              "variants": {
+                "type": "array",
+                "description": "Named variants of this component, e.g. 'primary', 'destructive', 'ghost'.",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "usageNotes": {
+                "type": "string",
+                "description": "Guidance on when and how to use this design system component."
+              }
+            }
+          }
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional clarifying context for the design system."
+        }
+      }
+    },
+    "accessibilityRequirements": {
+      "type": "array",
+      "description": "Accessibility expectations. Each must be independently verifiable.",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/definitions/namedRequirement"
+          },
+          {
+            "properties": {
+              "id": {
+                "pattern": "^AR-\\d{3}$"
+              },
+              "rationale": {
+                "type": "string",
+                "description": "Why this accessibility requirement matters."
+              }
+            }
+          }
+        ]
+      }
+    },
+    "uxAcceptanceCriteria": {
+      "type": "array",
+      "description": "Design-specific success criteria. Each must be binary, verifiable, and linked to a GoalSpec story or requirement.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "description",
+          "refs"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/uxacId",
+            "description": "Unique identifier for this UX acceptance criterion (e.g. 'UXAC-001')."
+          },
+          "name": {
+            "type": "string",
+            "description": "Short descriptive name summarizing this UX acceptance criterion (e.g. 'New Research Session').",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "A binary pass/fail UX condition. Must not be subjective.",
+            "minLength": 10
+          },
+          "refs": {
+            "type": "object",
+            "description": "At least one US-ID or REQ-ID must be provided.",
+            "additionalProperties": false,
+            "properties": {
+              "usRefs": {
+                "type": "array",
+                "description": "US-NNN IDs from GoalSpec user stories this criterion relates to.",
+                "items": {
+                  "$ref": "#/definitions/usId"
+                }
+              },
+              "reqRefs": {
+                "type": "array",
+                "description": "REQ-NNN IDs from GoalSpec functional requirements this criterion measures.",
+                "items": {
+                  "$ref": "#/definitions/reqId"
+                }
+              }
+            }
+          },
+          "verificationMethod": {
+            "type": "string",
+            "description": "How this criterion will be verified, e.g. 'manual walkthrough', 'automated UI test'."
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional clarifying context for this criterion."
+          }
+        }
+      }
+    },
+    "designTokens": {
+      "type": "array",
+      "description": "Design tokens that define visual consistency across the product",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this design token, format DT-NNN-tokenName.",
+            "pattern": "^DT-\\d{3}-[a-z][a-z0-9-]*$"
+          },
+          "name": {
+            "type": "string",
+            "description": "Token name, e.g. \"color-primary\", \"spacing-md\".",
+            "minLength": 1
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "color",
+              "typography",
+              "spacing",
+              "border-radius",
+              "shadow",
+              "opacity",
+              "z-index"
+            ],
+            "description": "The design dimension this token belongs to"
+          },
+          "value": {
+            "type": "string",
+            "description": "The token value, e.g. \"#1a73e8\", \"16px\", \"0.5\""
+          },
+          "description": {
+            "type": "string",
+            "description": "When and how this token should be used.",
+            "minLength": 10
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "GL-NNN identifiers for related glossary terms.",
+            "items": {
+              "type": "string",
+              "pattern": "^GL-\\d{3}$"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "category",
+          "value"
+        ]
+      }
+    }
+  },
+  "outputFiles": [
+    "artifacts/DesignSpec.md",
+    "artifacts/DesignSpec.json"
+  ],
+  "specDependencies": {
+    "goalSpec": {
+      "required": true
+    },
+    "glossary": {
+      "required": true
+    }
+  }
+}

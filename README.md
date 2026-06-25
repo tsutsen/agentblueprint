@@ -100,7 +100,7 @@ AgentBlueprint/
 Each spec has two files:
 
 - **Agent instructions** (`skills/blueprint/instructions/`) — human-readable agent guidance for producing each spec artifact
-- **JSON schema** (`skills/blueprint/schemas/json/`) — machine-validation schema, source of truth for structure
+- **JSON schema** (`skills/blueprint/schemas/`) — machine-validation schema, source of truth for structure
 
 ### Linters
 
