@@ -3,18 +3,17 @@ name: blueprint
 description: >
   Orchestrates creation of software lifecycle artifacts (GoalSpec, Glossary,
   DesignSpec, ArchitectureSpec, DataSpec, ApiSpec, TestSpec) and epic
-  decomposition (issues). Loads schemas and dependencies, runs structural
-  linting, delegates interviewing to the interview skill. Writes sections via
-  the write_spec_fields tool. Use when creating artifacts or breaking down epics
-  into issues.
+  decomposition (issues). Conducts schema-driven interviews, writes sections
+  via the write_spec_fields tool, and produces JSON + Markdown output.
+  Use when creating artifacts or breaking down epics into issues.
 version: 2.0.0
 ---
 
 # Blueprint
 
-Blueprint is the project artifact orchestrator.
-
-It delegates interview mechanics to `/skill:interview`
+Blueprint is the project artifact orchestrator. It conducts schema-driven
+interviews, writes sections via tools, and produces JSON + Markdown output
+for every artifact.
 
 ---
 
@@ -26,21 +25,75 @@ Blueprint is responsible for:
 2. Loading the artifact schema.
 3. Loading dependency artifacts.
 4. Running structural lint on existing artifacts and surfacing findings.
-5. Invoking interview workflows and writing sections via tools.
-6. Producing JSON and Markdown output for every completed artifact.
-7. Producing handoff recommendations.
-
-Blueprint is NOT responsible for interview methodology as it belongs to a dedicated skill.
+5. Conducting schema-driven interviews (one question at a time).
+6. Writing sections via the `write_spec_fields` tool.
+7. Producing JSON and Markdown output for every completed artifact.
+8. Producing handoff recommendations.
 
 ---
 
 ## Suite Overview
 
-| Concern              | Skill                   |
-|----------------------|-------------------------|
-| Artifact orchestration | `/skill:blueprint`    |
-| Interview mechanics  | `/skill:interview`      |
-| Epic decomposition   | `/skill:blueprint issues` |
+| Concern              | Command                     |
+|----------------------|-----------------------------|
+| Artifact creation    | `/skill:blueprint <type>`   |
+| Epic decomposition   | `/skill:blueprint issues`   |
+
+---
+
+## Interview Rules
+
+When conducting an interview, follow these rules strictly:
+
+1. **Relentless Inquiry:** Do not stop until every section has a complete,
+   unambiguous shared understanding.
+2. **Section Sequencing:** Follow the section order from the schema exactly.
+   Complete one section fully before moving to the next.
+3. **Single Questioning:** Ask one question at a time. Wait for the user's
+   answer before proceeding.
+4. **Recommended Answers:** For every question, provide your own recommended
+   answer based on best practices and loaded context. Label it clearly as a
+   recommendation, not a conclusion.
+5. **Loaded Context Validation:** If a question can be answered from the
+   loaded context (dependencies, schema, prior artifacts), use that context
+   rather than asking the user.
+6. **Contradiction Detection:** If the user's answer conflicts with loaded
+   context, surface it immediately. Example: "Your code cancels entire Orders,
+   but you just said partial cancellation is possible — which is right?"
+7. **Term Clarification:** If the user uses a vague or overloaded term,
+   propose a precise canonical term before continuing.
+8. **Glossary Enforcement:** If a glossary was loaded as context, check
+   every new term against it. Flag conflicts immediately.
+9. **Schema Compliance:** Each section must conform strictly to the schema.
+   If the schema specifies a format (e.g., Planguage for NFRs), enforce it.
+   Do not accept free-form content where a structured format is required.
+   Prompt the user to restate in the required format if needed.
+10. **Inferences vs Facts:** Maintain a clear distinction between Facts
+    (verifiable, sourced) and Inferences (derived by reasoning, uncertain).
+    Never treat an inference as a fact without explicit user confirmation.
+11. **No hallucination:** Only record what the user has explicitly stated
+    or what can be verified from loaded context. If uncertain about a detail,
+    ask. Do not fill gaps with assumptions.
+12. **Resume Handling:** If resuming, skip all prior sections and start at
+    the specified section. Do not re-interview sections that were already
+    completed.
+
+---
+
+## Output Format
+
+After each section is complete, produce:
+
+```yaml
+section: <SectionName>
+confidence: <high | medium | low>
+content: <section content, formatted per schema requirements>
+open_questions:
+  - <any unresolved questions for the user to address later>
+```
+
+Low confidence or non-empty `open_questions` must be flagged to the user
+before writing the section. Do not proceed silently.
 
 ---
 
@@ -153,8 +206,6 @@ Briefly note the warning count but do not block:
 
 Proceed silently.
 
-
-
 ---
 
 ### Step 3 — Orientation
@@ -176,96 +227,37 @@ If resuming, ask: "Resume from the last confirmed section, or restart from the b
 
 ---
 
-### Step 4 — Interview (Skill Execution Protocol)
+### Step 4 — Interview
 
-Do NOT invoke `/skill:interview` — that only loads the skill's content as
-context without executing its behavioral protocol. Instead, use the
-`subagent` tool to delegate the interview to a fresh subagent that carries
-the interview skill's instructions as its system context. This ensures the
-interview rules (one question at a time, recommended answers, schema
-compliance, etc.) are actually executed.
+Conduct the interview directly, following the **Interview Rules** and **Output Format**
+defined at the top of this document.
 
-**Execute the interview via subagent:**
+**For each section, in order:**
 
-```
-tool: subagent
-args:
-  agent: "<current-agent-name>"
-  task: |
-    You are conducting an artifact interview. Follow these rules strictly:
+1. Present a single question about the section.
+2. Provide a recommended answer based on best practices and loaded context.
+3. Wait for the user's answer.
+4. Validate the answer against the schema, loaded context, and other specs.
+5. If the answer is incomplete, ask follow-up questions.
+6. When the section is complete, produce the YAML output:
 
-    ## Interview Rules
-    1. **Relentless Inquiry:** Do not stop until every section has complete,
-       unambiguous shared understanding.
-    2. **Section Sequencing:** Follow the section order from the schema exactly.
-       Complete one section fully before moving to the next.
-    3. **Single Questioning:** Ask one question at a time. Wait for the user's
-       answer before proceeding.
-    4. **Recommended Answers:** For every question, provide your own recommended
-       answer based on best practices and loaded context. Label it clearly as a
-       recommendation, not a conclusion.
-    5. **Loaded Context Validation:** If a question can be answered from the
-       loaded context (dependencies, schema, prior artifacts), use that context
-       rather than asking the user.
-    6. **Contradiction Detection:** If the user's answer conflicts with loaded
-       context, surface it immediately.
-    7. **Term Clarification:** If the user uses a vague or overloaded term,
-       propose a precise canonical term before continuing.
-    8. **Schema Compliance:** Each section must conform strictly to the schema.
-       If the schema specifies a format (e.g., Planguage for NFRs), enforce it.
-    9. **Inferences vs Facts:** Never treat an inference as a fact without
-       explicit user confirmation.
-    10. **No hallucination:** Only record what the user has explicitly stated.
-    11. **Resume Handling:** If the task specifies "Resume from: <SectionName>",
-        skip all prior sections and start at the specified section.
-    12. **No file writing:** Interview produces validated section content only.
-        Do not write files.
-
-    ## Artifact Context
-    <Insert artifact name, sections, dependencies, resume point here>
-
-    Begin by presenting the first question for the first (or resumed) section.
-  
-  context: "fresh"
-  skill: true
+```yaml
+section: <SectionName>
+confidence: <high | medium | low>
+content: <validated section content>
+open_questions:
+  - <any unresolved questions>
 ```
 
-**Construct the task content from Steps 1–3:**
+7. If confidence is low or there are open questions, flag them to the user
+   before proceeding. Do not write the section yet.
+8. Once the user confirms the section content, proceed to Step 5 to write it.
 
-- **Artifact name:** from `load_artifact` result
-- **Dependencies:** from `load_artifact` result (resolved/missing status)
-- **Sections:** from the schema loaded in Step 1
-- **Resume point:** from Step 3 (which fields have content in the JSON)
-- **Dependency content:** Load resolved dependency JSON/Markdown files and
-  include relevant excerpts in the task so the subagent has context for
-  questions that reference other artifacts.
+**If the user has resolved all open questions and confidence is high:**
+Write the section via `write_spec_fields` (Step 5), then move to the next section.
 
-**Example task content:**
-
-```
-You are conducting an artifact interview. Follow these rules strictly:
-
-[Interview rules as above...]
-
-## Artifact Context
-Artifact: GoalSpec
-Sections: Project Objective, Functional Requirements, Non-Functional Requirements, User Stories, Success Criteria, Non-Goals
-Dependencies:
-- None (this is the root artifact)
-Resume from: Project Objective (fresh start)
-
-Begin by presenting the first question for the first (or resumed) section.
-```
-
-**After the subagent completes the interview for all sections:**
-
-The subagent will produce validated section content. The blueprint skill
-then writes each section to the JSON artifact using `write_spec_fields`
-(Step 5), proceeding section by section. Each section's content comes from
-the subagent's interview output.
-
-If the subagent reports low confidence or open questions for any section,
-flag them to the user before proceeding to write that section.
+**Resume support:** If resuming from a section, skip all prior sections
+and start at the specified section.
 
 ---
 
