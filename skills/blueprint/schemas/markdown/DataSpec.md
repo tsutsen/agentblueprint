@@ -1,20 +1,3 @@
-## Output
-
-After the interview is complete and the JSON artifact has been written via
-`write_section`, the Markdown file must be regenerated from the JSON to
-ensure zero drift between formats.
-
-
-```
-tool: generate_artifact_markdown
-args:
-  artifactType: data
-  jsonPath: artifacts/DataSpec.json
-```
-
-This overwrites the Markdown file with content derived from the JSON.
-The JSON is the single source of truth; the Markdown is derived.
-
 ---
 
 ---
@@ -420,3 +403,23 @@ When defining relationships between entities, use the following conventions:
 | Dependency | "needs temporarily" | Dashed line + open arrow (- - →) | A uses B only momentarily (e.g. method param, local var). No stored reference. | depends on, calls, uses temporarily, creates locally, imports, receives as parameter, receives as argument, uses as local variable, references as parameter, references as argument, uses as a local variable, references as a local variable, instantiates locally, invokes, throws, catches |
 
 
+
+
+---
+
+## Output
+
+After the interview is complete and the JSON artifact has been written via
+`write_section`, the Markdown file must be regenerated from the JSON to
+ensure zero drift between formats.
+
+
+```
+tool: generate_artifact_markdown
+args:
+  artifactType: data
+  jsonPath: artifacts/DataSpec.json
+```
+
+This overwrites the Markdown file with content derived from the JSON.
+The JSON is the single source of truth; the Markdown is derived.
