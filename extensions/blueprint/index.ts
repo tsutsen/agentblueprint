@@ -9,8 +9,7 @@ import { registerGenerateTests } from "./tools/generate-tests";
 import { registerGenerateDiagrams } from "./tools/generate-diagrams";
 import { registerGenerateArtifactMarkdown } from "./tools/generate-artifact-markdown";
 import { registerSpecUpgrade } from "./tools/spec-upgrade";
-import { registerGraphMetrics } from "./tools/graph-metrics";
-import { registerGraphVisualize } from "./tools/graph-visualize";
+import { registerGraphTools } from "./tools/graph";
 
 export default function (pi: ExtensionAPI) {
   const extDir = path.resolve(__dirname);
@@ -24,6 +23,5 @@ export default function (pi: ExtensionAPI) {
   registerGenerateDiagrams(pi, extDir);
   registerGenerateArtifactMarkdown(pi, extDir);
   registerSpecUpgrade(pi, extDir);
-  registerGraphMetrics(pi, extDir);
-  registerGraphVisualize(pi, extDir);
+  registerGraphTools(pi, extDir);
 }
