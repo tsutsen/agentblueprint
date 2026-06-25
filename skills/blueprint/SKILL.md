@@ -228,15 +228,22 @@ On success, show the JSON path and section count:
 
 On revision request: re-interview affected sections, rewrite, re-verify.
 
-After the last section:
-1. Tell the user: "All sections are written to JSON. Please review and reply
-   with 'approve' when you are satisfied, or tell me what to change."
-2. Wait for explicit approval.
-3. On approval: proceed to lint.
+After the last section is written, proceed to Step 6.
 
 ---
 
-### Step 6 — Lint
+### Step 6 — Confirmation gate
+
+Before linting, present the completed artifact to the user for review:
+
+> "Here is the completed <ArtifactName>. Please review it and confirm
+> it is correct, or let me know what needs to change."
+
+Do not proceed to lint or handoff until the user explicitly confirms.
+This gate is mandatory for all artifacts except GoalSpec (which is the
+starting point).
+
+### Step 7 — Lint
 
 Now validate the JSON artifact against its schema:
 
@@ -253,7 +260,7 @@ apply the fix and re-validate.
 
 ---
 
-### Step 7 — Generate Markdown from JSON
+### Step 8 — Generate Markdown from JSON
 
 After lint passes, regenerate the Markdown from the JSON to ensure zero
 drift between formats. The JSON is the single source of truth; Markdown
@@ -271,7 +278,7 @@ the JSON. The Markdown is now guaranteed to match the JSON exactly.
 
 ---
 
-### Step 8 — Handoff
+### Step 9 — Handoff
 
 Call the `handoff` tool to produce a handoff table:
 

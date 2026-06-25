@@ -53,15 +53,4 @@ Each term must include:
 * `security` — Authentication, authorization, access control.
 * `ui` — Screen, interface, and presentation terms (panels, dashboards, dialogs).
 
-### Confirmation gate
-
-Before proceeding to DesignSpec or ArchitectureSpec, confirm the glossary
-with the user:
-
-> "Here is the glossary. Please review all terms and categories. Confirm
-> this is complete before we proceed — additions after that point will
-> require updating glossaryRefs in downstream specs."
-
-This gate is mandatory. Do not skip it.
-
 

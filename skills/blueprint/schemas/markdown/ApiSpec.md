@@ -63,18 +63,6 @@ Each function must have:
 
 ---
 
-### Confirmation gate
-
-Before proceeding to TestSpec, confirm the full function list with the user:
-
-> "Here are all functions in the API surface. Please confirm this is
-> complete before we move to the test spec — additions after that point
-> will require revisiting tests."
-
-This gate is mandatory. Do not skip it.
-
----
-
 ## Cross-spec consistency
 
 After producing `artifacts/ApiSpec.json`, run the cross-spec linter:

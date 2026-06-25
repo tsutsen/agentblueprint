@@ -189,16 +189,4 @@ The verification prompt is:
 > this test verifies. Then state whether the described behaviour matches
 > the contract: [paste contract]. If there is a mismatch, describe it."
 
----
-
-## Confirmation Gate
-
-Before this skill completes, present the full test spec to the user:
-
-> "Here is the test specification. Please review each function's happy path,
-> edge cases, and error paths. Confirm if these correctly capture the intended
-> behaviour, or let me know what needs to change."
-
-Do not proceed to implementation or handoff until confirmed.
-
 
