@@ -27,15 +27,10 @@ import argparse
 from pathlib import Path
 from typing import Optional
 from shared import Issue, LayerResult, print_human, print_json_output
+from schema_validator import SchemaValidator
 
 # Regex for GL-NNN ID format (e.g. GL-001)
 GL_ID_RE = re.compile(r"^GL-\d{3}$")
-
-try:
-    import jsonschema
-    HAS_JSONSCHEMA = True
-except ImportError:
-    HAS_JSONSCHEMA = False
 
 
 # ── Term extraction from other specs ─────────────────────────────────────────
@@ -306,16 +301,14 @@ def run_lint(
 ) -> LayerResult:
     result = LayerResult()
 
-    # JSON Schema validation
-    if schema_path and HAS_JSONSCHEMA:
-        schema = json.loads(schema_path.read_text())
-        for err in jsonschema.Draft7Validator(schema).iter_errors(glossary):
-            result.add("error", "schema", f"{err.json_path}: {err.message}")
-    elif schema_path and not HAS_JSONSCHEMA:
-        result.add("warning", "schema_skipped",
-            "jsonschema not installed — skipping schema validation.",
-            hint="pip install jsonschema")
+    # JSON Schema validation (auto-generated from schema)
+    if schema_path:
+        schema = json.loads(Path(schema_path).read_text())
+        schema_issues = SchemaValidator(schema).validate(spec)
+        for issue in schema_issues:
+            result.add(issue.severity, issue.category, issue.message, issue.hint)
 
+    # 
     # Project match — goalspec/archspec/designspec use "project"; dataspec/apispec use "module"
     for label, spec in other_specs.items():
         if not spec:
