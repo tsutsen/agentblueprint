@@ -176,30 +176,96 @@ If resuming, ask: "Resume from the last confirmed section, or restart from the b
 
 ---
 
-### Step 4 — Interview
+### Step 4 — Interview (Skill Execution Protocol)
 
-Invoke `/skill:interview` with a task that includes:
+Do NOT invoke `/skill:interview` — that only loads the skill's content as
+context without executing its behavioral protocol. Instead, use the
+`subagent` tool to delegate the interview to a fresh subagent that carries
+the interview skill's instructions as its system context. This ensures the
+interview rules (one question at a time, recommended answers, schema
+compliance, etc.) are actually executed.
+
+**Execute the interview via subagent:**
 
 ```
-/skill:interview Interview for <ArtifactName>.
+tool: subagent
+args:
+  agent: "<current-agent-name>"
+  task: |
+    You are conducting an artifact interview. Follow these rules strictly:
 
+    ## Interview Rules
+    1. **Relentless Inquiry:** Do not stop until every section has complete,
+       unambiguous shared understanding.
+    2. **Section Sequencing:** Follow the section order from the schema exactly.
+       Complete one section fully before moving to the next.
+    3. **Single Questioning:** Ask one question at a time. Wait for the user's
+       answer before proceeding.
+    4. **Recommended Answers:** For every question, provide your own recommended
+       answer based on best practices and loaded context. Label it clearly as a
+       recommendation, not a conclusion.
+    5. **Loaded Context Validation:** If a question can be answered from the
+       loaded context (dependencies, schema, prior artifacts), use that context
+       rather than asking the user.
+    6. **Contradiction Detection:** If the user's answer conflicts with loaded
+       context, surface it immediately.
+    7. **Term Clarification:** If the user uses a vague or overloaded term,
+       propose a precise canonical term before continuing.
+    8. **Schema Compliance:** Each section must conform strictly to the schema.
+       If the schema specifies a format (e.g., Planguage for NFRs), enforce it.
+    9. **Inferences vs Facts:** Never treat an inference as a fact without
+       explicit user confirmation.
+    10. **No hallucination:** Only record what the user has explicitly stated.
+    11. **Resume Handling:** If the task specifies "Resume from: <SectionName>",
+        skip all prior sections and start at the specified section.
+    12. **No file writing:** Interview produces validated section content only.
+        Do not write files.
+
+    ## Artifact Context
+    <Insert artifact name, sections, dependencies, resume point here>
+
+    Begin by presenting the first question for the first (or resumed) section.
+  
+  context: "fresh"
+  skill: true
+```
+
+**Construct the task content from Steps 1–3:**
+
+- **Artifact name:** from `load_artifact` result
+- **Dependencies:** from `load_artifact` result (resolved/missing status)
+- **Sections:** from the schema loaded in Step 1
+- **Resume point:** from Step 3 (which fields have content in the JSON)
+- **Dependency content:** Load resolved dependency JSON/Markdown files and
+  include relevant excerpts in the task so the subagent has context for
+  questions that reference other artifacts.
+
+**Example task content:**
+
+```
+You are conducting an artifact interview. Follow these rules strictly:
+
+[Interview rules as above...]
+
+## Artifact Context
+Artifact: GoalSpec
+Sections: Project Objective, Functional Requirements, Non-Functional Requirements, User Stories, Success Criteria, Non-Goals
 Dependencies:
-- <DepName>: <resolved|missing>
-- ...
+- None (this is the root artifact)
+Resume from: Project Objective (fresh start)
 
-Schema sections: <Section1>, <Section2>, ...
-
-Resume from: <FirstPendingSection> (omit if fresh start)
+Begin by presenting the first question for the first (or resumed) section.
 ```
 
-The blueprint skill constructs this task from the results of Steps 1–3:
-- **Dependencies** come from `load_artifact` result
-- **Sections** come from the schema loaded in Step 1
-- **Resume point** comes from Step 3 (which fields have content in the JSON)
+**After the subagent completes the interview for all sections:**
 
-The interview skill generates structured questions from the schema. The blueprint
-skill uses dependency content (JSON parsed or Markdown text) as context when
-asking questions that reference another artifact.
+The subagent will produce validated section content. The blueprint skill
+then writes each section to the JSON artifact using `write_spec_fields`
+(Step 5), proceeding section by section. Each section's content comes from
+the subagent's interview output.
+
+If the subagent reports low confidence or open questions for any section,
+flag them to the user before proceeding to write that section.
 
 ---
 
