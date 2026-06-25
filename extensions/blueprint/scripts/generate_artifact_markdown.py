@@ -14,6 +14,7 @@ Usage:
 import argparse
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Any, Optional
@@ -43,6 +44,30 @@ SCHEMA_TO_MD = {
     "taskplan.schema.json": "TaskPlan.md",
     "issue.schema.json": None,
 }
+
+# ID pattern: WORD-NNN (e.g. REQ-001, NFR-002, US-003, FN-001, GL-001, EP-001)
+# Also matches IDs with suffixes like REQ-001-initiate-research-session
+ID_PATTERN = re.compile(r'^[A-Z]+-\d+(-[a-z]+)*$')
+
+
+def fmt_id(text: str) -> str:
+    """Italicize IDs (WORD-NNN pattern)."""
+    if ID_PATTERN.match(text):
+        return f"*{text}*"
+    return text
+
+
+def fmt_name(text: str) -> str:
+    """Boldify names (first meaningful word/phrase)."""
+    if text and len(text.strip()) > 0:
+        return f"**{text.strip()}**"
+    return text
+
+
+def fmt_field(text: str) -> str:
+    """Leave field names (with underscores) unformatted."""
+    return text
+
 
 # Artifact-specific title overrides (schema-derived titles look ugly)
 TITLE_OVERRIDES = {
@@ -323,7 +348,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
         elif artifact_type == "goal" and prop_name == "functionalRequirements":
             lines.append("## Functional Requirements\n")
             for fr in value:
-                id_ = fr.get("id", "")
+                id_ = fmt_id(fr.get("id", ""))
                 description = fr.get("description", "")
                 actor = fr.get("actor", "")
                 glossary_refs = fr.get("glossaryRefs", [])
@@ -353,7 +378,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                     title_text = scale
                 else:
                     title_text = category
-                lines.append(f"### {id_} — {title_text}")
+                lines.append(f"### {fmt_id(id_)} — {title_text}")
                 lines.append(f"Category: {category}")
                 lines.append("")
                 lines.append(f"Scale: {scale}")
@@ -373,7 +398,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
         elif artifact_type == "goal" and prop_name == "userStories":
             lines.append("## User Stories\n")
             for us in value:
-                id_ = us.get("id", "")
+                id_ = fmt_id(us.get("id", ""))
                 actor = us.get("actor", "")
                 capability = us.get("capability", "")
                 outcome = us.get("outcome", "")
@@ -392,7 +417,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
         elif artifact_type == "goal" and prop_name == "successCriteria":
             lines.append("## Success Criteria\n")
             for sc in value:
-                id_ = sc.get("id", "")
+                id_ = fmt_id(sc.get("id", ""))
                 description = sc.get("description", "")
                 verification = sc.get("verificationMethod", "")
                 refs = sc.get("refs", {})
@@ -410,11 +435,11 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
         elif artifact_type == "goal" and prop_name == "nonGoals":
             lines.append("## Non-Goals\n")
             for ng in value:
-                capability = ng.get("capability", "")
+                capability = fmt_name(ng.get("capability", ""))
                 reason = ng.get("reason", "")
                 line = f"- {capability} — {reason}"
                 if ng.get("glossaryRefs"):
-                    line += f" *(glossaryRefs: {', '.join(f'`{r}`' for r in ng['glossaryRefs'])})*"
+                    line += f" (glossaryRefs: {', '.join(f'`{r}`' for r in ng['glossaryRefs'])})"
                 lines.append(line)
             lines.append("")
 
@@ -429,7 +454,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                 related = term.get("relatedTerms", [])
                 category = term.get("category", "")
                 id_ = term.get("id", "")
-                lines.append(f"### {id_}: {term_name}\n")
+                lines.append(f"### {fmt_id(id_)}: {fmt_name(term_name)}\n")
                 lines.append(definition)
                 lines.append("")
                 if synonyms:
@@ -458,7 +483,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                 visibility = entity.get("visibility", "public")
                 fields = entity.get("fields", [])
                 methods = entity.get("methods", [])
-                lines.append(f"### {name}\n")
+                lines.append(f"### {fmt_name(name)}\n")
                 if desc:
                     lines.append(desc)
                     lines.append("")
@@ -490,8 +515,8 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
                 if methods:
                     lines.append("Methods:\n")
                     for method in methods:
-                        mname = method.get("name", "")
-                        api_ref = method.get("apiRef", "")
+                        mname = fmt_name(method.get("name", ""))
+                        api_ref = fmt_id(method.get("apiRef", ""))
                         mdesc = method.get("description", "")
                         lines.append(f"- `{mname}` → `{api_ref}` — {mdesc}")
                     lines.append("")
@@ -526,7 +551,7 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
         elif artifact_type == "data" and prop_name == "enums":
             lines.append("## Enumerated Types\n")
             for enum in value:
-                name = enum.get("name", "")
+                name = fmt_name(enum.get("name", ""))
                 values = enum.get("values", [])
                 lines.append(f"### {name}\n")
                 for val in values:
