@@ -53,6 +53,6 @@ updated: {{ updated }}
 | ID | Name | Description | Rationale | nfrRefs | glossaryRefs |
 |---|---|---|---|---|---|
 {% for constraint in constraints -%}
-| {{ constraint.id }} | {{ constraint.name }} | {{ constraint.description | format_id_refs }}{% if constraint.rationale %} | {{ constraint.rationale }}{% endif %}{% if constraint.nfrRefs %} | {{ constraint.nfrRefs | join(', ') | format_id_refs }}{% endif %}{% if constraint.glossaryRefs %} | {{ constraint.glossaryRefs | format_glossary_refs }}{% endif %} |
+| {{ constraint.id }} | {{ constraint.name }} | {{ constraint.description | format_id_refs }} | {{ constraint.rationale or '' }} | {{ constraint.nfrRefs | join(', ') | format_id_refs if constraint.nfrRefs else '' }} | {{ constraint.glossaryRefs | format_glossary_refs if constraint.glossaryRefs else '' }} |
 {% endfor -%}
 {% endif -%}
