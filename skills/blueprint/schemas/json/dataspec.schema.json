@@ -13,9 +13,7 @@
     "relationships"
   ],
   "additionalProperties": false,
-
   "definitions": {
-
     "glId": {
       "type": "string",
       "description": "Glossary term identifier (GL-NNN).",
@@ -30,9 +28,23 @@
       "type": "string",
       "description": "Enum identifier (NUM-NNN-enumName).",
       "pattern": "^NUM-\\d{3}-[A-Z][A-Za-z0-9]*$"
+    },
+    "entId": {
+      "type": "string",
+      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
+      "description": "Unique identifier for ent"
+    },
+    "relId": {
+      "type": "string",
+      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
+      "description": "Unique identifier for rel"
+    },
+    "primId": {
+      "type": "string",
+      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
+      "description": "Unique identifier for prim"
     }
   },
-
   "properties": {
     "version": {
       "type": "string",
@@ -57,7 +69,25 @@
       "type": "array",
       "description": "Allowed primitive type names. Every field type must resolve to one of these or to an entity/enum name.",
       "items": {
-        "type": "string"
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this primitive type"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the primitive type (e.g., string, number, boolean, array, object)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the primitive type"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
       },
       "default": [
         "string",
@@ -188,7 +218,9 @@
                 "glossaryRefs": {
                   "type": "array",
                   "description": "Glossary term IDs (GL-NNN) referenced in this field's description.",
-                  "items": { "$ref": "#/definitions/glId" }
+                  "items": {
+                    "$ref": "#/definitions/glId"
+                  }
                 }
               }
             }
@@ -231,13 +263,14 @@
           "glossaryRefs": {
             "type": "array",
             "description": "Glossary term IDs (GL-NNN) that this entity maps to. The entity name itself should have a corresponding glossary entry.",
-            "items": { "$ref": "#/definitions/glId" }
+            "items": {
+              "$ref": "#/definitions/glId"
+            }
           }
         }
       }
     },
-
-  "relationships": {
+    "relationships": {
       "type": "array",
       "description": "All directional relationships between entities.\nRelationship types must be one of: association, composition, aggregation, dependency, realization.\nCardinality labels must be one of: 1, 0..1, 1..*, *, 0..*\nNo duplicate relationships of the same type between the same entity pair.\nAbstract entities cannot be the target of composition/aggregation relationships.",
       "items": {
@@ -245,7 +278,8 @@
         "required": [
           "from",
           "to",
-          "type"
+          "type",
+          "id"
         ],
         "additionalProperties": false,
         "properties": {
@@ -305,6 +339,10 @@
           },
           "description": {
             "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this relationship"
           }
         }
       }

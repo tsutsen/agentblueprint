@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "3.0.0",
   "project": "LLMGateway",
   "apiSpecVersion": "1.0.0",
   "dataSpecVersion": "1.0.0",
@@ -141,7 +141,10 @@
       "expectedOutputType": "Query",
       "contractClause": "Bypasses classification when overrideBackendId is provided.",
       "reqRefs": [
-        "REQ-004"
+        "REQ-001"
+      ],
+      "nfrRefs": [
+        "NFR-002"
       ]
     },
     {
@@ -157,7 +160,10 @@
         "status": "COMPLETED"
       },
       "expectedOutputType": "Query",
-      "contractClause": "Complex queries are routed to the most capable backend."
+      "contractClause": "Complex queries are routed to the most capable backend.",
+      "reqRefs": [
+        "REQ-013"
+      ]
     },
     {
       "id": "TST-routeQuery-004",

@@ -1,120 +1,190 @@
 {
   "version": "1.0.0",
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "2.0.0",
   "project": "LLMGateway",
-
   "terms": [
     {
       "id": "GL-001",
-      "term": "Backend",
-      "definition": "A configured LLM service endpoint the gateway can route queries to. May be local (running on the same machine) or cloud (remote API).",
-      "examples": ["llama.cpp server on localhost:8080", "Anthropic API"],
-      "relatedTerms": ["GL-002", "GL-011", "GL-012"],
-      "category": "domain"
+      "examples": [
+        "llama.cpp server on localhost:8080",
+        "Anthropic API"
+      ],
+      "relatedTerms": [
+        "GL-002",
+        "GL-011",
+        "GL-012"
+      ],
+      "category": "domain",
+      "name": "Backend",
+      "description": "A configured LLM service endpoint the gateway can route queries to. May be local (running on the same machine) or cloud (remote API)."
     },
     {
       "id": "GL-002",
-      "term": "Backend Pool",
-      "definition": "The in-memory registry of all configured backends and their current availability state, maintained at runtime by the backend-pool component.",
-      "relatedTerms": ["GL-001", "GL-007"],
-      "category": "domain"
+      "relatedTerms": [
+        "GL-001",
+        "GL-007"
+      ],
+      "category": "domain",
+      "name": "Backend Pool",
+      "description": "The in-memory registry of all configured backends and their current availability state, maintained at runtime by the backend-pool component."
     },
     {
       "id": "GL-003",
-      "term": "Query",
-      "definition": "A single request from a developer submitted to the gateway for routing and processing by a backend.",
-      "examples": ["A code completion request", "A natural language question"],
-      "relatedTerms": ["GL-004", "GL-006", "GL-010"],
-      "category": "domain"
+      "examples": [
+        "A code completion request",
+        "A natural language question"
+      ],
+      "relatedTerms": [
+        "GL-004",
+        "GL-006",
+        "GL-010"
+      ],
+      "category": "domain",
+      "name": "Query",
+      "description": "A single request from a developer submitted to the gateway for routing and processing by a backend."
     },
     {
       "id": "GL-004",
-      "term": "Route Decision",
-      "definition": "The output of the routing step: which backend was selected for a given query and the reason for selection, including the assigned complexity tier.",
-      "relatedTerms": ["GL-003", "GL-005", "GL-007"],
-      "category": "domain"
+      "relatedTerms": [
+        "GL-003",
+        "GL-005",
+        "GL-007"
+      ],
+      "category": "domain",
+      "name": "Route Decision",
+      "description": "The output of the routing step: which backend was selected for a given query and the reason for selection, including the assigned complexity tier."
     },
     {
       "id": "GL-005",
-      "term": "Classifier",
-      "definition": "The component that analyses a query and assigns it a complexity tier (simple, moderate, or complex) to inform routing decisions.",
-      "relatedTerms": ["GL-007", "GL-003"],
-      "category": "domain"
+      "relatedTerms": [
+        "GL-007",
+        "GL-003"
+      ],
+      "category": "domain",
+      "name": "Classifier",
+      "description": "The component that analyses a query and assigns it a complexity tier (simple, moderate, or complex) to inform routing decisions."
     },
     {
       "id": "GL-006",
-      "term": "Router",
-      "definition": "The component that selects a backend for a query based on its complexity tier, configured priority order, and backend availability.",
-      "relatedTerms": ["GL-005", "GL-002", "GL-004"],
-      "category": "domain"
+      "relatedTerms": [
+        "GL-005",
+        "GL-002",
+        "GL-004"
+      ],
+      "category": "domain",
+      "name": "Router",
+      "description": "The component that selects a backend for a query based on its complexity tier, configured priority order, and backend availability."
     },
     {
       "id": "GL-007",
-      "term": "Complexity Tier",
-      "definition": "A categorical label assigned to a query by the Classifier indicating how capable a backend needs to be to handle it. Values are simple, moderate, or complex.",
-      "examples": ["simple", "moderate", "complex"],
-      "relatedTerms": ["GL-005", "GL-006"],
-      "category": "domain"
+      "examples": [
+        "simple",
+        "moderate",
+        "complex"
+      ],
+      "relatedTerms": [
+        "GL-005",
+        "GL-006"
+      ],
+      "category": "domain",
+      "name": "Complexity Tier",
+      "description": "A categorical label assigned to a query by the Classifier indicating how capable a backend needs to be to handle it. Values are simple, moderate, or complex."
     },
     {
       "id": "GL-008",
-      "term": "Fallback",
-      "definition": "The automatic selection of the next available backend when the preferred backend is unavailable or returns an error, triggered by the Router.",
-      "relatedTerms": ["GL-002", "GL-006"],
-      "category": "domain"
+      "relatedTerms": [
+        "GL-002",
+        "GL-006"
+      ],
+      "category": "domain",
+      "name": "Fallback",
+      "description": "The automatic selection of the next available backend when the preferred backend is unavailable or returns an error, triggered by the Router."
     },
     {
       "id": "GL-009",
-      "term": "Log Entry",
-      "definition": "A persisted record of a single processed query including the backend used, routing decision, response latency, and outcome.",
-      "relatedTerms": ["GL-003", "GL-004"],
-      "category": "domain"
+      "relatedTerms": [
+        "GL-003",
+        "GL-004"
+      ],
+      "category": "domain",
+      "name": "Log Entry",
+      "description": "A persisted record of a single processed query including the backend used, routing decision, response latency, and outcome."
     },
     {
       "id": "GL-010",
-      "term": "Routing Overhead",
-      "definition": "The latency added by the gateway's classification and routing logic on top of the backend's own response time, measured in milliseconds.",
-      "relatedTerms": ["GL-005", "GL-006"],
-      "category": "technical"
+      "relatedTerms": [
+        "GL-005",
+        "GL-006"
+      ],
+      "category": "technical",
+      "name": "Routing Overhead",
+      "description": "The latency added by the gateway's classification and routing logic on top of the backend's own response time, measured in milliseconds."
     },
     {
       "id": "GL-011",
-      "term": "Local Backend",
-      "definition": "A backend running as a process on the same machine as the gateway, accessed via localhost. Examples include llama.cpp, LM Studio, and Ollama.",
-      "examples": ["llama.cpp", "LM Studio", "Ollama"],
-      "synonyms": ["local model"],
-      "relatedTerms": ["GL-001", "GL-012"],
-      "category": "domain"
+      "examples": [
+        "llama.cpp",
+        "LM Studio",
+        "Ollama"
+      ],
+      "synonyms": [
+        "local model"
+      ],
+      "relatedTerms": [
+        "GL-001",
+        "GL-012"
+      ],
+      "category": "domain",
+      "name": "Local Backend",
+      "description": "A backend running as a process on the same machine as the gateway, accessed via localhost. Examples include llama.cpp, LM Studio, and Ollama."
     },
     {
       "id": "GL-012",
-      "term": "Cloud Backend",
-      "definition": "A backend accessed via a remote HTTP API, typically requiring an API key for authentication. Examples include Anthropic API and OpenRouter.",
-      "examples": ["Anthropic API", "OpenRouter"],
-      "synonyms": ["cloud model", "remote backend"],
-      "relatedTerms": ["GL-001", "GL-011"],
-      "category": "domain"
+      "examples": [
+        "Anthropic API",
+        "OpenRouter"
+      ],
+      "synonyms": [
+        "cloud model",
+        "remote backend"
+      ],
+      "relatedTerms": [
+        "GL-001",
+        "GL-011"
+      ],
+      "category": "domain",
+      "name": "Cloud Backend",
+      "description": "A backend accessed via a remote HTTP API, typically requiring an API key for authentication. Examples include Anthropic API and OpenRouter."
     },
     {
       "id": "GL-013",
-      "term": "OpenAI-compatible",
-      "definition": "Conforming to the request and response format of the OpenAI Chat Completions API, allowing clients built for OpenAI to work without modification.",
-      "relatedTerms": ["GL-001", "GL-003"],
-      "category": "technical"
+      "relatedTerms": [
+        "GL-001",
+        "GL-003"
+      ],
+      "category": "technical",
+      "name": "OpenAI-compatible",
+      "description": "Conforming to the request and response format of the OpenAI Chat Completions API, allowing clients built for OpenAI to work without modification."
     },
     {
       "id": "GL-014",
-      "term": "Priority Order",
-      "definition": "The user-configured ranked list of backends the Router consults in sequence when selecting a backend for a query.",
-      "relatedTerms": ["GL-006", "GL-002"],
-      "category": "domain"
+      "relatedTerms": [
+        "GL-006",
+        "GL-002"
+      ],
+      "category": "domain",
+      "name": "Priority Order",
+      "description": "The user-configured ranked list of backends the Router consults in sequence when selecting a backend for a query."
     },
     {
       "id": "GL-015",
-      "term": "Override",
-      "definition": "An explicit instruction from the developer to route a query to a specific backend, bypassing classification and priority logic.",
-      "relatedTerms": ["GL-006", "GL-004"],
-      "category": "domain"
+      "relatedTerms": [
+        "GL-006",
+        "GL-004"
+      ],
+      "category": "domain",
+      "name": "Override",
+      "description": "An explicit instruction from the developer to route a query to a specific backend, bypassing classification and priority logic."
     }
   ]
 }

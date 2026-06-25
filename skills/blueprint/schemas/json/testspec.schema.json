@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "testspec.schema.json",
   "title": "TestSpec",
-  "description": "Test specification for all API functions. Produced before implementation. Source of truth for test authorship and independent verification. Version 1.0.0.",
+  "description": "Test specification for all API functions. Produced before implementation. Source of truth for test authorship and independent verification. Version 3.0.0.",
   "type": "object",
   "required": [
     "version",
@@ -47,38 +47,13 @@
       "description": "Non-functional requirement identifier, format NFR-NNN. Must match an ID in GoalSpec.",
       "pattern": "^NFR-\\d{3}$"
     },
+    "scId": {
+      "type": "string",
+      "description": "Success criterion identifier, format SC-NNN. Must match an ID in GoalSpec.",
+      "pattern": "^SC-\\d{3}$"
+    },
     "concreteValue": {
       "description": "A concrete example value \u2014 string, number, boolean, object, or array. Must NOT be a placeholder like 'a valid userId' or 'some string'."
-    },
-    "requirementsTestEntry": {
-      "type": "object",
-      "description": "Maps a requirement to the test cases that verify it. Useful for REQ\u2192test traceability.",
-      "required": [
-        "reqRef",
-        "description",
-        "testIds"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "reqRef": {
-          "type": "string",
-          "description": "The requirement ID this entry covers (REQ-NNN or NFR-NNN).",
-          "pattern": "^(REQ|NFR)-\\d{3}$"
-        },
-        "description": {
-          "type": "string",
-          "description": "Human-readable description of what this requirement tests.",
-          "minLength": 5
-        },
-        "testIds": {
-          "type": "array",
-          "description": "Test case IDs that verify this requirement.",
-          "items": {
-            "$ref": "#/definitions/testId"
-          },
-          "minItems": 1
-        }
-      }
     },
     "glossaryRefItem": {
       "type": "object",
@@ -101,6 +76,11 @@
           "uniqueItems": true
         }
       }
+    },
+    "fcId": {
+      "type": "string",
+      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
+      "description": "Unique identifier for a function coverage entry"
     }
   },
   "properties": {
@@ -111,8 +91,8 @@
     },
     "schemaVersion": {
       "type": "string",
-      "description": "Version of the TestSpec schema this document conforms to. Must be '1.0.0'.",
-      "const": "1.0.0"
+      "description": "Version of the TestSpec schema this document conforms to. Must be '3.0.0'.",
+      "const": "3.0.0"
     },
     "project": {
       "type": "string",
@@ -159,7 +139,10 @@
           "happyPathCount",
           "edgeCaseCount",
           "errorPathCount",
-          "outOfScope"
+          "outOfScope",
+          "id",
+          "name",
+          "description"
         ],
         "additionalProperties": false,
         "properties": {
@@ -192,15 +175,20 @@
             "items": {
               "$ref": "#/definitions/glId"
             }
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this function coverage entry"
+          },
+          "name": {
+            "type": "string",
+            "description": "Short descriptive name for this function coverage entry"
+          },
+          "description": {
+            "type": "string",
+            "description": "Plain-language description of what this coverage entry captures"
           }
         }
-      }
-    },
-    "requirementsTests": {
-      "type": "array",
-      "description": "Maps each requirement to the test cases that verify it. Optional \u2014 useful for REQ\u2192test traceability. Use the generate_tests tool to populate automatically.",
-      "items": {
-        "$ref": "#/definitions/requirementsTestEntry"
       }
     },
     "tests": {
@@ -300,6 +288,20 @@
               "$ref": "#/definitions/glId"
             },
             "uniqueItems": true
+          },
+          "scRefs": {
+            "type": "array",
+            "description": "SC-IDs from GoalSpec that this test helps verify. Populated when success criteria are written. Use for TST\u2192SC traceability.",
+            "items": {
+              "$ref": "#/definitions/scId"
+            }
+          },
+          "nfrRefs": {
+            "type": "array",
+            "description": "NFR-IDs from GoalSpec that this test helps verify (e.g. performance benchmarks, reliability checks).",
+            "items": {
+              "$ref": "#/definitions/nfrId"
+            }
           }
         }
       }

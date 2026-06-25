@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "designspec.schema.json",
   "title": "DesignSpec",
-  "description": "User experience, interaction model, and visual design requirements. Contract between product requirements and implementation. Version 3.0.0.",
+  "description": "User experience, interaction model, and visual design requirements. Contract between product requirements and implementation. Version 4.0.0.",
   "type": "object",
   "required": [
     "version",
@@ -47,6 +47,11 @@
       "type": "string",
       "pattern": "^US-\\d{3}$"
     },
+    "fnId": {
+      "type": "string",
+      "description": "Function ID from ApiSpec. Format: FN-camelCase, e.g. 'FN-createUser'.",
+      "pattern": "^FN-[a-z][A-Za-z0-9]*$"
+    },
     "uxacId": {
       "type": "string",
       "pattern": "^UXAC-\\d{3}$"
@@ -70,6 +75,11 @@
       "properties": {
         "id": {
           "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "description": "Short descriptive name summarizing this requirement.",
           "minLength": 1
         },
         "description": {
@@ -118,6 +128,21 @@
       "type": "string",
       "description": "Glossary term identifier (GL-NNN).",
       "pattern": "^GL-\\d{3}$"
+    },
+    "dgId": {
+      "type": "string",
+      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
+      "description": "Unique identifier for dg"
+    },
+    "spcId": {
+      "type": "string",
+      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
+      "description": "Unique identifier for spc"
+    },
+    "patId": {
+      "type": "string",
+      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
+      "description": "Unique identifier for pat"
     }
   },
   "properties": {
@@ -128,8 +153,8 @@
     },
     "schemaVersion": {
       "type": "string",
-      "description": "Version of the DesignSpec schema this document conforms to. Must be '3.0.0'.",
-      "const": "3.0.0"
+      "description": "Version of the DesignSpec schema this document conforms to. Must be '4.0.0'.",
+      "const": "4.0.0"
     },
     "project": {
       "type": "string",
@@ -172,6 +197,14 @@
             "description": "A UX quality the design must achieve.",
             "minLength": 5
           },
+          "name": {
+            "type": "string",
+            "description": "Short descriptive name summarizing this design goal."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this design goal and how it will be achieved."
+          },
           "rationale": {
             "type": "string"
           }
@@ -201,6 +234,10 @@
             "type": "string",
             "description": "Human name for the persona, e.g. 'Leon'.",
             "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "A brief description of this persona's role, context, and motivations."
           },
           "role": {
             "type": "string",
@@ -274,6 +311,10 @@
             "type": "string",
             "minLength": 1
           },
+          "description": {
+            "type": "string",
+            "description": "A brief description of this user journey. May restate startingState and desiredOutcome in one sentence."
+          },
           "personaRef": {
             "$ref": "#/definitions/personaId",
             "description": "The persona this journey belongs to."
@@ -284,6 +325,21 @@
             "minItems": 1,
             "items": {
               "$ref": "#/definitions/usId"
+            }
+          },
+          "reqRefs": {
+            "type": "array",
+            "description": "REQ-IDs from GoalSpec that this journey exercises end-to-end. Use for UJ\u2192REQ traceability. At least one must be present.",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/definitions/reqId"
+            }
+          },
+          "fnRefs": {
+            "type": "array",
+            "description": "FN-IDs from ApiSpec that this journey exercises. Populated during implementation planning. Use for UJ\u2192FN traceability.",
+            "items": {
+              "$ref": "#/definitions/fnId"
             }
           },
           "startingState": {
@@ -395,6 +451,10 @@
             "description": "Human-readable screen name.",
             "minLength": 1
           },
+          "description": {
+            "type": "string",
+            "description": "Longer description of the screen's purpose and behavior. If omitted, 'purpose' is used as fallback."
+          },
           "purpose": {
             "type": "string",
             "description": "One sentence: what the user accomplishes on this screen.",
@@ -430,6 +490,13 @@
               "$ref": "#/definitions/usId"
             }
           },
+          "fnRefs": {
+            "type": "array",
+            "description": "FN-IDs from ApiSpec that this screen's interactions exercise. Populated during implementation planning. Use for SCR\u2192FN traceability.",
+            "items": {
+              "$ref": "#/definitions/fnId"
+            }
+          },
           "glossaryRefs": {
             "type": "array",
             "description": "Glossary term IDs (GL-NNN) referenced in the screen's purpose description.",
@@ -450,7 +517,8 @@
           "screenRef",
           "layout",
           "components",
-          "states"
+          "states",
+          "id"
         ],
         "additionalProperties": false,
         "properties": {
@@ -569,6 +637,10 @@
             "items": {
               "$ref": "#/definitions/glId"
             }
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this screen spec"
           }
         }
       }

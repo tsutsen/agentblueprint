@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "2.0.0",
   "module": "LLMGateway",
   "description": "API functions for the LLM Gateway — query routing, backend management, and log inspection.",
   "dataSpecVersion": "1.0.0",

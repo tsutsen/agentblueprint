@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "glossary.schema.json",
   "title": "Glossary",
-  "description": "Project vocabulary. Defines all domain terms used across specs. Version 1.0.0.",
+  "description": "Project vocabulary. Defines all domain terms used across specs. Version 2.0.0.",
   "type": "object",
   "required": [
     "version",
@@ -18,7 +18,7 @@
     },
     "schemaVersion": {
       "type": "string",
-      "const": "1.0.0"
+      "const": "2.0.0"
     },
     "project": {
       "type": "string",
@@ -38,14 +38,14 @@
         ],
         "additionalProperties": false,
         "properties": {
-          "term": {
+          "name": {
             "type": "string",
-            "description": "The term exactly as it appears in other specs. Case-sensitive.",
+            "description": "Name of this glossary term. Synonym for 'term' \u2014 use for graph visualization consistency. If omitted, falls back to 'term'.",
             "minLength": 1
           },
-          "definition": {
+          "description": {
             "type": "string",
-            "description": "Precise, unambiguous definition. Must not use the term itself in the definition. Must not contain file paths or schema names. Must not start with 'related to' or 'refers to' — use the 'relatedTerms' field instead."
+            "description": "Description of this glossary term. Synonym for 'definition' \u2014 use for graph visualization consistency. If omitted, falls back to 'definition'.",
             "minLength": 10
           },
           "examples": {
@@ -75,7 +75,28 @@
           "category": {
             "type": "string",
             "description": "Required. Grouping tag for the term.",
-            "enum": ["domain", "technical", "security", "ui"]
+            "enum": [
+              "domain",
+              "technical",
+              "security",
+              "ui"
+            ]
+          },
+          "reqRefs": {
+            "type": "array",
+            "description": "REQ-IDs from GoalSpec that reference this term. Populated during requirement writing. Use for GL\u2192REQ traceability.",
+            "items": {
+              "type": "string",
+              "pattern": "^REQ-\\d{3}$"
+            }
+          },
+          "fnRefs": {
+            "type": "array",
+            "description": "FN-IDs from ApiSpec that use this term. Populated during API design. Use for GL\u2192FN traceability.",
+            "items": {
+              "type": "string",
+              "pattern": "^FN-[a-z][A-Za-z0-9]*$"
+            }
           },
           "id": {
             "type": "string",
@@ -85,6 +106,13 @@
         }
       },
       "uniqueItems": true
+    }
+  },
+  "definitions": {
+    "glId": {
+      "type": "string",
+      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
+      "description": "Unique identifier for a glossary term"
     }
   }
 }

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "archspec.schema.json",
   "title": "ArchitectureSpec",
-  "description": "Structural specification of the system: components, responsibilities, data flow, and constraints. Version 1.0.0.",
+  "description": "Structural specification of the system: components, responsibilities, data flow, and constraints. Version 2.0.0.",
   "type": "object",
   "required": [
     "version",
@@ -33,6 +33,21 @@
       "type": "string",
       "description": "Glossary term identifier, format GL-NNN. Must match an ID in Glossary.json.",
       "pattern": "^GL-\\d{3}$"
+    },
+    "compId": {
+      "type": "string",
+      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
+      "description": "Unique identifier for comp"
+    },
+    "flowId": {
+      "type": "string",
+      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
+      "description": "Unique identifier for flow"
+    },
+    "conId": {
+      "type": "string",
+      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
+      "description": "Unique identifier for con"
     }
   },
   "properties": {
@@ -43,8 +58,8 @@
     },
     "schemaVersion": {
       "type": "string",
-      "description": "Version of the ArchSpec schema this document conforms to. Must be '1.0.0'.",
-      "const": "1.0.0"
+      "description": "Version of the ArchSpec schema this document conforms to. Must be '2.0.0'.",
+      "const": "2.0.0"
     },
     "project": {
       "type": "string",
@@ -158,6 +173,10 @@
             "description": "One sentence: what this component exists to do.",
             "minLength": 10
           },
+          "description": {
+            "type": "string",
+            "description": "Longer description of the component's role and behavior. If omitted, 'purpose' is used as fallback."
+          },
           "responsibilities": {
             "type": "array",
             "description": "Exclusive behaviours owned by this component. No two components may share the same responsibility.",
@@ -202,6 +221,14 @@
             "description": "Glossary term IDs (GL-NNN) that this component's concepts map to. Use for cross-spec traceability.",
             "items": {
               "$ref": "#/definitions/glId"
+            }
+          },
+          "fnRefs": {
+            "type": "array",
+            "description": "FN-IDs from ApiSpec that this component owns. Populated during implementation. Use for Component\u2192FN traceability. Each FN must belong to exactly one component.",
+            "items": {
+              "type": "string",
+              "pattern": "^FN-[a-z][A-Za-z0-9]*$"
             }
           },
           "notes": {

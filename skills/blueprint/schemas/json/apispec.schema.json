@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "apispec.schema.json",
   "title": "ApiSpec",
-  "description": "Interface specification for all functions exposed by a module. Source of truth for test spec and cross-spec linting.",
+  "description": "Interface specification for all functions exposed by a module. Source of truth for test spec and cross-spec linting. Version 2.0.0.",
   "type": "object",
   "required": [
     "version",
@@ -63,6 +63,11 @@
           "description": "What the caller receives: exception class name, HTTP status, or error shape."
         }
       }
+    },
+    "fnId": {
+      "type": "string",
+      "pattern": "^[A-Z]+-\\d{3}-[a-z][a-z0-9-]*$",
+      "description": "Unique identifier for an API function"
     }
   },
   "properties": {
@@ -73,8 +78,8 @@
     },
     "schemaVersion": {
       "type": "string",
-      "description": "Version of the ApiSpec schema this document conforms to. Must be '1.0.0'.",
-      "const": "1.0.0"
+      "description": "Version of the ApiSpec schema this document conforms to. Must be '2.0.0'.",
+      "const": "2.0.0"
     },
     "module": {
       "type": "string",
@@ -175,6 +180,45 @@
             "description": "Optional grouping tags, e.g. ['auth', 'admin'].",
             "items": {
               "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status of this function.",
+            "enum": [
+              "draft",
+              "review",
+              "confirmed",
+              "implemented",
+              "deprecated"
+            ],
+            "default": "draft"
+          },
+          "priority": {
+            "type": "string",
+            "description": "Implementation priority. P0 = must have, P1 = should have, P2 = could have, P3 = won't have now.",
+            "enum": [
+              "P0",
+              "P1",
+              "P2",
+              "P3"
+            ],
+            "default": "P2"
+          },
+          "reqRefs": {
+            "type": "array",
+            "description": "REQ-IDs from GoalSpec that this function implements. Populated during architecture phase. Use for FN\u2192REQ traceability. At least one must be present once requirements are known.",
+            "items": {
+              "type": "string",
+              "pattern": "^REQ-\\d{3}$"
+            }
+          },
+          "nfrRefs": {
+            "type": "array",
+            "description": "NFR-IDs from GoalSpec that this function helps satisfy (e.g. performance, reliability).",
+            "items": {
+              "type": "string",
+              "pattern": "^NFR-\\d{3}$"
             }
           }
         }
