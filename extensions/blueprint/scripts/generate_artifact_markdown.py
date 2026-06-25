@@ -70,8 +70,15 @@ FRONTMATTER_FIELDS = {
     "issue": ["id", "title", "type", "status", "epic", "blocked_by", "milestone", "created", "updated", "inScope", "outOfScope", "acceptanceCriteria"],
 }
 
-# Fields to skip in frontmatter (metadata-only)
-FRONTMATTER_SKIP = {"version", "schemaVersion", "updated", "created", "_meta", "glossaryRefs", "reqRefs", "nfrRefs", "usRefs", "fnRefs", "entityRefs"}
+# Fields to skip entirely (metadata-only, already in frontmatter)
+FRONTMATTER_SKIP = {
+    "version", "schemaVersion", "updated", "created", "_meta",
+    "glossaryRefs", "reqRefs", "nfrRefs", "usRefs", "fnRefs", "entityRefs",
+    # Top-level metadata — already in frontmatter or not content
+    "project", "status", "module", "description",
+    "goalSpecVersion", "dataSpecVersion", "apiSpecVersion",
+    "verificationStatus", "functionCoverage", "titleGlossaryRefs",
+}
 
 
 def resolve_schema_path(schemas_dir: str, schema_name: str) -> str:
@@ -263,9 +270,10 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
         for key, value in data.items():
             if key in FRONTMATTER_SKIP or key.startswith("_"):
                 continue
-            label = get_property_description({"name": key})
             rendered = render_value(value)
             if rendered:
+                # Use the key as a simple header, not the schema description
+                label = key.replace("_", " ").title()
                 lines.append(f"## {label}\n\n{rendered}\n")
         return "\n".join(lines)
 
@@ -820,8 +828,8 @@ def render_schema_properties(data: dict, schema: dict, artifact_type: str) -> st
             lines.append("")
 
         else:
-            # Generic rendering
-            lines.append(f"## {title}\n")
+            # Generic rendering — use the property name, not the schema description
+            lines.append(f"## {prop_name.replace('_', ' ').title()}\n")
             lines.append(rendered)
             lines.append("")
 
