@@ -137,7 +137,7 @@ export function Controls({
               <RotateCcw className="h-3.5 w-3.5" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="top">Reset zoom</TooltipContent>
+          <TooltipContent side="top">Fit all nodes</TooltipContent>
         </Tooltip>
       </div>
     </>
