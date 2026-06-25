@@ -15,20 +15,19 @@ updated: {{ updated }}
 | Term | Definition |
 |---|---|
 {% for term in terms -%}
-| **{{ term.name }}** | {{ term.definition }} |
-
+| **{{ term.name }}** | {{ term.description }} |
 {% endfor -%}
 ## Full Term Details
 
 {% for term in terms -%}
 ### {{ term.name }} ({{ term.id }})
 
-- **Definition**: {{ term.definition }}
+- **Definition**: {{ term.description }}
 {% if term.category -%}
 - **Category**: {{ term.category }}
 {% endif -%}
 {% if term.relatedTerms -%}
-- **Related Terms**: {{ term.relatedTerms | join(', ') }}
+- **Related Terms**: {{ term.relatedTerms | format_glossary_refs }}
 {% endif -%}
 {% if term.examples -%}
 - **Examples**: {{ term.examples | join(', ') }}
