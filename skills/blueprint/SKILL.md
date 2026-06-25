@@ -162,10 +162,9 @@ Proceed silently.
 Check whether the JSON artifact file exists on disk (e.g., `artifacts/GoalSpec.json`).
 
 - **File absent:** proceed normally — this is a fresh start.
-- **File present:** load the JSON and inspect `_meta.updatedField` to determine
-  the last confirmed field. Report the artifact name, its sections, which
-  sections have content (by checking which top-level fields are populated),
-  and any missing dependencies.
+- **File present:** load the JSON and inspect which top-level fields have
+  content. Report the artifact name, its sections, which sections have content
+  (by checking which fields are populated), and any missing dependencies.
 
 Output before the first interview question:
 
@@ -196,7 +195,7 @@ Resume from: <FirstPendingSection> (omit if fresh start)
 The blueprint skill constructs this task from the results of Steps 1–3:
 - **Dependencies** come from `load_artifact` result
 - **Sections** come from the schema loaded in Step 1
-- **Resume point** comes from Step 3 (JSON `_meta.updatedField`)
+- **Resume point** comes from Step 3 (which fields have content in the JSON)
 
 The interview skill generates structured questions from the schema. The blueprint
 skill uses dependency content (JSON parsed or Markdown text) as context when

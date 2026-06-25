@@ -44,16 +44,16 @@ export function registerWriteSpecFields(pi: ExtensionAPI) {
     description:
       "Surgically update one or more fields on the JSON artifact. The tool " +
       "loads the existing JSON from disk, applies all updates, and writes back " +
-      "atomically. This is atomic — data is always persisted incrementally. If " +
-      "the session crashes, the latest JSON on disk can be loaded to resume. " +
-      "The JSON is the single source of truth — Markdown is derived later via " +
-      "generate_artifact_markdown.",
+      "atomically. Data is persisted incrementally — if the session crashes, the " +
+      "latest JSON on disk can be loaded to resume. Resume state is determined by " +
+      "checking which fields have content. The JSON is the single source of truth — " +
+      "Markdown is derived later via generate_artifact_markdown.",
     parameters: Type.Object({
       filePath: Type.String({
         description: "Output file path (e.g. artifacts/GoalSpec.json)",
       }),
       field: Type.String({
-        description: "Human-readable label for this write operation (e.g. 'Project Objective', 'Functional Requirements'). Used for logging and resume tracking.",
+        description: "Human-readable label for this write operation (e.g. 'Project Objective', 'Functional Requirements'). Used for logging.",
       }),
       content: Type.String({
         description: "The validated section content.",
@@ -74,7 +74,6 @@ export function registerWriteSpecFields(pi: ExtensionAPI) {
       const fullPath = path.resolve(ctx.cwd, filePath);
       const jsonPath = fullPath.replace(/\.md$/, '.json');
       const dir = path.dirname(jsonPath);
-      const now = new Date().toISOString();
 
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
@@ -86,11 +85,6 @@ export function registerWriteSpecFields(pi: ExtensionAPI) {
         deepSet(data, update.jsonPath, update.jsonValue);
       }
 
-      // Update metadata
-      data._meta = data._meta || {};
-      data._meta.updated = now;
-      data._meta.updatedField = field;
-
       fs.writeFileSync(jsonPath, JSON.stringify(data, null, 2) + '\n');
 
       return {
@@ -98,10 +92,9 @@ export function registerWriteSpecFields(pi: ExtensionAPI) {
           type: "text",
           text: `Field written: ${field}\n` +
             `  JSON: ${jsonPath}\n` +
-            `  Updates: ${updates.length} field(s)\n` +
-            `  Updated: ${now}`,
+            `  Updates: ${updates.length} field(s)`,
         }],
-        details: { success: true, field, jsonPath, updates, updated: now },
+        details: { success: true, field, jsonPath, updates },
       };
     },
   });
