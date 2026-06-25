@@ -190,11 +190,11 @@
               "minLength": 5
             }
           },
-          "specDependencies": {
+          "dependencies": {
             "type": "array",
             "description": "Component IDs this component depends on. Must reference real component IDs in this spec.",
             "items": {
-              "$ref": "#/definitions/componentId"
+              "$ref": "#/definitions/compId"
             }
           },
           "reqRefs": {

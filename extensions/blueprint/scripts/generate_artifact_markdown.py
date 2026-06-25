@@ -940,6 +940,15 @@ def render_template(artifact_type: str, data: dict, json_path: str,
     env.filters['format_json'] = format_json
     env.filters['format_id_refs'] = format_id_refs
     env.filters['clean_flow_name'] = clean_flow_name
+
+    def map_component_id(name, components):
+        """Map component name to component ID."""
+        for comp in components:
+            if comp.get('name', '').lower().replace(' ', '-') == name.lower():
+                return comp.get('id', name)
+        return name
+
+    env.filters['map_component_id'] = lambda name: name  # default, will be overridden per-render
     template = env.from_string(template_str)
 
     # Prepare context for template
