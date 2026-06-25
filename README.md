@@ -426,7 +426,7 @@ project/
 |------|-----------|---------|
 | `init_workspace` | `force?` | Creates directories, pre-creates artifact files, installs deps |
 | `load_artifact` | `artifactType` | Loads schema + dependencies, prefers JSON, validates required deps |
-| `write_section` | `filePath, field, content, jsonPath, jsonValue` | Surgically updates a JSON field; loads existing JSON, merges, writes back |
+| `write_spec_fields` | `filePath, field, content, jsonPath, jsonValue` | Surgically updates a JSON field; loads existing JSON, merges, writes back |
 | `lint` | `artifacts?[], mode?, epic?, epicsDir?` | Structural linting (`assess` for decisions, `raw` for full report) |
 | `handoff` | `{}` | Checks artifact availability against DEPS, produces handoff table |
 | `generate_tests` | `apiSpecPath?, goalSpecPath?, testSpecPath?, reqMappingPath?` | Auto-generate TestSpec from ApiSpec (happy/edge/error paths, reqRefs) |
@@ -460,7 +460,7 @@ project/
 ## Design Principles
 
 1. **JSON-first** — the JSON artifact is the single source of truth at all
-   times. `write_section` writes JSON directly during the interview.
+   times. `write_spec_fields` writes JSON directly during the interview.
    Markdown is derived from JSON via `generate_artifact_markdown` after
    lint passes. Zero risk of format drift.
 2. **Enforceable** — schemas define strict structure. Linters validate

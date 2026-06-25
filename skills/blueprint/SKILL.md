@@ -5,7 +5,7 @@ description: >
   DesignSpec, ArchitectureSpec, DataSpec, ApiSpec, TestSpec) and epic
   decomposition (issues). Loads schemas and dependencies, runs structural
   linting, delegates interviewing to the interview skill. Writes sections via
-  the write_section tool. Use when creating artifacts or breaking down epics
+  the write_spec_fields tool. Use when creating artifacts or breaking down epics
   into issues.
 version: 2.0.0
 ---
@@ -207,12 +207,12 @@ asking questions that reference another artifact.
 ### Step 5 — Section persistence
 
 After each section is confirmed, write the JSON field using the
-`write_section` tool. The tool loads the existing JSON from disk,
+`write_spec_fields` tool. The tool loads the existing JSON from disk,
 updates the field, and writes back — **atomic and incremental**. No need
 to track the full JSON state.
 
 ```
-tool: write_section
+tool: write_spec_fields
 args:
   filePath: artifacts/<ArtifactType>.json
   field: <field label>
@@ -224,7 +224,7 @@ args:
 **Examples:**
 
 ```
-tool: write_section
+tool: write_spec_fields
 args:
   filePath: artifacts/GoalSpec.json
   field: Project Objective
@@ -234,7 +234,7 @@ args:
 ```
 
 ```
-tool: write_section
+tool: write_spec_fields
 args:
   filePath: artifacts/GoalSpec.json
   field: Functional Requirements

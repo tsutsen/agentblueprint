@@ -3,7 +3,7 @@ import path from "node:path";
 import { registerInitWorkspace } from "./tools/init-workspace";
 import { registerLoadArtifact } from "./tools/load-artifact";
 import { registerLint } from "./tools/lint";
-import { registerWriteSection } from "./tools/write-section";
+import { registerWriteSpecFields } from "./tools/write-spec-fields";
 import { registerHandoff } from "./tools/handoff";
 import { registerGenerateTests } from "./tools/generate-tests";
 import { registerGenerateDiagrams } from "./tools/generate-diagrams";
@@ -18,7 +18,7 @@ export default function (pi: ExtensionAPI) {
   registerInitWorkspace(pi);
   registerLoadArtifact(pi);
   registerLint(pi, extDir);
-  registerWriteSection(pi);
+  registerWriteSpecFields(pi);
   registerHandoff(pi);
   registerGenerateTests(pi, extDir);
   registerGenerateDiagrams(pi, extDir);

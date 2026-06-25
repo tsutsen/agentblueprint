@@ -37,9 +37,9 @@ function loadExisting(filePath: string): Record<string, unknown> {
   return {};
 }
 
-export function registerWriteSection(pi: ExtensionAPI) {
+export function registerWriteSpecFields(pi: ExtensionAPI) {
   pi.registerTool({
-    name: "write_section",
+    name: "write_spec_fields",
     label: "Write Section",
     description:
       "Surgically update a field on the JSON artifact. The tool loads the " +
