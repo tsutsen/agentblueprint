@@ -937,9 +937,32 @@ def render_template(artifact_type: str, data: dict, json_path: str,
         cleaned = re.sub(r'\s*\([A-Z]{1,4}-\d{3,}\)', '', cleaned)
         return cleaned.strip()
 
+    def render_ia_tree(tree, indent=0):
+        """Render an information architecture tree as indented text."""
+        lines = []
+        # Handle dict with 'root' key
+        if isinstance(tree, dict) and 'root' in tree:
+            return render_ia_tree(tree['root'], indent)
+        if isinstance(tree, list):
+            for item in tree:
+                lines.append(render_ia_tree(item, indent))
+        elif isinstance(tree, dict):
+            name = tree.get('name', 'Unknown')
+            screen_ref = tree.get('screenRef', '')
+            prefix = '  ' * indent
+            if indent == 0:
+                lines.append(f'{prefix}{name}')
+            else:
+                ref = f' ({screen_ref})' if screen_ref else ''
+                lines.append(f'{prefix}- {name}{ref}')
+            if 'children' in tree:
+                lines.append(render_ia_tree(tree['children'], indent + 1))
+        return '\n'.join(lines)
+
     env.filters['format_json'] = format_json
     env.filters['format_id_refs'] = format_id_refs
     env.filters['clean_flow_name'] = clean_flow_name
+    env.filters['render_ia_tree'] = render_ia_tree
 
     def map_component_id(name, components):
         """Map component name to component ID."""

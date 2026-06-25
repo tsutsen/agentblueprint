@@ -21,22 +21,12 @@ updated: {{ updated }}
 {% if personas -%}
 ## User Personas
 
+| Name | Goals | Pain Points | Technical Skill Level |
+|---|---|---|---|
 {% for persona in personas -%}
-### {{ persona.label or loop.index }} — {{ persona.name }}
-{% if persona.goals -%}
-- **Goals:** {{ persona.goals | join('; ') | format_id_refs }}
-
-{% endif -%}
-{% if persona.painPoints -%}
-- **Pain Points:** {{ persona.painPoints | join('; ') | format_id_refs }}
-
-{% endif -%}
-{% if persona.technicalSkillLevel -%}
-- **Technical Skill Level:** {{ persona.technicalSkillLevel }}
-
-{% endif -%}
-
+| {{ persona.name }} | {{ persona.goals | join('; ') | format_id_refs }} | {{ persona.painPoints | join('; ') | format_id_refs }} | {{ persona.technicalSkillLevel }} |
 {% endfor -%}
+
 {% endif -%}
 {% if userJourneys -%}
 ## User Journeys
@@ -59,9 +49,17 @@ updated: {{ updated }}
 ## Information Architecture
 
 ```
-{{ informationArchitecture }}
+{{ informationArchitecture | render_ia_tree }}
 ```
 
+{% if informationArchitecture.get('notes') -%}
+**Notes:** {{ informationArchitecture.notes }}
+
+{% endif -%}
+{% if informationArchitecture.get('glossaryRefs') -%}
+**glossaryRefs:** {{ informationArchitecture.glossaryRefs | format_glossary_refs }}
+
+{% endif -%}
 {% endif -%}
 {% if screenInventory -%}
 ## Screen Inventory
