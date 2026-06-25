@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-generate_markdown_schemas.py — Generate markdown schema docs from JSON schema files.
+generate_markdown_schemas.py — Generate agent instruction docs from JSON schema files.
 
 Reads each *.schema.json file and produces a corresponding *.md file in the
-markdown schemas directory. The JSON schema is the single source of truth;
+instructions directory. The JSON schema is the single source of truth;
 the markdown is derived documentation.
 
 Usage:
@@ -506,7 +506,7 @@ def find_schemas(schemas_dir: str) -> list[tuple[str, str]]:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate markdown schema docs from JSON schema files."
+        description="Generate agent instruction docs from JSON schema files."
     )
     parser.add_argument(
         "--type",
@@ -576,7 +576,7 @@ def main():
             print(f"  GENERATED: {md_path}")
             generated += 1
 
-    print(f"\nGenerated {generated} markdown schema(s).")
+    print(f"\nGenerated {generated} agent instruction(s).")
 
     # Show diff summary
     print("\nRegenerated schemas:")

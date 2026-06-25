@@ -1,7 +1,7 @@
 ---
 name: spec-generate-md
 description: >
-  Regenerates markdown schema documentation from JSON schema files.
+  Regenerates agent instruction documentation from JSON schema files.
   The JSON schema is the single source of truth; markdown is derived.
   Run after any JSON schema change to keep docs in sync.
 version: 1.0.0
@@ -9,7 +9,7 @@ version: 1.0.0
 
 # Generate Markdown Schemas
 
-Regenerates markdown schema documentation from JSON schema files.
+Regenerates agent instruction documentation from JSON schema files.
 
 ## When invoked
 

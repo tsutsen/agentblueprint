@@ -1242,7 +1242,7 @@ function registerGenerateMarkdownSchemas(pi: ExtensionAPI, extDir: string) {
     name: "generate_markdown_schemas",
     label: "Generate Markdown Schemas",
     description:
-      "Regenerate markdown schema documentation from JSON schema files. " +
+      "Regenerate agent instruction documentation from JSON schema files. " +
       "The JSON schema is the single source of truth; markdown is derived. " +
       "Run after any JSON schema change to keep docs in sync.",
     parameters: Type.Object({
