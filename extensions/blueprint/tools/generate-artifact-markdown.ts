@@ -34,8 +34,10 @@ export function registerGenerateArtifactMarkdown(pi: ExtensionAPI, extDir: strin
         ...(outPath ? ["--output", outPath] : []),
       ].join(" ");
 
+      let stderr = "";
       try {
-        const { stdout, stderr } = await ctx.sh(cmd);
+        const { stdout, stderr: shStderr } = await ctx.sh(cmd);
+        stderr = shStderr;
         return {
           content: [{ type: "text", text: stdout.trim() }],
           details: { success: true },
