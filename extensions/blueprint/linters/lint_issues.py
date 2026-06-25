@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from shared import Issue, LayerResult, print_human, print_json_output
+from schema_validator import SchemaValidator
 
 
 @dataclass
@@ -458,70 +459,29 @@ class IssueLinter:
                         covered.add(epic_ac)
 
     def lint_schema(self):
-        """Validate each issue's JSON against required fields."""
-        required_fields = [
-            "artifact", "id", "title", "type", "status",
-            "epic", "blocked_by", "milestone", "created", "updated"
-        ]
+        """Validate each issue's JSON against its schema and semantic rules.
+        
+        Schema constraints (required, pattern, enum, const, minLength, maxLength,
+        additionalProperties, etc.) are validated by SchemaValidator.
+        Semantic checks (updated >= created, cross-reference validity) remain here.
+        """
+        schema_path = Path(__file__).resolve().parent.parent.parent.parent / "skills" / "blueprint" / "schemas" / "json" / "issue.schema.json"
+        validator = SchemaValidator(schema_path) if schema_path.exists() else None
 
         for issue_file in self.issue_files:
             data = issue_file.data
             if not data:
                 continue
 
-            # Check required fields
-            for field_name in required_fields:
-                if field_name not in data:
-                    self.add_issue("error", "schema",
-                        f"{issue_file.issue_id}: missing required field '{field_name}'")
+            # JSON Schema validation (auto-generated from schema)
+            if validator:
+                schema_issues = validator.validate(data)
+                for issue in schema_issues:
+                    # Prefix message with issue ID for context
+                    msg = f"{issue_file.issue_id}: {issue.message}"
+                    self.add_issue(issue.severity, "schema", msg, issue.hint)
 
-            # Validate field formats
-            if data.get("id") and not ISSUE_ID_RE.match(data["id"]):
-                self.add_issue("error", "schema",
-                    f"{issue_file.issue_id}: invalid id format '{data['id']}'")
-
-            if data.get("epic") and not EPIC_ID_RE.match(data["epic"]):
-                self.add_issue("error", "schema",
-                    f"{issue_file.issue_id}: invalid epic format '{data['epic']}'")
-
-            if data.get("milestone") and not MILESTONE_RE.match(data["milestone"]):
-                self.add_issue("error", "schema",
-                    f"{issue_file.issue_id}: invalid milestone format '{data['milestone']}'")
-
-            if data.get("created") and not DATE_RE.match(data["created"]):
-                self.add_issue("error", "schema",
-                    f"{issue_file.issue_id}: invalid created date '{data['created']}'")
-
-            if data.get("updated") and not DATE_RE.match(data["updated"]):
-                self.add_issue("error", "schema",
-                    f"{issue_file.issue_id}: invalid updated date '{data['updated']}'")
-
-            if data.get("type") and data["type"] not in ("AFK", "HITL"):
-                self.add_issue("error", "schema",
-                    f"{issue_file.issue_id}: invalid type '{data['type']}' (must be AFK or HITL)")
-
-            if data.get("status") and data["status"] not in (
-                "not_started", "in_progress", "needs_review", "complete"
-            ):
-                self.add_issue("error", "schema",
-                    f"{issue_file.issue_id}: invalid status '{data['status']}'")
-
-            # Check blocked_by is a list of valid IDs
-            blocked_by = data.get("blocked_by", [])
-            if not isinstance(blocked_by, list):
-                self.add_issue("error", "schema",
-                    f"{issue_file.issue_id}: blocked_by must be an array")
-            else:
-                # Check blocked_by items match pattern
-                for item in blocked_by:
-                    if not ISSUE_ID_RE.match(str(item)):
-                        self.add_issue("error", "schema",
-                            f"{issue_file.issue_id}: blocked_by item '{item}' is not a valid IS-NNN")
-                # Check for duplicates
-                if len(blocked_by) != len(set(blocked_by)):
-                    self.add_issue("warning", "schema",
-                        f"{issue_file.issue_id}: duplicate entries in blocked_by")
-
+            # Semantic checks that JSON Schema can't express:
             # Check updated >= created
             created = data.get("created", "")
             updated = data.get("updated", "")
@@ -529,16 +489,12 @@ class IssueLinter:
                 self.add_issue("warning", "schema",
                     f"{issue_file.issue_id}: updated ({updated}) is before created ({created})")
 
-            # Check title length
-            title = data.get("title", "")
-            if title and len(title) < 5:
+            # Check blocked_by duplicates (SchemaValidator checks uniqueness via uniqueItems,
+            # but we add a more user-friendly warning)
+            blocked_by = data.get("blocked_by", [])
+            if isinstance(blocked_by, list) and len(blocked_by) != len(set(blocked_by)):
                 self.add_issue("warning", "schema",
-                    f"{issue_file.issue_id}: title is too short ({len(title)} chars)")
-
-            # Check artifact value
-            if data.get("artifact") != "Issue":
-                self.add_issue("error", "schema",
-                    f"{issue_file.issue_id}: artifact must be 'Issue', got '{data['artifact']}'")
+                    f"{issue_file.issue_id}: duplicate entries in blocked_by")
 
     def lint_file_naming(self):
         """Check that directory name matches file name (IS-001/IS-001.md)."""
