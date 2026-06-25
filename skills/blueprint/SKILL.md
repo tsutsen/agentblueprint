@@ -162,8 +162,8 @@ Proceed silently.
 Check whether the JSON artifact file exists on disk (e.g., `artifacts/GoalSpec.json`).
 
 - **File absent:** proceed normally — this is a fresh start.
-- **File present:** load the JSON and inspect `_meta.updatedSection` to determine
-  the last confirmed section. Report the artifact name, its sections, which
+- **File present:** load the JSON and inspect `_meta.updatedField` to determine
+  the last confirmed field. Report the artifact name, its sections, which
   sections have content (by checking which top-level fields are populated),
   and any missing dependencies.
 
@@ -196,7 +196,7 @@ Resume from: <FirstPendingSection> (omit if fresh start)
 The blueprint skill constructs this task from the results of Steps 1–3:
 - **Dependencies** come from `load_artifact` result
 - **Sections** come from the schema loaded in Step 1
-- **Resume point** comes from Step 3 (JSON `_meta.updatedSection`)
+- **Resume point** comes from Step 3 (JSON `_meta.updatedField`)
 
 The interview skill generates structured questions from the schema. The blueprint
 skill uses dependency content (JSON parsed or Markdown text) as context when
@@ -206,7 +206,7 @@ asking questions that reference another artifact.
 
 ### Step 5 — Section persistence
 
-After each section is confirmed, write it to the JSON artifact using the
+After each section is confirmed, write the JSON field using the
 `write_section` tool. The tool loads the existing JSON from disk,
 updates the field, and writes back — **atomic and incremental**. No need
 to track the full JSON state.
@@ -215,10 +215,10 @@ to track the full JSON state.
 tool: write_section
 args:
   filePath: artifacts/<ArtifactType>.json
-  section: <SectionName>
+  field: <field label>
   content: <validated section content>
   jsonPath: <dot-separated path>
-  jsonValue: <the section data>
+  jsonValue: <the data>
 ```
 
 **Examples:**
@@ -227,7 +227,7 @@ args:
 tool: write_section
 args:
   filePath: artifacts/GoalSpec.json
-  section: Project Objective
+  field: Project Objective
   content: "The system shall provide..."
   jsonPath: "objective.statement"
   jsonValue: "The system shall provide..."
@@ -237,7 +237,7 @@ args:
 tool: write_section
 args:
   filePath: artifacts/GoalSpec.json
-  section: Functional Requirements
+  field: Functional Requirements
   content: "FR-001: ..."
   jsonPath: "functionalRequirements"
   jsonValue: [{ "id": "FR-001", "description": "...", "priority": "high" }]
@@ -247,7 +247,7 @@ The JSON is the single source of truth — Markdown is derived later via
 `generate_artifact_markdown`.
 
 On success, show the JSON path and updated timestamp:
-"Section written: <SectionName>. JSON: <path>."
+"Field written: <FieldLabel>. JSON: <path>."
 
 On revision request: re-interview affected sections, rewrite, re-verify.
 

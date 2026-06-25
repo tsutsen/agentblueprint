@@ -426,7 +426,7 @@ project/
 |------|-----------|---------|
 | `init_workspace` | `force?` | Creates directories, pre-creates artifact files, installs deps |
 | `load_artifact` | `artifactType` | Loads schema + dependencies, prefers JSON, validates required deps |
-| `write_section` | `filePath, section, content, jsonPath, jsonValue` | Surgically updates a JSON field; loads existing JSON, merges, writes back |
+| `write_section` | `filePath, field, content, jsonPath, jsonValue` | Surgically updates a JSON field; loads existing JSON, merges, writes back |
 | `lint` | `artifacts?[], mode?, epic?, epicsDir?` | Structural linting (`assess` for decisions, `raw` for full report) |
 | `handoff` | `{}` | Checks artifact availability against DEPS, produces handoff table |
 | `generate_tests` | `apiSpecPath?, goalSpecPath?, testSpecPath?, reqMappingPath?` | Auto-generate TestSpec from ApiSpec (happy/edge/error paths, reqRefs) |

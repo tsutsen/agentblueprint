@@ -42,7 +42,7 @@ export function registerWriteSection(pi: ExtensionAPI) {
     name: "write_section",
     label: "Write Section",
     description:
-      "Surgically update fields on the JSON artifact. The tool loads the " +
+      "Surgically update a field on the JSON artifact. The tool loads the " +
       "existing JSON from disk, applies the update, and writes back. " +
       "This is atomic — data is always persisted incrementally. If the " +
       "session crashes, the latest JSON on disk can be loaded to resume. " +
@@ -52,8 +52,8 @@ export function registerWriteSection(pi: ExtensionAPI) {
       filePath: Type.String({
         description: "Output file path (e.g. artifacts/GoalSpec.json)",
       }),
-      section: Type.String({
-        description: "Section name just confirmed (e.g. Project Objective, Non-Goals). Used for logging.",
+      field: Type.String({
+        description: "Field name being written (e.g. 'Project Objective', 'Functional Requirements'). Used for logging and resume tracking.",
       }),
       content: Type.String({
         description: "The validated section content.",
@@ -66,7 +66,7 @@ export function registerWriteSection(pi: ExtensionAPI) {
       }),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-      const { filePath, section, content, jsonPath: pathStr, jsonValue } = params;
+      const { filePath, field, content, jsonPath: pathStr, jsonValue } = params;
       const fullPath = path.resolve(ctx.cwd, filePath);
       const jsonPath = fullPath.replace(/\.md$/, '.json');
       const dir = path.dirname(jsonPath);
@@ -83,19 +83,19 @@ export function registerWriteSection(pi: ExtensionAPI) {
       // Update metadata
       data._meta = data._meta || {};
       data._meta.updated = now;
-      data._meta.updatedSection = section;
+      data._meta.updatedField = field;
 
       fs.writeFileSync(jsonPath, JSON.stringify(data, null, 2) + '\n');
 
       return {
         content: [{
           type: "text",
-          text: `Section written: ${section}\n` +
+          text: `Field written: ${field}\n` +
             `  JSON: ${jsonPath}\n` +
             `  Path: ${pathStr}\n` +
             `  Updated: ${now}`,
         }],
-        details: { success: true, section, jsonPath, path: pathStr, updated: now },
+        details: { success: true, field, jsonPath, path: pathStr, updated: now },
       };
     },
   });
