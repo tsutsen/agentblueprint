@@ -3,14 +3,16 @@
 Generate tests for all ApiSpec functions that don't have tests yet.
 
 Usage:
-    python3 scripts/generate_tests.py [--goal GoalSpec.json] [--api ApiSpec.json] [--test TestSpec.json]
+    python3 scripts/generate_tests.py                    # uses defaults from cwd
+    python3 scripts/generate_tests.py --api path/to/ApiSpec.json
+    python3 scripts/generate_tests.py --api ApiSpec.json --goal GoalSpec.json --test TestSpec.json
 
 This script:
-1. Reads artifacts/ApiSpec.json for function definitions
-2. Reads artifacts/GoalSpec.json (optional) for REQ/NFR mapping
-3. Reads artifacts/TestSpec.json for existing tests
+1. Reads ApiSpec.json for function definitions
+2. Reads GoalSpec.json (optional) for REQ/NFR mapping
+3. Reads TestSpec.json for existing tests
 4. Generates tests for functions without tests
-5. Saves updated tests to artifacts/TestSpec.json
+5. Saves updated tests to TestSpec.json
 
 Test ID format: TST-{functionName}-{NNN} (e.g. TST-createSession-001)
 fnRef format: FN-{camelCase} (e.g. FN-createSession)
@@ -18,20 +20,20 @@ fnRef format: FN-{camelCase} (e.g. FN-createSession)
 Requirements mapping:
   Tests are generated with reqRefs populated from GoalSpec if:
   - The ApiSpec function has a 'reqRefs' field (added during ApiSpec creation), OR
-  - A manual mapping file is provided at artifacts/req_fn_mapping.json
+  - A manual mapping file is provided at req_fn_mapping.json
   Otherwise reqRefs are left empty and must be filled in manually.
 """
 
+import argparse
 import json
 import sys
 from pathlib import Path
 
-# Project root
-PROJECT_ROOT = Path(__file__).parent.parent
-API_SPEC_PATH = PROJECT_ROOT / "artifacts" / "ApiSpec.json"
-GOAL_SPEC_PATH = PROJECT_ROOT / "artifacts" / "GoalSpec.json"
-TEST_SPEC_PATH = PROJECT_ROOT / "artifacts" / "TestSpec.json"
-REQ_MAPPING_PATH = PROJECT_ROOT / "artifacts" / "req_fn_mapping.json"
+# Defaults (relative to cwd)
+DEFAULT_API_SPEC = "artifacts/ApiSpec.json"
+DEFAULT_GOAL_SPEC = "artifacts/GoalSpec.json"
+DEFAULT_TEST_SPEC = "artifacts/TestSpec.json"
+DEFAULT_REQ_MAPPING = "artifacts/req_fn_mapping.json"
 
 
 def load_json(path):
@@ -215,25 +217,55 @@ def generate_out_of_scope(fn):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Generate TestSpec test cases for ApiSpec functions without tests."
+    )
+    parser.add_argument(
+        "--api",
+        default=DEFAULT_API_SPEC,
+        help=f"Path to ApiSpec JSON (default: {DEFAULT_API_SPEC})",
+    )
+    parser.add_argument(
+        "--goal",
+        default=DEFAULT_GOAL_SPEC,
+        help=f"Path to GoalSpec JSON (default: {DEFAULT_GOAL_SPEC})",
+    )
+    parser.add_argument(
+        "--test",
+        default=DEFAULT_TEST_SPEC,
+        help=f"Path to TestSpec JSON (default: {DEFAULT_TEST_SPEC})",
+    )
+    parser.add_argument(
+        "--mapping",
+        default=DEFAULT_REQ_MAPPING,
+        help=f"Path to REQ→Fn mapping JSON (default: {DEFAULT_REQ_MAPPING})",
+    )
+    args = parser.parse_args()
+
+    api_path = Path(args.api)
+    goal_path = Path(args.goal)
+    test_path = Path(args.test)
+    mapping_path = Path(args.mapping)
+
     # Load ApiSpec (required)
-    print("Loading ApiSpec...")
-    api = load_json(API_SPEC_PATH)
+    print(f"Loading ApiSpec: {api_path}")
+    api = load_json(api_path)
     print(f"  Found {len(api['functions'])} functions")
 
     # Load GoalSpec (optional — for REQ/NFR traceability)
     goal_spec = None
     req_mapping = None
-    if GOAL_SPEC_PATH.exists():
-        print("Loading GoalSpec...")
-        goal_spec = load_json(GOAL_SPEC_PATH)
+    if goal_path.exists():
+        print(f"Loading GoalSpec: {goal_path}")
+        goal_spec = load_json(goal_path)
         print(f"  Found {len(goal_spec.get('functionalRequirements', []))} REQ, "
               f"{len(goal_spec.get('nonFunctionalRequirements', []))} NFR")
-    if REQ_MAPPING_PATH.exists():
-        print("Loading REQ→Fn mapping...")
-        req_mapping = load_json(REQ_MAPPING_PATH)
+    if mapping_path.exists():
+        print(f"Loading REQ→Fn mapping: {mapping_path}")
+        req_mapping = load_json(mapping_path)
 
-    print("Loading TestSpec...")
-    ts = load_json(TEST_SPEC_PATH)
+    print(f"Loading TestSpec: {test_path}")
+    ts = load_json(test_path)
     existing_tests = ts.get("tests", [])
     existing_fn_refs = get_existing_fn_refs(existing_tests)
     print(f"  Found {len(existing_tests)} existing tests")
@@ -281,8 +313,8 @@ def main():
         ts["functionCoverage"].append(fc)
 
     # Save updated TestSpec
-    save_json(TEST_SPEC_PATH, ts)
-    print(f"\n✓ Saved {len(new_tests)} new tests to {TEST_SPEC_PATH}")
+    save_json(test_path, ts)
+    print(f"\n✓ Saved {len(new_tests)} new tests to {test_path}")
     print(f"  Total tests: {len(ts['tests'])}")
     print(f"  Total function coverage entries: {len(ts['functionCoverage'])}")
 
