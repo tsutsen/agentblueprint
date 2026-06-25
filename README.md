@@ -426,7 +426,7 @@ project/
 |------|-----------|---------|
 | `init_workspace` | `force?` | Creates directories, pre-creates artifact files, installs deps |
 | `load_artifact` | `artifactType` | Loads schema + dependencies, prefers JSON, validates required deps |
-| `write_section` | `filePath, section, content, sections_complete, sections_pending, jsonContent` | Writes JSON artifact (single source of truth); tracks section progress in `_sections` field |
+| `write_section` | `filePath, section, content, jsonContent, ready?` | Writes JSON artifact (single source of truth); sets `ready`/`readyAt` when complete |
 | `update_frontmatter` | `filePath, status, sections_complete, sections_pending` | Updates artifact frontmatter (status, sections, date) |
 | `lint` | `artifacts?[], mode?, epic?, epicsDir?` | Structural linting (`assess` for decisions, `raw` for full report) |
 | `handoff` | `{}` | Checks artifact availability against DEPS, produces handoff table |

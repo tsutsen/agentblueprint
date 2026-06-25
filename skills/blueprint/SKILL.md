@@ -214,17 +214,19 @@ args:
   filePath: artifacts/<ArtifactType>.json
   section: <SectionName>
   content: <validated section content>
-  sections_complete: ["<Section1>", "<Section2>", ...]
-  sections_pending: ["<Section3>", ...]
   jsonContent: { ... complete JSON object ... }
+  ready: true
 ```
 
-`write_section` writes the JSON artifact with a `_sections` tracking field
-that records which sections are complete. The JSON is the single source of
+`write_section` writes the JSON artifact. The JSON is the single source of
 truth — Markdown is derived later via `generate_artifact_markdown`.
 
-On success, show the JSON path and section count:
-"Section written: <SectionName>. JSON: <path>. Sections complete: N, pending: M."
+Set `ready: true` when all sections are complete. The tool records a
+`ready` flag and `readyAt` timestamp on the JSON for the markdown generation
+step to check.
+
+On success, show the JSON path and ready status:
+"Section written: <SectionName>. JSON: <path>. Ready: true."
 
 On revision request: re-interview affected sections, rewrite, re-verify.
 

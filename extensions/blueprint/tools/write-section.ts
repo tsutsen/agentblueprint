@@ -10,8 +10,8 @@ export function registerWriteSection(pi: ExtensionAPI) {
     description:
       "Write a confirmed artifact section to JSON during the interview. " +
       "The JSON is the single source of truth — Markdown is derived later " +
-      "via generate_artifact_markdown. Tracks section progress in a _sections " +
-      "field on the JSON artifact.",
+      "via generate_artifact_markdown. Records when the JSON is ready for " +
+      "markdown generation with a `ready` flag and `readyAt` timestamp.",
     parameters: Type.Object({
       filePath: Type.String({
         description: "Output file path (e.g. artifacts/GoalSpec.json)",
@@ -22,21 +22,18 @@ export function registerWriteSection(pi: ExtensionAPI) {
       content: Type.String({
         description: "The validated section content to write.",
       }),
-      sections_complete: Type.Array(Type.String(), {
-        description: "List of confirmed section names (including the one just written).",
-      }),
-      sections_pending: Type.Array(Type.String(), {
-        description: "List of section names still to be confirmed.",
-      }),
       jsonContent: Type.Optional(Type.Object({}, {
         description: "Complete JSON object for the entire artifact. Written to the .json file. The blueprint skill accumulates this across sections.",
       })),
+      ready: Type.Optional(Type.Boolean({
+        description: "Whether the JSON is ready for markdown generation. Set true when all sections are complete.",
+      })),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-      const { filePath, section, content, sections_complete, sections_pending, jsonContent } = params;
+      const { filePath, section, content, jsonContent, ready } = params;
       const fullPath = path.resolve(ctx.cwd, filePath);
       const dir = path.dirname(fullPath);
-      const updated = new Date().toISOString().slice(0, 10);
+      const now = new Date().toISOString();
 
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
@@ -46,12 +43,10 @@ export function registerWriteSection(pi: ExtensionAPI) {
       let jsonWritten = false;
       if (jsonContent) {
         jsonPath = fullPath.replace(/\.md$/, '.json');
-        if (!jsonContent._sections) {
-          jsonContent._sections = { sections_complete: [], sections_pending: [] };
+        if (ready) {
+          jsonContent.ready = true;
+          jsonContent.readyAt = now;
         }
-        jsonContent._sections.sections_complete = sections_complete;
-        jsonContent._sections.sections_pending = sections_pending;
-        jsonContent._sections.updated = updated;
         fs.writeFileSync(jsonPath, JSON.stringify(jsonContent, null, 2) + '\n');
         jsonWritten = true;
       }
@@ -66,25 +61,15 @@ export function registerWriteSection(pi: ExtensionAPI) {
 
       const written = fs.readFileSync(jsonPath, "utf-8");
       const revalidated = JSON.parse(written);
-      const hasSections = revalidated._sections?.sections_complete?.includes(section);
-
-      if (!hasSections) {
-        return {
-          content: [{ type: "text", text: `ERROR: section '${section}' not found in written JSON.` }],
-          details: { success: false },
-          isError: true,
-        };
-      }
 
       return {
         content: [{
           type: "text",
           text: `Section written: ${section}\n` +
             `  JSON: ${jsonPath}\n` +
-            `  Sections complete: ${sections_complete.length}\n` +
-            `  Sections pending: ${sections_pending.length}`,
+            `  Ready: ${revalidated.ready === true}`,
         }],
-        details: { success: true, section, jsonPath },
+        details: { success: true, section, jsonPath, ready: revalidated.ready },
       };
     },
   });
