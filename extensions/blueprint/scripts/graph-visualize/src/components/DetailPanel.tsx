@@ -21,7 +21,7 @@ export interface DetailPanelProps {
 
 export function DetailPanel({ node, connections, onClose, onSelectNode }: DetailPanelProps) {
   return (
-    <div data-testid="detail-panel" className="absolute top-4 right-4 w-[360px] max-h-[calc(100%-2rem)] bg-card border border-border rounded-xl shadow-lg z-40 flex flex-col overflow-hidden">
+    <div data-testid="detail-panel" className="absolute top-4 right-4 w-[360px] max-h-[calc(100%-2rem)] bg-card border border-border rounded-xl shadow-lg z-40 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-right-4 slide-in-from-top-2 duration-200">
       {/* Header */}
       <div data-testid="detail-header" className="flex items-start justify-between p-4 border-b border-border">
         <div data-testid="detail-header-text" className="flex flex-col gap-1 pr-2 min-w-0 flex-1">
