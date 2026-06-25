@@ -91,7 +91,6 @@ updated: {{ updated }}
 
 {% for state in screen.states -%}
 - **{{ state.name }}**: {{ state.description }}
-
 {% endfor -%}
 {% endif -%}
 {% if screen.interactions -%}
