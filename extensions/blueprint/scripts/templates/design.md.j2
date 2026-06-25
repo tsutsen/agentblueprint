@@ -168,20 +168,12 @@ updated: {{ updated }}
 {% if uxAcceptanceCriteria -%}
 ## UX Acceptance Criteria
 
+| ID | Name | Description | Verification | refs |
+|---|---|---|---|---|
 {% for criterion in uxAcceptanceCriteria -%}
-### {{ criterion.id }} — {{ criterion.name }}
-
-{{ criterion.description }}
-{% if criterion.verificationMethod -%}
-**Verification:** {{ criterion.verificationMethod }}
-
-{% endif -%}
-{% if criterion.refs -%}
-**refs:** {{ criterion.refs | join(', ') | format_id_refs }}
-
-{% endif -%}
-
+| {{ criterion.id }} | {{ criterion.name }} | {{ criterion.description | format_id_refs }} | {{ criterion.verificationMethod }} | {{ criterion.refs | join(', ') | format_id_refs if criterion.refs else '' }} |
 {% endfor -%}
+
 {% endif -%}
 {% if designTokens -%}
 ## Design Tokens
