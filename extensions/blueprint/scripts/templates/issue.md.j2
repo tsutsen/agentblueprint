@@ -1,0 +1,54 @@
+---
+artifact: Issue
+{% if status %}
+status: {{ status }}
+{% endif %}
+{% if updated %}
+updated: {{ updated }}
+{% endif %}
+---
+
+# {{ id }}: {{ title }}
+
+{{ description }}
+
+{% if type -%}
+**Type:** {{ type }}
+
+{% endif -%}
+{% if epic -%}
+**Epic:** {{ epic }}
+
+{% endif -%}
+{% if blocked_by -%}
+**Blocked by:** {{ blocked_by | join(', ') }}
+
+{% endif -%}
+{% if milestone -%}
+**Milestone:** {{ milestone }}
+
+{% endif -%}
+{% if inScope -%}
+## In Scope
+
+{% for item in inScope -%}
+- {{ item.description if item is mapping else item }}
+{% endfor -%}
+
+{% endif -%}
+{% if outOfScope -%}
+## Out of Scope
+
+{% for item in outOfScope -%}
+- {{ item.description if item is mapping else item }}
+{% endfor -%}
+
+{% endif -%}
+{% if acceptanceCriteria -%}
+## Acceptance Criteria
+
+{% for ac in acceptanceCriteria -%}
+- [ ] {{ ac.description if ac is mapping else ac }}
+{% endfor -%}
+
+{% endif -%}

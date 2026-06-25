@@ -1,0 +1,78 @@
+---
+artifact: TaskPlan
+{% if status %}
+status: {{ status }}
+{% endif %}
+{% if updated %}
+updated: {{ updated }}
+{% endif %}
+---
+
+# TaskPlan
+
+{{ description }}
+
+## Milestones
+
+{% for ms in milestones -%}
+### {{ ms.id }}: {{ ms.name }}
+
+{{ ms.outcome }}
+
+*Milestones:* {{ ms.epics | join(', ') }}
+
+{% endfor -%}
+## Epics
+
+{% for epic in epics -%}
+### {{ epic.id }}: {{ epic.title }}
+
+{% if epic.objective -%}
+{{ epic.objective }}
+
+{% endif -%}
+{% if epic.summary -%}
+*{{ epic.summary }}*
+
+{% endif -%}
+*Milestone:* {{ epic.milestone }}
+{% if epic.requirements -%}
+*Requirements:* {{ epic.requirements | join(', ') }}
+{% endif -%}
+{% if epic.dependencies -%}
+{% if epic.dependencies.blockedBy -%}
+*Blocked by:* {{ epic.dependencies.blockedBy | join(', ') }}
+{% endif -%}
+{% if epic.dependencies.blocks -%}
+*Blocks:* {{ epic.dependencies.blocks | join(', ') }}
+{% endif -%}
+{% endif -%}
+
+{% if epic.scope -%}
+{% if epic.scope.inScope -%}
+
+**In Scope:**
+
+{% for item in epic.scope.inScope -%}
+- {{ item }}
+{% endfor -%}
+{% endif -%}
+{% if epic.scope.outOfScope -%}
+
+**Out of Scope:**
+
+{% for item in epic.scope.outOfScope -%}
+- {{ item }}
+{% endfor -%}
+{% endif -%}
+{% endif -%}
+{% if epic.acceptanceCriteria -%}
+
+**Acceptance Criteria:**
+
+{% for ac in epic.acceptanceCriteria -%}
+- [ ] {{ ac }}
+{% endfor -%}
+{% endif -%}
+
+{% endfor -%}
