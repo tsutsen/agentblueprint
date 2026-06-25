@@ -206,10 +206,10 @@ asking questions that reference another artifact.
 
 ### Step 5 — Section persistence
 
-After each section is confirmed, write the **complete accumulated JSON** to
-disk using the `write_section` tool. This is critical: the JSON is persisted
-incrementally so that if the session crashes, the latest state on disk can
-be loaded to resume.
+After each section is confirmed, write it to the JSON artifact using the
+`write_section` tool. The tool loads the existing JSON from disk,
+updates the field, and writes back — **atomic and incremental**. No need
+to track the full JSON state.
 
 ```
 tool: write_section
@@ -217,17 +217,31 @@ args:
   filePath: artifacts/<ArtifactType>.json
   section: <SectionName>
   content: <validated section content>
-  jsonContent: { ... complete accumulated JSON ... }
+  jsonPath: <dot-separated path>
+  jsonValue: <the section data>
 ```
 
-**How to build `jsonContent`:**
+**Examples:**
 
-1. **Fresh start:** start with an empty object `{}` and merge each confirmed
-   section's data into it.
-2. **Resuming:** load the existing JSON from disk first, then merge the new
-   section's data on top of it.
-3. **Pass the full accumulated object** — not just the new section. The tool
-   writes the entire JSON atomically.
+```
+tool: write_section
+args:
+  filePath: artifacts/GoalSpec.json
+  section: Project Objective
+  content: "The system shall provide..."
+  jsonPath: "objective.statement"
+  jsonValue: "The system shall provide..."
+```
+
+```
+tool: write_section
+args:
+  filePath: artifacts/GoalSpec.json
+  section: Functional Requirements
+  content: "FR-001: ..."
+  jsonPath: "functionalRequirements"
+  jsonValue: [{ "id": "FR-001", "description": "...", "priority": "high" }]
+```
 
 The JSON is the single source of truth — Markdown is derived later via
 `generate_artifact_markdown`.

@@ -3,17 +3,51 @@ import { Type } from "typebox";
 import fs from "node:fs";
 import path from "node:path";
 
+/**
+ * Deep set a value on an object using a dot-separated path.
+ * Creates intermediate objects/arrays as needed.
+ */
+function deepSet(obj: Record<string, unknown>, path: string, value: unknown): void {
+  const parts = path.split(".");
+  let current: Record<string, unknown> = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const key = parts[i];
+    if (!(key in current) || typeof current[key] !== "object" || current[key] === null) {
+      const nextKey = parts[i + 1];
+      current[key] = /^\d+$/.test(nextKey) ? [] : {};
+    }
+    current = current[key] as Record<string, unknown>;
+  }
+  current[parts[parts.length - 1]] = value;
+}
+
+/**
+ * Load an existing JSON file, or return an empty object if it doesn't exist.
+ */
+function loadExisting(filePath: string): Record<string, unknown> {
+  if (fs.existsSync(filePath)) {
+    try {
+      const raw = fs.readFileSync(filePath, "utf-8");
+      const parsed = JSON.parse(raw);
+      return typeof parsed === "object" && parsed !== null ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+
 export function registerWriteSection(pi: ExtensionAPI) {
   pi.registerTool({
     name: "write_section",
     label: "Write Section",
     description:
-      "Write the complete JSON artifact to disk during the interview. " +
-      "Call this after every section is confirmed — pass the full accumulated " +
-      "JSON object. This ensures data is persisted incrementally: if the session " +
-      "crashes, the latest JSON on disk can be loaded to resume. " +
-      "The JSON is the single source of truth — Markdown is derived later via " +
-      "generate_artifact_markdown.",
+      "Surgically update fields on the JSON artifact. The tool loads the " +
+      "existing JSON from disk, applies the update, and writes back. " +
+      "This is atomic — data is always persisted incrementally. If the " +
+      "session crashes, the latest JSON on disk can be loaded to resume. " +
+      "The JSON is the single source of truth — Markdown is derived later " +
+      "via generate_artifact_markdown.",
     parameters: Type.Object({
       filePath: Type.String({
         description: "Output file path (e.g. artifacts/GoalSpec.json)",
@@ -22,38 +56,46 @@ export function registerWriteSection(pi: ExtensionAPI) {
         description: "Section name just confirmed (e.g. Project Objective, Non-Goals). Used for logging.",
       }),
       content: Type.String({
-        description: "The validated section content to write.",
+        description: "The validated section content.",
       }),
-      jsonContent: Type.Object({}, {
-        description: "Complete accumulated JSON object for the entire artifact. Must include all previously confirmed sections plus the new one. This is written atomically to disk.",
+      jsonPath: Type.String({
+        description: "Dot-separated path to the field to set (e.g. 'functionalRequirements', 'userStories[0].statement'). Arrays can be indexed.",
+      }),
+      jsonValue: Type.Unknown({
+        description: "The value to set at jsonPath. Can be a string, number, boolean, object, or array.",
       }),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-      const { filePath, section, content, jsonContent } = params;
+      const { filePath, section, content, jsonPath: pathStr, jsonValue } = params;
       const fullPath = path.resolve(ctx.cwd, filePath);
-      const dir = path.dirname(fullPath);
+      const jsonPath = fullPath.replace(/\.md$/, '.json');
+      const dir = path.dirname(jsonPath);
       const now = new Date().toISOString();
 
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
 
-      // Add metadata to the JSON
-      jsonContent._meta = jsonContent._meta || {};
-      jsonContent._meta.updated = now;
-      jsonContent._meta.updatedSection = section;
+      // Load existing JSON, merge new value, write back
+      const data = loadExisting(jsonPath);
+      deepSet(data, pathStr, jsonValue);
 
-      const jsonPath = fullPath.replace(/\.md$/, '.json');
-      fs.writeFileSync(jsonPath, JSON.stringify(jsonContent, null, 2) + '\n');
+      // Update metadata
+      data._meta = data._meta || {};
+      data._meta.updated = now;
+      data._meta.updatedSection = section;
+
+      fs.writeFileSync(jsonPath, JSON.stringify(data, null, 2) + '\n');
 
       return {
         content: [{
           type: "text",
           text: `Section written: ${section}\n` +
             `  JSON: ${jsonPath}\n` +
+            `  Path: ${pathStr}\n` +
             `  Updated: ${now}`,
         }],
-        details: { success: true, section, jsonPath, updated: now },
+        details: { success: true, section, jsonPath, path: pathStr, updated: now },
       };
     },
   });
