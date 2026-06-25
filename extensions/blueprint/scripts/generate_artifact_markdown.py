@@ -916,6 +916,12 @@ def render_template(artifact_type: str, data: dict, json_path: str,
     
     env.filters['format_glossary_refs'] = format_glossary_refs
     env.filters['format_inputs'] = format_inputs
+
+    def format_json(obj):
+        """Format an object as compact JSON."""
+        return json.dumps(obj, ensure_ascii=False)
+
+    env.filters['format_json'] = format_json
     template = env.from_string(template_str)
 
     # Prepare context for template
