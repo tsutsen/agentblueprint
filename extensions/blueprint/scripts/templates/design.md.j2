@@ -108,12 +108,12 @@ updated: {{ updated }}
 {% if interactionPatterns -%}
 ## Interaction Patterns
 
+| Name | Description |
+|---|---|
 {% for pattern in interactionPatterns -%}
-### {{ pattern.name }}
-
-{{ pattern.description }}
-
+| {{ pattern.name }} | {{ pattern.description }} |
 {% endfor -%}
+
 {% endif -%}
 {% if visualDesignRequirements -%}
 ## Visual Design Requirements
