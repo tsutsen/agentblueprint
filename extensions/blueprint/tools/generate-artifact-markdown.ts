@@ -34,7 +34,7 @@ export function registerGenerateArtifactMarkdown(pi: ExtensionAPI, extDir: strin
       ];
 
       try {
-        const { stdout, stderr } = await execFilePromise("python", args, {
+        const { stdout, stderr } = await execFilePromise("python", [script, ...args], {
           cwd: ctx.cwd,
           timeout: 30000,
         });
