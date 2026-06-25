@@ -40,33 +40,37 @@ function loadExisting(filePath: string): Record<string, unknown> {
 export function registerWriteSpecFields(pi: ExtensionAPI) {
   pi.registerTool({
     name: "write_spec_fields",
-    label: "Write Section",
+    label: "Write Spec Fields",
     description:
-      "Surgically update a field on the JSON artifact. The tool loads the " +
-      "existing JSON from disk, applies the update, and writes back. " +
-      "This is atomic — data is always persisted incrementally. If the " +
-      "session crashes, the latest JSON on disk can be loaded to resume. " +
-      "The JSON is the single source of truth — Markdown is derived later " +
-      "via generate_artifact_markdown.",
+      "Surgically update one or more fields on the JSON artifact. The tool " +
+      "loads the existing JSON from disk, applies all updates, and writes back " +
+      "atomically. This is atomic — data is always persisted incrementally. If " +
+      "the session crashes, the latest JSON on disk can be loaded to resume. " +
+      "The JSON is the single source of truth — Markdown is derived later via " +
+      "generate_artifact_markdown.",
     parameters: Type.Object({
       filePath: Type.String({
         description: "Output file path (e.g. artifacts/GoalSpec.json)",
       }),
       field: Type.String({
-        description: "Field name being written (e.g. 'Project Objective', 'Functional Requirements'). Used for logging and resume tracking.",
+        description: "Human-readable label for this write operation (e.g. 'Project Objective', 'Functional Requirements'). Used for logging and resume tracking.",
       }),
       content: Type.String({
         description: "The validated section content.",
       }),
-      jsonPath: Type.String({
-        description: "Dot-separated path to the field to set (e.g. 'functionalRequirements', 'userStories[0].statement'). Arrays can be indexed.",
-      }),
-      jsonValue: Type.Unknown({
-        description: "The value to set at jsonPath. Can be a string, number, boolean, object, or array.",
+      updates: Type.Array(Type.Object({
+        jsonPath: Type.String({
+          description: "Dot-separated path to the field to set (e.g. 'functionalRequirements', 'userStories[0].statement'). Arrays can be indexed.",
+        }),
+        jsonValue: Type.Unknown({
+          description: "The value to set at jsonPath. Can be a string, number, boolean, object, or array.",
+        }),
+      }), {
+        description: "List of field updates to apply atomically.",
       }),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-      const { filePath, field, content, jsonPath: pathStr, jsonValue } = params;
+      const { filePath, field, content, updates } = params;
       const fullPath = path.resolve(ctx.cwd, filePath);
       const jsonPath = fullPath.replace(/\.md$/, '.json');
       const dir = path.dirname(jsonPath);
@@ -76,9 +80,11 @@ export function registerWriteSpecFields(pi: ExtensionAPI) {
         fs.mkdirSync(dir, { recursive: true });
       }
 
-      // Load existing JSON, merge new value, write back
+      // Load existing JSON, apply all updates, write back
       const data = loadExisting(jsonPath);
-      deepSet(data, pathStr, jsonValue);
+      for (const update of updates) {
+        deepSet(data, update.jsonPath, update.jsonValue);
+      }
 
       // Update metadata
       data._meta = data._meta || {};
@@ -92,10 +98,10 @@ export function registerWriteSpecFields(pi: ExtensionAPI) {
           type: "text",
           text: `Field written: ${field}\n` +
             `  JSON: ${jsonPath}\n` +
-            `  Path: ${pathStr}\n` +
+            `  Updates: ${updates.length} field(s)\n` +
             `  Updated: ${now}`,
         }],
-        details: { success: true, field, jsonPath, path: pathStr, updated: now },
+        details: { success: true, field, jsonPath, updates, updated: now },
       };
     },
   });

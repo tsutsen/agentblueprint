@@ -208,7 +208,7 @@ asking questions that reference another artifact.
 
 After each section is confirmed, write the JSON field using the
 `write_spec_fields` tool. The tool loads the existing JSON from disk,
-updates the field, and writes back — **atomic and incremental**. No need
+applies all updates, and writes back — **atomic and incremental**. No need
 to track the full JSON state.
 
 ```
@@ -217,11 +217,13 @@ args:
   filePath: artifacts/<ArtifactType>.json
   field: <field label>
   content: <validated section content>
-  jsonPath: <dot-separated path>
-  jsonValue: <the data>
+  updates: [
+    { jsonPath: <dot-separated path>, jsonValue: <value> },
+    ...
+  ]
 ```
 
-**Examples:**
+**Single field:**
 
 ```
 tool: write_spec_fields
@@ -229,18 +231,25 @@ args:
   filePath: artifacts/GoalSpec.json
   field: Project Objective
   content: "The system shall provide..."
-  jsonPath: "objective.statement"
-  jsonValue: "The system shall provide..."
+  updates: [
+    { jsonPath: "objective.statement", jsonValue: "The system shall provide..." }
+  ]
 ```
+
+**Multiple fields (one call):**
 
 ```
 tool: write_spec_fields
 args:
   filePath: artifacts/GoalSpec.json
   field: Functional Requirements
-  content: "FR-001: ..."
-  jsonPath: "functionalRequirements"
-  jsonValue: [{ "id": "FR-001", "description": "...", "priority": "high" }]
+  content: "FR-001: User can login. FR-002: User can logout."
+  updates: [
+    { jsonPath: "functionalRequirements", jsonValue: [
+      { "id": "FR-001", "description": "User can login", "priority": "high" },
+      { "id": "FR-002", "description": "User can logout", "priority": "medium" }
+    ]}
+  ]
 ```
 
 The JSON is the single source of truth — Markdown is derived later via
