@@ -15,17 +15,6 @@ updated: {{ updated }}
 
 {{ overview.summary }}
 
-{% if overview.subsystems -%}
-{% for sub in overview.subsystems -%}
-{{ loop.index }}. **{{ sub.name }}** — {{ sub.purpose }}
-
-{% endfor -%}
-{% endif -%}
-{% if overview.pipelineDescription -%}
-
-{{ overview.pipelineDescription }}
-
-{% endif -%}
 {% endif -%}
 ## Components
 
