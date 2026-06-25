@@ -54,8 +54,8 @@ updated: {{ updated }}
 
 ## Non-Goals
 
-| Capability | Reason | glossaryRefs |
-|---|---|---|
+| ID | Capability | Reason | glossaryRefs |
+|---|---|---|---|
 {% for ng in nonGoals -%}
-| {{ ng.capability }} | {{ ng.reason | format_id_refs }}{% if ng.glossaryRefs %} | {{ ng.glossaryRefs | format_glossary_refs }}{% endif %} |
+| {{ ng.id }} | {{ ng.capability }} | {{ ng.reason | format_id_refs }}{% if ng.glossaryRefs %} | {{ ng.glossaryRefs | format_glossary_refs }}{% endif %} |
 {% endfor -%}
