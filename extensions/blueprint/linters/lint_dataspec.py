@@ -25,8 +25,8 @@ import sys
 import argparse
 import re
 from pathlib import Path
-from dataclasses import dataclass, field
 from typing import Optional, Set
+from shared import Issue, LayerResult, print_human, print_json_output
 
 try:
     import jsonschema
@@ -35,43 +35,12 @@ except ImportError:
     HAS_JSONSCHEMA = False
 
 
-# ── Result types ──────────────────────────────────────────────────────────────
-
-@dataclass
-class Issue:
-    severity: str      # "error" | "warning"
-    category: str
-    message: str
-    hint: str = ""
-
-
-@dataclass
-class LintResult:
-    errors: list[Issue] = field(default_factory=list)
-    warnings: list[Issue] = field(default_factory=list)
-
-    def add(self, severity: str, category: str, message: str, hint: str = ""):
-        issue = Issue(severity, category, message, hint)
-        if severity == "error":
-            self.errors.append(issue)
-        else:
-            self.warnings.append(issue)
-
-    @property
-    def clean(self) -> bool:
-        return len(self.errors) == 0
-
-    @property
-    def all_issues(self):
-        return self.errors + self.warnings
-
-
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def extract_ids(items: list, key: str) -> list[str]:
     return [item[key] for item in items if key in item]
 
-def check_duplicates(ids: list[str], label: str, result: LintResult):
+def check_duplicates(ids: list[str], label: str, result: LayerResult):
     seen = set()
     for id_ in ids:
         if id_ in seen:
@@ -83,7 +52,7 @@ def check_duplicates(ids: list[str], label: str, result: LintResult):
 
 # ── Semantic checks ───────────────────────────────────────────────────────────
 
-def check_entities(spec: dict, enums: list, result: LintResult) -> Set[str]:
+def check_entities(spec: dict, enums: list, result: LayerResult) -> Set[str]:
     """Validate entity names, fields, methods, and extends references."""
     entities = spec.get("entities", [])
     entity_names: Set[str] = set()
@@ -167,7 +136,7 @@ def check_entities(spec: dict, enums: list, result: LintResult) -> Set[str]:
     return entity_names
 
 
-def check_enums(spec: dict, result: LintResult) -> Set[str]:
+def check_enums(spec: dict, result: LayerResult) -> Set[str]:
     """Validate enum names and values."""
     enums = spec.get("enums", [])
     enum_names: Set[str] = set()
@@ -203,7 +172,7 @@ def check_enums(spec: dict, result: LintResult) -> Set[str]:
     return enum_names
 
 
-def check_abstract_entity_relationships(spec: dict, result: LintResult):
+def check_abstract_entity_relationships(spec: dict, result: LayerResult):
     """Warn when abstract entities have composition/aggregation relationships as targets.
 
     Abstract entities are base classes and should not be 'owned' by other entities.
@@ -224,7 +193,7 @@ def check_abstract_entity_relationships(spec: dict, result: LintResult):
                     hint="Abstract entities are base classes and should not be 'owned'. Use 'association' instead.")
 
 
-def check_relationships(spec: dict, entity_names: Set[str], result: LintResult):
+def check_relationships(spec: dict, entity_names: Set[str], result: LayerResult):
     """Validate relationship endpoints and types."""
     relationships = spec.get("relationships", [])
     enum_names = {e["name"] for e in spec.get("enums", [])}
@@ -267,7 +236,7 @@ def check_relationships(spec: dict, entity_names: Set[str], result: LintResult):
         check_relationship_label_keywords(rel, result)
 
 
-def check_relationship_label_keywords(rel: dict, result: LintResult):
+def check_relationship_label_keywords(rel: dict, result: LayerResult):
     """Warn if the relationship label contains keywords suggesting a different type.
 
     The label (natural-language description) should match the declared type.
@@ -371,7 +340,7 @@ def check_relationship_label_keywords(rel: dict, result: LintResult):
             hint="Review whether the relationship type or label should be adjusted.")
 
 
-def check_enum_entity_conflict(spec: dict, result: LintResult):
+def check_enum_entity_conflict(spec: dict, result: LayerResult):
     """Check that no entity name collides with an enum name."""
     entity_names = {e["name"] for e in spec.get("entities", [])}
     enum_names = {e["name"] for e in spec.get("enums", [])}
@@ -382,7 +351,7 @@ def check_enum_entity_conflict(spec: dict, result: LintResult):
             hint=f"Remove the entity '{name}' and use the enum instead, or rename the entity.")
 
 
-def check_field_type_kinds(spec: dict, entity_names: Set[str], enum_names: Set[str], result: LintResult):
+def check_field_type_kinds(spec: dict, entity_names: Set[str], enum_names: Set[str], result: LayerResult):
     """Warn when a field type could be ambiguous (exists as entity but should be enum or vice versa)."""
     for entity in spec.get("entities", []):
         for field_def in entity.get("fields", []):
@@ -399,7 +368,7 @@ def check_field_type_kinds(spec: dict, entity_names: Set[str], enum_names: Set[s
                     hint=f"Clarify whether '{base}' should be used as a type reference (enum) or a relationship target (entity).")
 
 
-def check_duplicate_fields(spec: dict, result: LintResult):
+def check_duplicate_fields(spec: dict, result: LayerResult):
     """Check for duplicate field names within entities."""
     for entity in spec.get("entities", []):
         field_names = [f["name"] for f in entity.get("fields", [])]
@@ -410,7 +379,7 @@ def check_duplicate_fields(spec: dict, result: LintResult):
                 hint="Remove duplicate field definitions.")
 
 
-def check_entity_should_be_field(spec: dict, api_spec: Optional[dict], result: LintResult):
+def check_entity_should_be_field(spec: dict, api_spec: Optional[dict], result: LayerResult):
     """Heuristic: entity with ≤3 fields, all primitives, ≤1 relationship, ≤1 referrer → should be a field."""
     entities = spec.get("entities", [])
     relationships = spec.get("relationships", [])
@@ -462,7 +431,7 @@ def check_entity_should_be_field(spec: dict, api_spec: Optional[dict], result: L
                 hint=f"Consider whether this entity should be a field of '{parent}' instead.")
 
 
-def check_field_should_be_entity(spec: dict, api_spec: Optional[dict], result: LintResult):
+def check_field_should_be_entity(spec: dict, api_spec: Optional[dict], result: LayerResult):
     """Heuristic: field of complex type with >5 fields, has identity, ≥2 referrers, ≥1 relationship, ≥2 API functions → should be an entity."""
     entities = spec.get("entities", [])
     relationships = spec.get("relationships", [])
@@ -529,7 +498,7 @@ def check_field_should_be_entity(spec: dict, api_spec: Optional[dict], result: L
                          f"{rel_counts.get(ftype, 0)} relationship(s), {api_counts.get(ftype, 0)} API function(s).")
 
 
-def check_methods_coverage(spec: dict, api_spec: Optional[dict], result: LintResult):
+def check_methods_coverage(spec: dict, api_spec: Optional[dict], result: LayerResult):
     """Warn if entity has ≥2 ApiSpec functions but 0 methods defined."""
     if not api_spec:
         return
@@ -558,7 +527,7 @@ def _name_similarity(a: str, b: str) -> float:
     return __import__('difflib').SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
 
-def check_entity_similarity(spec: dict, result: LintResult):
+def check_entity_similarity(spec: dict, result: LayerResult):
     """Warn if two entities have similar names and high field overlap."""
     entities = spec.get("entities", [])
     for i, a in enumerate(entities):
@@ -593,7 +562,7 @@ def check_entity_similarity(spec: dict, result: LintResult):
                          f"Consider merging or renaming.")
 
 
-def check_similar_entities_connected(spec: dict, result: LintResult):
+def check_similar_entities_connected(spec: dict, result: LayerResult):
     """Warn if similar-named entities exist but have no relationship between them."""
     entities = spec.get("entities", [])
     relationships = spec.get("relationships", [])
@@ -631,7 +600,7 @@ def check_similar_entities_connected(spec: dict, result: LintResult):
                      f"Consider adding a relationship or clarifying their distinct roles.")
 
 
-def check_bidirectional_relationships(spec: dict, result: LintResult):
+def check_bidirectional_relationships(spec: dict, result: LayerResult):
     """Warn when two entities have relationships in both directions.
 
     DBML only supports unidirectional relationships. If A → B and B → A
@@ -665,7 +634,7 @@ def check_bidirectional_relationships(spec: dict, result: LintResult):
                      f"for your domain model.")
 
 
-def check_entity_list_fields(spec: dict, result: LintResult):
+def check_entity_list_fields(spec: dict, result: LayerResult):
     """Warn when an entity has a field that is a list of another entity.
 
     Entity[] fields suggest embedding a collection of related entities
@@ -692,7 +661,7 @@ def check_entity_list_fields(spec: dict, result: LintResult):
                          f"associations.")
 
 
-def check_primitives(spec: dict, result: LintResult):
+def check_primitives(spec: dict, result: LayerResult):
     """Validate that primitives list is non-empty and contains valid names."""
     primitives = spec.get("primitives", [])
     expected_primitives = {'string', 'number', 'boolean', 'null', 'void'}
@@ -709,7 +678,7 @@ def check_primitives(spec: dict, result: LintResult):
             hint="Consider removing 'any' to enforce stricter type discipline.")
 
 
-def check_pk_naming(spec: dict, result: LintResult):
+def check_pk_naming(spec: dict, result: LayerResult):
     """Warn if any entity's primary key field doesn't contain 'id' in its name.
 
     Primary keys should be easily identifiable. Fields named 'id', 'entityId',
@@ -755,7 +724,7 @@ def check_pk_naming(spec: dict, result: LintResult):
 
 
 
-def check_duplicate_relationships(spec: dict, result: LintResult):
+def check_duplicate_relationships(spec: dict, result: LayerResult):
     """Warn when the same entity pair has multiple relationships of the same type."""
     seen = {}
     for rel in spec.get("relationships", []):
@@ -770,7 +739,7 @@ def check_duplicate_relationships(spec: dict, result: LintResult):
             seen[key] = rel.get("line", 0)
 
 
-def check_missing_descriptions(spec: dict, result: LintResult):
+def check_missing_descriptions(spec: dict, result: LayerResult):
     """Warn about entities and fields without descriptions."""
     for entity in spec.get("entities", []):
         if not entity.get("description"):
@@ -785,7 +754,7 @@ def check_missing_descriptions(spec: dict, result: LintResult):
                     hint="Add a description to explain the purpose of this field.")
 
 
-def check_method_apiRef(spec: dict, api_spec: Optional[dict], result: LintResult):
+def check_method_apiRef(spec: dict, api_spec: Optional[dict], result: LayerResult):
     """Verify apiRef references in entity methods exist in ApiSpec."""
     if not api_spec:
         return
@@ -826,7 +795,7 @@ def match_glossary_term(name: str, glossary: dict) -> list[str]:
     return matches
 
 
-def check_entity_glossary(spec: dict, glossary: Optional[dict], result: LintResult):
+def check_entity_glossary(spec: dict, glossary: Optional[dict], result: LayerResult):
     """ERROR: Every entity name must match a glossary term."""
     if not glossary:
         return
@@ -840,7 +809,7 @@ def check_entity_glossary(spec: dict, glossary: Optional[dict], result: LintResu
                 hint="Add a glossary entry for this entity, or rename it to match an existing term.")
 
 
-def check_enum_glossary(spec: dict, glossary: Optional[dict], result: LintResult):
+def check_enum_glossary(spec: dict, glossary: Optional[dict], result: LayerResult):
     """ERROR: Every enum name must match a glossary term."""
     if not glossary:
         return
@@ -854,7 +823,7 @@ def check_enum_glossary(spec: dict, glossary: Optional[dict], result: LintResult
                 hint="Add a glossary entry for this enum, or rename it to match an existing term.")
 
 
-def check_field_glossary_refs(spec: dict, glossary: Optional[dict], result: LintResult):
+def check_field_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResult):
     """INFO: Warn if field descriptions contain domain concepts but have no glossaryRefs."""
     if not glossary:
         return
@@ -886,8 +855,8 @@ def check_field_glossary_refs(spec: dict, glossary: Optional[dict], result: Lint
 # ── Runner ────────────────────────────────────────────────────────────────────
 
 def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
-             api_spec: Optional[dict] = None, glossary: Optional[dict] = None) -> LintResult:
-    result = LintResult()
+             api_spec: Optional[dict] = None, glossary: Optional[dict] = None) -> LayerResult:
+    result = LayerResult()
 
     # JSON Schema validation
     if schema_path and HAS_JSONSCHEMA:
@@ -938,44 +907,9 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
     return result
 
 
-# ── Output ────────────────────────────────────────────────────────────────────
+# ── Output
+# Uses shared.print_human and shared.print_json_output
 
-def print_human(result: LintResult, path: str):
-    print(f"\n{'─'*60}")
-    print(f"  DataSpec Lint Report — {path}")
-    print(f"{'─'*60}")
-
-    if not result.all_issues:
-        print("  ✓ All checks passed.\n")
-        return
-
-    if result.errors:
-        print(f"\n  ERRORS ({len(result.errors)}):")
-        for e in result.errors:
-            print(f"    ✗ [{e.category}] {e.message}")
-            if e.hint:
-                print(f"      → {e.hint}")
-
-    if result.warnings:
-        print(f"\n  WARNINGS ({len(result.warnings)}):")
-        for w in result.warnings:
-            print(f"    ⚠ [{w.category}] {w.message}")
-            if w.hint:
-                print(f"      → {w.hint}")
-
-    print(f"\n  {len(result.errors)} error(s), {len(result.warnings)} warning(s).\n")
-
-
-def print_json_output(result: LintResult):
-    out = {
-        "clean": result.clean,
-        "errors": [{"category": e.category, "message": e.message, "hint": e.hint} for e in result.errors],
-        "warnings": [{"category": w.category, "message": w.message, "hint": w.hint} for w in result.warnings]
-    }
-    print(json.dumps(out, indent=2))
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(description="Lint a DataSpec JSON.")

@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+"""
+shared.py — Canonical types and output formatting for all linters.
+
+All linters should import from this module instead of defining their own
+Issue and LayerResult types. This ensures consistent output across all
+linters, which is critical for agents that parse lint results.
+
+Usage in a linter:
+    from shared import Issue, LayerResult, print_human, print_json_output
+"""
+
+import json
+from dataclasses import dataclass, field
+
+
+# ── Canonical types ───────────────────────────────────────────────────────────
+
+@dataclass
+class Issue:
+    """A single lint finding."""
+    severity: str          # "error" | "warning" | "info"
+    category: str          # e.g. "schema", "duplicate_id", "cross-ref"
+    message: str           # Human-readable description of the issue
+    hint: str = ""         # Optional suggestion for how to fix
+
+
+@dataclass
+class LayerResult:
+    """Result from a single lint layer (one spec or cross-spec check)."""
+    name: str = ""
+    errors: list[Issue] = field(default_factory=list)
+    warnings: list[Issue] = field(default_factory=list)
+
+    @property
+    def clean(self) -> bool:
+        return len(self.errors) == 0
+
+    @property
+    def all_issues(self):
+        return self.errors + self.warnings
+
+    def add(self, severity: str, category: str, message: str, hint: str = ""):
+        issue = Issue(severity, category, message, hint)
+        if severity == "error":
+            self.errors.append(issue)
+        else:
+            self.warnings.append(issue)
+
+
+# ── Output formatting ────────────────────────────────────────────────────────
+
+def print_human(result: LayerResult, path: str = ""):
+    """Print human-readable lint report."""
+    print(f"\n{'─'*60}")
+    if path:
+        print(f"  {result.name} Lint Report — {path}")
+    else:
+        print(f"  {result.name} Lint Report")
+    print(f"{'─'*60}")
+
+    if not result.all_issues:
+        print("  ✓ All checks passed.\n")
+        return
+
+    if result.errors:
+        print(f"\n  ERRORS ({len(result.errors)}):")
+        for e in result.errors:
+            print(f"    ✗ [{e.category}] {e.message}")
+            if e.hint:
+                print(f"      → {e.hint}")
+
+    if result.warnings:
+        print(f"\n  WARNINGS ({len(result.warnings)}):")
+        for w in result.warnings:
+            print(f"    ⚠ [{w.category}] {w.message}")
+            if w.hint:
+                print(f"      → {w.hint}")
+
+    print(f"\n  {len(result.errors)} error(s), {len(result.warnings)} warning(s).\n")
+
+
+def print_json_output(result: LayerResult):
+    """Print JSON lint report."""
+    out = {
+        "clean": result.clean,
+        "errors": [{"category": e.category, "message": e.message, "hint": e.hint} for e in result.errors],
+        "warnings": [{"category": w.category, "message": w.message, "hint": w.hint} for w in result.warnings]
+    }
+    print(json.dumps(out, indent=2))

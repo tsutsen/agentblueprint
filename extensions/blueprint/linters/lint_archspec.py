@@ -26,8 +26,8 @@ import sys
 import argparse
 import re
 from pathlib import Path
-from dataclasses import dataclass, field
 from typing import Optional
+from shared import Issue, LayerResult, print_human, print_json_output
 
 try:
     import jsonschema
@@ -36,40 +36,9 @@ except ImportError:
     HAS_JSONSCHEMA = False
 
 
-# ── Result types ──────────────────────────────────────────────────────────────
-
-@dataclass
-class Issue:
-    severity: str
-    category: str
-    message: str
-    hint: str = ""
-
-
-@dataclass
-class LintResult:
-    errors: list[Issue] = field(default_factory=list)
-    warnings: list[Issue] = field(default_factory=list)
-
-    def add(self, severity: str, category: str, message: str, hint: str = ""):
-        issue = Issue(severity, category, message, hint)
-        if severity == "error":
-            self.errors.append(issue)
-        else:
-            self.warnings.append(issue)
-
-    @property
-    def clean(self) -> bool:
-        return len(self.errors) == 0
-
-    @property
-    def all_issues(self):
-        return self.errors + self.warnings
-
-
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def check_duplicates(ids: list[str], label: str, result: LintResult):
+def check_duplicates(ids: list[str], label: str, result: LayerResult):
     seen = set()
     for id_ in ids:
         if id_ in seen:
@@ -108,14 +77,14 @@ def detect_cycle(graph: dict[str, list[str]]) -> Optional[list[str]]:
 
 # ── Checks ────────────────────────────────────────────────────────────────────
 
-def check_project_match(spec: dict, goal: dict, result: LintResult):
+def check_project_match(spec: dict, goal: dict, result: LayerResult):
     if spec["project"] != goal["project"]:
         result.add("error", "project_match",
             f"Project mismatch: archspec='{spec['project']}' goalspec='{goal['project']}'.",
             hint="Both specs must have identical 'project' values.")
 
 
-def check_version_pins(spec: dict, goal: dict, result: LintResult):
+def check_version_pins(spec: dict, goal: dict, result: LayerResult):
     pinned = spec.get("goalSpecVersion")
     if pinned and pinned != goal["version"]:
         result.add("error", "version_drift",
@@ -123,7 +92,7 @@ def check_version_pins(spec: dict, goal: dict, result: LintResult):
             hint="Re-review architecture against updated GoalSpec, then update goalSpecVersion.")
 
 
-def check_components(spec: dict, result: LintResult) -> set[str]:
+def check_components(spec: dict, result: LayerResult) -> set[str]:
     components = spec.get("components", [])
     ids = [c["id"] for c in components]
     check_duplicates(ids, "component", result)
@@ -172,7 +141,7 @@ def check_components(spec: dict, result: LintResult) -> set[str]:
     return component_ids
 
 
-def check_subsystems(spec: dict, component_ids: set[str], result: LintResult):
+def check_subsystems(spec: dict, component_ids: set[str], result: LayerResult):
     subsystems = spec.get("overview", {}).get("subsystems", [])
     all_comp_refs = []
     comp_to_subs: dict[str, list[str]] = {}
@@ -209,7 +178,7 @@ def check_subsystems(spec: dict, component_ids: set[str], result: LintResult):
                 hint="Each component should belong to exactly one subsystem.")
 
 
-def check_data_flows(spec: dict, component_ids: set[str], result: LintResult):
+def check_data_flows(spec: dict, component_ids: set[str], result: LayerResult):
     flows = spec.get("dataFlow", [])
     ids = [f["id"] for f in flows]
     check_duplicates(ids, "FLW", result)
@@ -240,7 +209,7 @@ def check_data_flows(spec: dict, component_ids: set[str], result: LintResult):
                 hint="A data flow must show at least a source and a sink step.")
 
 
-def check_constraints(spec: dict, result: LintResult):
+def check_constraints(spec: dict, result: LayerResult):
     constraints = spec.get("constraints", [])
     ids = [c["id"] for c in constraints]
     check_duplicates(ids, "CON", result)
@@ -266,7 +235,7 @@ def check_constraints(spec: dict, result: LintResult):
                 hint="Constraints should describe what is required, not which technology satisfies it.")
 
 
-def check_req_nfr_refs(spec: dict, goal: Optional[dict], result: LintResult):
+def check_req_nfr_refs(spec: dict, goal: Optional[dict], result: LayerResult):
     """Resolve all REQ/NFR refs across components, flows, and constraints against GoalSpec."""
     if not goal:
         return
@@ -301,7 +270,7 @@ def check_req_nfr_refs(spec: dict, goal: Optional[dict], result: LintResult):
             check_nfr(ref, f"Constraint '{con['id']}'")
 
 
-def check_fr_coverage(spec: dict, goal: Optional[dict], result: LintResult):
+def check_fr_coverage(spec: dict, goal: Optional[dict], result: LayerResult):
     """Every FR in GoalSpec should be covered by at least one component."""
     if not goal:
         return
@@ -318,7 +287,7 @@ def check_fr_coverage(spec: dict, goal: Optional[dict], result: LintResult):
                 hint=f"Add reqRef '{fr['id']}' to the component responsible for this requirement.")
 
 
-def check_nfr_coverage(spec: dict, goal: Optional[dict], result: LintResult):
+def check_nfr_coverage(spec: dict, goal: Optional[dict], result: LayerResult):
     """Every NFR in GoalSpec should be covered by at least one component or constraint."""
     if not goal:
         return
@@ -338,7 +307,7 @@ def check_nfr_coverage(spec: dict, goal: Optional[dict], result: LintResult):
                 hint=f"Add nfrRef '{nfr['id']}' to a component or constraint responsible for this NFR.")
 
 
-def check_subsystem_empty(spec: dict, component_ids: set[str], result: LintResult):
+def check_subsystem_empty(spec: dict, component_ids: set[str], result: LayerResult):
     """Warn if a subsystem has no components assigned."""
     subsystems = spec.get("overview", {}).get("subsystems", [])
     for sub in subsystems:
@@ -349,7 +318,7 @@ def check_subsystem_empty(spec: dict, component_ids: set[str], result: LintResul
                 hint="Assign components to this subsystem or remove it.")
 
 
-def check_subsystem_overlap(spec: dict, result: LintResult):
+def check_subsystem_overlap(spec: dict, result: LayerResult):
     """Warn if a component is assigned to multiple subsystems."""
     subsystems = spec.get("overview", {}).get("subsystems", [])
     comp_to_subs: dict[str, list[str]] = {}
@@ -364,7 +333,7 @@ def check_subsystem_overlap(spec: dict, result: LintResult):
                 hint="Each component should belong to exactly one subsystem.")
 
 
-def check_data_ref_valid(spec: dict, data_spec: Optional[dict], result: LintResult):
+def check_data_ref_valid(spec: dict, data_spec: Optional[dict], result: LayerResult):
     """Warn if data flow steps reference non-existent DataSpec entities."""
     if not data_spec:
         return
@@ -379,7 +348,7 @@ def check_data_ref_valid(spec: dict, data_spec: Optional[dict], result: LintResu
                     hint=f"Add '{data_ref}' to DataSpec or correct the dataRef.")
 
 
-def check_component_responsibility_count(spec: dict, result: LintResult):
+def check_component_responsibility_count(spec: dict, result: LayerResult):
     """Warn if a component has too many responsibilities (>5)."""
     for comp in spec.get("components", []):
         resps = comp.get("responsibilities", [])
@@ -389,7 +358,7 @@ def check_component_responsibility_count(spec: dict, result: LintResult):
                 hint="A component with >5 responsibilities may be doing too much. Consider splitting into multiple components.")
 
 
-def check_data_flow_step_count(spec: dict, result: LintResult):
+def check_data_flow_step_count(spec: dict, result: LayerResult):
     """Warn if a data flow has too many steps (>10)."""
     for flow in spec.get("dataFlow", []):
         steps = flow.get("steps", [])
@@ -399,7 +368,7 @@ def check_data_flow_step_count(spec: dict, result: LintResult):
                 hint="A data flow with >10 steps may be too complex. Consider splitting into multiple flows.")
 
 
-def check_external_component_count(spec: dict, result: LintResult):
+def check_external_component_count(spec: dict, result: LayerResult):
     """Warn if too many components are external (>30% of total)."""
     components = spec.get("components", [])
     if not components:
@@ -411,7 +380,7 @@ def check_external_component_count(spec: dict, result: LintResult):
             hint="Too many external components may indicate over-exposure. Review which components truly need to be external.")
 
 
-def check_dependency_depth(spec: dict, result: LintResult):
+def check_dependency_depth(spec: dict, result: LayerResult):
     """Warn if any component has a dependency chain >3 levels deep."""
     components = spec.get("components", [])
     comp_deps = {c["id"]: c.get("dependencies", []) for c in components}
@@ -435,7 +404,7 @@ def check_dependency_depth(spec: dict, result: LintResult):
                 hint="Deep dependency chains can make the system hard to understand and maintain.")
 
 
-def check_isolated_components(spec: dict, result: LintResult):
+def check_isolated_components(spec: dict, result: LayerResult):
     """Warn if a component has no dependencies AND no dependents (isolated)."""
     components = spec.get("components", [])
     comp_ids = {c["id"] for c in components}
@@ -456,7 +425,7 @@ def check_isolated_components(spec: dict, result: LintResult):
                 hint="An isolated component may indicate a design issue — consider whether it truly belongs in the architecture or should be merged.")
 
 
-def check_flow_descriptions(spec: dict, result: LintResult):
+def check_flow_descriptions(spec: dict, result: LayerResult):
     """Warn if data flow descriptions are empty."""
     for flow in spec.get("dataFlow", []):
         desc = flow.get("description", "")
@@ -466,7 +435,7 @@ def check_flow_descriptions(spec: dict, result: LintResult):
                 hint="Every data flow should have a one-sentence description explaining its purpose.")
 
 
-def check_flow_data_refs(spec: dict, result: LintResult):
+def check_flow_data_refs(spec: dict, result: LayerResult):
     """Warn if flow steps have empty dataRef fields."""
     for flow in spec.get("dataFlow", []):
         for i, step in enumerate(flow.get("steps", [])):
@@ -477,7 +446,7 @@ def check_flow_data_refs(spec: dict, result: LintResult):
                     hint="Name the data entity or payload moving through this step.")
 
 
-def check_vague_responsibilities(spec: dict, result: LintResult):
+def check_vague_responsibilities(spec: dict, result: LayerResult):
     """Warn if a component has only one responsibility that is vague/generic."""
     vague_patterns = [
         r"\bconsist(?:ent|ently)\b", r"\bacross all\b", r"\bthe system\b",
@@ -498,7 +467,7 @@ def check_vague_responsibilities(spec: dict, result: LintResult):
                     break
 
 
-def check_inline_req_refs_in_responsibilities(spec: dict, result: LintResult):
+def check_inline_req_refs_in_responsibilities(spec: dict, result: LayerResult):
     """Warn if responsibilities contain text that looks like non-standard refs (e.g. 'key flow 9b')."""
     import re
     
@@ -519,7 +488,7 @@ def check_inline_req_refs_in_responsibilities(spec: dict, result: LintResult):
                         hint="Move requirement references to the reqRefs/nfrRefs arrays. Use glossaryRefs for term references.")
 
 
-def check_components_in_data_flows(spec: dict, result: LintResult):
+def check_components_in_data_flows(spec: dict, result: LayerResult):
     """Warn if a component is not referenced in any data flow step."""
     components = spec.get("components", [])
     comp_ids = {c["id"] for c in components}
@@ -539,7 +508,7 @@ def check_components_in_data_flows(spec: dict, result: LintResult):
                 hint="Either add this component to a relevant data flow or remove it from the architecture if it's not part of the data pipeline.")
 
 
-def check_cross_spec_versions(spec: dict, data_spec: Optional[dict], api_spec: Optional[dict], result: LintResult):
+def check_cross_spec_versions(spec: dict, data_spec: Optional[dict], api_spec: Optional[dict], result: LayerResult):
     """Warn if dataSpecVersion/apiSpecVersion don't match loaded specs."""
     pinned_data = spec.get("dataSpecVersion")
     pinned_api = spec.get("apiSpecVersion")
@@ -557,7 +526,7 @@ def check_cross_spec_versions(spec: dict, data_spec: Optional[dict], api_spec: O
                 hint="Update apiSpecVersion to match the ApiSpec's version.")
 
 
-def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LintResult):
+def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResult):
     """Warn if components/flows/constraints have no glossaryRefs.
     If a glossary is provided, also validate that refs point to valid GL-NNN IDs."""
     gl_ids = set()
@@ -607,8 +576,8 @@ def run_lint(spec: dict, schema_path: Optional[Path],
              goal: Optional[dict], strict: bool,
              glossary: Optional[dict] = None,
              data_spec: Optional[dict] = None,
-             api_spec: Optional[dict] = None) -> LintResult:
-    result = LintResult()
+             api_spec: Optional[dict] = None) -> LayerResult:
+    result = LayerResult()
 
     # JSON Schema validation
     if schema_path and HAS_JSONSCHEMA:
@@ -654,45 +623,9 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     return result
 
 
-# ── Output ────────────────────────────────────────────────────────────────────
+# ── Output
+# Uses shared.print_human and shared.print_json_output
 
-def print_human(result: LintResult, path: str, goal_path: Optional[str]):
-    print(f"\n{'─'*60}")
-    print(f"  ArchSpec Lint Report — {path}")
-    if goal_path:
-        print(f"  GoalSpec — {goal_path}")
-    print(f"{'─'*60}")
-
-    if not result.all_issues:
-        print("  ✓ All checks passed.\n")
-        return
-
-    if result.errors:
-        print(f"\n  ERRORS ({len(result.errors)}):")
-        for e in result.errors:
-            print(f"    ✗ [{e.category}] {e.message}")
-            if e.hint:
-                print(f"      → {e.hint}")
-
-    if result.warnings:
-        print(f"\n  WARNINGS ({len(result.warnings)}):")
-        for w in result.warnings:
-            print(f"    ⚠ [{w.category}] {w.message}")
-            if w.hint:
-                print(f"      → {w.hint}")
-
-    print(f"\n  {len(result.errors)} error(s), {len(result.warnings)} warning(s).\n")
-
-
-def print_json_output(result: LintResult):
-    print(json.dumps({
-        "clean": result.clean,
-        "errors": [{"category": e.category, "message": e.message, "hint": e.hint} for e in result.errors],
-        "warnings": [{"category": w.category, "message": w.message, "hint": w.hint} for w in result.warnings]
-    }, indent=2))
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(description="Lint an ArchSpec JSON.")

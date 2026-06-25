@@ -25,8 +25,8 @@ import re
 import sys
 import argparse
 from pathlib import Path
-from dataclasses import dataclass, field
 from typing import Optional
+from shared import Issue, LayerResult, print_human, print_json_output
 
 # Regex for GL-NNN ID format (e.g. GL-001)
 GL_ID_RE = re.compile(r"^GL-\d{3}$")
@@ -36,37 +36,6 @@ try:
     HAS_JSONSCHEMA = True
 except ImportError:
     HAS_JSONSCHEMA = False
-
-
-# ── Result types ──────────────────────────────────────────────────────────────
-
-@dataclass
-class Issue:
-    severity: str
-    category: str
-    message: str
-    hint: str = ""
-
-
-@dataclass
-class LintResult:
-    errors: list[Issue] = field(default_factory=list)
-    warnings: list[Issue] = field(default_factory=list)
-
-    def add(self, severity: str, category: str, message: str, hint: str = ""):
-        issue = Issue(severity, category, message, hint)
-        if severity == "error":
-            self.errors.append(issue)
-        else:
-            self.warnings.append(issue)
-
-    @property
-    def clean(self) -> bool:
-        return len(self.errors) == 0
-
-    @property
-    def all_issues(self):
-        return self.errors + self.warnings
 
 
 # ── Term extraction from other specs ─────────────────────────────────────────
@@ -113,7 +82,7 @@ def extract_domain_terms(specs: dict) -> dict[str, list[str]]:
 
 # ── Checks ────────────────────────────────────────────────────────────────────
 
-def check_gl_ids(glossary: dict, result: LintResult) -> dict[str, dict]:
+def check_gl_ids(glossary: dict, result: LayerResult) -> dict[str, dict]:
     """Check GL-NNN IDs are sequential and unique. Returns term_id → entry map."""
     terms = glossary.get("terms", [])
     seen_ids: dict[str, dict] = {}
@@ -156,7 +125,7 @@ def check_gl_ids(glossary: dict, result: LintResult) -> dict[str, dict]:
     return seen_ids
 
 
-def check_duplicates(glossary: dict, result: LintResult) -> dict[str, dict]:
+def check_duplicates(glossary: dict, result: LayerResult) -> dict[str, dict]:
     """Check for duplicate term names. Returns term_name → entry map."""
     terms = glossary.get("terms", [])
     seen: dict[str, dict] = {}
@@ -171,7 +140,7 @@ def check_duplicates(glossary: dict, result: LintResult) -> dict[str, dict]:
     return seen
 
 
-def check_self_reference(term_map: dict[str, dict], result: LintResult):
+def check_self_reference(term_map: dict[str, dict], result: LayerResult):
     """A term must not appear in its own definition."""
     for name, entry in term_map.items():
         defn = entry.get("definition", "")
@@ -184,7 +153,7 @@ def check_self_reference(term_map: dict[str, dict], result: LintResult):
                 hint="Definitions must not use the term being defined. Rewrite using other words.")
 
 
-def check_circular_definitions(term_map: dict[str, dict], result: LintResult):
+def check_circular_definitions(term_map: dict[str, dict], result: LayerResult):
     """Detect circular definitions: A defined using B defined using A."""
     import re
 
@@ -235,7 +204,7 @@ def check_circular_definitions(term_map: dict[str, dict], result: LintResult):
                         hint="Rewrite one definition to break the cycle.")
 
 
-def check_related_terms(gl_id_map: dict[str, dict], result: LintResult):
+def check_related_terms(gl_id_map: dict[str, dict], result: LayerResult):
     """All relatedTerms must be valid GL-NNN IDs that exist in the glossary."""
     for term_id, entry in gl_id_map.items():
         for related in entry.get("relatedTerms", []):
@@ -249,7 +218,7 @@ def check_related_terms(gl_id_map: dict[str, dict], result: LintResult):
                     hint=f"Add GL-{related.split('-')[1]} as a glossary entry or correct the ID.")
 
 
-def check_synonym_conflicts(gl_id_map: dict[str, dict], result: LintResult):
+def check_synonym_conflicts(gl_id_map: dict[str, dict], result: LayerResult):
     """Synonyms must not also have their own glossary entry — that creates ambiguity."""
     for term_id, entry in gl_id_map.items():
         for syn in entry.get("synonyms", []):
@@ -261,7 +230,7 @@ def check_synonym_conflicts(gl_id_map: dict[str, dict], result: LintResult):
                         hint=f"Either remove the '{syn}' entry and keep it as a synonym, or remove it from '{entry['term']}' synonyms.")
 
 
-def check_definition_quality(gl_id_map: dict[str, dict], result: LintResult):
+def check_definition_quality(gl_id_map: dict[str, dict], result: LayerResult):
     """Flag definitions that are suspiciously short or placeholder-like."""
     placeholder_patterns = ["tbd", "todo", "see above", "see below", "n/a", "same as"]
     vague_starters = ["a thing", "something that", "refers to", "relates to"]
@@ -291,7 +260,7 @@ def check_definition_quality(gl_id_map: dict[str, dict], result: LintResult):
 def check_cross_spec_coverage(
     gl_id_map: dict[str, dict],
     domain_terms: dict[str, list[str]],
-    result: LintResult
+    result: LayerResult
 ):
     """
     Domain terms extracted from other specs should have glossary entries.
@@ -334,8 +303,8 @@ def run_lint(
     schema_path: Optional[Path],
     other_specs: dict,
     strict: bool
-) -> LintResult:
-    result = LintResult()
+) -> LayerResult:
+    result = LayerResult()
 
     # JSON Schema validation
     if schema_path and HAS_JSONSCHEMA:
@@ -381,43 +350,9 @@ def run_lint(
     return result
 
 
-# ── Output ────────────────────────────────────────────────────────────────────
+# ── Output
+# Uses shared.print_human and shared.print_json_output
 
-def print_human(result: LintResult, path: str):
-    print(f"\n{'─'*60}")
-    print(f"  Glossary Lint Report — {path}")
-    print(f"{'─'*60}")
-
-    if not result.all_issues:
-        print("  ✓ All checks passed.\n")
-        return
-
-    if result.errors:
-        print(f"\n  ERRORS ({len(result.errors)}):")
-        for e in result.errors:
-            print(f"    ✗ [{e.category}] {e.message}")
-            if e.hint:
-                print(f"      → {e.hint}")
-
-    if result.warnings:
-        print(f"\n  WARNINGS ({len(result.warnings)}):")
-        for w in result.warnings:
-            print(f"    ⚠ [{w.category}] {w.message}")
-            if w.hint:
-                print(f"      → {w.hint}")
-
-    print(f"\n  {len(result.errors)} error(s), {len(result.warnings)} warning(s).\n")
-
-
-def print_json_output(result: LintResult):
-    print(json.dumps({
-        "clean": result.clean,
-        "errors":   [{"category": e.category, "message": e.message, "hint": e.hint} for e in result.errors],
-        "warnings": [{"category": w.category, "message": w.message, "hint": w.hint} for w in result.warnings]
-    }, indent=2))
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(description="Lint a Glossary JSON.")

@@ -18,15 +18,7 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
 
-
-# ── Shared types ──────────────────────────────────────────────────────────────
-
-@dataclass
-class Issue:
-    severity: str          # "error" | "warning" | "info"
-    category: str          # "id" | "dependency" | "coverage" | "structure" | "schema"
-    message: str
-    hint: str = ""
+from shared import Issue, LayerResult, print_human, print_json_output
 
 
 @dataclass
@@ -614,33 +606,6 @@ class IssueLinter:
         self.lint_coverage()
         return self.issues
 
-    def summary(self) -> str:
-        """Return a formatted summary of lint findings."""
-        errors = [i for i in self.issues if i.severity == "error"]
-        warnings = [i for i in self.issues if i.severity == "warning"]
-        infos = [i for i in self.issues if i.severity == "info"]
-
-        lines = []
-        if errors:
-            lines.append(f"Errors: {len(errors)}")
-            for e in errors:
-                lines.append(f"  [{e.category}] {e.message}" +
-                             (f" — {e.hint}" if e.hint else ""))
-        if warnings:
-            lines.append(f"Warnings: {len(warnings)}")
-            for w in warnings:
-                lines.append(f"  [{w.category}] {w.message}" +
-                             (f" — {w.hint}" if w.hint else ""))
-        if infos:
-            lines.append(f"Info: {len(infos)}")
-            for i in infos:
-                lines.append(f"  [{i.category}] {i.message}")
-
-        if not self.issues:
-            lines.append("No issues found.")
-
-        return "\n".join(lines)
-
 
 # ── Integration with lint_all.py ──────────────────────────────────────────────
 
@@ -675,6 +640,8 @@ def main():
                         help="Path to glossary.json for synonym expansion")
     parser.add_argument("--strict", action="store_true",
                         help="Treat warnings as errors")
+    parser.add_argument("--json", action="store_true",
+                        help="Output results as JSON")
     args = parser.parse_args()
 
     taskplan = None
@@ -703,7 +670,15 @@ def main():
         linter.goal = goal
     issues = linter.run(taskplan)
 
-    print(linter.summary())
+    # Build a LayerResult for consistent output
+    layer = LayerResult(name="issues")
+    for issue in issues:
+        layer.add(issue.severity, issue.category, issue.message, issue.hint)
+
+    if args.json:
+        print_json_output(layer)
+    else:
+        print_human(layer, f"{args.epic} in {args.epics_dir}")
 
     errors = [i for i in issues if i.severity == "error"]
     if errors or (args.strict and [i for i in issues if i.severity == "warning"]):

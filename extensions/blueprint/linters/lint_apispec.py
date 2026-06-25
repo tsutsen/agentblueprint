@@ -23,8 +23,8 @@ import sys
 import argparse
 import re
 from pathlib import Path
-from dataclasses import dataclass, field
 from typing import Optional, Set, Dict, Any
+from shared import Issue, LayerResult, print_human, print_json_output
 
 try:
     import jsonschema
@@ -33,40 +33,9 @@ except ImportError:
     HAS_JSONSCHEMA = False
 
 
-# ── Result types ──────────────────────────────────────────────────────────────
-
-@dataclass
-class Issue:
-    severity: str      # "error" | "warning"
-    category: str
-    message: str
-    hint: str = ""
-
-
-@dataclass
-class LintResult:
-    errors: list[Issue] = field(default_factory=list)
-    warnings: list[Issue] = field(default_factory=list)
-
-    def add(self, severity: str, category: str, message: str, hint: str = ""):
-        issue = Issue(severity, category, message, hint)
-        if severity == "error":
-            self.errors.append(issue)
-        else:
-            self.warnings.append(issue)
-
-    @property
-    def clean(self) -> bool:
-        return len(self.errors) == 0
-
-    @property
-    def all_issues(self):
-        return self.errors + self.warnings
-
-
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def check_duplicates(ids: list[str], label: str, result: LintResult):
+def check_duplicates(ids: list[str], label: str, result: LayerResult):
     seen = set()
     for id_ in ids:
         if id_ in seen:
@@ -83,7 +52,7 @@ def resolve_base_type(type_str: str) -> str:
 
 # ── Semantic checks ───────────────────────────────────────────────────────────
 
-def check_functions(spec: dict, result: LintResult) -> Set[str]:
+def check_functions(spec: dict, result: LayerResult) -> Set[str]:
     """Validate function IDs, names, parameters, and error conditions."""
     functions = spec.get("functions", [])
     fn_ids: Set[str] = set()
@@ -126,7 +95,7 @@ def check_functions(spec: dict, result: LintResult) -> Set[str]:
     return fn_ids
 
 
-def check_errors(spec: dict, fn_ids: Set[str], result: LintResult):
+def check_errors(spec: dict, fn_ids: Set[str], result: LayerResult):
     """Validate error conditions for each function."""
     functions = spec.get("functions", [])
 
@@ -150,7 +119,7 @@ def check_errors(spec: dict, fn_ids: Set[str], result: LintResult):
                     hint="Error codes must be uppercase with underscores, e.g. 'NOT_FOUND'.")
 
 
-def check_visibility(spec: dict, result: LintResult):
+def check_visibility(spec: dict, result: LayerResult):
     """Validate function visibility values."""
     functions = spec.get("functions", [])
     for fn in functions:
@@ -163,7 +132,7 @@ def check_visibility(spec: dict, result: LintResult):
 
 
 
-def check_duplicate_names(spec: dict, result: LintResult):
+def check_duplicate_names(spec: dict, result: LayerResult):
     """Warn when multiple functions share the same name."""
     names = {}
     for fn in spec.get("functions", []):
@@ -177,7 +146,7 @@ def check_duplicate_names(spec: dict, result: LintResult):
                 names[fname] = fn["id"]
 
 
-def check_missing_descriptions(spec: dict, result: LintResult):
+def check_missing_descriptions(spec: dict, result: LayerResult):
     """Warn about functions, parameters, and outputs without descriptions."""
     for fn in spec.get("functions", []):
         fid = fn["id"]
@@ -204,7 +173,7 @@ def check_missing_descriptions(spec: dict, result: LintResult):
                 hint="Add a description explaining what this function returns.")
 
 
-def check_unused_functions(spec: dict, data_spec: Optional[Dict[str, Any]], result: LintResult):
+def check_unused_functions(spec: dict, data_spec: Optional[Dict[str, Any]], result: LayerResult):
     """Warn about functions not referenced by any entity's apiRef."""
     if not data_spec:
         return
@@ -224,7 +193,7 @@ def check_unused_functions(spec: dict, data_spec: Optional[Dict[str, Any]], resu
                 hint="Either add this function to an entity's methods, or remove it if unused.")
 
 
-def check_cross_spec_types(spec: dict, data_spec: Optional[Dict[str, Any]], result: LintResult):
+def check_cross_spec_types(spec: dict, data_spec: Optional[Dict[str, Any]], result: LayerResult):
     """Verify that types used in ApiSpec match exactly with DataSpec.
 
     Checks:
@@ -280,7 +249,7 @@ def check_cross_spec_types(spec: dict, data_spec: Optional[Dict[str, Any]], resu
                         hint=f"Define '{base}' in the data spec or use an existing type.")
 
 
-def check_required_parameter_description(spec: dict, result: LintResult):
+def check_required_parameter_description(spec: dict, result: LayerResult):
     """Required parameters must have descriptions."""
     for fn in spec.get("functions", []):
         fid = fn["id"]
@@ -291,7 +260,7 @@ def check_required_parameter_description(spec: dict, result: LintResult):
                     hint="Required parameters should always have a description explaining their purpose.")
 
 
-def check_internal_function_visibility(spec: dict, result: LintResult):
+def check_internal_function_visibility(spec: dict, result: LayerResult):
     """Warn about internal functions that have public-facing characteristics.
 
     Internal functions should not be:
@@ -321,7 +290,7 @@ def check_internal_function_visibility(spec: dict, result: LintResult):
 
 # ── Cross-spec checks ─────────────────────────────────────────────────────────
 
-def check_entity_refs(spec: dict, data_spec: Optional[Dict[str, Any]], result: LintResult):
+def check_entity_refs(spec: dict, data_spec: Optional[Dict[str, Any]], result: LayerResult):
     """Validate that entity references match data spec entities."""
     if not data_spec:
         return
@@ -366,7 +335,7 @@ def check_entity_refs(spec: dict, data_spec: Optional[Dict[str, Any]], result: L
                         hint=f"Add '{base}' to the data spec's primitives list or use an existing type.")
 
 
-def check_module_match(spec: dict, data_spec: Optional[Dict[str, Any]], result: LintResult):
+def check_module_match(spec: dict, data_spec: Optional[Dict[str, Any]], result: LayerResult):
     """Validate that module name matches data spec."""
     if not data_spec:
         return
@@ -380,7 +349,7 @@ def check_module_match(spec: dict, data_spec: Optional[Dict[str, Any]], result: 
             hint="Both specs must describe the same module.")
 
 
-def check_version_match(spec: dict, data_spec: Optional[Dict[str, Any]], result: LintResult):
+def check_version_match(spec: dict, data_spec: Optional[Dict[str, Any]], result: LayerResult):
     """Validate that dataSpecVersion matches data spec version."""
     if not data_spec:
         return
@@ -396,8 +365,8 @@ def check_version_match(spec: dict, data_spec: Optional[Dict[str, Any]], result:
 
 # ── Runner ────────────────────────────────────────────────────────────────────
 
-def run_lint(spec: dict, schema_path: Optional[Path], data_spec: Optional[Dict[str, Any]], strict: bool) -> LintResult:
-    result = LintResult()
+def run_lint(spec: dict, schema_path: Optional[Path], data_spec: Optional[Dict[str, Any]], strict: bool) -> LayerResult:
+    result = LayerResult()
 
     # JSON Schema validation
     if schema_path and HAS_JSONSCHEMA:
@@ -436,44 +405,9 @@ def run_lint(spec: dict, schema_path: Optional[Path], data_spec: Optional[Dict[s
     return result
 
 
-# ── Output ────────────────────────────────────────────────────────────────────
+# ── Output
+# Uses shared.print_human and shared.print_json_output
 
-def print_human(result: LintResult, path: str):
-    print(f"\n{'─'*60}")
-    print(f"  ApiSpec Lint Report — {path}")
-    print(f"{'─'*60}")
-
-    if not result.all_issues:
-        print("  ✓ All checks passed.\n")
-        return
-
-    if result.errors:
-        print(f"\n  ERRORS ({len(result.errors)}):")
-        for e in result.errors:
-            print(f"    ✗ [{e.category}] {e.message}")
-            if e.hint:
-                print(f"      → {e.hint}")
-
-    if result.warnings:
-        print(f"\n  WARNINGS ({len(result.warnings)}):")
-        for w in result.warnings:
-            print(f"    ⚠ [{w.category}] {w.message}")
-            if w.hint:
-                print(f"      → {w.hint}")
-
-    print(f"\n  {len(result.errors)} error(s), {len(result.warnings)} warning(s).\n")
-
-
-def print_json_output(result: LintResult):
-    out = {
-        "clean": result.clean,
-        "errors": [{"category": e.category, "message": e.message, "hint": e.hint} for e in result.errors],
-        "warnings": [{"category": w.category, "message": w.message, "hint": w.hint} for w in result.warnings]
-    }
-    print(json.dumps(out, indent=2))
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(description="Lint an ApiSpec JSON.")

@@ -39,15 +39,10 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
 
+from shared import Issue, LayerResult as SharedLayerResult
+
 
 # ── Shared types ──────────────────────────────────────────────────────────────
-
-@dataclass
-class Issue:
-    severity: str
-    category: str
-    message: str
-    hint: str = ""
 
 @dataclass
 class CompletenessGate:
@@ -94,28 +89,11 @@ class CompletenessScore:
         ]
 
 @dataclass
-class LayerResult:
-    name: str
+class LayerResult(SharedLayerResult):
+    """Extended LayerResult with suite-level fields."""
     skipped: bool = False
     skip_reason: str = ""
-    errors: list[Issue] = field(default_factory=list)
-    warnings: list[Issue] = field(default_factory=list)
     completeness: Optional[CompletenessScore] = None
-
-    @property
-    def clean(self) -> bool:
-        return len(self.errors) == 0
-
-    @property
-    def all_issues(self):
-        return self.errors + self.warnings
-
-    def add(self, severity: str, category: str, message: str, hint: str = ""):
-        issue = Issue(severity, category, message, hint)
-        if severity == "error":
-            self.errors.append(issue)
-        else:
-            self.warnings.append(issue)
 
 @dataclass
 class SuiteResult:

@@ -14,39 +14,8 @@ import sys
 import argparse
 import re
 from pathlib import Path
-from dataclasses import dataclass, field
 from typing import Optional, Set, Dict, Any
-
-
-# ── Result types ──────────────────────────────────────────────────────────────
-
-@dataclass
-class Issue:
-    severity: str      # "error" | "warning"
-    category: str
-    message: str
-    hint: str = ""
-
-
-@dataclass
-class LintResult:
-    errors: list[Issue] = field(default_factory=list)
-    warnings: list[Issue] = field(default_factory=list)
-
-    def add(self, severity: str, category: str, message: str, hint: str = ""):
-        issue = Issue(severity, category, message, hint)
-        if severity == "error":
-            self.errors.append(issue)
-        else:
-            self.warnings.append(issue)
-
-    @property
-    def clean(self) -> bool:
-        return len(self.errors) == 0
-
-    @property
-    def all_issues(self):
-        return self.errors + self.warnings
+from shared import Issue, LayerResult, print_human, print_json_output
 
 
 # ── Markdown parsing ──────────────────────────────────────────────────────────
@@ -108,7 +77,7 @@ def extract_json_functions(spec: dict) -> Set[str]:
 # ── Consistency checks ────────────────────────────────────────────────────────
 
 def check_entity_consistency(md_entities: Set[str], json_entities: Set[str],
-                             spec_name: str, result: LintResult):
+                             spec_name: str, result: LayerResult):
     """Check that entity names match between Markdown and JSON."""
     only_md = md_entities - json_entities
     only_json = json_entities - md_entities
@@ -125,7 +94,7 @@ def check_entity_consistency(md_entities: Set[str], json_entities: Set[str],
 
 
 def check_enum_consistency(md_enums: Set[str], json_enums: Set[str],
-                           spec_name: str, result: LintResult):
+                           spec_name: str, result: LayerResult):
     """Check that enum names match between Markdown and JSON."""
     only_md = md_enums - json_enums
     only_json = json_enums - md_enums
@@ -142,7 +111,7 @@ def check_enum_consistency(md_enums: Set[str], json_enums: Set[str],
 
 
 def check_relationship_consistency(md_rels: Set[tuple], json_rels: Set[tuple],
-                                   spec_name: str, result: LintResult):
+                                   spec_name: str, result: LayerResult):
     """Check that relationships match between Markdown and JSON."""
     only_md = md_rels - json_rels
     only_json = json_rels - md_rels
@@ -159,7 +128,7 @@ def check_relationship_consistency(md_rels: Set[tuple], json_rels: Set[tuple],
 
 
 def check_function_consistency(md_fns: Set[str], json_fns: Set[str],
-                               spec_name: str, result: LintResult):
+                               spec_name: str, result: LayerResult):
     """Check that function IDs match between Markdown and JSON."""
     only_md = md_fns - json_fns
     only_json = json_fns - md_fns
@@ -177,8 +146,8 @@ def check_function_consistency(md_fns: Set[str], json_fns: Set[str],
 
 # ── Runner ────────────────────────────────────────────────────────────────────
 
-def run_lint(spec_dir: Path, specs: list[str]) -> LintResult:
-    result = LintResult()
+def run_lint(spec_dir: Path, specs: list[str]) -> LayerResult:
+    result = LayerResult()
 
     for spec_type in specs:
         md_path = spec_dir / f"{spec_type.title()}.md"
@@ -213,44 +182,9 @@ def run_lint(spec_dir: Path, specs: list[str]) -> LintResult:
     return result
 
 
-# ── Output ────────────────────────────────────────────────────────────────────
+# ── Output
+# Uses shared.print_human and shared.print_json_output
 
-def print_human(result: LintResult):
-    print(f"\n{'─'*60}")
-    print(f"  Consistency Lint Report")
-    print(f"{'─'*60}")
-
-    if not result.all_issues:
-        print("  ✓ All checks passed.\n")
-        return
-
-    if result.errors:
-        print(f"\n  ERRORS ({len(result.errors)}):")
-        for e in result.errors:
-            print(f"    ✗ [{e.category}] {e.message}")
-            if e.hint:
-                print(f"      → {e.hint}")
-
-    if result.warnings:
-        print(f"\n  WARNINGS ({len(result.warnings)}):")
-        for w in result.warnings:
-            print(f"    ⚠ [{w.category}] {w.message}")
-            if w.hint:
-                print(f"      → {w.hint}")
-
-    print(f"\n  {len(result.errors)} error(s), {len(result.warnings)} warning(s).\n")
-
-
-def print_json_output(result: LintResult):
-    out = {
-        "clean": result.clean,
-        "errors": [{"category": e.category, "message": e.message, "hint": e.hint} for e in result.errors],
-        "warnings": [{"category": w.category, "message": w.message, "hint": w.hint} for w in result.warnings]
-    }
-    print(json.dumps(out, indent=2))
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(description="Check Markdown/JSON consistency.")

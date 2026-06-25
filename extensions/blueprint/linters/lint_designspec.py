@@ -31,8 +31,8 @@ import sys
 import argparse
 import re
 from pathlib import Path
-from dataclasses import dataclass, field
 from typing import Optional
+from shared import Issue, LayerResult, print_human, print_json_output
 
 try:
     import jsonschema
@@ -41,40 +41,9 @@ except ImportError:
     HAS_JSONSCHEMA = False
 
 
-# ── Result types ──────────────────────────────────────────────────────────────
-
-@dataclass
-class Issue:
-    severity: str
-    category: str
-    message: str
-    hint: str = ""
-
-
-@dataclass
-class LintResult:
-    errors: list[Issue] = field(default_factory=list)
-    warnings: list[Issue] = field(default_factory=list)
-
-    def add(self, severity: str, category: str, message: str, hint: str = ""):
-        issue = Issue(severity, category, message, hint)
-        if severity == "error":
-            self.errors.append(issue)
-        else:
-            self.warnings.append(issue)
-
-    @property
-    def clean(self) -> bool:
-        return len(self.errors) == 0
-
-    @property
-    def all_issues(self):
-        return self.errors + self.warnings
-
-
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def check_duplicates(ids: list[str], label: str, result: LintResult):
+def check_duplicates(ids: list[str], label: str, result: LayerResult):
     seen = set()
     for id_ in ids:
         if id_ in seen:
@@ -94,7 +63,7 @@ def collect_ia_screen_refs(nodes: list) -> set[str]:
     return refs
 
 
-def collect_ia_leaf_issues(nodes: list, result: LintResult):
+def collect_ia_leaf_issues(nodes: list, result: LayerResult):
     """Leaf nodes (no children) must have a screenRef."""
     for node in nodes:
         children = node.get("children", [])
@@ -108,7 +77,7 @@ def collect_ia_leaf_issues(nodes: list, result: LintResult):
 
 # ── Checks ────────────────────────────────────────────────────────────────────
 
-def check_project_and_version(spec: dict, goal: Optional[dict], result: LintResult):
+def check_project_and_version(spec: dict, goal: Optional[dict], result: LayerResult):
     if not goal:
         return
     if spec["project"] != goal["project"]:
@@ -122,7 +91,7 @@ def check_project_and_version(spec: dict, goal: Optional[dict], result: LintResu
             hint="Update goalSpecVersion after reviewing design against the updated GoalSpec.")
 
 
-def check_design_goals(spec: dict, result: LintResult):
+def check_design_goals(spec: dict, result: LayerResult):
     goals = spec.get("designGoals", [])
     ids = [g["id"] for g in goals]
     check_duplicates(ids, "DCON", result)
@@ -146,7 +115,7 @@ def check_design_goals(spec: dict, result: LintResult):
                 hint="Design goals must describe UX qualities, not technology choices.")
 
 
-def check_personas(spec: dict, goal: Optional[dict], result: LintResult) -> set[str]:
+def check_personas(spec: dict, goal: Optional[dict], result: LayerResult) -> set[str]:
     personas = spec.get("personas", [])
     ids = [p["id"] for p in personas]
     check_duplicates(ids, "persona", result)
@@ -164,7 +133,7 @@ def check_personas(spec: dict, goal: Optional[dict], result: LintResult) -> set[
 
 
 def check_journeys(spec: dict, persona_ids: set[str],
-                   screen_ids: set[str], goal: Optional[dict], result: LintResult) -> set[str]:
+                   screen_ids: set[str], goal: Optional[dict], result: LayerResult) -> set[str]:
     journeys = spec.get("userJourneys", [])
     ids = [j["id"] for j in journeys]
     check_duplicates(ids, "UJ", result)
@@ -207,7 +176,7 @@ def check_journeys(spec: dict, persona_ids: set[str],
     return covered_us_ids
 
 
-def check_ia(spec: dict, screen_ids: set[str], result: LintResult) -> set[str]:
+def check_ia(spec: dict, screen_ids: set[str], result: LayerResult) -> set[str]:
     ia = spec.get("informationArchitecture", {})
     root = ia.get("root", [])
 
@@ -226,7 +195,7 @@ def check_ia(spec: dict, screen_ids: set[str], result: LintResult) -> set[str]:
 
 
 def check_screen_inventory(spec: dict, ia_screen_refs: set[str],
-                            goal: Optional[dict], result: LintResult) -> set[str]:
+                            goal: Optional[dict], result: LayerResult) -> set[str]:
     screens = spec.get("screenInventory", [])
     ids = [s["id"] for s in screens]
     check_duplicates(ids, "SCR", result)
@@ -263,7 +232,7 @@ def check_screen_inventory(spec: dict, ia_screen_refs: set[str],
 
 
 def check_screen_specs(spec: dict, screen_ids: set[str],
-                        pattern_ids: set[str], result: LintResult):
+                        pattern_ids: set[str], result: LayerResult):
     screen_specs = spec.get("screenSpecs", [])
     spec_refs = [s["screenRef"] for s in screen_specs]
     check_duplicates(spec_refs, "screenSpec.screenRef", result)
@@ -307,14 +276,14 @@ def check_screen_specs(spec: dict, screen_ids: set[str],
                 hint="Add a screen spec entry for every screen in the inventory.")
 
 
-def check_interaction_patterns(spec: dict, result: LintResult) -> set[str]:
+def check_interaction_patterns(spec: dict, result: LayerResult) -> set[str]:
     patterns = spec.get("interactionPatterns", [])
     ids = [p["id"] for p in patterns]
     check_duplicates(ids, "interactionPattern", result)
     return set(ids)
 
 
-def check_uxac(spec: dict, goal: Optional[dict], result: LintResult):
+def check_uxac(spec: dict, goal: Optional[dict], result: LayerResult):
     criteria = spec.get("uxAcceptanceCriteria", [])
     ids = [c["id"] for c in criteria]
     check_duplicates(ids, "UXAC", result)
@@ -359,7 +328,7 @@ def check_uxac(spec: dict, goal: Optional[dict], result: LintResult):
                 hint="UX acceptance criteria must be binary and independently verifiable.")
 
 
-def check_us_journey_coverage(goal: Optional[dict], covered_us_ids: set[str], result: LintResult):
+def check_us_journey_coverage(goal: Optional[dict], covered_us_ids: set[str], result: LayerResult):
     """Every GoalSpec user story should be covered by at least one journey."""
     if not goal:
         return
@@ -370,7 +339,7 @@ def check_us_journey_coverage(goal: Optional[dict], covered_us_ids: set[str], re
                 hint=f"Add a user journey with usRef='{us['id']}' covering this story.")
 
 
-def check_forbidden_content(spec: dict, result: LintResult):
+def check_forbidden_content(spec: dict, result: LayerResult):
     """Scan prose fields for forbidden content: database schemas, internal APIs, source code."""
     forbidden_terms = [
         ("database schema", ["create table", "alter table", "primary key", "foreign key",
@@ -399,7 +368,7 @@ def check_forbidden_content(spec: dict, result: LintResult):
                     hint=f"DesignSpec must not contain {category}. Move this to the appropriate spec.")
 
 
-def check_screens_reachable(spec: dict, screen_ids: set[str], result: LintResult):
+def check_screens_reachable(spec: dict, screen_ids: set[str], result: LayerResult):
     """Every screen should appear in at least one journey step."""
     journey_screen_refs = set()
     for journey in spec.get("userJourneys", []):
@@ -414,7 +383,7 @@ def check_screens_reachable(spec: dict, screen_ids: set[str], result: LintResult
                 hint="Add a journey step that passes through this screen, or reconsider whether it is needed.")
 
 
-def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LintResult):
+def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResult):
     """Check that personas, screens, components, and journey steps link to glossary terms.
 
     Severity levels:
@@ -487,8 +456,8 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LintResult
 
 def run_lint(spec: dict, schema_path: Optional[Path],
              goal: Optional[dict], strict: bool,
-             glossary: Optional[dict] = None) -> LintResult:
-    result = LintResult()
+             glossary: Optional[dict] = None) -> LayerResult:
+    result = LayerResult()
 
     # JSON Schema validation
     if schema_path and HAS_JSONSCHEMA:
@@ -531,45 +500,9 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     return result
 
 
-# ── Output ────────────────────────────────────────────────────────────────────
+# ── Output
+# Uses shared.print_human and shared.print_json_output
 
-def print_human(result: LintResult, path: str, goal_path: Optional[str]):
-    print(f"\n{'─'*60}")
-    print(f"  DesignSpec Lint Report — {path}")
-    if goal_path:
-        print(f"  GoalSpec — {goal_path}")
-    print(f"{'─'*60}")
-
-    if not result.all_issues:
-        print("  ✓ All checks passed.\n")
-        return
-
-    if result.errors:
-        print(f"\n  ERRORS ({len(result.errors)}):")
-        for e in result.errors:
-            print(f"    ✗ [{e.category}] {e.message}")
-            if e.hint:
-                print(f"      → {e.hint}")
-
-    if result.warnings:
-        print(f"\n  WARNINGS ({len(result.warnings)}):")
-        for w in result.warnings:
-            print(f"    ⚠ [{w.category}] {w.message}")
-            if w.hint:
-                print(f"      → {w.hint}")
-
-    print(f"\n  {len(result.errors)} error(s), {len(result.warnings)} warning(s).\n")
-
-
-def print_json_output(result: LintResult):
-    print(json.dumps({
-        "clean": result.clean,
-        "errors":   [{"category": e.category, "message": e.message, "hint": e.hint} for e in result.errors],
-        "warnings": [{"category": w.category, "message": w.message, "hint": w.hint} for w in result.warnings]
-    }, indent=2))
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(description="Lint a DesignSpec JSON.")

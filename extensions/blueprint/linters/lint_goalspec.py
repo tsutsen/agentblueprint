@@ -23,45 +23,14 @@ import sys
 import argparse
 import re
 from pathlib import Path
-from dataclasses import dataclass, field
 from typing import Optional
+from shared import Issue, LayerResult, print_human, print_json_output
 
 try:
     import jsonschema
     HAS_JSONSCHEMA = True
 except ImportError:
     HAS_JSONSCHEMA = False
-
-
-# ── Result types ──────────────────────────────────────────────────────────────
-
-@dataclass
-class Issue:
-    severity: str      # "error" | "warning"
-    category: str
-    message: str
-    hint: str = ""
-
-
-@dataclass
-class LintResult:
-    errors: list[Issue] = field(default_factory=list)
-    warnings: list[Issue] = field(default_factory=list)
-
-    def add(self, severity: str, category: str, message: str, hint: str = ""):
-        issue = Issue(severity, category, message, hint)
-        if severity == "error":
-            self.errors.append(issue)
-        else:
-            self.warnings.append(issue)
-
-    @property
-    def clean(self) -> bool:
-        return len(self.errors) == 0
-
-    @property
-    def all_issues(self):
-        return self.errors + self.warnings
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -74,7 +43,7 @@ def numeric(id_str: str) -> int:
     m = re.search(r"(\d+)$", id_str)
     return int(m.group(1)) if m else -1
 
-def check_duplicates(ids: list[str], label: str, result: LintResult):
+def check_duplicates(ids: list[str], label: str, result: LayerResult):
     seen = set()
     for id_ in ids:
         if id_ in seen:
@@ -83,7 +52,7 @@ def check_duplicates(ids: list[str], label: str, result: LintResult):
                 hint=f"Each {label} must have a unique identifier.")
         seen.add(id_)
 
-def check_sequential(ids: list[str], label: str, result: LintResult):
+def check_sequential(ids: list[str], label: str, result: LayerResult):
     """Warn when IDs skip numbers, e.g. REQ-001, REQ-003 (missing REQ-002)."""
     nums = sorted([numeric(i) for i in ids])
     for i, n in enumerate(nums):
@@ -97,7 +66,7 @@ def check_sequential(ids: list[str], label: str, result: LintResult):
 
 # ── Semantic checks ───────────────────────────────────────────────────────────
 
-def check_objective(spec: dict, result: LintResult):
+def check_objective(spec: dict, result: LayerResult):
     obj = spec["objective"]
     status = spec.get("status", "draft")
 
@@ -119,7 +88,7 @@ def check_objective(spec: dict, result: LintResult):
             hint="Objective must describe what and why, not how. Move technology choices to architecture.")
 
 
-def check_functional_requirements(spec: dict, result: LintResult) -> set[str]:
+def check_functional_requirements(spec: dict, result: LayerResult) -> set[str]:
     frs = spec.get("functionalRequirements", [])
     ids = extract_ids(frs, "id")
 
@@ -145,7 +114,7 @@ def check_functional_requirements(spec: dict, result: LintResult) -> set[str]:
     return set(ids)
 
 
-def check_nfrs(spec: dict, result: LintResult) -> set[str]:
+def check_nfrs(spec: dict, result: LayerResult) -> set[str]:
     nfrs = spec.get("nonFunctionalRequirements", [])
     ids = extract_ids(nfrs, "id")
 
@@ -189,7 +158,7 @@ def check_nfrs(spec: dict, result: LintResult) -> set[str]:
     return set(ids)
 
 
-def check_user_stories(spec: dict, req_ids: set[str], result: LintResult) -> set[str]:
+def check_user_stories(spec: dict, req_ids: set[str], result: LayerResult) -> set[str]:
     stories = spec.get("userStories", [])
     ids = extract_ids(stories, "id")
     fr_actors = {fr["actor"] for fr in spec.get("functionalRequirements", [])}
@@ -229,7 +198,7 @@ def check_user_stories(spec: dict, req_ids: set[str], result: LintResult) -> set
     return story_req_refs
 
 
-def check_success_criteria(spec: dict, req_ids: set[str], nfr_ids: set[str], result: LintResult) -> set[str]:
+def check_success_criteria(spec: dict, req_ids: set[str], nfr_ids: set[str], result: LayerResult) -> set[str]:
     criteria = spec.get("successCriteria", [])
     ids = extract_ids(criteria, "id")
 
@@ -279,7 +248,7 @@ def check_success_criteria(spec: dict, req_ids: set[str], nfr_ids: set[str], res
 
 
 def check_coverage(spec: dict, req_ids: set[str], story_req_refs: set[str],
-                   sc_covered_reqs: set[str], result: LintResult):
+                   sc_covered_reqs: set[str], result: LayerResult):
     """
     Every FR should be:
     - Referenced by at least one user story
@@ -297,7 +266,7 @@ def check_coverage(spec: dict, req_ids: set[str], story_req_refs: set[str],
                 hint="Add a success criterion that verifies this requirement is met.")
 
 
-def check_non_goals(spec: dict, result: LintResult):
+def check_non_goals(spec: dict, result: LayerResult):
     non_goals = spec.get("nonGoals", [])
 
     vague_smells = ["everything", "advanced", "features", "stuff",
@@ -315,7 +284,7 @@ def check_non_goals(spec: dict, result: LintResult):
                 hint="Explain why this is excluded: deferred, out of scope, handled elsewhere.")
 
 
-def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LintResult):
+def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResult):
     """Check that actors, FRs, USs, non-goals, and NFRs link to glossary terms.
 
     Severity levels:
@@ -400,8 +369,8 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LintResult
 # ── Runner ────────────────────────────────────────────────────────────────────
 
 def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
-             glossary: Optional[dict] = None) -> LintResult:
-    result = LintResult()
+             glossary: Optional[dict] = None) -> LayerResult:
+    result = LayerResult()
 
     # JSON Schema validation
     if schema_path and HAS_JSONSCHEMA:
@@ -434,44 +403,9 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
     return result
 
 
-# ── Output ────────────────────────────────────────────────────────────────────
+# ── Output
+# Uses shared.print_human and shared.print_json_output
 
-def print_human(result: LintResult, path: str):
-    print(f"\n{'─'*60}")
-    print(f"  GoalSpec Lint Report — {path}")
-    print(f"{'─'*60}")
-
-    if not result.all_issues:
-        print("  ✓ All checks passed.\n")
-        return
-
-    if result.errors:
-        print(f"\n  ERRORS ({len(result.errors)}):")
-        for e in result.errors:
-            print(f"    ✗ [{e.category}] {e.message}")
-            if e.hint:
-                print(f"      → {e.hint}")
-
-    if result.warnings:
-        print(f"\n  WARNINGS ({len(result.warnings)}):")
-        for w in result.warnings:
-            print(f"    ⚠ [{w.category}] {w.message}")
-            if w.hint:
-                print(f"      → {w.hint}")
-
-    print(f"\n  {len(result.errors)} error(s), {len(result.warnings)} warning(s).\n")
-
-
-def print_json_output(result: LintResult):
-    out = {
-        "clean": result.clean,
-        "errors": [{"category": e.category, "message": e.message, "hint": e.hint} for e in result.errors],
-        "warnings": [{"category": w.category, "message": w.message, "hint": w.hint} for w in result.warnings]
-    }
-    print(json.dumps(out, indent=2))
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(description="Lint a GoalSpec JSON.")

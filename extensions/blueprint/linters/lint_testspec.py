@@ -28,45 +28,14 @@ import sys
 import argparse
 import re
 from pathlib import Path
-from dataclasses import dataclass, field
 from typing import Optional
+from shared import Issue, LayerResult, print_human, print_json_output
 
 try:
     import jsonschema
     HAS_JSONSCHEMA = True
 except ImportError:
     HAS_JSONSCHEMA = False
-
-
-# ── Result types ──────────────────────────────────────────────────────────────
-
-@dataclass
-class Issue:
-    severity: str
-    category: str
-    message: str
-    hint: str = ""
-
-
-@dataclass
-class LintResult:
-    errors: list[Issue] = field(default_factory=list)
-    warnings: list[Issue] = field(default_factory=list)
-
-    def add(self, severity: str, category: str, message: str, hint: str = ""):
-        issue = Issue(severity, category, message, hint)
-        if severity == "error":
-            self.errors.append(issue)
-        else:
-            self.warnings.append(issue)
-
-    @property
-    def clean(self) -> bool:
-        return len(self.errors) == 0
-
-    @property
-    def all_issues(self):
-        return self.errors + self.warnings
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -114,7 +83,7 @@ def expected_test_prefix(fn_id: str) -> str:
 
 # ── Checks ────────────────────────────────────────────────────────────────────
 
-def check_duplicate_ids(spec: dict, result: LintResult):
+def check_duplicate_ids(spec: dict, result: LayerResult):
     ids = [t["id"] for t in spec.get("tests", [])]
     seen = set()
     for tid in ids:
@@ -125,7 +94,7 @@ def check_duplicate_ids(spec: dict, result: LintResult):
         seen.add(tid)
 
 
-def check_test_id_format(spec: dict, result: LintResult):
+def check_test_id_format(spec: dict, result: LayerResult):
     """Test IDs must follow TST-NNN-testName pattern."""
     for t in spec.get("tests", []):
         tid = t.get("id", "")
@@ -139,7 +108,7 @@ def check_test_id_format(spec: dict, result: LintResult):
                 hint="Test IDs must follow the pattern 'TST-NNN-testName', e.g. 'TST-001-exportReportAsPDF'.")
 
 
-def check_id_fn_consistency(spec: dict, result: LintResult):
+def check_id_fn_consistency(spec: dict, result: LayerResult):
     """Test ID prefix must match its fnRef: T-createUser-001 must ref fn_createUser."""
     for t in spec.get("tests", []):
         tid = t.get("id", "")
@@ -151,7 +120,7 @@ def check_id_fn_consistency(spec: dict, result: LintResult):
                 hint=f"Rename to '{expected}-NNN' to keep IDs traceable to their function.")
 
 
-def check_category_rules(spec: dict, result: LintResult):
+def check_category_rules(spec: dict, result: LayerResult):
     """Enforce per-category required fields."""
     for t in spec.get("tests", []):
         tid = t.get("id", "?")
@@ -182,7 +151,7 @@ def check_category_rules(spec: dict, result: LintResult):
                     hint="Remove errorCode or change category to error-path.")
 
 
-def check_placeholder_values(spec: dict, result: LintResult):
+def check_placeholder_values(spec: dict, result: LayerResult):
     """Detect placeholder input values."""
     for t in spec.get("tests", []):
         tid = t.get("id", "?")
@@ -201,7 +170,7 @@ def check_placeholder_values(spec: dict, result: LintResult):
                 hint="Describe the specific scenario being tested.")
 
 
-def check_api_refs(spec: dict, api: Optional[dict], result: LintResult):
+def check_api_refs(spec: dict, api: Optional[dict], result: LayerResult):
     """Resolve fnRefs and errorCodes against ApiSpec."""
     if not api:
         return
@@ -232,7 +201,7 @@ def check_api_refs(spec: dict, api: Optional[dict], result: LintResult):
                     hint=f"Add error code '{error_code}' to '{fn_ref}' in ApiSpec or correct the test.")
 
 
-def check_api_coverage(spec: dict, api: Optional[dict], result: LintResult):
+def check_api_coverage(spec: dict, api: Optional[dict], result: LayerResult):
     """Every ApiSpec function must have tests; every error code must have an error-path test."""
     if not api:
         return
@@ -261,7 +230,7 @@ def check_api_coverage(spec: dict, api: Optional[dict], result: LintResult):
                     hint=f"Add a test with fnRef='{fn_id}', category='error-path', errorCode='{code}'.")
 
 
-def check_function_coverage_summary(spec: dict, result: LintResult):
+def check_function_coverage_summary(spec: dict, result: LayerResult):
     """Validate functionCoverage entries match actual test counts."""
     tests = spec.get("tests", [])
     coverage_entries = spec.get("functionCoverage", [])
@@ -316,7 +285,7 @@ def check_function_coverage_summary(spec: dict, result: LintResult):
                 hint=f"Add a functionCoverage entry for '{fn}' with out-of-scope declarations.")
 
 
-def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LintResult):
+def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResult):
     """WARN: Check that test descriptions, contract clauses, and out-of-scope items have glossaryRefs."""
     if not glossary:
         return
@@ -374,7 +343,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LintResult
                     hint="Add glossaryRefs (GL-NNN) for domain concepts in this outOfScope item.")
 
 
-def check_lifecycle(spec: dict, result: LintResult):
+def check_lifecycle(spec: dict, result: LayerResult):
     """Status-aware completeness checks."""
     status = spec.get("status", "draft")
     verification = spec.get("verificationStatus", "pending")
@@ -399,8 +368,8 @@ def check_lifecycle(spec: dict, result: LintResult):
 # ── Runner ────────────────────────────────────────────────────────────────────
 
 def run_lint(spec: dict, schema_path: Optional[Path],
-             api: Optional[dict], glossary: Optional[dict], strict: bool) -> LintResult:
-    result = LintResult()
+             api: Optional[dict], glossary: Optional[dict], strict: bool) -> LayerResult:
+    result = LayerResult()
 
     if schema_path and HAS_JSONSCHEMA:
         schema = json.loads(schema_path.read_text())
@@ -431,45 +400,9 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     return result
 
 
-# ── Output ────────────────────────────────────────────────────────────────────
+# ── Output
+# Uses shared.print_human and shared.print_json_output
 
-def print_human(result: LintResult, path: str, api_path: Optional[str]):
-    print(f"\n{'─'*60}")
-    print(f"  TestSpec Lint Report — {path}")
-    if api_path:
-        print(f"  ApiSpec — {api_path}")
-    print(f"{'─'*60}")
-
-    if not result.all_issues:
-        print("  ✓ All checks passed.\n")
-        return
-
-    if result.errors:
-        print(f"\n  ERRORS ({len(result.errors)}):")
-        for e in result.errors:
-            print(f"    ✗ [{e.category}] {e.message}")
-            if e.hint:
-                print(f"      → {e.hint}")
-
-    if result.warnings:
-        print(f"\n  WARNINGS ({len(result.warnings)}):")
-        for w in result.warnings:
-            print(f"    ⚠ [{w.category}] {w.message}")
-            if w.hint:
-                print(f"      → {w.hint}")
-
-    print(f"\n  {len(result.errors)} error(s), {len(result.warnings)} warning(s).\n")
-
-
-def print_json_output(result: LintResult):
-    print(json.dumps({
-        "clean": result.clean,
-        "errors":   [{"category": e.category, "message": e.message, "hint": e.hint} for e in result.errors],
-        "warnings": [{"category": w.category, "message": w.message, "hint": w.hint} for w in result.warnings]
-    }, indent=2))
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(description="Lint a TestSpec JSON.")
