@@ -61,23 +61,6 @@ Each function must have:
 * Functions with no documented errors should be questioned — most functions
   have at least one error condition.
 
----
 
-## Cross-spec consistency
-
-After producing `artifacts/ApiSpec.json`, run the cross-spec linter:
-
-```
-python extensions/blueprint/linters/lint_cross.py \
-  --data artifacts/DataSpec.json \
-  --api  artifacts/ApiSpec.json \
-  --json
-```
-
-All errors must be resolved before handoff. In particular:
-
-* Every function input/output type must resolve in DataSpec
-* Every `entity` reference must exist in DataSpec
-* Every DataSpec entity method `apiRef` must resolve to a function in this spec
 
 
