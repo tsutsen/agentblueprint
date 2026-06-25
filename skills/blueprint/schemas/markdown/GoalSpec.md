@@ -1,7 +1,7 @@
 ---
 name: GoalSpec
 type: schema
-version: 1.0.0
+version: 4.0.0
 ---
 
 ## Goal Spec
@@ -69,7 +69,7 @@ for complex ones."
 Observable capabilities the system must provide.
 
 Each requirement must:
-* Have a unique identifier in format `REQ-NNN` (REQ-001, REQ-002, ...)
+* Have a unique identifier in format `REQ-NNN-slug` (REQ-001-initiate-research-session)
 * Be independently testable
 * Describe observable behaviour, not implementation
 * Be owned by one actor
@@ -105,7 +105,7 @@ Each NFR may also have **glossaryRefs** (array of GL-NNN): Domain concepts in th
 NFR descriptions. If the user provides a vague NFR (e.g. "should be fast"),
 prompt them to provide Scale and Meter before recording it.**
 
-Each NFR must have a unique identifier in format `NFR-NNN`.
+Each NFR must have a unique identifier in format `NFR-NNN-slug` (NFR-001-response-time).
 
 ```
 NFR-<NNN>
@@ -151,7 +151,7 @@ one functional requirement.
 
 Each story must also have **glossaryRefs** (array of GL-NNN): Domain concepts in the capability or outcome descriptions.
 
-Each story must have a unique identifier in format `US-NNN`.
+Each story must have a unique identifier in format `US-NNN-slug` (US-001-start-research-question).
 
 Format:
 As a <actor>,
@@ -175,7 +175,7 @@ Objective, binary conditions that determine the project is complete.
 Success criteria are the measurable thresholds for NFRs and the acceptance
 gates for FRs.
 
-Each criterion must have a unique identifier in format `SC-NNN`.
+Each criterion must have a unique identifier in format `SC-NNN-slug` (SC-001-percentage-completed-sessions).
 
 Each criterion must:
 * Be binary — passes or fails, no partial credit
@@ -201,6 +201,7 @@ Explicit statements of what this project will NOT attempt to solve.
 Non-goals prevent scope creep and tell downstream artifacts what to exclude.
 
 Each non-goal must:
+* Have a unique identifier in format `NG-NNN-slug` (NG-001-general-web-search)
 * Name a specific capability being excluded
 * Give a brief reason (deferred, out of scope, handled elsewhere)
 * Have **glossaryRefs** (array of GL-NNN): Glossary mapping for the excluded capability

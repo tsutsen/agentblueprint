@@ -1,7 +1,7 @@
 ---
 name: DesignSpec
 type: schema
-version: 1.0.0
+version: 4.0.0
 ---
 
 # Design Spec
@@ -70,7 +70,7 @@ in GoalSpec functional requirements and user stories.
 
 For each persona:
 
-* **ID** — kebab-case identifier, e.g. `power-developer`
+* **ID** — format `PSN-NNN-slug`, e.g. `PSN-001-dr-mira-chen`
 * **Name** — human name for the persona
 * **Role** — actor role, must match a GoalSpec actor
 * **Goals** — what this persona is trying to accomplish
@@ -84,7 +84,7 @@ For each persona:
 
 End-to-end workflows from the user's perspective.
 
-Each journey must have a unique identifier in format `UJ-NNN`.
+Each journey must have a unique identifier in format `UJ-NNN-slug`, e.g. `UJ-001-full-research-session`.
 
 Each journey must:
 
@@ -94,6 +94,8 @@ Each journey must:
 * Have alternating user and system steps
 * Have a defined desired outcome
 * Each journey step may have **glossaryRefs** (array of GL-NNN): Concepts in the step's action description
+* **reqRefs** (array of REQ-NNN-slug): GoalSpec requirements this journey exercises end-to-end
+* **fnRefs** (array of FN-NNN-slug): ApiSpec functions this journey exercises
 
 Every `US-NNN` in GoalSpec must be covered by at least one journey.
 
@@ -116,7 +118,7 @@ Rules:
 List of all screens and views. Screen IDs are the shared key referenced
 throughout this spec.
 
-Screen IDs are kebab-case, e.g. `library-screen`, `search-panel`.
+Screen IDs are in format `SCR-NNN-slug`, e.g. `SCR-001-landing-page`.
 
 For each screen:
 
@@ -126,7 +128,8 @@ For each screen:
 * **Primary Actions** — the main things a user can do
 * **Inputs** (optional) — data the user provides
 * **Outputs** (optional) — data the screen displays
-* **US refs** (optional) — `US-NNN` IDs this screen helps fulfil
+* **US refs** (optional) — `US-NNN-slug` IDs this screen helps fulfil
+* **fnRefs** (optional) — `FN-NNN-slug` IDs from ApiSpec that this screen's interactions exercise
 * **glossaryRefs** (array of GL-NNN): Domain concepts in the screen's purpose description
 
 ---
@@ -153,7 +156,7 @@ For each screen spec:
 
 Reusable interaction rules. Defined once, referenced throughout screen specs.
 
-Each pattern must have a unique kebab-case ID, e.g. `keyboard-navigation`.
+Each pattern must have a unique identifier in format `PAT-NNN-slug`, e.g. `PAT-001-pipeline-status-indicators`.
 
 Should be defined once and referenced by screen spec components and interactions.
 Do not repeat pattern definitions inline in screen specs.
@@ -164,7 +167,7 @@ Do not repeat pattern definitions inline in screen specs.
 
 Appearance constraints. Must describe requirements, not artistic preferences.
 
-Each requirement must have a unique identifier in format `VDR-NNN`.
+Each requirement must have a unique identifier in format `VDR-NNN-slug`, e.g. `VDR-001-design-token-system`.
 
 Examples:
 
@@ -192,7 +195,7 @@ Screen spec components should reference design system names.
 
 Accessibility expectations. Each must be independently verifiable.
 
-Each requirement must have a unique identifier in format `AR-NNN`.
+Each requirement must have a unique identifier in format `AR-NNN-slug`, e.g. `AR-001-contrast-ratio-4-5`.
 
 Examples:
 
@@ -206,7 +209,7 @@ Examples:
 Design-specific success criteria. Each must be binary and independently
 verifiable.
 
-Each criterion must have a unique identifier in format `UXAC-NNN`.
+Each criterion must have a unique identifier in format `UXAC-NNN-slug`, e.g. `UXAC-001-new-research-session`.
 
 Each criterion must:
 

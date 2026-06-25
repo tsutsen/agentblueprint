@@ -1,7 +1,7 @@
 ---
 name: ArchitectureSpec
 type: schema
-version: 1.0.0
+version: 2.0.0
 ---
 
 ## Architecture Spec
@@ -53,15 +53,16 @@ Defines major architectural units.
 
 Each component must have:
 
-* **ID** — kebab-case, unique, e.g. `search-service`, `api-gateway`
+* **ID** — format `COMP-NNN-slug`, e.g. `COMP-001-session-manager`
 * **Name** — human-readable
 * **Purpose** — one sentence: what this component exists to do
 * **Responsibilities** — exclusive behaviours owned by this component.
   No two components may claim the same responsibility.
 * **Dependencies** — IDs of other components this one depends on.
   Must reference real component IDs in this spec.
-* **REQ refs** (optional) — `REQ-NNN` IDs from GoalSpec this component satisfies
-* **NFR refs** (optional) — `NFR-NNN` IDs from GoalSpec this component is responsible for
+* **REQ refs** (optional) — `REQ-NNN-slug` IDs from GoalSpec this component satisfies
+* **NFR refs** (optional) — `NFR-NNN-slug` IDs from GoalSpec this component is responsible for
+* **fnRefs** (optional) — `FN-NNN-slug` IDs from ApiSpec that this component owns
 * **Visibility** — `external` (exposed to callers) or `internal`
 * **glossaryRefs** (array of GL-NNN): Glossary terms the component's concepts map to
 
@@ -80,7 +81,7 @@ Describes movement of information through the system as named, ordered flows.
 
 Each flow must have:
 
-* **ID** — kebab-case, unique, e.g. `query-routing-flow`
+* **ID** — format `FLOW-NNN-slug`, e.g. `FLOW-001-session-creation`
 * **Name** — human-readable
 * **Description** (optional) — prose summary
 * **REQ refs** (optional) — `REQ-NNN` IDs this flow implements
@@ -97,7 +98,7 @@ Each flow must have:
 Architectural limitations and hard requirements. Each must be independently
 verifiable.
 
-Each constraint must have a unique identifier in format `CON-NNN`.
+Each constraint must have a unique identifier in format `CON-NNN-slug`, e.g. `CON-001-must-implemented-dynamically`.
 
 Each constraint must:
 

@@ -20,7 +20,7 @@ The JSON is the single source of truth; the Markdown is derived.
 ---
 name: ApiSpec
 type: schema
-version: 1.0.0
+version: 2.0.0
 ---
 
 ## API Spec
@@ -74,8 +74,8 @@ All functions exposed by this module.
 
 Each function must have:
 
-* **ID** — stable unique identifier in format `fn_camelCase`,
-  e.g. `fn_createUser`, `fn_cancelOrder`
+* **ID** — stable unique identifier in format `FN-NNN-slug`,
+  e.g. `FN-001-createUser`, `FN-002-cancelOrder`
 * **Name** — camelCase function name as it appears in code
 * **Description** — one sentence: what this function does
 * **Entity** (optional) — the entity from DataSpec this function primarily
@@ -96,6 +96,10 @@ Each function must have:
   * **Return type** — what the caller receives
 * **Visibility** — `public` or `internal`
 * **Pure** — boolean: true if no side effects (same input → same output always)
+* **Priority** — `P0` (must have), `P1` (should have), or `P2` (nice to have)
+* **Status** — lifecycle status (e.g. `draft`, `confirmed`, `deprecated`)
+* **reqRefs** (array of REQ-NNN-slug): GoalSpec functional requirements this function implements
+* **nfrRefs** (array of NFR-NNN-slug): GoalSpec non-functional requirements this function helps satisfy
 
 **Rules:**
 

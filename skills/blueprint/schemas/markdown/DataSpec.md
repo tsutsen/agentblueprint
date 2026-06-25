@@ -213,7 +213,12 @@ first completing the clarification phase.**
 
 ### Primitives
 
-The set of primitive type names used as field types.
+The set of primitive type definitions used as field types.
+
+Each primitive must have:
+* **ID** — format `PRIM-NNN-slug`, e.g. `PRIM-001-string`
+* **Name** — the primitive type name (e.g. `string`, `number`, `boolean`, `array`, `object`, `null`)
+* **Description** — what this primitive represents
 
 Defaults: `string`, `number`, `boolean`, `null`, `any`.
 
@@ -229,7 +234,7 @@ defined in this spec.
 Enumerated types used across entities and API contracts.
 
 Each enum must have:
-
+* **ID** — format `ENUM-NNN-slug`, e.g. `ENUM-001-evidencetype`
 * **Name** — PascalCase, e.g. `OrderStatus`
 * **Description** (optional)
 * **Values** — each with:
@@ -249,7 +254,7 @@ Each enum must have:
 All domain entities (classes) in the system.
 
 Each entity must have:
-
+* **ID** — format `ENT-NNN-slug`, e.g. `ENT-001-researchsession`
 * **Name** — PascalCase, unique, e.g. `User`, `OrderItem`
 * **Description** — what this entity represents in the domain
 * **glossaryRefs** (array of GL-NNN): Glossary terms the entity maps to. The entity name itself should have a corresponding glossary entry.
@@ -319,7 +324,7 @@ subclasses that should be listed?"
 Directional relationships between entities.
 
 Each relationship must have:
-
+* **ID** — format `REL-NNN-slug`, e.g. `REL-001-researchsession-researchbrief`
 * **From** — source entity name
 * **To** — target entity name
 * **Type** — one of:

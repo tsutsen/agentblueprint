@@ -1,7 +1,7 @@
 ---
 name: TestSpec
 type: schema
-version: 1.0.0
+version: 3.0.0
 ---
 
 ## Test Spec
@@ -49,7 +49,7 @@ Cover the primary successful execution path.
 
 Each test must have:
 
-* **ID** — format `TST-<functionName>-<NNN>`, e.g. `TST-createUser-001`
+* **ID** — format `TST-NNN-slug`, e.g. `TST-001-create-session-with-valid-input`
 * **Description** — the scenario being tested
 * **Input** — concrete example values (not placeholders)
 * **Expected Output** — exact value or shape
@@ -132,10 +132,13 @@ Every test must be traceable back to at least one requirement:
    explicitly called out in a requirement. Otherwise leave `reqRefs` as `null`.
 
 4. **NFR linkage**: If a test validates a non-functional requirement
-   (e.g., performance, security), note the NFR-ID in the test's `notes`
-   field. NFRs are not directly testable via unit tests — they require
+   (e.g., performance, security), add the NFR-ID to the test's `nfrRefs`
+   array. NFRs are not directly testable via unit tests — they require
    separate load/security tests. The TestSpec should still document the
    NFR reference for traceability.
+
+5. **SC linkage**: If a test validates a success criterion, add the
+   SC-ID to the test's `scRefs` array.
 
 #### Glossary Reference Validation
 
@@ -255,6 +258,18 @@ args:
 This is the **mandatory schema validation gate**. If validation fails,
 fix the JSON artifact and retry. Do NOT proceed to handoff with invalid JSON.
 
+### Step 1 — Schema validation
+
+```python
+python extensions/blueprint/linters/lint_testspec.py \
+  artifacts/TestSpec.json \
+  --schema schemas/json/testspec.schema.json \
+  --json
+```
+
+This is the **mandatory schema validation gate**. If validation fails,
+fix the JSON artifact and retry. Do NOT proceed to handoff with invalid JSON.
+
 ### Step 2 — Semantic lint via `lint_testspec.py`
 
 ```
@@ -308,9 +323,9 @@ auto-generate a baseline test suite from the ApiSpec:
 ```
 tool: generate_tests
 args:
-  apiSpecPath: artifacts/Api.json
+  apiSpecPath: artifacts/ApiSpec.json
   goalSpecPath: artifacts/GoalSpec.json
-  testSpecPath: artifacts/Test.json
+  testSpecPath: artifacts/TestSpec.json
 ```
 
 This generates:

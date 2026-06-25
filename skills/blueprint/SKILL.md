@@ -120,11 +120,12 @@ and get a decision:
 ```
 tool: lint
 args:
-  artifacts: ["goal", "design", "arch", "data", "api", "test", "glossary"]
+  artifacts: [<list only artifact types whose JSON exists on disk>]
   mode: "assess"
 ```
 
-Only include artifacts whose JSON files exist on disk.
+Dynamically determine which artifact types have JSON files on disk and include
+only those. Do not hardcode a static list.
 
 **If `decision: "block"`:**
 
