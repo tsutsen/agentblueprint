@@ -38,6 +38,7 @@ The set of primitive type names used as field types:
 ### {{ entity.name }}
 
 {{ entity.description }}
+
 {% if entity.abstract -%}
 
 *Abstract entity*
@@ -62,13 +63,16 @@ The set of primitive type names used as field types:
 {% endfor -%}
 {% endif -%}
 {% if entity.methods -%}
+
 Methods:
 
+| Name | API Ref | Description |
+|---|---|---|
 {% for method in entity.methods -%}
-- `{{ method.name }}` → `{{ method.apiRef }}` — {{ method.description | format_id_refs }}
-
+| {{ method.name }} | {{ method.apiRef }} | {{ method.description | format_id_refs }} |
 {% endfor -%}
 {% endif -%}
+
 {% endfor -%}
 ## Relationships
 
