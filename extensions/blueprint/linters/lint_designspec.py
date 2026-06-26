@@ -39,6 +39,8 @@ from shared import (
     find_patterns,
     print_human,
     print_json_output,
+    validate_coverage,
+    validate_exists,
     validate_glossary_refs,
 )
 
@@ -197,11 +199,11 @@ def _check_ia(spec: dict, result: LayerResult, extra_specs: dict) -> tuple:
     ia_screen_refs = _collect_ia_screen_refs(root)
     
     # IA screenRefs must resolve
-    for ref in ia_screen_refs:
-        if ref not in screens:
-            result.add("error", "ia_screen_ref",
-                f"IA references screen '{ref}' which is not in the screen inventory.",
-                hint=f"Add a screen with id='{ref}' to screenInventory or correct the IA reference.")
+    ia_nodes = []
+    for node in root:
+        if node.get("screenRef"):
+            ia_nodes.append({"id": node.get("name", ""), "screenRef": node["screenRef"]})
+    validate_exists(ia_nodes, "screenRef", screens, result, "IA node", "screen inventory")
     
     return ia_screen_refs
 
@@ -230,35 +232,33 @@ def _check_screen_specs(spec: dict, result: LayerResult, extra_specs: dict) -> N
     find_duplicates(spec_refs, "screenSpec.screenRef", result)
     spec_screen_ids = set(spec_refs)
     
+    # screenRef must resolve
+    validate_exists(screen_specs, "screenRef", screens, result, "Screen spec", "screen inventory")
+    
+    # pattern refs in components
+    component_patterns = []
     for ss in screen_specs:
-        ref = ss["screenRef"]
-        
-        # screenRef must resolve
-        if ref not in screens:
-            result.add("error", "screen_spec_ref",
-                f"Screen spec references '{ref}' which is not in the screen inventory.",
-                hint=f"Add screen '{ref}' to screenInventory or correct the screenRef.")
-        
-        # pattern refs in components
         for comp in ss.get("components", []):
             for pref in comp.get("patternRefs", []):
                 if pref not in patterns:
                     result.add("error", "pattern_ref",
-                        f"Screen spec '{ref}' component '{comp['name']}': patternRef '{pref}' not found in interactionPatterns.",
+                        f"Screen spec '{ss['screenRef']}' component '{comp['name']}': patternRef '{pref}' not found in interactionPatterns.",
                         hint=f"Add a pattern with id='{pref}' or correct the reference.")
-        
-        # pattern refs in interactions
+    
+    # pattern refs in interactions
+    for ss in screen_specs:
         for interaction in ss.get("interactions", []):
             pref = interaction.get("patternRef")
             if pref and pref not in patterns:
                 result.add("error", "pattern_ref",
-                    f"Screen spec '{ref}' interaction '{interaction['trigger'][:40]}': patternRef '{pref}' not found.",
+                    f"Screen spec '{ss['screenRef']}' interaction '{interaction['trigger'][:40]}': patternRef '{pref}' not found.",
                     hint=f"Add a pattern with id='{pref}' or correct the reference.")
-        
-        # Warn: screen with no states is suspicious
+    
+    # Warn: screen with no states is suspicious
+    for ss in screen_specs:
         if not ss.get("states"):
             result.add("warning", "screen_no_states",
-                f"Screen spec '{ref}' has no states defined.",
+                f"Screen spec '{ss['screenRef']}' has no states defined.",
                 hint="Every screen should document at least its empty, loaded, and error states.")
     
     # Screens in inventory with no spec
@@ -320,16 +320,15 @@ def _check_us_journey_coverage(spec: dict, result: LayerResult, extra_specs: dic
         return
     
     journeys = spec.get("userJourneys", [])
-    covered_us_ids = set()
-    for journey in journeys:
-        for ref in journey.get("usRefs", []):
-            covered_us_ids.add(ref)
-    
-    for us in goal.get("userStories", []):
-        if us["id"] not in covered_us_ids:
-            result.add("warning", "us_no_journey",
-                f"GoalSpec {us['id']} ('{us['capability'][:50]}') has no user journey.",
-                hint=f"Add a user journey with usRef='{us['id']}' covering this story.")
+    validate_coverage(
+        goal.get("userStories", []),
+        journeys,
+        "id",
+        "usRefs",
+        result,
+        "GoalSpec US",
+        "user journey",
+    )
 
 
 def _check_screens_reachable(spec: dict, result: LayerResult, extra_specs: dict) -> None:

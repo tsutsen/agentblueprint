@@ -398,7 +398,13 @@ def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] |
         for item in items:
             iid = item.get("id", "?")
             for refs_key in refs:
-                for ref in item.get(refs_key, []):
+                ref_value = item.get(refs_key)
+                # Handle both string and list refs
+                if isinstance(ref_value, str):
+                    ref_value = [ref_value]
+                elif ref_value is None:
+                    ref_value = []
+                for ref in ref_value:
                     if ref not in valid.get(refs_key, set()):
                         result.add("error", category,
                             f"{label} '{iid}': {refs_key} ref '{ref}' not found.",
