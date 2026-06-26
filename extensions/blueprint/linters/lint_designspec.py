@@ -32,7 +32,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, check_duplicates
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, find_duplicates
 from schema_validator import SchemaValidator
 
 
@@ -80,7 +80,7 @@ def validate_project_and_version(spec: dict, goal: Optional[dict], result: Layer
 def check_design_goals(spec: dict, result: LayerResult):
     goals = spec.get("designGoals", [])
     ids = [g["id"] for g in goals]
-    check_duplicates(ids, "DG", result)
+    find_duplicates(ids, "DG", result)
 
 
 
@@ -98,7 +98,7 @@ def check_design_goals(spec: dict, result: LayerResult):
 def check_personas(spec: dict, goal: Optional[dict], result: LayerResult) -> set[str]:
     personas = spec.get("personas", [])
     ids = [p["id"] for p in personas]
-    check_duplicates(ids, "persona", result)
+    find_duplicates(ids, "persona", result)
 
 
 
@@ -118,7 +118,7 @@ def check_journeys(spec: dict, persona_ids: set[str],
                    screen_ids: set[str], goal: Optional[dict], result: LayerResult) -> set[str]:
     journeys = spec.get("userJourneys", [])
     ids = [j["id"] for j in journeys]
-    check_duplicates(ids, "UJ", result)
+    find_duplicates(ids, "UJ", result)
 
     goal_us_ids = {us["id"] for us in goal.get("userStories", [])} if goal else set()
     covered_us_ids = set()
@@ -180,7 +180,7 @@ def check_screen_inventory(spec: dict, ia_screen_refs: set[str],
                             goal: Optional[dict], result: LayerResult) -> set[str]:
     screens = spec.get("screenInventory", [])
     ids = [s["id"] for s in screens]
-    check_duplicates(ids, "SCR", result)
+    find_duplicates(ids, "SCR", result)
 
 
 
@@ -211,7 +211,7 @@ def check_screen_specs(spec: dict, screen_ids: set[str],
                         pattern_ids: set[str], result: LayerResult):
     screen_specs = spec.get("screenSpecs", [])
     spec_refs = [s["screenRef"] for s in screen_specs]
-    check_duplicates(spec_refs, "screenSpec.screenRef", result)
+    find_duplicates(spec_refs, "screenSpec.screenRef", result)
     spec_screen_ids = set(spec_refs)
 
     # screenRef must resolve
@@ -255,14 +255,14 @@ def check_screen_specs(spec: dict, screen_ids: set[str],
 def check_interaction_patterns(spec: dict, result: LayerResult) -> set[str]:
     patterns = spec.get("interactionPatterns", [])
     ids = [p["id"] for p in patterns]
-    check_duplicates(ids, "interactionPattern", result)
+    find_duplicates(ids, "interactionPattern", result)
     return set(ids)
 
 
 def check_uxac(spec: dict, goal: Optional[dict], result: LayerResult):
     criteria = spec.get("uxAcceptanceCriteria", [])
     ids = [c["id"] for c in criteria]
-    check_duplicates(ids, "UXAC", result)
+    find_duplicates(ids, "UXAC", result)
 
     goal_us_ids  = {us["id"] for us in goal.get("userStories", [])} if goal else set()
     goal_req_ids = {fr["id"] for fr in goal.get("functionalRequirements", [])} if goal else set()
@@ -307,7 +307,7 @@ def check_uxac(spec: dict, goal: Optional[dict], result: LayerResult):
 def check_visual_design_requirements(spec: dict, result: LayerResult):
     vdrs = spec.get("visualDesignRequirements", [])
     ids = [v["id"] for v in vdrs]
-    check_duplicates(ids, "VDR", result)
+    find_duplicates(ids, "VDR", result)
 
 
 

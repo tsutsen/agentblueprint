@@ -24,7 +24,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import extract_ids, Issue, LayerResult, print_human, print_json_output, validate_spec_ids, check_duplicates, check_sequential
+from shared import extract_ids, Issue, LayerResult, print_human, print_json_output, validate_spec_ids, find_duplicates, validate_sequential
 from schema_validator import SchemaValidator
 
 
@@ -57,8 +57,8 @@ def check_functional_requirements(spec: dict, result: LayerResult) -> set[str]:
     frs = spec.get("functionalRequirements", [])
     ids = extract_ids(frs, "id")
 
-    check_duplicates(ids, "REQ", result)
-    check_sequential(ids, "REQ", result)
+    find_duplicates(ids, "REQ", result)
+    validate_sequential(ids, "REQ", result)
 
     # Smell: description contains measurable thresholds
     threshold_pattern = re.compile(r"\d+\s*(ms|MB|GB|%|rps|req|second|minute|hour)", re.IGNORECASE)
@@ -83,8 +83,8 @@ def check_nfrs(spec: dict, result: LayerResult) -> set[str]:
     nfrs = spec.get("nonFunctionalRequirements", [])
     ids = extract_ids(nfrs, "id")
 
-    check_duplicates(ids, "NFR", result)
-    check_sequential(ids, "NFR", result)
+    find_duplicates(ids, "NFR", result)
+    validate_sequential(ids, "NFR", result)
 
     status = spec.get("status", "draft")
 
@@ -128,8 +128,8 @@ def check_user_stories(spec: dict, req_ids: set[str], result: LayerResult) -> se
     ids = extract_ids(stories, "id")
     fr_actors = {fr["actor"] for fr in spec.get("functionalRequirements", [])}
 
-    check_duplicates(ids, "US", result)
-    check_sequential(ids, "US", result)
+    find_duplicates(ids, "US", result)
+    validate_sequential(ids, "US", result)
 
     story_req_refs = set()
 
@@ -167,8 +167,8 @@ def check_success_criteria(spec: dict, req_ids: set[str], nfr_ids: set[str], res
     criteria = spec.get("successCriteria", [])
     ids = extract_ids(criteria, "id")
 
-    check_duplicates(ids, "SC", result)
-    check_sequential(ids, "SC", result)
+    find_duplicates(ids, "SC", result)
+    validate_sequential(ids, "SC", result)
 
     sc_covered_reqs = set()
     sc_covered_nfrs = set()
@@ -235,8 +235,8 @@ def check_non_goals(spec: dict, result: LayerResult):
     non_goals = spec.get("nonGoals", [])
     ids = extract_ids(non_goals, "id")
 
-    check_duplicates(ids, "NG", result)
-    check_sequential(ids, "NG", result)
+    find_duplicates(ids, "NG", result)
+    validate_sequential(ids, "NG", result)
 
     vague_smells = ["everything", "advanced", "features", "stuff",
                     "things", "all", "etc", "misc"]

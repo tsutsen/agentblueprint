@@ -24,7 +24,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional, Set, Dict, Any
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, check_duplicates
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, find_duplicates
 from schema_validator import SchemaValidator
 
 

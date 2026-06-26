@@ -112,7 +112,7 @@ def check_gl_ids(glossary: dict, result: LayerResult) -> dict[str, dict]:
     return seen_ids
 
 
-def check_duplicates(glossary: dict, result: LayerResult) -> dict[str, dict]:
+def find_duplicates(glossary: dict, result: LayerResult) -> dict[str, dict]:
     """Check for duplicate term names. Returns term_name → entry map."""
     terms = glossary.get("terms", [])
     seen: dict[str, dict] = {}

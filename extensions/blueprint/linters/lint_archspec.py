@@ -38,7 +38,7 @@ from shared import (
     validate_item_count,
     Issue,
     LayerResult,
-    check_duplicates,
+    find_duplicates,
     find_orphans,
     print_human,
     print_json_output,
@@ -107,7 +107,7 @@ def check_version_pins(spec: dict, goal: dict, result: LayerResult):
 def check_components(spec: dict, result: LayerResult) -> set[str]:
     components = spec.get("components", [])
     ids = [c["id"] for c in components]
-    check_duplicates(ids, "component", result)
+    find_duplicates(ids, "component", result)
 
     component_ids = set(ids)
 
@@ -220,7 +220,7 @@ def check_subsystems(spec: dict, component_ids: set[str], result: LayerResult):
 def check_data_flows(spec: dict, component_ids: set[str], result: LayerResult):
     flows = spec.get("dataFlow", [])
     ids = [f["id"] for f in flows]
-    check_duplicates(ids, "FLW", result)
+    find_duplicates(ids, "FLW", result)
 
     for flow in flows:
         fid = flow["id"]
@@ -249,7 +249,7 @@ def check_data_flows(spec: dict, component_ids: set[str], result: LayerResult):
 def check_constraints(spec: dict, result: LayerResult):
     constraints = spec.get("constraints", [])
     ids = [c["id"] for c in constraints]
-    check_duplicates(ids, "CON", result)
+    find_duplicates(ids, "CON", result)
 
     # Implementation smells in constraints
     impl_smells = [

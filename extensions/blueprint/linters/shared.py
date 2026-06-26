@@ -107,7 +107,7 @@ def validate_spec_ids(items_by_type: dict[str, list],
             _validate_ids(items, "id", id_type, f"{id_type}_id_format", result)
 
 
-def check_duplicates(ids: list[str], label: str, result: "LayerResult") -> None:
+def find_duplicates(ids: list[str], label: str, result: "LayerResult") -> None:
     """Check for duplicate IDs in a list.
     
     Args:
@@ -130,7 +130,7 @@ def _extract_num(id_str: str) -> int:
     return int(m.group(1)) if m else -1
 
 
-def check_sequential(ids: list[str], label: str, result: "LayerResult") -> None:
+def validate_sequential(ids: list[str], label: str, result: "LayerResult") -> None:
     """Warn when IDs skip numbers, e.g. REQ-001, REQ-003 (missing REQ-002).
     
     Args:
