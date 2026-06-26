@@ -20,7 +20,7 @@ import json
 import argparse
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, check_id_format
+from shared import Issue, LayerResult, print_human, print_json_output, validate_ids
 
 
 # ── Checks ────────────────────────────────────────────────────────────────────
@@ -38,10 +38,10 @@ def run_lint(spec: dict, schema_path: Optional[Path],
             result.add(issue.severity, issue.category, issue.message, issue.hint)
 
     # EPIC ID format validation
-    check_id_format(spec.get("epics", []), "id", "ep", "ep_id_format", result)
+    validate_ids(spec.get("epics", []), "id", "ep", "ep_id_format", result)
 
     # MILESTONE ID format validation
-    check_id_format(spec.get("milestones", []), "id", "milestone", "milestone_id_format", result)
+    validate_ids(spec.get("milestones", []), "id", "milestone", "milestone_id_format", result)
 
     if strict:
         for w in result.warnings:

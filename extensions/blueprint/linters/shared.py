@@ -72,9 +72,9 @@ def validate_id_format(id_value: str, id_type: str) -> tuple[bool, str]:
     return False, f"ID '{id_value}' does not follow {ID_PATTERNS[id_type]['hint'].lower()}"
 
 
-def check_id_format(items: list[dict], id_key: str, id_type: str,
-                    category: str, result: "LayerResult") -> None:
-    """Validate ID format for a list of items.
+def validate_ids(items: list[dict], id_key: str, id_type: str,
+                 category: str, result: "LayerResult") -> None:
+    """Validate IDs for a list of items.
     
     Args:
         items: List of dicts, each with an 'id' field.
@@ -87,7 +87,7 @@ def check_id_format(items: list[dict], id_key: str, id_type: str,
         iid = item.get(id_key, "")
         valid, msg = validate_id_format(iid, id_type)
         if not valid:
-            result.add("error", f"{category}", msg,
+            result.add("error", category, msg,
                 hint=f"Use format {ID_PATTERNS[id_type]['hint'].replace('Format: ', '').lower()} (e.g. '{ID_PATTERNS[id_type]['example']}").")
 
 

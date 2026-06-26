@@ -24,7 +24,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, check_id_format
+from shared import Issue, LayerResult, print_human, print_json_output, validate_ids
 from schema_validator import SchemaValidator
 
 
@@ -267,7 +267,7 @@ def check_non_goals(spec: dict, result: LayerResult):
 
     check_duplicates(ids, "NG", result)
     check_sequential(ids, "NG", result)
-    check_id_format(non_goals, "id", "ng", "ng_id_format", result)
+    validate_ids(non_goals, "id", "ng", "ng_id_format", result)
 
     vague_smells = ["everything", "advanced", "features", "stuff",
                     "things", "all", "etc", "misc"]

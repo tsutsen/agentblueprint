@@ -92,7 +92,7 @@ def check_design_goals(spec: dict, result: LayerResult):
     check_duplicates(ids, "DG", result)
 
     # Validate DG-NNN-PascalCase format
-    check_id_format(goals, "id", "dg", "dg_id_format", result)
+    validate_ids(goals, "id", "dg", "dg_id_format", result)
 
     forbidden = ["database", "api", "endpoint", "framework", "library",
                  "class", "function", "sql", "http", "rest", "json"]
@@ -111,7 +111,7 @@ def check_personas(spec: dict, goal: Optional[dict], result: LayerResult) -> set
     check_duplicates(ids, "persona", result)
 
     # Validate PRS-NNN-PascalCase format
-    check_id_format(personas, "id", "prs", "prs_id_format", result)
+    validate_ids(personas, "id", "prs", "prs_id_format", result)
 
     if goal:
         goal_actors = {fr["actor"] for fr in goal.get("functionalRequirements", [])}
@@ -194,7 +194,7 @@ def check_screen_inventory(spec: dict, ia_screen_refs: set[str],
     check_duplicates(ids, "SCR", result)
 
     # Validate SCR-NNN-PascalCase format
-    check_id_format(screens, "id", "scr", "scr_id_format", result)
+    validate_ids(screens, "id", "scr", "scr_id_format", result)
 
     screen_ids = set(ids)
 
@@ -322,7 +322,7 @@ def check_visual_design_requirements(spec: dict, result: LayerResult):
     check_duplicates(ids, "VDR", result)
 
     # Validate VDR-NNN format
-    check_id_format(vdrs, "id", "vdr", "vdr_id_format", result)
+    validate_ids(vdrs, "id", "vdr", "vdr_id_format", result)
 
 
 def check_us_journey_coverage(goal: Optional[dict], covered_us_ids: set[str], result: LayerResult):

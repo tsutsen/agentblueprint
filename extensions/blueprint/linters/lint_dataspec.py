@@ -54,7 +54,7 @@ def check_entities(spec: dict, enums: list, result: LayerResult) -> Set[str]:
     entity_map: dict = {}
 
     # Validate ENT-NNN-PascalCase format
-    check_id_format(entities, "id", "ent", "entity_id_format", result)
+    validate_ids(entities, "id", "ent", "entity_id_format", result)
 
     for entity in entities:
         eid = entity.get("id", "")
@@ -135,7 +135,7 @@ def check_enums(spec: dict, result: LayerResult) -> Set[str]:
     enum_names: Set[str] = set()
 
     # Validate NUM-NNN-PascalCase format
-    check_id_format(enums, "id", "num", "enum_id_format", result)
+    validate_ids(enums, "id", "num", "enum_id_format", result)
 
     for enum in enums:
         eid = enum.get("id", "")

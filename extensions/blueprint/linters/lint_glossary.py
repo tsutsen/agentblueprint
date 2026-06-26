@@ -26,7 +26,7 @@ import sys
 import argparse
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, check_id_format
+from shared import Issue, LayerResult, print_human, print_json_output, validate_ids
 from schema_validator import SchemaValidator
 
 
@@ -81,7 +81,7 @@ def check_gl_ids(glossary: dict, result: LayerResult) -> dict[str, dict]:
     ids_found: list[int] = []
 
     # Validate GL-NNN-PascalCase format
-    check_id_format(terms, "id", "gl", "gl_id_format", result)
+    validate_ids(terms, "id", "gl", "gl_id_format", result)
 
     for entry in terms:
         term_id = entry.get("id", "")
