@@ -36,8 +36,6 @@ from shared import (
     find_duplicates,
     find_orphans,
     find_patterns,
-    find_patterns_nested,
-    find_vague_patterns,
     print_human,
     print_json_output,
     validate_coverage,
