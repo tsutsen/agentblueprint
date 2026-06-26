@@ -64,25 +64,37 @@ def check_components(spec: dict, result: LayerResult) -> set[str]:
 
     # Build dependency graph, validate refs, and check for cycles
     find_cycles(
-        components, "id", "dependencies", component_ids,
-        result, label="Component", category="circular_dependency",
-        hint="Refactor to break the cycle — introduce an abstraction or invert a dependency."
+        components,
+        "id",
+        "dependencies",
+        component_ids,
+        result,
+        label="Component",
+        category="circular_dependency",
+        hint="Refactor to break the cycle — introduce an abstraction or invert a dependency.",
     )
 
     # Warn: component with no reqRefs
-    for comp in components:
-        validate_non_empty(
-            [comp], "reqRefs", "id", result,
-            label="Component", category="component_no_reqs",
-            hint="Link each component to the requirements it helps satisfy."
-        )
+    validate_non_empty(
+        components,
+        "reqRefs",
+        "id",
+        result,
+        label="Component",
+        category="component_no_reqs",
+        hint="Link each component to the requirements it helps satisfy.",
+    )
 
     # Overlapping responsibilities
-    find_duplicates(
-        components, "responsibilities", "id", result,
-        label="Component", category="overlapping_responsibility",
+    find_duplicates_nested(
+        components,
+        "responsibilities",
+        "id",
+        result,
+        label="Component",
+        category="overlapping_responsibility",
         hint="Each responsibility must be owned by exactly one component.",
-        normalize=lambda r: r.strip().lower().rstrip(".")
+        normalize=lambda r: r.strip().lower().rstrip("."),
     )
 
     return component_ids
