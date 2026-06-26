@@ -24,13 +24,12 @@ Usage:
 """
 
 import json
+import re
 import sys
 import argparse
-import re
 from pathlib import Path
-from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version
-from schema_validator import SchemaValidator
+from typing import Optional, Dict, Set
+from shared import BaseLinter, LayerResult, validate_spec_ids
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -40,6 +39,7 @@ PLACEHOLDER_PATTERNS = [
     "placeholder", "tbd", "todo", "your ", "a user", "a product",
     "an order", "some value", "test value"
 ]
+
 
 def has_placeholder(value) -> bool:
     if isinstance(value, str):
@@ -52,33 +52,18 @@ def has_placeholder(value) -> bool:
     return False
 
 
-def fn_name_from_id(fn_id: str) -> str:
-    """FN-001-createUser → createUser, or FN-createUser → createUser"""
-    # New format: FN-NNN-testName
-    match = re.match(r"^FN-\d{3}-(.+)$", fn_id)
-    if match:
-        return match.group(1)
-    # Legacy format: FN-testName
-    if fn_id.startswith("FN-"):
-        return fn_id[3:]
-    if fn_id.startswith("fn_"):
-        return fn_id[3:]
-    return fn_id
-
-
 def expected_test_prefix(fn_id: str) -> str:
     """FN-001-createUser → TST-001-createUser, or FN-createUser → TST-createUser"""
-    # New format: FN-NNN-testName
     match = re.match(r"^FN-(\d{3})-(.+)$", fn_id)
     if match:
         return f"TST-{match.group(1)}-{match.group(2)}"
-    # Legacy format: FN-testName
-    return f"TST-{fn_name_from_id(fn_id)}"
+    return f"TST-{fn_id[3:]}" if fn_id.startswith("FN-") else f"TST-{fn_id}"
 
 
 # ── Checks ────────────────────────────────────────────────────────────────────
 
-def check_duplicate_ids(spec: dict, result: LayerResult):
+def _check_duplicate_ids(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Check for duplicate test IDs."""
     ids = [t["id"] for t in spec.get("tests", [])]
     seen = set()
     for tid in ids:
@@ -89,34 +74,20 @@ def check_duplicate_ids(spec: dict, result: LayerResult):
         seen.add(tid)
 
 
-def check_test_id_format(spec: dict, result: LayerResult):
-    """Test IDs must follow TST-NNN-testName pattern."""
-    tests = spec.get("tests", [])
-    
-    # Validate TST-NNN-lowerCamelCase format
-    validate_spec_ids({"tst": spec.get("tests", [])}, result)
-    
-    for t in tests:
-        tid = t.get("id", "")
-        if not tid:
-            result.add("error", "test_missing_id",
-                f"Test is missing an 'id' field.",
-                hint="Add an ID in the format 'TST-NNN-testName', e.g. 'TST-001-exportReportAsPDF'.")
-
-
-def check_id_fn_consistency(spec: dict, result: LayerResult):
-    """Test ID prefix must match its fnRef: T-createUser-001 must ref fn_createUser."""
+def _check_id_fn_consistency(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Test ID prefix must match its fnRef."""
     for t in spec.get("tests", []):
         tid = t.get("id", "")
         fn_ref = t.get("fnRef", "")
-        expected = expected_test_prefix(fn_ref)
-        if tid and fn_ref and not tid.startswith(expected + "-"):
-            result.add("error", "id_fn_mismatch",
-                f"Test '{tid}': ID prefix does not match fnRef '{fn_ref}' (expected '{expected}-NNN').",
-                hint=f"Rename to '{expected}-NNN' to keep IDs traceable to their function.")
+        if fn_ref:
+            expected = expected_test_prefix(fn_ref)
+            if tid and not tid.startswith(expected + "-"):
+                result.add("error", "id_fn_mismatch",
+                    f"Test '{tid}': ID prefix does not match fnRef '{fn_ref}' (expected '{expected}-NNN').",
+                    hint=f"Rename to '{expected}-NNN' to keep IDs traceable to their function.")
 
 
-def check_category_rules(spec: dict, result: LayerResult):
+def _check_category_rules(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
     """Enforce per-category required fields."""
     for t in spec.get("tests", []):
         tid = t.get("id", "?")
@@ -147,7 +118,7 @@ def check_category_rules(spec: dict, result: LayerResult):
                     hint="Remove errorCode or change category to error-path.")
 
 
-def check_placeholder_values(spec: dict, result: LayerResult):
+def _check_placeholder_values(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
     """Detect placeholder input values."""
     for t in spec.get("tests", []):
         tid = t.get("id", "?")
@@ -157,7 +128,6 @@ def check_placeholder_values(spec: dict, result: LayerResult):
                 result.add("warning", "placeholder_input",
                     f"Test '{tid}': input '{param}' may contain a placeholder value ('{str(val)[:40]}').",
                     hint="Use concrete, specific values — not 'a valid userId' but 'usr_48291'.")
-        # Description check — only flag obvious placeholders, not normal prose
         desc = t.get("description", "")
         desc_placeholders = ["tbd", "todo", "placeholder", "some test", "a test"]
         if any(desc.lower().startswith(p) or desc.lower() == p for p in desc_placeholders):
@@ -166,8 +136,9 @@ def check_placeholder_values(spec: dict, result: LayerResult):
                 hint="Describe the specific scenario being tested.")
 
 
-def check_api_refs(spec: dict, api: Optional[dict], result: LayerResult):
+def _check_api_refs(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
     """Resolve fnRefs and errorCodes against ApiSpec."""
+    api = extra_specs.get("api")
     if not api:
         return
 
@@ -197,14 +168,15 @@ def check_api_refs(spec: dict, api: Optional[dict], result: LayerResult):
                     hint=f"Add error code '{error_code}' to '{fn_ref}' in ApiSpec or correct the test.")
 
 
-def check_api_coverage(spec: dict, api: Optional[dict], result: LayerResult):
+def _check_api_coverage(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
     """Every ApiSpec function must have tests; every error code must have an error-path test."""
+    api = extra_specs.get("api")
     if not api:
         return
 
     tests = spec.get("tests", [])
     tested_fns = {t["fnRef"] for t in tests if t.get("fnRef")}
-    tested_errors: dict[str, set] = {}
+    tested_errors: Dict[str, Set[str]] = {}
     for t in tests:
         if t.get("fnRef") and t.get("errorCode"):
             tested_errors.setdefault(t["fnRef"], set()).add(t["errorCode"])
@@ -226,7 +198,7 @@ def check_api_coverage(spec: dict, api: Optional[dict], result: LayerResult):
                     hint=f"Add a test with fnRef='{fn_id}', category='error-path', errorCode='{code}'.")
 
 
-def check_function_coverage_summary(spec: dict, result: LayerResult):
+def _check_function_coverage_summary(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
     """Validate functionCoverage entries match actual test counts."""
     tests = spec.get("tests", [])
     coverage_entries = spec.get("functionCoverage", [])
@@ -238,7 +210,7 @@ def check_function_coverage_summary(spec: dict, result: LayerResult):
         return
 
     # Count actual tests per function per category
-    actual: dict[str, dict] = {}
+    actual: Dict[str, Dict[str, int]] = {}
     for t in tests:
         fn = t.get("fnRef")
         cat = t.get("category")
@@ -253,11 +225,11 @@ def check_function_coverage_summary(spec: dict, result: LayerResult):
         counts = actual.get(fn, {})
 
         declared_happy = entry.get("happyPathCount", 0)
-        declared_edge  = entry.get("edgeCaseCount", 0)
+        declared_edge = entry.get("edgeCaseCount", 0)
         declared_error = entry.get("errorPathCount", 0)
 
         actual_happy = counts.get("happy-path", 0)
-        actual_edge  = counts.get("edge-case", 0)
+        actual_edge = counts.get("edge-case", 0)
         actual_error = counts.get("error-path", 0)
 
         if declared_happy != actual_happy:
@@ -281,15 +253,16 @@ def check_function_coverage_summary(spec: dict, result: LayerResult):
                 hint=f"Add a functionCoverage entry for '{fn}' with out-of-scope declarations.")
 
 
-def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResult):
+def _check_glossary_refs(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
     """WARN: Check that test descriptions, contract clauses, and out-of-scope items have glossaryRefs."""
+    glossary = extra_specs.get("glossary")
     if not glossary:
         return
 
     # Build glossary term map (lowercase -> id)
     glossary_lower = {}
     for t in glossary.get("terms", []):
-        glossary_lower[t["term"].lower()] = t["id"]
+        glossary_lower[t["name"].lower()] = t["id"]
 
     def has_domain_concept(text: str) -> bool:
         text_lower = text.lower()
@@ -311,7 +284,6 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
         if not has_text or refs:
             continue
 
-        # Check if description or contractClause has domain concepts
         text_parts = [desc, clause]
         combined = " ".join(text_parts)
         if has_domain_concept(combined):
@@ -339,7 +311,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
                     hint="Add glossaryRefs (GL-NNN) for domain concepts in this outOfScope item.")
 
 
-def check_lifecycle(spec: dict, result: LayerResult):
+def _check_lifecycle(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
     """Status-aware completeness checks."""
     status = spec.get("status", "draft")
     verification = spec.get("verificationStatus", "pending")
@@ -361,67 +333,54 @@ def check_lifecycle(spec: dict, result: LayerResult):
                 hint="Add a functionCoverage entry for every function before review.")
 
 
-# ── Runner ────────────────────────────────────────────────────────────────────
+# ── Semantic Rules ────────────────────────────────────────────────────────────
 
-def run_lint(spec: dict, schema_path: Optional[Path],
-             api: Optional[dict], glossary: Optional[dict], strict: bool) -> LayerResult:
-    result = LayerResult()
-
-    # JSON Schema validation (auto-generated from schema)
-    if schema_path:
-        schema = json.loads(Path(schema_path).read_text())
-        schema_issues = SchemaValidator(schema).validate(spec)
-        for issue in schema_issues:
-            result.add(issue.severity, issue.category, issue.message, issue.hint)
-
-    check_duplicate_ids(spec, result)
-    check_test_id_format(spec, result)
-    check_id_fn_consistency(spec, result)
-    check_category_rules(spec, result)
-    check_placeholder_values(spec, result)
-    check_api_refs(spec, api, result)
-    check_api_coverage(spec, api, result)
-    check_function_coverage_summary(spec, result)
-    check_glossary_refs(spec, glossary, result)
-    check_lifecycle(spec, result)
-
-    if strict:
-        for w in result.warnings:
-            w.severity = "error"
-            result.errors.append(w)
-        result.warnings.clear()
-
-    return result
+SEMANTIC_RULES = []
 
 
-# ── Output
-# Uses shared.print_human and shared.print_json_output
+# ── Misc Checks ───────────────────────────────────────────────────────────────
+
+MISC_CHECKS = [
+    ("duplicate_ids", _check_duplicate_ids),
+    ("id_fn_consistency", _check_id_fn_consistency),
+    ("category_rules", _check_category_rules),
+    ("placeholder_values", _check_placeholder_values),
+    ("api_refs", _check_api_refs),
+    ("api_coverage", _check_api_coverage),
+    ("function_coverage", _check_function_coverage_summary),
+    ("glossary_refs", _check_glossary_refs),
+    ("lifecycle", _check_lifecycle),
+]
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Lint a TestSpec JSON.")
-    parser.add_argument("input",    help="Path to testspec JSON")
-    parser.add_argument("--schema", help="Path to testspec.schema.json")
-    parser.add_argument("--api",    help="Path to apispec JSON for cross-spec checks")
-    parser.add_argument("--glossary", help="Path to glossary JSON for glossary reference checks")
-    parser.add_argument("--strict", action="store_true")
-    parser.add_argument("--json",   action="store_true")
-    args = parser.parse_args()
+# ── Cross-spec dependency ─────────────────────────────────────────────────────
 
-    spec = json.loads(Path(args.input).read_text())
-    schema_path = Path(args.schema) if args.schema else None
-    api = json.loads(Path(args.api).read_text()) if args.api else None
-    glossary = json.loads(Path(args.glossary).read_text()) if args.glossary else None
+CROSS_SPEC_DEPS = ["api", "glossary"]
 
-    result = run_lint(spec, schema_path, api, glossary, args.strict)
 
-    if args.json:
-        print_json_output(result)
-    else:
-        print_human(result, args.input)
+# ── Linter Class ──────────────────────────────────────────────────────────────
 
-    sys.exit(0 if result.clean else 1)
+class TestSpecLinter(BaseLinter):
+    """Linter for TestSpec artifacts."""
+    
+    SPEC_NAME = "testspec"
+    SEMANTIC_RULES = SEMANTIC_RULES
+    MISC_CHECKS = MISC_CHECKS
+    CROSS_SPEC_DEPS = CROSS_SPEC_DEPS
 
+
+# ── Backward-compatible entry point ───────────────────────────────────────────
+
+def run_lint(spec, schema_path, api, glossary, strict):
+    """Backward-compatible entry point for lint_all.py."""
+    linter = TestSpecLinter(spec, schema_path, strict)
+    return linter.run(api=api, glossary=glossary)
+
+
+# ── CLI ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    main()
+    TestSpecLinter.main([
+        ("--api", {"help": "Path to apispec JSON for cross-spec checks", "spec_name": "api"}),
+        ("--glossary", {"help": "Path to glossary JSON", "spec_name": "glossary"}),
+    ])
