@@ -35,11 +35,8 @@ from typing import Optional
 from shared import (
     BaseLinter,
     LayerResult,
-    find_duplicates,
-    find_patterns,
     print_human,
     print_json_output,
-    validate_coverage,
     validate_exists,
     validate_glossary_refs,
 )
@@ -74,6 +71,74 @@ SEMANTIC_RULES = [
         "label": "UXAC",
         "category": "uxac_subjective",
         "hint": "UX acceptance criteria must be binary and independently verifiable.",
+    },
+    
+    # Screen specs must reference valid screens
+    {
+        "type": "exists",
+        "section": "screenSpecs",
+        "key": "screenRef",
+        "valid_section": "screenInventory",
+        "label": "Screen spec",
+        "ref_label": "screen inventory",
+        "category": "screen_spec_ref",
+        "hint": "Add screen to screenInventory or correct the screenRef.",
+    },
+    
+    # Screens must have states
+    {
+        "type": "non_empty",
+        "section": "screenSpecs",
+        "key": "states",
+        "label": "Screen spec",
+        "category": "screen_no_states",
+        "hint": "Every screen should document at least its empty, loaded, and error states.",
+    },
+    
+    # UXAC must have refs
+    {
+        "type": "non_empty",
+        "section": "uxAcceptanceCriteria",
+        "key": "refs",
+        "label": "UXAC",
+        "category": "uxac_no_refs",
+        "hint": "Every UX acceptance criterion must link to at least one user story or requirement.",
+    },
+    
+    # UXAC refs must resolve to GoalSpec
+    {
+        "type": "exists",
+        "section": "uxAcceptanceCriteria",
+        "key": "refs.usRefs",
+        "valid_extra_spec": "goal",
+        "valid_section": "userStories",
+        "label": "UXAC",
+        "ref_label": "GoalSpec userStory",
+        "category": "uxac_us_ref",
+        "hint": "Add to GoalSpec userStories or correct the reference.",
+    },
+    {
+        "type": "exists",
+        "section": "uxAcceptanceCriteria",
+        "key": "refs.reqRefs",
+        "valid_extra_spec": "goal",
+        "valid_section": "functionalRequirements",
+        "label": "UXAC",
+        "ref_label": "GoalSpec requirement",
+        "category": "uxac_req_ref",
+        "hint": "Add to GoalSpec functionalRequirements or correct the reference.",
+    },
+    
+    # User stories must be covered by journeys
+    {
+        "type": "coverage",
+        "covered_section": "userStories",
+        "source_section": "userJourneys",
+        "covered_key": "id",
+        "refs_key": "usRefs",
+        "covered_label": "GoalSpec US",
+        "source_label": "user journey",
+        "valid_extra_spec": "goal",
     },
 ]
 
@@ -111,20 +176,10 @@ def _collect_ia_leaf_issues(nodes: list, result: LayerResult) -> None:
             _collect_ia_leaf_issues(children, result)
 
 
-def _check_design_goals(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Check design goal duplicates."""
-    goals = spec.get("designGoals", [])
-    ids = [g["id"] for g in goals]
-    find_duplicates(ids, "DG", result)
-
-
 def _check_personas(spec: dict, result: LayerResult, extra_specs: dict) -> set:
-    """Check persona duplicates and actor consistency."""
+    """Check persona actor consistency."""
     personas = spec.get("personas", [])
-    ids = [p["id"] for p in personas]
     goal = extra_specs.get("goal")
-    
-    find_duplicates(ids, "persona", result)
     
     if goal:
         goal_actors = {fr["actor"] for fr in goal.get("functionalRequirements", [])}
@@ -135,16 +190,13 @@ def _check_personas(spec: dict, result: LayerResult, extra_specs: dict) -> set:
                     f"Persona '{persona['id']}': role '{persona['role']}' does not match any actor in GoalSpec.",
                     hint="Persona roles must be consistent with actors named in GoalSpec requirements and stories.")
     
-    return set(ids)
+    return set(p["id"] for p in personas)
 
 
 def _check_journeys(spec: dict, result: LayerResult, extra_specs: dict) -> tuple:
-    """Check journey duplicates, refs, and coverage."""
+    """Check journey refs and coverage."""
     journeys = spec.get("userJourneys", [])
-    ids = [j["id"] for j in journeys]
     goal = extra_specs.get("goal")
-    
-    find_duplicates(ids, "UJ", result)
     
     # Build lookup sets
     personas = {p["id"]: p for p in spec.get("personas", [])}
@@ -208,35 +260,15 @@ def _check_ia(spec: dict, result: LayerResult, extra_specs: dict) -> tuple:
     return ia_screen_refs
 
 
-def _check_screen_inventory(spec: dict, result: LayerResult, extra_specs: dict) -> tuple:
-    """Check screen inventory duplicates and IA refs."""
-    screens = spec.get("screenInventory", [])
-    ids = [s["id"] for s in screens]
-    goal = extra_specs.get("goal")
-    
-    find_duplicates(ids, "SCR", result)
-    
-    screen_ids = set(ids)
-    goal_us_ids = {us["id"] for us in goal.get("userStories", [])} if goal else set()
-    
-    return screen_ids, goal_us_ids
-
-
 def _check_screen_specs(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Check screen specs, pattern refs, and states."""
+    """Check screen specs, pattern refs, and screens with no spec."""
     screen_specs = spec.get("screenSpecs", [])
     screens = {s["id"] for s in spec.get("screenInventory", [])}
     patterns = {p["id"] for p in spec.get("interactionPatterns", [])}
     
-    spec_refs = [s["screenRef"] for s in screen_specs]
-    find_duplicates(spec_refs, "screenSpec.screenRef", result)
-    spec_screen_ids = set(spec_refs)
-    
-    # screenRef must resolve
-    validate_exists(screen_specs, "screenRef", screens, result, "Screen spec", "screen inventory")
+    spec_screen_ids = set(ss["screenRef"] for ss in screen_specs)
     
     # pattern refs in components
-    component_patterns = []
     for ss in screen_specs:
         for comp in ss.get("components", []):
             for pref in comp.get("patternRefs", []):
@@ -254,81 +286,12 @@ def _check_screen_specs(spec: dict, result: LayerResult, extra_specs: dict) -> N
                     f"Screen spec '{ss['screenRef']}' interaction '{interaction['trigger'][:40]}': patternRef '{pref}' not found.",
                     hint=f"Add a pattern with id='{pref}' or correct the reference.")
     
-    # Warn: screen with no states is suspicious
-    for ss in screen_specs:
-        if not ss.get("states"):
-            result.add("warning", "screen_no_states",
-                f"Screen spec '{ss['screenRef']}' has no states defined.",
-                hint="Every screen should document at least its empty, loaded, and error states.")
-    
     # Screens in inventory with no spec
     for sid in screens:
         if sid not in spec_screen_ids:
             result.add("warning", "screen_no_spec",
                 f"Screen '{sid}' has no screen spec.",
                 hint="Add a screen spec entry for every screen in the inventory.")
-
-
-def _check_uxac(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Check UXAC duplicates, refs, and subjective language."""
-    criteria = spec.get("uxAcceptanceCriteria", [])
-    ids = [c["id"] for c in criteria]
-    goal = extra_specs.get("goal")
-    
-    find_duplicates(ids, "UXAC", result)
-    
-    goal_us_ids = {us["id"] for us in goal.get("userStories", [])} if goal else set()
-    goal_req_ids = {fr["id"] for fr in goal.get("functionalRequirements", [])} if goal else set()
-    
-    for uxac in criteria:
-        uid = uxac["id"]
-        refs = uxac.get("refs", {})
-        us_refs = refs.get("usRefs", [])
-        req_refs = refs.get("reqRefs", [])
-        
-        # Must have at least one ref
-        if not us_refs and not req_refs:
-            result.add("error", "uxac_no_refs",
-                f"{uid}: no US or REQ references.",
-                hint="Every UX acceptance criterion must link to at least one user story or requirement.")
-        
-        # Refs resolve
-        for ref in us_refs:
-            if goal and ref not in goal_us_ids:
-                result.add("error", "uxac_us_ref",
-                    f"{uid}: usRef '{ref}' not found in GoalSpec.",
-                    hint=f"Add '{ref}' to GoalSpec userStories or correct the reference.")
-        
-        for ref in req_refs:
-            if goal and ref not in goal_req_ids:
-                result.add("error", "uxac_req_ref",
-                    f"{uid}: reqRef '{ref}' not found in GoalSpec.",
-                    hint=f"Add '{ref}' to GoalSpec functionalRequirements or correct the reference.")
-
-
-def _check_visual_design_requirements(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Check VDR duplicates."""
-    vdrs = spec.get("visualDesignRequirements", [])
-    ids = [v["id"] for v in vdrs]
-    find_duplicates(ids, "VDR", result)
-
-
-def _check_us_journey_coverage(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Check that all GoalSpec user stories are covered by journeys."""
-    goal = extra_specs.get("goal")
-    if not goal:
-        return
-    
-    journeys = spec.get("userJourneys", [])
-    validate_coverage(
-        goal.get("userStories", []),
-        journeys,
-        "id",
-        "usRefs",
-        result,
-        "GoalSpec US",
-        "user journey",
-    )
 
 
 def _check_screens_reachable(spec: dict, result: LayerResult, extra_specs: dict) -> None:
@@ -384,15 +347,10 @@ class DesignSpecLinter(BaseLinter):
     GLOSSARY_CHECKS = GLOSSARY_CHECKS
     CROSS_SPEC_DEPS = ["goal"]
     MISC_CHECKS = [
-        ("design_goals", _check_design_goals),
         ("personas", _check_personas),
         ("journeys", _check_journeys),
         ("ia", _check_ia),
-        ("screen_inventory", _check_screen_inventory),
         ("screen_specs", _check_screen_specs),
-        ("uxac", _check_uxac),
-        ("visual_design_requirements", _check_visual_design_requirements),
-        ("us_journey_coverage", _check_us_journey_coverage),
         ("screens_reachable", _check_screens_reachable),
         ("forbidden_content", _check_forbidden_content),
     ]
