@@ -148,6 +148,11 @@ def check_sequential(ids: list[str], label: str, result: "LayerResult") -> None:
             break  # report first gap only
 
 
+def extract_ids(items: list, key: str) -> list[str]:
+    """Extract a field from a list of dicts."""
+    return [item[key] for item in items if key in item]
+
+
 # Backwards compatibility alias
 ID_FORMATS = ID_PATTERNS
 

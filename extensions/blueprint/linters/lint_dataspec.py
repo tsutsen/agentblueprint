@@ -26,15 +26,11 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional, Set
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, check_duplicates
+from shared import extract_ids, Issue, LayerResult, print_human, print_json_output, validate_spec_ids, check_duplicates
 from schema_validator import SchemaValidator
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
-
-def extract_ids(items: list, key: str) -> list[str]:
-    return [item[key] for item in items if key in item]
-
 
 # ── Semantic checks ───────────────────────────────────────────────────────────
 
