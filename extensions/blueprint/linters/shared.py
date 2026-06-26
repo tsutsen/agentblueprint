@@ -38,11 +38,12 @@ ID_PATTERNS = {
     "flw": {"pattern": r"^FLW-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", "example": "FLW-001-sessionCreation", "hint": "Format: FLW-NNN-name (kebab-case name suffix)"},
     "dfw": {"pattern": r"^[a-z][a-z0-9-]*$", "example": "query-routing-flow", "hint": "Format: kebab-case lowercase"},
     # DataSpec
-    "ent": {"pattern": r"^[a-zA-Z][a-zA-Z0-9]*$", "example": "User", "hint": "Format: PascalCase entity name"},
+    "ent": {"pattern": r"^ENT-\d{3}-[A-Z][A-Za-z0-9]*$", "example": "ENT-001-User", "hint": "Format: ENT-NNN-PascalCase"},
+    "num": {"pattern": r"^NUM-\d{3}-[A-Z][A-Za-z0-9]*$", "example": "NUM-001-UserName", "hint": "Format: NUM-NNN-PascalCase"},
     # ApiSpec
-    "fn": {"pattern": r"^FN-[a-z][A-Za-z0-9]*$", "example": "FN-authenticate", "hint": "Format: FN-lowerCamelCase"},
+    "fn": {"pattern": r"^FN-\d{3}-[a-z][A-Za-z0-9]*$", "example": "FN-001-authenticate", "hint": "Format: FN-NNN-lowerCamelCase"},
     # TestSpec
-    "tst": {"pattern": r"^TST-\d{3}$", "example": "TST-001", "hint": "Format: TST-NNN (3-digit zero-padded)"},
+    "tst": {"pattern": r"^TST-\d{3}-[a-z][A-Za-z0-9]*$", "example": "TST-001-exportReportAsPDF", "hint": "Format: TST-NNN-testName (lowerCamelCase name suffix)"},
 }
 
 

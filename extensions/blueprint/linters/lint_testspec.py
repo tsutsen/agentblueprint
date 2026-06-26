@@ -29,7 +29,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output
+from shared import Issue, LayerResult, print_human, print_json_output, validate_id_format
 from schema_validator import SchemaValidator
 
 
@@ -97,7 +97,7 @@ def check_test_id_format(spec: dict, result: LayerResult):
             result.add("error", "test_missing_id",
                 f"Test is missing an 'id' field.",
                 hint="Add an ID in the format 'TST-NNN-testName', e.g. 'TST-001-exportReportAsPDF'.")
-        elif not re.match(r"^TST-\d{3}-[a-z][A-Za-z0-9]*$", tid):
+        elif not validate_id_format(tid, "tst")[0]:
             result.add("error", "test_id_format",
                 f"Test ID '{tid}' does not follow TST-NNN-testName pattern.",
                 hint="Test IDs must follow the pattern 'TST-NNN-testName', e.g. 'TST-001-exportReportAsPDF'.")

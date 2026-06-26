@@ -26,7 +26,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional, Set
-from shared import Issue, LayerResult, print_human, print_json_output
+from shared import Issue, LayerResult, print_human, print_json_output, validate_id_format
 from schema_validator import SchemaValidator
 
 
@@ -60,7 +60,7 @@ def check_entities(spec: dict, enums: list, result: LayerResult) -> Set[str]:
             result.add("error", "entity_missing_id",
                 f"Entity '{entity.get('name', '<unknown>')}'' is missing an 'id' field.",
                 hint="Add an ID in the format 'ENT-NNN-entityName', e.g. 'ENT-001-ResearchSession'.")
-        elif not re.match(r"^ENT-\d{3}-[A-Z][A-Za-z0-9]*$", eid):
+        elif not validate_id_format(eid, "ent")[0]:
             result.add("error", "entity_id_format",
                 f"Entity '{entity.get('name', '<unknown>')}'' has invalid ID format: '{eid}'.",
                 hint="Entity IDs must follow the pattern 'ENT-NNN-entityName', e.g. 'ENT-001-ResearchSession'.")
@@ -115,10 +115,10 @@ def check_entities(spec: dict, enums: list, result: LayerResult) -> Set[str]:
                     hint="Method names must start with a lowercase letter.")
 
             api_ref = method.get("apiRef", "")
-            if api_ref and not re.match(r"^FN-[a-z]", api_ref):
+            if api_ref and not validate_id_format(api_ref, "fn")[0]:
                 result.add("error", "method_api_ref_format",
-                    f"Entity '{entity['name']}': method '{mname}' has apiRef '{api_ref}' which doesn't match FN-<camelCase>.",
-                    hint="apiRef must reference a function ID in the API spec, e.g. 'FN-createUser'.")
+                    f"Entity '{entity['name']}': method '{mname}' has apiRef '{api_ref}' which doesn't match FN-NNN-lowerCamelCase.",
+                    hint="apiRef must reference a function ID in the API spec, e.g. 'FN-001-authenticate'.")
 
     # Validate visibility
     for entity in entities:
@@ -143,7 +143,7 @@ def check_enums(spec: dict, result: LayerResult) -> Set[str]:
             result.add("error", "enum_missing_id",
                 f"Enum '{enum.get('name', '<unknown>')}'' is missing an 'id' field.",
                 hint="Add an ID in the format 'NUM-NNN-enumName', e.g. 'NUM-001-EvidenceType'.")
-        elif not re.match(r"^NUM-\d{3}-[A-Z][A-Za-z0-9]*$", eid):
+        elif not validate_id_format(eid, "num")[0]:
             result.add("error", "enum_id_format",
                 f"Enum '{enum.get('name', '<unknown>')}'' has invalid ID format: '{eid}'.",
                 hint="Enum IDs must follow the pattern 'NUM-NNN-enumName', e.g. 'NUM-001-EvidenceType'.")

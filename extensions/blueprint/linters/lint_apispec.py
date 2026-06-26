@@ -24,7 +24,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional, Set, Dict, Any
-from shared import Issue, LayerResult, print_human, print_json_output
+from shared import Issue, LayerResult, print_human, print_json_output, validate_id_format
 from schema_validator import SchemaValidator
 
 
@@ -57,7 +57,7 @@ def check_functions(spec: dict, result: LayerResult) -> Set[str]:
         fn_ids.add(fid)
 
         # Function ID must follow FN-NNN-<camelCase>
-        if not re.match(r"^FN-\d{3}-[a-z][A-Za-z0-9]*$", fid):
+        if not validate_id_format(fid, "fn")[0]:
             result.add("error", "fn_id_format",
                 f"Function ID '{fid}' does not follow FN-NNN-<camelCase>.",
                 hint="Function IDs must follow the pattern 'FN-NNN-functionName', e.g. 'FN-001-createUser'.")
