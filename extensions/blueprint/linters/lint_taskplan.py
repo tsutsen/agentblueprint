@@ -20,37 +20,146 @@ import json
 import argparse
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version
+from shared import BaseLinter, LayerResult, validate_spec_ids
 
 
-# ── Checks ────────────────────────────────────────────────────────────────────
+class TaskPlanLinter(BaseLinter):
+    """Linter for TaskPlan artifacts."""
+    
+    SPEC_NAME = "taskplan"
+    SEMANTIC_RULES = []
+    MISC_CHECKS = [
+        ("requirement_coverage", _check_requirement_coverage),
+        ("epic_coverage", _check_epic_coverage),
+        ("non_goal_check", _check_non_goal_check),
+        ("dependency_order", _check_dependency_order),
+        ("milestone_outcomes", _check_milestone_outcomes),
+        ("epic_milestone_assignment", _check_epic_milestone_assignment),
+        ("req_id_reference", _check_req_id_reference),
+    ]
+    CROSS_SPEC_DEPS = ["goal"]
+    GLOSSARY_CHECKS = [
+        ("Epic", "glossaryRefs", "epics"),
+        ("Milestone", "glossaryRefs", "milestones"),
+    ]
 
-def run_lint(spec: dict, schema_path: Optional[Path],
-             goal: Optional[dict], strict: bool) -> LayerResult:
-    result = LayerResult()
 
-    # JSON Schema validation (auto-generated from schema)
-    if schema_path:
-        from schema_validator import SchemaValidator
-        schema = json.loads(Path(schema_path).read_text())
-        schema_issues = SchemaValidator(schema).validate(spec)
-        for issue in schema_issues:
-            result.add(issue.severity, issue.category, issue.message, issue.hint)
+def _check_requirement_coverage(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Check that every GoalSpec requirement appears in at least one epic's coverage list."""
+    goal = extra_specs.get("goal")
+    if not goal:
+        return
+    
+    req_ids = {req["id"] for req in goal.get("functionalRequirements", [])}
+    epics = spec.get("epics", [])
+    
+    covered_reqs = set()
+    for epic in epics:
+        for req_ref in epic.get("coverage", []):
+            covered_reqs.add(req_ref)
+    
+    for req_id in req_ids:
+        if req_id not in covered_reqs:
+            result.add("warning", "requirement_uncovered",
+                f"Requirement '{req_id}' is not covered by any epic.",
+                hint="Add the requirement to an epic's coverage list.")
 
-    # Shared validations
-    validate_spec_ids({"ep": spec.get("epics", []), "milestone": spec.get("milestones", [])}, result)
 
-    if strict:
-        for w in result.warnings:
-            w.severity = "error"
-            result.errors.append(w)
-        result.warnings.clear()
+def _check_epic_coverage(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Check that every epic covers at least one requirement."""
+    for epic in spec.get("epics", []):
+        eid = epic.get("id", "?")
+        coverage = epic.get("coverage", [])
+        if not coverage:
+            result.add("warning", "epic_no_coverage",
+                f"Epic '{eid}' covers no requirements.",
+                hint="Add at least one requirement to this epic's coverage list.")
 
-    return result
+
+def _check_non_goal_check(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Check that no epic implements a GoalSpec non-goal."""
+    goal = extra_specs.get("goal")
+    if not goal:
+        return
+    
+    non_goal_ids = {ng["id"] for ng in goal.get("nonGoals", [])}
+    epics = spec.get("epics", [])
+    
+    for epic in epics:
+        for req_ref in epic.get("coverage", []):
+            if req_ref in non_goal_ids:
+                result.add("error", "epic_implements_non_goal",
+                    f"Epic '{epic.get('id', '?')}' covers non-goal '{req_ref}'.",
+                    hint="Remove this requirement from the epic's coverage list.")
+
+
+def _check_dependency_order(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Check that epics are listed in dependency order (blockers before dependents)."""
+    epics = spec.get("epics", [])
+    epic_ids = {epic["id"] for epic in epics}
+    
+    for i, epic in enumerate(epics):
+        for blocker in epic.get("blockers", []):
+            if blocker not in epic_ids:
+                result.add("warning", "unknown_blocker",
+                    f"Epic '{epic.get('id', '?')}' blocks on unknown epic '{blocker}'.",
+                    hint="Add the blocker epic to the TaskPlan or remove the blocker reference.")
+
+
+def _check_milestone_outcomes(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Check that milestones have demonstrable outcomes."""
+    for milestone in spec.get("milestones", []):
+        mid = milestone.get("id", "?")
+        outcome = milestone.get("outcome", "")
+        if not outcome or not outcome.strip():
+            result.add("warning", "milestone_no_outcome",
+                f"Milestone '{mid}' has no outcome description.",
+                hint="Describe what demonstrable outcome this milestone delivers.")
+
+
+def _check_epic_milestone_assignment(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Check that every epic belongs to exactly one milestone."""
+    epics = spec.get("epics", [])
+    for epic in epics:
+        eid = epic.get("id", "?")
+        milestone = epic.get("milestone")
+        if not milestone:
+            result.add("warning", "epic_no_milestone",
+                f"Epic '{eid}' is not assigned to any milestone.",
+                hint="Assign this epic to a milestone.")
+        elif isinstance(milestone, list):
+            if len(milestone) > 1:
+                result.add("warning", "epic_multiple_milestones",
+                    f"Epic '{eid}' belongs to multiple milestones: {milestone}.",
+                    hint="Assign this epic to exactly one milestone.")
+
+
+def _check_req_id_reference(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Check that all REQ-IDs referenced in TaskPlan exist in GoalSpec."""
+    goal = extra_specs.get("goal")
+    if not goal:
+        return
+    
+    req_ids = {req["id"] for req in goal.get("functionalRequirements", [])}
+    epics = spec.get("epics", [])
+    
+    for epic in epics:
+        for req_ref in epic.get("coverage", []):
+            if req_ref not in req_ids:
+                result.add("error", "req_ref_missing",
+                    f"Epic '{epic.get('id', '?')}': coverage reference '{req_ref}' not found in GoalSpec.",
+                    hint="Add the requirement to GoalSpec or correct the reference.")
 
 
 # ── Output
 # Uses shared.print_human and shared.print_json_output
+
+
+def run_lint(spec: dict, schema_path: Optional[Path],
+             goal: Optional[dict], strict: bool) -> LayerResult:
+    """Backward-compatible entry point for lint_all.py."""
+    linter = TaskPlanLinter(spec, schema_path, strict)
+    return linter.run(goal=goal)
 
 
 def main():
@@ -72,4 +181,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
