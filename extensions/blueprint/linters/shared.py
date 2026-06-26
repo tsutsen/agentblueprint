@@ -153,6 +153,27 @@ def extract_ids(items: list, key: str) -> list[str]:
     return [item[key] for item in items if key in item]
 
 
+def check_project_and_version(spec: dict, spec_name: str, goal: dict,
+                              result: "LayerResult") -> None:
+    """Check project match and version pinning against GoalSpec.
+    
+    Args:
+        spec: The spec to check.
+        spec_name: Name for error messages (e.g. "archspec", "designspec").
+        goal: The GoalSpec dict.
+        result: LayerResult to append errors to.
+    """
+    if spec.get("project") != goal.get("project"):
+        result.add("error", "project_match",
+            f"Project mismatch: {spec_name}='{spec.get("project")}' goalspec='{goal.get("project")}'.",
+            hint=f"Both specs must have identical 'project' values.")
+    pinned = spec.get("goalSpecVersion")
+    if pinned and pinned != goal.get("version"):
+        result.add("error", "version_drift",
+            f"{spec_name}.goalSpecVersion='{pinned}' does not match goalspec.version='{goal.get("version")}'.",
+            hint=f"Update goalSpecVersion after reviewing {spec_name} against the updated GoalSpec.")
+
+
 # Backwards compatibility alias
 ID_FORMATS = ID_PATTERNS
 

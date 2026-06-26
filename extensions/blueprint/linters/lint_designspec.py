@@ -455,7 +455,7 @@ def run_lint(spec: dict, schema_path: Optional[Path],
 
     # 
     # Cross-spec version checks
-    check_project_and_version(spec, goal, result)
+    check_project_and_version(spec, "designspec", goal, result)
 
     # Section checks — order matters: build ID sets first, reference them later
     check_design_goals(spec, result)
