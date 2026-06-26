@@ -79,21 +79,30 @@ class PatternsRule(_TargetRuleBase):
     max_count: int
 
 
-class CoverageRule(_RuleBase):
+class CoverageRule(TypedDict, total=False):
     """Check that covered items are referenced by covering items."""
     type: Literal["coverage"]
     covered: str
     covering: str
     ref_field: str
+    severity: str
+    category: str
+    hint: str
     covered_label: str
     source_label: str
 
 
-class OrphansRule(_TargetRuleBase):
-    """Check for isolated items (no deps, no dependents)."""
+class OrphansRule(TypedDict, total=False):
+    """Check for isolated items (no deps, no dependents).
+
+    Note: uses 'warning' as the category field name (not 'category').
+    """
     type: Literal["orphans"]
     target: str
     deps_field: str
+    severity: str
+    label: str
+    hint: str
     id_field: str
     warning: str
 
@@ -1348,6 +1357,8 @@ def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None
 def handle_coverage(resolved_covered: Resolved, resolved_covering: Resolved, rule: dict, result: LayerResult) -> None:
     """Check that covered items are referenced by covering items."""
     severity = rule.get("severity", "warning")
+    category = rule.get("category", "uncovered")
+    hint_template = rule.get("hint")
     covered_label = rule.get("covered_label", resolved_covered.parent_label)
     source_label = rule.get("source_label", resolved_covering.parent_label)
     ref_field = rule.get("ref_field", "refs")
@@ -1374,9 +1385,11 @@ def handle_coverage(resolved_covered: Resolved, resolved_covering: Resolved, rul
         desc = item.get("description", "") if isinstance(item, dict) else ""
         desc_short = desc[:60] + "..." if desc else ""
         if iid not in covered_refs:
-            result.add(severity, "uncovered",
+            hint_text = (hint_template or
+                f"Add ref '{iid}' to a {source_label} responsible for this.")
+            result.add(severity, category,
                 f"{covered_label} {iid} ('{desc_short}') is not covered by any {source_label}.",
-                hint=f"Add ref '{iid}' to a {source_label} responsible for this.")
+                hint=hint_text)
 
 
 def handle_orphans(resolved: Resolved, rule: dict, result: LayerResult) -> None:
@@ -1458,9 +1471,9 @@ _KNOWN_FIELDS: dict[str, set[str]] = {
     "patterns":   {"type", "target", "patterns", "negate", "text_key", "text_keys", "max_count",
                    "label", "category", "severity", "hint"},
     "coverage":   {"type", "covered", "covering", "ref_field", "covered_label", "source_label",
-                   "label", "category", "severity", "hint"},
+                   "severity", "category", "hint"},
     "orphans":    {"type", "target", "deps_field", "id_field", "warning",
-                   "label", "category", "severity", "hint"},
+                   "label", "severity", "hint"},
 }
 
 
