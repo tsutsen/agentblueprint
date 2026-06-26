@@ -37,8 +37,8 @@
     },
     "personaId": {
       "type": "string",
-      "description": "kebab-case persona identifier, e.g. 'power-developer'.",
-      "pattern": "^[a-z][a-z0-9-]*$"
+      "description": "Persona identifier, format PRS-NNN-PascalCase.",
+      "pattern": "^PRS-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     },
     "reqId": {
       "type": "string",
