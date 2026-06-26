@@ -810,19 +810,19 @@ def _resolve_valid_section(rule: dict, spec: dict, extra_specs: dict) -> set:
     if "valid" in rule:
         return set(rule["valid"])
     
-    # Valid from another section in the same spec
-    if "valid_section" in rule:
-        items = _get_nested(spec, rule["valid_section"])
-        key = rule.get("valid_key", "id")
-        return {item.get(key, "") for item in items}
-    
-    # Valid from an extra spec (e.g., goal, data, api)
+    # Valid from an extra spec (e.g., goal, data, api) - check first for cross-spec rules
     if "valid_extra_spec" in rule:
         extra = extra_specs.get(rule["valid_extra_spec"])
         if extra:
             items = _get_nested(extra, rule.get("valid_section", ""))
             key = rule.get("valid_key", "id")
             return {item.get(key, "") for item in items}
+    
+    # Valid from another section in the same spec
+    if "valid_section" in rule:
+        items = _get_nested(spec, rule["valid_section"])
+        key = rule.get("valid_key", "id")
+        return {item.get(key, "") for item in items}
     
     return set()
 
