@@ -799,10 +799,52 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
     """Execute declarative semantic rules against a spec.
     
     Args:
-        rules: List of rule dicts.
+        rules: List of rule dicts. Each rule has a "type" and optional fields:
         spec: The spec being linted.
         result: LayerResult to append findings to.
         extra_specs: Extra specs passed to the linter (goal, data, api, etc.).
+    
+    Rule Types:
+        non_empty: Check that a field is not empty.
+            Required: section, key
+            Optional: id_key, label, category, hint
+            Example: {"type": "non_empty", "section": "components", "key": "reqRefs"}
+        
+        exists: Check that refs in items exist in a valid set.
+            Required: section, key, valid_section (or valid_extra_spec + valid_section)
+            Optional: nested_key, valid_key, label, ref_label, category, hint
+            Example: {"type": "exists", "section": "components", "key": "reqRefs",
+                      "valid_extra_spec": "goal", "valid_section": "functionalRequirements"}
+        
+        no_overlap: Check that items don't overlap across groups.
+            Required: section, refs_key, id_key
+            Optional: label, category, hint
+            Example: {"type": "no_overlap", "section": "subsystems", "refs_key": "componentRefs"}
+        
+        item_count: Check that a list field has a specific count.
+            Required: section, key, count, compare_mode, id_key
+            Optional: label, category, hint
+            compare_mode: 1=warn if >count, -1=warn if <count, 0=warn if ==count
+            Example: {"type": "item_count", "section": "components", "key": "responsibilities",
+                      "count": 8, "compare_mode": 1}
+        
+        patterns: Check that text matches regex patterns.
+            Required: section, patterns
+            Optional: text_key, nested_key, max_count, label, category, hint, match_fn
+            patterns: list of strings or (pattern, label) tuples
+            Example: {"type": "patterns", "section": "constraints", "text_key": "description",
+                      "patterns": ["postgres", "mysql"]}
+        
+        coverage: Check that covered items are referenced by source items.
+            Required: covered_section, source_section, covered_key, refs_key
+            Optional: covered_label, source_label
+            Example: {"type": "coverage", "covered_section": "components",
+                      "source_section": "subsystems", "refs_key": "componentRefs"}
+        
+        orphans: Check that items have dependencies or dependents.
+            Required: section
+            Optional: id_key, deps_key, label, warning, hint
+            Example: {"type": "orphans", "section": "components", "deps_key": "dependencies"}
     """
     for rule in rules:
         # Some rules (like coverage) don't have a single "section" key
