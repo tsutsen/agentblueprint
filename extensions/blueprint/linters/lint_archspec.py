@@ -30,6 +30,7 @@ from typing import Optional
 
 from schema_validator import SchemaValidator
 from shared import (
+    find_vague_patterns,
     find_patterns_nested,
     find_patterns,
     validate_non_empty,
@@ -432,21 +433,11 @@ def check_vague_responsibilities(spec: dict, result: LayerResult):
         r"\bmanage\s+(the |all |any )?\b",
         r"\bensure\s+(that |the |all )?\b",
     ]
-    import re
-
-    for comp in spec.get("components", []):
-        resps = comp.get("responsibilities", [])
-        if len(resps) == 1:
-            resp_lower = resps[0].lower()
-            for pattern in vague_patterns:
-                if re.search(pattern, resp_lower):
-                    result.add(
-                        "warning",
-                        "vague_responsibility",
-                        f"Component '{comp['id']}' has a single vague responsibility: '{resps[0][:80]}...'.",
-                        hint="Break into specific, actionable responsibilities. Avoid generic statements like 'consistent error handling across all components'.",
-                    )
-                    break
+    find_vague_patterns(
+        spec.get("components", []), "responsibilities", vague_patterns,
+        "id", result, label="Component", category="vague_responsibility",
+        hint="Break into specific, actionable responsibilities. Avoid generic statements like 'consistent error handling across all components'."
+    )
 
 
 def check_inline_req_refs_in_responsibilities(spec: dict, result: LayerResult):

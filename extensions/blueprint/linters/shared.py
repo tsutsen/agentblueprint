@@ -429,7 +429,41 @@ def find_patterns_nested(items: list[dict], nested_key: str, patterns: list[tupl
                 result.add("warning", category,
                     f"{label or iid} '{iid}': {', '.join(f'{label}: {m}' for label, m in matches)}.",
                     hint=hint or f"Review {label.lower() or 'item'} for {category}.")
-    # Normalize to list of refs and dict of valid sets
+
+
+def find_vague_patterns(items: list[dict], nested_key: str, patterns: list[str],
+                        id_key: str, result: "LayerResult", label: str = "",
+                        category: str = "vague", hint: str = "", max_count: int = 1) -> None:
+    """Warn if items with <= max_count nested items match vague patterns.
+    
+    Args:
+        items: List of parent items to check.
+        nested_key: Key in each item that holds the list of nested items.
+        patterns: List of regex patterns to check.
+        id_key: Key in each item that holds the ID.
+        result: LayerResult to append warnings to.
+        label: Label for error messages (e.g., "Component").
+        category: Category for the warning.
+        hint: Custom hint message.
+        max_count: Maximum nested item count to trigger check (default: 1).
+    """
+    import re
+    
+    for item in items:
+        iid = item.get(id_key, "?")
+        nested_items = item.get(nested_key, [])
+        
+        if len(nested_items) <= max_count:
+            for nested_item in nested_items:
+                text = nested_item if isinstance(nested_item, str) else nested_item.get("text", "")
+                for pattern in patterns:
+                    if re.search(pattern, text.lower()):
+                        text_short = text[:80] + "..." if len(text) > 80 else text
+                        result.add("warning", category,
+                            f"{label or iid} '{iid}' has a single vague responsibility: '{text_short}'.",
+                            hint=hint or "Break into specific, actionable items.")
+                        break
+            # Normalize to list of refs and dict of valid sets
     if isinstance(refs, str):
         refs = [refs]
         if isinstance(valid, set):
