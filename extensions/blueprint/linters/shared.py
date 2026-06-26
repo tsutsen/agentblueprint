@@ -21,23 +21,22 @@ from dataclasses import dataclass, field
 
 ID_PATTERNS = {
     # ── GoalSpec ──────────────────────────────────────────────────────────────
-    "req": {"pattern": r"^REQ-\d{3}$", "example": "REQ-001", "hint": "Format: REQ-NNN (3-digit zero-padded)"},
-    "nfr": {"pattern": r"^NFR-\d{3}$", "example": "NFR-001", "hint": "Format: NFR-NNN (3-digit zero-padded)"},
-    "us": {"pattern": r"^US-\d{3}$", "example": "US-001", "hint": "Format: US-NNN (3-digit zero-padded)"},
-    "sc": {"pattern": r"^SC-\d{3}$", "example": "SC-001", "hint": "Format: SC-NNN (3-digit zero-padded)"},
-    "ng": {"pattern": r"^NG-\d{3}$", "example": "NG-001", "hint": "Format: NG-NNN (3-digit zero-padded)"},
+    "req": {"pattern": r"^REQ-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "REQ-001-createAccount", "hint": "Format: REQ-NNN-lowerCamelCase"},
+    "nfr": {"pattern": r"^NFR-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "NFR-001-responseTime", "hint": "Format: NFR-NNN-lowerCamelCase"},
+    "us": {"pattern": r"^US-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "US-001-login", "hint": "Format: US-NNN-lowerCamelCase"},
+    "sc": {"pattern": r"^SC-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "SC-001-dataIntegrity", "hint": "Format: SC-NNN-lowerCamelCase"},
+    "ng": {"pattern": r"^NG-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "NG-001-webSearch", "hint": "Format: NG-NNN-lowerCamelCase"},
     # ── Glossary ──────────────────────────────────────────────────────────────
-    "gl": {"pattern": r"^GL-\d{3}$", "example": "GL-001", "hint": "Format: GL-NNN (3-digit zero-padded)"},
-    # ── DesignSpec ────────────────────────────────────────────────────────────
-    "dg": {"pattern": r"^DG-\d{3}$", "example": "DG-001", "hint": "Format: DG-NNN (3-digit zero-padded)"},
+    "gl": {"pattern": r"^GL-\d{3}$", "example": "GL-001", "hint": "Format: GL-NNN (3-digit zero-padded, glossary terms are self-describing)"},
+    "dg": {"pattern": r"^DG-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "DG-001-MinimizeCognitiveLoad", "hint": "Format: DG-NNN-PascalCase"},
     "scr": {"pattern": r"^SCR-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "SCR-001-LandingPage", "hint": "Format: SCR-NNN-PascalCase"},
     "dcon": {"pattern": r"^DCON-\d{3}$", "example": "DCON-001", "hint": "Format: DCON-NNN (3-digit zero-padded)"},
     "ar": {"pattern": r"^AR-\d{3}$", "example": "AR-001", "hint": "Format: AR-NNN (3-digit zero-padded)"},
     "dt": {"pattern": r"^DT-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "DT-001-PrimaryColor", "hint": "Format: DT-NNN-PascalCase"},
     "pat": {"pattern": r"^PAT-\d{3}$", "example": "PAT-001", "hint": "Format: PAT-NNN (3-digit zero-padded)"},
     "spc": {"pattern": r"^SPC-\d{3}$", "example": "SPC-001", "hint": "Format: SPC-NNN (3-digit zero-padded)"},
-    "uj": {"pattern": r"^UJ-\d{3}$", "example": "UJ-001", "hint": "Format: UJ-NNN (3-digit zero-padded)"},
-    "uxac": {"pattern": r"^UXAC-\d{3}$", "example": "UXAC-001", "hint": "Format: UXAC-NNN (3-digit zero-padded)"},
+    "uj": {"pattern": r"^UJ-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "UJ-001-findProduct", "hint": "Format: UJ-NNN-lowerCamelCase"},
+    "uxac": {"pattern": r"^UXAC-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "UXAC-001-touchTarget", "hint": "Format: UXAC-NNN-lowerCamelCase"},
     "vdr": {"pattern": r"^VDR-\d{3}$", "example": "VDR-001", "hint": "Format: VDR-NNN (3-digit zero-padded)"},
     # ── ArchitectureSpec ──────────────────────────────────────────────────────
     "comp": {"pattern": r"^[a-zA-Z][a-zA-Z0-9]*$", "example": "AuthService", "hint": "Format: PascalCase component name"},
@@ -56,10 +55,10 @@ ID_PATTERNS = {
     "fn": {"pattern": r"^FN-\d{3}-[a-z][A-Za-z0-9]*$", "example": "FN-001-authenticate", "hint": "Format: FN-NNN-lowerCamelCase"},
     # ── TestSpec ──────────────────────────────────────────────────────────────
     "tst": {"pattern": r"^TST-\d{3}-[a-z][A-Za-z0-9]*$", "example": "TST-001-exportReportAsPDF", "hint": "Format: TST-NNN-lowerCamelCase"},
-    "fc": {"pattern": r"^FC-\d{3}$", "example": "FC-001", "hint": "Format: FC-NNN (3-digit zero-padded)"},
+    "fc": {"pattern": r"^FC-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "FC-001-authenticate", "hint": "Format: FC-NNN-lowerCamelCase"},
     # ── TaskPlan / Issues ─────────────────────────────────────────────────────
-    "ep": {"pattern": r"^EP-\d{3}$", "example": "EP-001", "hint": "Format: EP-NNN (3-digit zero-padded)"},
-    "is": {"pattern": r"^IS-\d{3}$", "example": "IS-001", "hint": "Format: IS-NNN (3-digit zero-padded)"},
+    "ep": {"pattern": r"^EP-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "EP-001-userOnboarding", "hint": "Format: EP-NNN-lowerCamelCase"},
+    "is": {"pattern": r"^IS-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "IS-001-implementLogin", "hint": "Format: IS-NNN-lowerCamelCase"},
     "milestone": {"pattern": r"^M\d+$", "example": "M1", "hint": "Format: M followed by digits (e.g. M1, M12)"},
 }
 
