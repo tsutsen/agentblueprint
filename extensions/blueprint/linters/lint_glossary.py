@@ -26,7 +26,7 @@ import sys
 import argparse
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, _validate_id as validate_id_format
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, check_project_and_version, _validate_id as validate_id_format
 from schema_validator import SchemaValidator
 
 

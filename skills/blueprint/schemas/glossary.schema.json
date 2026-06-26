@@ -113,6 +113,11 @@
         "pattern": "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
       },
       "uniqueItems": true
+    },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
     }
   },
   "definitions": {

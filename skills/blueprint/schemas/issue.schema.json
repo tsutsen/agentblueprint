@@ -14,7 +14,8 @@
     "blocked_by",
     "milestone",
     "created",
-    "updated"
+    "updated",
+    "project"
   ],
   "definitions": {
     "glId": {
@@ -165,6 +166,16 @@
         "$ref": "#/definitions/acceptanceCriterion"
       },
       "description": "Verifiable acceptance criteria for this issue."
+    },
+    "project": {
+      "type": "string",
+      "description": "Project name. Must match across all specs.",
+      "minLength": 1
+    },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
     }
   },
   "additionalProperties": false,

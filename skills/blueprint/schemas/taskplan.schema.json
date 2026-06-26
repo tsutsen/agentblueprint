@@ -242,6 +242,11 @@
           }
         }
       }
+    },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
     }
   },
   "outputFiles": [

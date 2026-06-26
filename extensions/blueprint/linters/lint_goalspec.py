@@ -348,6 +348,9 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
         for issue in schema_issues:
             result.add(issue.severity, issue.category, issue.message, issue.hint)
 
+    # Project match and version pinning
+    check_project_and_version(spec, "goalspec", goal, result)
+
     # ID format validation
     validate_spec_ids({"req": spec.get("functionalRequirements", []), "nfr": spec.get("nonFunctionalRequirements", []), "us": spec.get("userStories", []), "sc": spec.get("successCriteria", []), "ng": spec.get("nonGoals", [])}, result)
 

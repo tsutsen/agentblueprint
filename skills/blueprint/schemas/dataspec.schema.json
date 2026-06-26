@@ -10,7 +10,8 @@
     "primitives",
     "enums",
     "entities",
-    "relationships"
+    "relationships",
+    "project"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -365,6 +366,16 @@
           }
         }
       }
+    },
+    "project": {
+      "type": "string",
+      "description": "Project name. Must match across all specs.",
+      "minLength": 1
+    },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
     }
   },
   "outputFiles": [

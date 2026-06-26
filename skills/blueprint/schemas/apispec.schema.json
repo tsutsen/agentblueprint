@@ -7,7 +7,8 @@
   "required": [
     "version",
     "module",
-    "functions"
+    "functions",
+    "project"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -262,6 +263,16 @@
       "type": "integer",
       "description": "Total number of functions defined.",
       "readOnly": true
+    },
+    "project": {
+      "type": "string",
+      "description": "Project name. Must match across all specs.",
+      "minLength": 1
+    },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
     }
   },
   "outputFiles": [
