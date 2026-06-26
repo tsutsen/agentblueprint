@@ -174,6 +174,128 @@ SEMANTIC_RULES = [
         "label": "Flow",
         "category": "flow_step_count",
     },
+    
+    # Components must not have vague responsibilities
+    {
+        "type": "patterns",
+        "section": "components",
+        "nested_key": "responsibilities",
+        "patterns": [
+            (r"\bconsist(?:ent|ently)\b", "consistent/consistently"),
+            (r"\bacross all\b", "across all"),
+            (r"\bthe system\b", "the system"),
+            (r"\bprovide\s+(a |an )?\b", "provide a/an"),
+            (r"\bhandle\s+(all |the |any )?\b", "handle all/the/any"),
+            (r"\bmanage\s+(the |all |any )?\b", "manage the/all/any"),
+            (r"\bensure\s+(that |the |all )?\b", "ensure that/the/all"),
+        ],
+        "label": "Component",
+        "category": "vague_responsibility",
+        "hint": "Break into specific, actionable responsibilities. Avoid generic statements.",
+        "max_count": 1,
+    },
+    
+    # Responsibilities must not contain inline refs
+    {
+        "type": "patterns",
+        "section": "components",
+        "nested_key": "responsibilities",
+        "patterns": [
+            (r"\bkey\s+flow\s+\w+\b", "key flow references"),
+            (r"\bflow\s+\d+[a-z]?\b", "flow number references"),
+            (r"\bsection\s+\d+\b", "section references"),
+        ],
+        "label": "Component",
+        "category": "inline_ref_in_responsibility",
+        "hint": "Move requirement references to the reqRefs/nfrRefs arrays.",
+    },
+    
+    # Components must not be isolated (no deps, no dependents)
+    {
+        "type": "orphans",
+        "section": "components",
+        "id_key": "id",
+        "deps_key": "dependencies",
+        "label": "Component",
+        "warning": "isolated",
+        "hint": "An isolated component may indicate a design issue.",
+    },
+    
+    # GoalSpec FRs must be covered by components
+    {
+        "type": "coverage",
+        "covered_section": "functionalRequirements",
+        "source_section": "components",
+        "covered_key": "id",
+        "refs_key": "reqRefs",
+        "covered_label": "GoalSpec FR",
+        "source_label": "component",
+        "valid_extra_spec": "goal",
+    },
+    
+    # GoalSpec NFRs must be covered by components or constraints
+    {
+        "type": "coverage",
+        "covered_section": "nonFunctionalRequirements",
+        "source_section": "components",
+        "covered_key": "id",
+        "refs_key": "nfrRefs",
+        "covered_label": "GoalSpec NFR",
+        "source_label": "component",
+        "valid_extra_spec": "goal",
+    },
+    
+    # Components must reference valid GoalSpec REQ/NFR
+    {
+        "type": "exists",
+        "section": "components",
+        "key": "reqRefs",
+        "valid_extra_spec": "goal",
+        "valid_section": "functionalRequirements",
+        "valid_key": "id",
+        "label": "Component",
+        "ref_label": "GoalSpec requirement",
+        "category": "req_ref_missing",
+    },
+    
+    # Components must reference valid GoalSpec NFR
+    {
+        "type": "exists",
+        "section": "components",
+        "key": "nfrRefs",
+        "valid_extra_spec": "goal",
+        "valid_section": "nonFunctionalRequirements",
+        "valid_key": "id",
+        "label": "Component",
+        "ref_label": "GoalSpec NFR",
+        "category": "nfr_ref_missing",
+    },
+    
+    # Flow steps must reference valid GoalSpec REQ
+    {
+        "type": "exists",
+        "section": "dataFlow",
+        "key": "reqRefs",
+        "valid_extra_spec": "goal",
+        "valid_section": "functionalRequirements",
+        "valid_key": "id",
+        "label": "Flow",
+        "ref_label": "GoalSpec requirement",
+        "category": "req_ref_missing",
+    },
+    
+    # Constraints must reference valid GoalSpec NFR
+    {
+        "type": "exists",
+        "section": "constraints",
+        "key": "nfrRefs",
+        "valid_extra_spec": "goal",
+        "valid_section": "nonFunctionalRequirements",
+        "valid_key": "id",
+        "label": "Constraint",
+        "ref_label": "GoalSpec NFR",
+        "category": "nfr_ref_missing",
+    },
 ]
 
 
@@ -205,47 +327,6 @@ def _check_circular_dependencies(spec: dict, result: LayerResult, extra_specs: d
     )
 
 
-def _check_vague_responsibilities(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Warn if a component has only one responsibility that is vague/generic."""
-    vague_patterns = [
-        r"\bconsist(?:ent|ently)\b",
-        r"\bacross all\b",
-        r"\bthe system\b",
-        r"\bprovide\s+(a |an )?\b",
-        r"\bhandle\s+(all |the |any )?\b",
-        r"\bmanage\s+(the |all |any )?\b",
-        r"\bensure\s+(that |the |all )?\b",
-    ]
-    find_patterns(
-        spec.get("components", []),
-        patterns=vague_patterns,
-        result=result,
-        label="Component",
-        category="vague_responsibility",
-        hint="Break into specific, actionable responsibilities. Avoid generic statements like 'consistent error handling across all components'.",
-        nested_key="responsibilities",
-        max_count=1,
-    )
-
-
-def _check_inline_refs_in_responsibilities(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Warn if responsibilities contain text that looks like non-standard refs."""
-    non_standard_patterns = [
-        (r"\bkey\s+flow\s+\w+\b", "key flow references"),
-        (r"\bflow\s+\d+[a-z]?\b", "flow number references"),
-        (r"\bsection\s+\d+\b", "section references"),
-    ]
-    find_patterns(
-        spec.get("components", []),
-        patterns=non_standard_patterns,
-        result=result,
-        label="Component",
-        category="inline_ref_in_responsibility",
-        hint="Move requirement references to the reqRefs/nfrRefs arrays. Use glossaryRefs for term references.",
-        nested_key="responsibilities",
-    )
-
-
 def _check_components_in_data_flows(spec: dict, result: LayerResult, extra_specs: dict) -> None:
     """Warn if a component is not referenced in any data flow step."""
     components = spec.get("components", [])
@@ -268,93 +349,6 @@ def _check_components_in_data_flows(spec: dict, result: LayerResult, extra_specs
             )
 
 
-def _check_orphan_components(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Warn if components have no dependencies and no dependents."""
-    find_orphans(
-        spec.get("components", []),
-        "id",
-        "dependencies",
-        result,
-        label="Component",
-    )
-
-
-def _check_req_nfr_refs(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Resolve all REQ/NFR refs across components, flows, and constraints against GoalSpec."""
-    goal = extra_specs.get("goal")
-    if not goal:
-        return
-    
-    goal_req_ids = {r["id"] for r in goal.get("functionalRequirements", [])}
-    goal_nfr_ids = {r["id"] for r in goal.get("nonFunctionalRequirements", [])}
-    valid_refs = {"reqRefs": goal_req_ids, "nfrRefs": goal_nfr_ids}
-    
-    from shared import validate_exists
-    
-    validate_exists(
-        spec.get("components", []),
-        ["reqRefs", "nfrRefs"],
-        valid_refs,
-        result,
-        label="Component",
-        ref_label="GoalSpec requirement",
-        category="req_ref_missing",
-    )
-    validate_exists(
-        spec.get("dataFlow", []),
-        ["reqRefs"],
-        valid_refs,
-        result,
-        label="Flow",
-        ref_label="GoalSpec requirement",
-        category="req_ref_missing",
-    )
-    validate_exists(
-        spec.get("constraints", []),
-        ["nfrRefs"],
-        valid_refs,
-        result,
-        label="Constraint",
-        ref_label="GoalSpec NFR",
-        category="nfr_ref_missing",
-    )
-
-
-def _check_fr_coverage(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Check that GoalSpec FRs are covered by components."""
-    goal = extra_specs.get("goal")
-    if not goal:
-        return
-    
-    validate_coverage(
-        goal.get("functionalRequirements", []),
-        spec.get("components", []),
-        "id",
-        "reqRefs",
-        result,
-        covered_label="GoalSpec FR",
-        source_label="component",
-    )
-
-
-def _check_nfr_coverage(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Check that GoalSpec NFRs are covered by components or constraints."""
-    goal = extra_specs.get("goal")
-    if not goal:
-        return
-    
-    all_nfr_source = spec.get("components", []) + spec.get("constraints", [])
-    validate_coverage(
-        goal.get("nonFunctionalRequirements", []),
-        all_nfr_source,
-        "id",
-        "nfrRefs",
-        result,
-        covered_label="GoalSpec NFR",
-        source_label="component or constraint",
-    )
-
-
 # ── Linter Class ──────────────────────────────────────────────────────────────
 
 class ArchSpecLinter(BaseLinter):
@@ -364,13 +358,7 @@ class ArchSpecLinter(BaseLinter):
     CROSS_SPEC_DEPS = ["goal", "data", "api"]
     MISC_CHECKS = [
         ("circular_deps", _check_circular_dependencies),
-        ("vague_responsibilities", _check_vague_responsibilities),
-        ("inline_refs", _check_inline_refs_in_responsibilities),
         ("components_in_flows", _check_components_in_data_flows),
-        ("orphan_components", _check_orphan_components),
-        ("req_nfr_refs", _check_req_nfr_refs),
-        ("fr_coverage", _check_fr_coverage),
-        ("nfr_coverage", _check_nfr_coverage),
     ]
 
 

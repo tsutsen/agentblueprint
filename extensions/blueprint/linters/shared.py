@@ -880,6 +880,13 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
         elif rule_type == "coverage":
             # Cross-section coverage: covered items must be referenced by source items
             covered = _get_nested(spec, rule.get("covered_section", rule.get("section", "")))
+            
+            # If covered_section is in an extra spec, load it
+            if rule.get("valid_extra_spec") and not covered:
+                extra = extra_specs.get(rule["valid_extra_spec"])
+                if extra:
+                    covered = _get_nested(extra, rule["covered_section"])
+            
             source_items = _get_nested(spec, rule["source_section"])
             validate_coverage(
                 covered,
