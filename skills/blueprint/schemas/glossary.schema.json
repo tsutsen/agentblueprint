@@ -95,14 +95,6 @@
               "pattern": "^REQ-\\d{3}$"
             }
           },
-          "fnRefs": {
-            "type": "array",
-            "description": "FN-IDs from ApiSpec that use this term. Populated during API design. Use for GL\u2192FN traceability.",
-            "items": {
-              "type": "string",
-              "pattern": "^FN-[a-z][A-Za-z0-9]*$"
-            }
-          },
           "id": {
             "type": "string",
             "description": "Unique glossary term identifier. Format: GL-NNN (3-digit zero-padded, sequential).",

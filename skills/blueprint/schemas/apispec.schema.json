@@ -79,6 +79,21 @@
       "type": "string",
       "description": "Glossary term identifier, format GL-NNN-PascalCase.",
       "pattern": "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+    },
+    "scrId": {
+      "type": "string",
+      "description": "Screen identifier from DesignSpec, format SCR-NNN-PascalCase.",
+      "pattern": "^SCR-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+    },
+    "ujId": {
+      "type": "string",
+      "description": "User journey identifier from DesignSpec, format UJ-NNN-lowerCamelCase.",
+      "pattern": "^UJ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+    },
+    "compId": {
+      "type": "string",
+      "description": "Component identifier from ArchitectureSpec, format COMP-NNN-PascalCase.",
+      "pattern": "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     }
   },
   "properties": {
@@ -241,6 +256,27 @@
             "items": {
               "type": "string",
               "pattern": "^NFR-\\d{3}$"
+            }
+          },
+          "screenRefs": {
+            "type": "array",
+            "description": "SCR-IDs from DesignSpec screenInventory that this API function supports.",
+            "items": {
+              "$ref": "#/definitions/scrId"
+            }
+          },
+          "ujRefs": {
+            "type": "array",
+            "description": "UJ-IDs from DesignSpec userJourneys that this API function enables.",
+            "items": {
+              "$ref": "#/definitions/ujId"
+            }
+          },
+          "componentRefs": {
+            "type": "array",
+            "description": "COMP-IDs from ArchitectureSpec components that this function interacts with.",
+            "items": {
+              "$ref": "#/definitions/compId"
             }
           }
         }

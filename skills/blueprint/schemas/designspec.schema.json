@@ -364,13 +364,6 @@
               "$ref": "#/definitions/reqId"
             }
           },
-          "fnRefs": {
-            "type": "array",
-            "description": "FN-IDs from ApiSpec that this journey exercises. Populated during implementation planning. Use for UJ\u2192FN traceability.",
-            "items": {
-              "$ref": "#/definitions/fnId"
-            }
-          },
           "startingState": {
             "type": "string",
             "description": "What the user and system state are at the beginning of this journey.",
@@ -524,13 +517,6 @@
             "description": "US-NNN-slug IDs this screen helps fulfil.",
             "items": {
               "$ref": "#/definitions/usId"
-            }
-          },
-          "fnRefs": {
-            "type": "array",
-            "description": "FN-IDs from ApiSpec that this screen's interactions exercise. Populated during implementation planning. Use for SCR\u2192FN traceability.",
-            "items": {
-              "$ref": "#/definitions/fnId"
             }
           },
           "glossaryRefs": {

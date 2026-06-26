@@ -184,14 +184,6 @@
             "type": "string",
             "description": "Optional clarifying context. Must not contain implementation details."
           },
-          "fnRefs": {
-            "type": "array",
-            "description": "FN-IDs from ApiSpec that implement this requirement. Populated during architecture phase. Use for REQ\u2192FN traceability. At least one must be present once implementation begins.",
-            "items": {
-              "type": "string",
-              "pattern": "^FN-[a-z][A-Za-z0-9]*$"
-            }
-          },
           "scRefs": {
             "type": "array",
             "description": "SC-IDs from this GoalSpec that measure this requirement. Populated when success criteria are written. At least one must be present.",
@@ -295,13 +287,6 @@
             "items": {
               "$ref": "#/definitions/glId"
             }
-          },
-          "conRefs": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "CON-NNN-slug IDs from ArchitectureSpec constraints that stem from this NFR."
           }
         }
       }

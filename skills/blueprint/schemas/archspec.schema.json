@@ -228,25 +228,9 @@
               "$ref": "#/definitions/glId"
             }
           },
-          "fnRefs": {
-            "type": "array",
-            "description": "FN-IDs from ApiSpec that this component owns. Populated during implementation. Use for Component\u2192FN traceability. Each FN must belong to exactly one component.",
-            "items": {
-              "type": "string",
-              "pattern": "^FN-[a-z][A-Za-z0-9]*$"
-            }
-          },
           "notes": {
             "type": "string",
             "description": "Optional clarifying context for this component that does not fit other fields."
-          },
-          "entityRefs": {
-            "type": "array",
-            "description": "ENT-NNN-slug IDs from DataSpec entities this component works with.",
-            "items": {
-              "type": "string",
-              "pattern": "^ENT-\\d{3}-[a-z][a-z0-9-]*$"
-            }
           },
           "status": {
             "type": "string",

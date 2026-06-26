@@ -44,6 +44,11 @@
       "type": "string",
       "description": "Primitive type identifier (PRIM-NNN-primitiveName).",
       "pattern": "^PRIM-\\d{3}-[a-z][a-z0-9-]*$"
+    },
+    "compId": {
+      "type": "string",
+      "description": "Component identifier from ArchitectureSpec, format COMP-NNN-PascalCase.",
+      "pattern": "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     }
   },
   "properties": {
@@ -283,6 +288,13 @@
             "description": "Glossary term IDs (GL-NNN) that this entity maps to. The entity name itself should have a corresponding glossary entry.",
             "items": {
               "$ref": "#/definitions/glId"
+            }
+          },
+          "componentRefs": {
+            "type": "array",
+            "description": "COMP-IDs from ArchitectureSpec components that own or serve this entity.",
+            "items": {
+              "$ref": "#/definitions/compId"
             }
           }
         }
