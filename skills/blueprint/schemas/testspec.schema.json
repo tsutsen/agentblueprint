@@ -335,10 +335,10 @@
           },
           "fieldRefs": {
             "type": "array",
-            "description": "Field IDs from DataSpec entities referenced in test inputs/outputs.",
+            "description": "Field names from DataSpec entities referenced in test inputs/outputs. Fields use camelCase names (e.g., 'userName'), not ID prefixes.",
             "items": {
               "type": "string",
-              "pattern": "^[A-Z][A-Z0-9_]*$"
+              "pattern": "^[a-z][a-zA-Z0-9]*$"
             }
           },
           "constraintRefs": {
