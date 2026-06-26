@@ -337,6 +337,19 @@ SEMANTIC_RULES = [
         "category": "fnref_missing",
         "hint": "Add the function to ApiSpec or correct the reference.",
     },
+    # Every ApiSpec function must have tests
+    {
+        "type": "coverage",
+        "covered_section": "functions",
+        "source_section": "tests",
+        "covered_key": "id",
+        "refs_key": "fnRef",
+        "valid_extra_spec": "api",
+        "covered_label": "ApiSpec function",
+        "source_label": "Test",
+        "category": "function_untested",
+        "hint": "Add at least one test with fnRef set to this function.",
+    },
 ]
 
 
@@ -347,7 +360,6 @@ MISC_CHECKS = [
     ("category_rules", _check_category_rules),
     ("placeholder_values", _check_placeholder_values),
     ("api_refs", _check_api_refs),
-    ("api_coverage", _check_api_coverage),
     ("function_coverage", _check_function_coverage_summary),
     ("glossary_refs", _check_glossary_refs),
     ("lifecycle", _check_lifecycle),
