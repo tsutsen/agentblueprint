@@ -483,12 +483,14 @@ def validate_non_empty(items: list[dict], key: str, id_key: str, result: "LayerR
 def find_patterns(items: list[dict], text_key: str = None, patterns: list[tuple[str, str]] = None,
                   id_key: str = "id", result: "LayerResult" = None, label: str = "",
                   category: str = "pattern_match", hint: str = "",
-                  match_fn: callable = None, nested_key: str = None, max_count: int = None) -> None:
+                  match_fn: callable = None, nested_key: str = None, max_count: int = None,
+                  text_keys: list[str] = None) -> None:
     """Warn if items match patterns in a text field (single or nested).
     
     Args:
         items: List of items to check.
         text_key: Key in each item that holds the text to check (e.g., "description").
+                  Deprecated: use text_keys instead for multiple fields.
         patterns: List of (regex_pattern, label) tuples.
         id_key: Key in each item that holds the ID (default: "id").
         result: LayerResult to append warnings to.
@@ -498,6 +500,8 @@ def find_patterns(items: list[dict], text_key: str = None, patterns: list[tuple[
         match_fn: Optional custom match function.
         nested_key: If set, check nested list items (e.g., "responsibilities").
         max_count: If set, only check items with <= this many nested items.
+        text_keys: List of text field keys to check (e.g., ["layout", "wireframe"]).
+                   If provided, checks all fields; falls back to text_key if not provided.
     """
     import re
     
@@ -511,6 +515,9 @@ def find_patterns(items: list[dict], text_key: str = None, patterns: list[tuple[
             if max_count is not None and len(nested_items) > max_count:
                 continue
             texts = [n if isinstance(n, str) else n.get("text", "") for n in nested_items]
+        elif text_keys:
+            # Check multiple text fields
+            texts = [item.get(k, "") for k in text_keys]
         elif text_key:
             # Check single text field
             texts = [item.get(text_key, "")]
@@ -941,6 +948,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 match_fn=rule.get("match_fn"),
                 nested_key=rule.get("nested_key"),
                 max_count=rule.get("max_count"),
+                text_keys=rule.get("text_keys"),
             )
         
         elif rule_type == "coverage":

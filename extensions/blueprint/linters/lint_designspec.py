@@ -140,6 +140,51 @@ SEMANTIC_RULES = [
         "source_label": "user journey",
         "valid_extra_spec": "goal",
     },
+    
+    # Screen specs must not contain forbidden content
+    {
+        "type": "patterns",
+        "section": "screenSpecs",
+        "text_keys": ["layout", "wireframe"],
+        "patterns": [
+            ("create table", "database schema"),
+            ("alter table", "database schema"),
+            ("primary key", "database schema"),
+            ("foreign key", "database schema"),
+            ("schema migration", "database schema"),
+            ("orm model", "database schema"),
+            ("endpoint", "internal API detail"),
+            ("rest api", "internal API detail"),
+            ("graphql", "internal API detail"),
+            ("grpc", "internal API detail"),
+            ("http method", "internal API detail"),
+            ("status code", "internal API detail"),
+            ("json schema", "internal API detail"),
+            ("request body", "internal API detail"),
+            ("def ", "source code"),
+            ("function\\(", "source code"),
+            ("class ", "source code"),
+            ("import ", "source code"),
+            ("const ", "source code"),
+            ("var ", "source code"),
+            ("return ", "source code"),
+            ("if \\(", "source code"),
+            ("for \\(", "source code"),
+            ("while \\(", "source code"),
+            ("react", "technology selection"),
+            ("vue", "technology selection"),
+            ("angular", "technology selection"),
+            ("tailwind", "technology selection"),
+            ("bootstrap", "technology selection"),
+            ("postgresql", "technology selection"),
+            ("redis", "technology selection"),
+            ("kafka", "technology selection"),
+            ("webpack", "technology selection"),
+        ],
+        "label": "Screen spec",
+        "category": "forbidden_content",
+        "hint": "DesignSpec must not contain {category}. Move this to the appropriate spec.",
+    },
 ]
 
 
@@ -311,34 +356,6 @@ def _check_screens_reachable(spec: dict, result: LayerResult, extra_specs: dict)
                 hint="Add a journey step that passes through this screen, or reconsider whether it is needed.")
 
 
-def _check_forbidden_content(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Scan prose fields for forbidden content."""
-    forbidden_terms = [
-        ("database schema", ["create table", "alter table", "primary key", "foreign key",
-                             "schema migration", "orm model"]),
-        ("internal API detail", ["endpoint", "rest api", "graphql", "grpc", "http method",
-                                  "status code", "json schema", "request body"]),
-        ("source code", ["def ", "function(", "class ", "import ", "const ", "var ",
-                          "return ", "if (", "for (", "while ("]),
-        ("technology selection", ["react", "vue", "angular", "tailwind", "bootstrap",
-                                   "postgresql", "redis", "kafka", "webpack"])
-    ]
-    
-    prose_sources = []
-    for ss in spec.get("screenSpecs", []):
-        prose_sources.append((f"screenSpec '{ss['screenRef']}' layout", ss.get("layout", "")))
-        prose_sources.append((f"screenSpec '{ss['screenRef']}' wireframe", ss.get("wireframe", "")))
-    
-    for label, text in prose_sources:
-        text_lower = text.lower()
-        for category, terms in forbidden_terms:
-            found = [t for t in terms if t in text_lower]
-            if found:
-                result.add("warning", "forbidden_content",
-                    f"{label}: may contain {category}: {found}.",
-                    hint=f"DesignSpec must not contain {category}. Move this to the appropriate spec.")
-
-
 # ── Linter Class ──────────────────────────────────────────────────────────────
 
 class DesignSpecLinter(BaseLinter):
@@ -352,7 +369,6 @@ class DesignSpecLinter(BaseLinter):
         ("ia", _check_ia),
         ("screen_specs", _check_screen_specs),
         ("screens_reachable", _check_screens_reachable),
-        ("forbidden_content", _check_forbidden_content),
     ]
 
 
