@@ -26,7 +26,7 @@ import sys
 import argparse
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, _validate_id as validate_id_format
 from schema_validator import SchemaValidator
 
 
@@ -195,9 +195,10 @@ def check_related_terms(gl_id_map: dict[str, dict], result: LayerResult):
     """All relatedTerms must be valid GL-NNN IDs that exist in the glossary."""
     for term_id, entry in gl_id_map.items():
         for related in entry.get("relatedTerms", []):
-            if not GL_ID_RE.match(related):
+            valid, _ = validate_id_format(related, "gl")
+            if not valid:
                 result.add("error", "related_term_format",
-                    f"Term '{entry["name"]}': relatedTerm '{related}' is not a valid GL-NNN ID.",
+                    f"Term '{entry['name']}': relatedTerm '{related}' is not a valid GL-NNN ID.",
                     hint="Use GL-NNN format (e.g., GL-001, GL-042).")
             elif related not in gl_id_map:
                 result.add("error", "related_term_missing",
