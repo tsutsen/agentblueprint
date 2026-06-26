@@ -173,18 +173,16 @@ def check_subsystems(spec: dict, component_ids: set[str], result: LayerResult):
     all_comp_refs = []
     comp_to_subs: dict[str, list[str]] = {}
 
+    # Check for empty subsystems
+    validate_non_empty(
+        subsystems, "componentRefs", "name", result,
+        label="Subsystem", category="subsystem_empty"
+    )
+
     for sub in subsystems:
         refs = sub.get("componentRefs", [])
 
-        # Check for empty subsystem
-        if not refs:
-            result.add(
-                "warning",
-                "subsystem_empty",
-                f"Subsystem '{sub['name']}' has no components assigned.",
-                hint="Assign components to this subsystem or remove it.",
-            )
-
+        # Check for invalid component refs
         for ref in refs:
             if ref not in component_ids:
                 result.add(
@@ -193,6 +191,8 @@ def check_subsystems(spec: dict, component_ids: set[str], result: LayerResult):
                     f"Subsystem '{sub['name']}': componentRef '{ref}' is not a defined component.",
                     hint=f"Add a component with id='{ref}' or correct the reference.",
                 )
+
+        for ref in refs:
             all_comp_refs.append(ref)
             comp_to_subs.setdefault(ref, []).append(sub["name"])
 
@@ -207,14 +207,10 @@ def check_subsystems(spec: dict, component_ids: set[str], result: LayerResult):
             )
 
     # Warn: component assigned to multiple subsystems
-    for comp, subs in comp_to_subs.items():
-        if len(subs) > 1:
-            result.add(
-                "warning",
-                "subsystem_overlap",
-                f"Component '{comp}' is assigned to multiple subsystems: {', '.join(subs)}.",
-                hint="Each component should belong to exactly one subsystem.",
-            )
+    validate_no_overlap(
+        subsystems, "componentRefs", "name", result,
+        label="Subsystem", category="subsystem_overlap"
+    )
 
 
 def check_data_flows(spec: dict, component_ids: set[str], result: LayerResult):
