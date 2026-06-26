@@ -19,19 +19,163 @@ Usage:
 """
 
 import json
-import sys
-import argparse
 import re
+import sys
 from pathlib import Path
 from typing import Optional
-from shared import extract_ids, Issue, LayerResult, print_human, print_json_output, validate_spec_ids, find_duplicates, validate_sequential, validate_project_and_version, validate_glossary_refs
-from schema_validator import SchemaValidator
+
+from shared import (
+    BaseLinter,
+    LayerResult,
+    find_duplicates,
+    find_patterns,
+    print_human,
+    print_json_output,
+    validate_sequential,
+    validate_glossary_refs,
+)
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-# ── Semantic checks ───────────────────────────────────────────────────────────
+# ── Semantic Rules ────────────────────────────────────────────────────────────
 
-def check_objective(spec: dict, result: LayerResult):
+SEMANTIC_RULES = [
+    # FRs must have descriptions
+    {
+        "type": "non_empty",
+        "section": "functionalRequirements",
+        "key": "description",
+        "id_key": "id",
+        "label": "FR",
+        "category": "fr_empty_description",
+        "hint": "Every functional requirement must have a description.",
+    },
+    
+    # NFRs must have descriptions
+    {
+        "type": "non_empty",
+        "section": "nonFunctionalRequirements",
+        "key": "description",
+        "id_key": "id",
+        "label": "NFR",
+        "category": "nfr_empty_description",
+        "hint": "Every NFR must have a description.",
+    },
+    
+    # User stories must have capabilities
+    {
+        "type": "non_empty",
+        "section": "userStories",
+        "key": "capability",
+        "id_key": "id",
+        "label": "User story",
+        "category": "story_empty_capability",
+        "hint": "Every user story must have a capability.",
+    },
+    
+    # Success criteria must have descriptions
+    {
+        "type": "non_empty",
+        "section": "successCriteria",
+        "key": "description",
+        "id_key": "id",
+        "label": "Success criterion",
+        "category": "sc_empty_description",
+        "hint": "Every success criterion must have a description.",
+    },
+    
+    # NFRs must have scale
+    {
+        "type": "non_empty",
+        "section": "nonFunctionalRequirements",
+        "key": "scale",
+        "id_key": "id",
+        "label": "NFR",
+        "category": "nfr_missing_scale",
+        "hint": "Every NFR must have a scale defined.",
+    },
+    
+    # NFRs must have meter
+    {
+        "type": "non_empty",
+        "section": "nonFunctionalRequirements",
+        "key": "meter",
+        "id_key": "id",
+        "label": "NFR",
+        "category": "nfr_missing_meter",
+        "hint": "Every NFR must have a meter defined.",
+    },
+    
+    # FRs must not contain implementation details
+    {
+        "type": "patterns",
+        "section": "functionalRequirements",
+        "text_key": "description",
+        "patterns": [
+            "use ", "using ", "call ", "via ", "with ", "implement", "library", "framework",
+        ],
+        "label": "FR",
+        "category": "fr_implementation_smell",
+        "hint": "FRs must describe observable behaviour, not how it is achieved.",
+    },
+    
+    # User stories must not contain feature-like language
+    {
+        "type": "patterns",
+        "section": "userStories",
+        "text_key": "capability",
+        "patterns": [
+            "use ", "using ", "implement", "button", "dropdown",
+            "api", "endpoint", "library", "framework", "click",
+        ],
+        "label": "User story",
+        "category": "story_feature_smell",
+        "hint": "User stories must express what the actor wants to achieve, not how.",
+    },
+    
+    # Success criteria must not contain subjective language
+    {
+        "type": "patterns",
+        "section": "successCriteria",
+        "text_key": "description",
+        "patterns": [
+            "feel", "feels", "fast", "slow", "good", "happy",
+            "nice", "smooth", "intuitive", "easy", "simple",
+        ],
+        "label": "Success criterion",
+        "category": "sc_subjective",
+        "hint": "Success criteria must be binary and independently verifiable.",
+    },
+    
+    # Non-goals must not be vague
+    {
+        "type": "patterns",
+        "section": "nonGoals",
+        "text_key": "capability",
+        "patterns": [
+            "everything", "advanced", "features", "stuff",
+            "things", "all", "etc", "misc",
+        ],
+        "label": "Non-goal",
+        "category": "nongoal_vague",
+        "hint": "Name the specific capability being excluded.",
+    },
+]
+
+
+# ── Glossary Checks ───────────────────────────────────────────────────────────
+
+GLOSSARY_CHECKS = [
+    ("FR", "glossaryRefs", "functionalRequirements"),
+    ("US", "glossaryRefs", "userStories"),
+    ("Non-goal", "glossaryRefs", "nonGoals"),
+    ("NFR", "glossaryRefs", "nonFunctionalRequirements"),
+]
+
+
+# ── Custom Checks ─────────────────────────────────────────────────────────────
+
+def _check_objective(spec: dict, result: LayerResult, extra_specs: dict) -> None:
+    """Check objective confirmation and implementation leaks."""
     obj = spec["objective"]
     status = spec.get("status", "draft")
 
@@ -53,10 +197,11 @@ def check_objective(spec: dict, result: LayerResult):
             hint="Objective must describe what and why, not how. Move technology choices to architecture.")
 
 
-def check_functional_requirements(spec: dict, result: LayerResult) -> set[str]:
+def _check_functional_requirements(spec: dict, result: LayerResult, extra_specs: dict) -> None:
+    """Check FR duplicates, sequential IDs, and thresholds."""
     frs = spec.get("functionalRequirements", [])
-    ids = extract_ids(frs, "id")
-
+    ids = [fr["id"] for fr in frs]
+    
     find_duplicates(ids, "REQ", result)
     validate_sequential(ids, "REQ", result)
 
@@ -68,21 +213,12 @@ def check_functional_requirements(spec: dict, result: LayerResult) -> set[str]:
                 f"{fr['id']}: description contains a measurable threshold.",
                 hint="Move thresholds to an NFR. FRs describe capability; NFRs describe quality.")
 
-        # Smell: description sounds like implementation
-        impl_smells = ["use ", "using ", "call ", "via ", "with ", "implement", "library", "framework"]
-        desc_lower = fr.get("description", "").lower()
-        if any(s in desc_lower for s in impl_smells):
-            result.add("warning", "fr_implementation_smell",
-                f"{fr['id']}: description may contain implementation detail.",
-                hint="FRs must describe observable behaviour, not how it is achieved.")
 
-    return set(ids)
-
-
-def check_nfrs(spec: dict, result: LayerResult) -> set[str]:
+def _check_nfrs(spec: dict, result: LayerResult, extra_specs: dict) -> None:
+    """Check NFR duplicates, sequential IDs, and TBD checks."""
     nfrs = spec.get("nonFunctionalRequirements", [])
-    ids = extract_ids(nfrs, "id")
-
+    ids = [nfr["id"] for nfr in nfrs]
+    
     find_duplicates(ids, "NFR", result)
     validate_sequential(ids, "NFR", result)
 
@@ -120,29 +256,18 @@ def check_nfrs(spec: dict, result: LayerResult) -> set[str]:
                     f"{nid}: only 'must' level defined — Plan and Wish are missing.",
                     hint="Define Plan and Wish levels, or mark them TBD explicitly.")
 
-    return set(ids)
 
-
-def check_user_stories(spec: dict, req_ids: set[str], result: LayerResult) -> set[str]:
+def _check_user_stories(spec: dict, result: LayerResult, extra_specs: dict) -> None:
+    """Check US duplicates, sequential IDs, and actor consistency."""
     stories = spec.get("userStories", [])
-    ids = extract_ids(stories, "id")
+    ids = [s["id"] for s in stories]
     fr_actors = {fr["actor"] for fr in spec.get("functionalRequirements", [])}
-
+    
     find_duplicates(ids, "US", result)
     validate_sequential(ids, "US", result)
 
-    story_req_refs = set()
-
     for story in stories:
         sid = story["id"]
-
-        # reqRefs resolve
-        for ref in story.get("reqRefs", []):
-            if ref not in req_ids:
-                result.add("error", "story_ref_missing",
-                    f"{sid}: reqRef '{ref}' does not exist in functionalRequirements.",
-                    hint=f"Add '{ref}' to functionalRequirements or correct the reference.")
-            story_req_refs.add(ref)
 
         # Actor consistency — warn if actor doesn't appear in any FR
         actor = story.get("actor", "")
@@ -151,27 +276,16 @@ def check_user_stories(spec: dict, req_ids: set[str], result: LayerResult) -> se
                 f"{sid}: actor '{actor}' does not match any actor in functionalRequirements.",
                 hint="Ensure actor names are consistent across stories and requirements.")
 
-        # Smell: capability sounds like a feature not a goal
-        feature_smells = ["use ", "using ", "implement", "button", "dropdown",
-                          "api", "endpoint", "library", "framework", "click"]
-        cap_lower = story.get("capability", "").lower()
-        if any(s in cap_lower for s in feature_smells):
-            result.add("warning", "story_feature_smell",
-                f"{sid}: capability may describe a feature rather than a goal.",
-                hint="User stories must express what the actor wants to achieve, not how.")
 
-    return story_req_refs
-
-
-def check_success_criteria(spec: dict, req_ids: set[str], nfr_ids: set[str], result: LayerResult) -> set[str]:
+def _check_success_criteria(spec: dict, result: LayerResult, extra_specs: dict) -> None:
+    """Check SC duplicates, sequential IDs, and refs."""
     criteria = spec.get("successCriteria", [])
-    ids = extract_ids(criteria, "id")
-
+    ids = [sc["id"] for sc in criteria]
+    req_ids = {fr["id"] for fr in spec.get("functionalRequirements", [])}
+    nfr_ids = {nfr["id"] for nfr in spec.get("nonFunctionalRequirements", [])}
+    
     find_duplicates(ids, "SC", result)
     validate_sequential(ids, "SC", result)
-
-    sc_covered_reqs = set()
-    sc_covered_nfrs = set()
 
     for sc in criteria:
         scid = sc["id"]
@@ -191,135 +305,85 @@ def check_success_criteria(spec: dict, req_ids: set[str], nfr_ids: set[str], res
                 result.add("error", "sc_ref_missing",
                     f"{scid}: reqRef '{ref}' does not exist in functionalRequirements.",
                     hint=f"Add '{ref}' to functionalRequirements or correct the reference.")
-            sc_covered_reqs.add(ref)
 
         for ref in nfr_refs:
             if ref not in nfr_ids:
                 result.add("error", "sc_ref_missing",
                     f"{scid}: nfrRef '{ref}' does not exist in nonFunctionalRequirements.",
                     hint=f"Add '{ref}' to nonFunctionalRequirements or correct the reference.")
-            sc_covered_nfrs.add(ref)
-
-        # Smell: subjective language
-        subjective = ["feel", "feels", "fast", "slow", "good", "happy",
-                      "nice", "smooth", "intuitive", "easy", "simple"]
-        desc_lower = sc.get("description", "").lower()
-        if any(s in desc_lower for s in subjective):
-            result.add("warning", "sc_subjective",
-                f"{scid}: description may contain subjective language.",
-                hint="Success criteria must be binary and independently verifiable.")
-
-    return sc_covered_reqs
 
 
-def check_coverage(spec: dict, req_ids: set[str], story_req_refs: set[str],
-                   sc_covered_reqs: set[str], result: LayerResult):
-    """
-    Every FR should be:
-    - Referenced by at least one user story
-    - Gated by at least one success criterion
-    """
-    for req_id in req_ids:
-        if req_id not in story_req_refs:
+def _check_coverage(spec: dict, result: LayerResult, extra_specs: dict) -> None:
+    """Check FR coverage by user stories and success criteria."""
+    frs = spec.get("functionalRequirements", [])
+    stories = spec.get("userStories", [])
+    criteria = spec.get("successCriteria", [])
+
+    story_req_refs = set()
+    for story in stories:
+        for ref in story.get("reqRefs", []):
+            story_req_refs.add(ref)
+
+    sc_covered_reqs = set()
+    for sc in criteria:
+        refs = sc.get("refs", {})
+        for ref in refs.get("reqRefs", []):
+            sc_covered_reqs.add(ref)
+
+    for fr in frs:
+        if fr["id"] not in story_req_refs:
             result.add("warning", "fr_no_story",
-                f"{req_id} is not referenced by any user story.",
+                f"{fr['id']} is not referenced by any user story.",
                 hint="Add a user story that motivates this requirement.")
 
-        if req_id not in sc_covered_reqs:
+        if fr["id"] not in sc_covered_reqs:
             result.add("warning", "fr_no_success_criterion",
-                f"{req_id} is not gated by any success criterion.",
+                f"{fr['id']} is not gated by any success criterion.",
                 hint="Add a success criterion that verifies this requirement is met.")
 
 
-def check_non_goals(spec: dict, result: LayerResult):
+def _check_non_goals(spec: dict, result: LayerResult, extra_specs: dict) -> None:
+    """Check non-goal duplicates, sequential IDs, and weak reasons."""
     non_goals = spec.get("nonGoals", [])
-    ids = extract_ids(non_goals, "id")
-
+    ids = [ng["id"] for ng in non_goals]
+    
     find_duplicates(ids, "NG", result)
     validate_sequential(ids, "NG", result)
 
-    vague_smells = ["everything", "advanced", "features", "stuff",
-                    "things", "all", "etc", "misc"]
     for ng in non_goals:
-        cap_lower = ng.get("capability", "").lower()
-        if any(s in cap_lower for s in vague_smells):
-            result.add("warning", "nongoal_vague",
-                f"Non-goal '{ng['capability']}' may be too vague.",
-                hint="Name the specific capability being excluded.")
-
         if len(ng.get("reason", "")) < 10:
             result.add("warning", "nongoal_weak_reason",
                 f"Non-goal '{ng['capability']}' has a very short reason.",
                 hint="Explain why this is excluded: deferred, out of scope, handled elsewhere.")
 
 
+# ── Linter Class ──────────────────────────────────────────────────────────────
 
-def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
-             glossary: Optional[dict] = None) -> LayerResult:
-    result = LayerResult()
-
-    # Schema validation (auto-generated from schema)
-    if schema_path:
-        schema = json.loads(Path(schema_path).read_text())
-        schema_issues = SchemaValidator(schema).validate(spec)
-        for issue in schema_issues:
-            result.add(issue.severity, issue.category, issue.message, issue.hint)
-
-    # Project match and version pinning
-    validate_project_and_version(spec, "goalspec", spec, result)
-
-    # ID format validation
-    validate_spec_ids({"req": spec.get("functionalRequirements", []), "nfr": spec.get("nonFunctionalRequirements", []), "us": spec.get("userStories", []), "sc": spec.get("successCriteria", []), "ng": spec.get("nonGoals", [])}, result)
-
-    # Semantic checks
-    check_objective(spec, result)
-    req_ids = check_functional_requirements(spec, result)
-    nfr_ids = check_nfrs(spec, result)
-    story_req_refs = check_user_stories(spec, req_ids, result)
-    sc_covered_reqs = check_success_criteria(spec, req_ids, nfr_ids, result)
-    check_coverage(spec, req_ids, story_req_refs, sc_covered_reqs, result)
-    check_non_goals(spec, result)
-    validate_glossary_refs(glossary, result, [
-                ("FR", "glossaryRefs", spec.get("functionalRequirements", [])),
-                ("US", "glossaryRefs", spec.get("userStories", [])),
-                ("Non-goal", "glossaryRefs", spec.get("nonGoals", [])),
-                ("NFR", "glossaryRefs", spec.get("nonFunctionalRequirements", [])),
-            ])
-
-    if strict:
-        for w in result.warnings:
-            w.severity = "error"
-            result.errors.append(w)
-        result.warnings.clear()
-
-    return result
+class GoalSpecLinter(BaseLinter):
+    SPEC_NAME = "goalspec"
+    SEMANTIC_RULES = SEMANTIC_RULES
+    GLOSSARY_CHECKS = GLOSSARY_CHECKS
+    CROSS_SPEC_DEPS = []
+    MISC_CHECKS = [
+        ("objective", _check_objective),
+        ("functional_requirements", _check_functional_requirements),
+        ("nfrs", _check_nfrs),
+        ("user_stories", _check_user_stories),
+        ("success_criteria", _check_success_criteria),
+        ("coverage", _check_coverage),
+        ("non_goals", _check_non_goals),
+    ]
 
 
-# ── Output
-# Uses shared.print_human and shared.print_json_output
+# ── Backward Compatibility ────────────────────────────────────────────────────
+
+def run_lint(spec, schema_path, strict, glossary=None):
+    """Backward-compatible entry point for lint_all.py."""
+    linter = GoalSpecLinter(spec, schema_path, strict)
+    return linter.run(glossary=glossary)
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Lint a GoalSpec JSON.")
-    parser.add_argument("input", help="Path to goalspec JSON")
-    parser.add_argument("--schema", help="Path to goalspec.schema.json")
-    parser.add_argument("--strict", action="store_true", help="Treat warnings as errors")
-    parser.add_argument("--json", action="store_true", help="Output as JSON")
-    args = parser.parse_args()
-
-    path = Path(args.input)
-    spec = json.loads(path.read_text())
-    schema_path = Path(args.schema) if args.schema else None
-
-    result = run_lint(spec, schema_path, args.strict)
-
-    if args.json:
-        print_json_output(result)
-    else:
-        print_human(result, str(path))
-
-    sys.exit(0 if result.clean else 1)
-
+# ── CLI ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    main()
+    GoalSpecLinter.main()
