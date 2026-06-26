@@ -912,6 +912,17 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 **{k: v for k, v in rule.items() if k in ("label", "category", "hint")}
             )
         
+        elif rule_type == "unique":
+            # Check that values in a field are unique (no duplicates)
+            key = rule.get("key", "id")
+            # Extract values from items
+            values = [item.get(key, "") for item in items if item.get(key)]
+            find_duplicates(
+                values,
+                result=result,
+                **{k: v for k, v in rule.items() if k in ("label", "category", "hint")}
+            )
+        
         elif rule_type == "exists":
             key = rule.get("key")
             if rule.get("nested_key"):

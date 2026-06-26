@@ -62,18 +62,6 @@ def expected_test_prefix(fn_id: str) -> str:
 
 # ── Checks ────────────────────────────────────────────────────────────────────
 
-def _check_duplicate_ids(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
-    """Check for duplicate test IDs."""
-    ids = [t["id"] for t in spec.get("tests", [])]
-    seen = set()
-    for tid in ids:
-        if tid in seen:
-            result.add("error", "duplicate_id",
-                f"Duplicate test id '{tid}'.",
-                hint="Each test must have a unique ID.")
-        seen.add(tid)
-
-
 def _check_id_fn_consistency(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
     """Test ID prefix must match its fnRef."""
     for t in spec.get("tests", []):
@@ -335,13 +323,22 @@ def _check_lifecycle(spec: dict, result: LayerResult, extra_specs: dict = None) 
 
 # ── Semantic Rules ────────────────────────────────────────────────────────────
 
-SEMANTIC_RULES = []
+SEMANTIC_RULES = [
+    # Test IDs must be unique
+    {
+        "type": "unique",
+        "section": "tests",
+        "key": "id",
+        "label": "Test",
+        "category": "duplicate_id",
+        "hint": "Each test must have a unique ID.",
+    },
+]
 
 
 # ── Misc Checks ───────────────────────────────────────────────────────────────
 
 MISC_CHECKS = [
-    ("duplicate_ids", _check_duplicate_ids),
     ("id_fn_consistency", _check_id_fn_consistency),
     ("category_rules", _check_category_rules),
     ("placeholder_values", _check_placeholder_values),
