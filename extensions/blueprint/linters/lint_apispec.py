@@ -234,32 +234,6 @@ def _check_type_refs(spec: dict, result: LayerResult, extra_specs: dict = None) 
                         hint=f"Add '{base}' to the data spec's primitives list or use an existing type.")
 
 
-def _check_module_match(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
-    """Validate that module name matches data spec."""
-    data_spec = extra_specs.get("data") if extra_specs else None
-    if not data_spec:
-        return
-    api_module = spec.get("module", "")
-    data_module = data_spec.get("module", "")
-    if api_module and data_module and api_module != data_module:
-        result.add("error", "module_mismatch",
-            f"ApiSpec module '{api_module}' does not match DataSpec module '{data_module}'.",
-            hint="Both specs must describe the same module.")
-
-
-def _check_version_match(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
-    """Validate that dataSpecVersion matches data spec version."""
-    data_spec = extra_specs.get("data") if extra_specs else None
-    if not data_spec:
-        return
-    api_data_ver = spec.get("dataSpecVersion")
-    data_ver = data_spec.get("version")
-    if api_data_ver and data_ver and api_data_ver != data_ver:
-        result.add("error", "version_mismatch",
-            f"ApiSpec dataSpecVersion '{api_data_ver}' does not match DataSpec version '{data_ver}'.",
-            hint="Update dataSpecVersion in the API spec after updating the data spec.")
-
-
 # ── Semantic Rules ────────────────────────────────────────────────────────────
 
 SEMANTIC_RULES = [
@@ -293,8 +267,6 @@ MISC_CHECKS = [
     ("fn_no_errors", _check_fn_no_errors),
     ("entity_refs", _check_entity_refs),
     ("type_refs", _check_type_refs),
-    ("module_match", _check_module_match),
-    ("version_match", _check_version_match),
 ]
 
 
@@ -312,6 +284,30 @@ class ApiSpecLinter(BaseLinter):
     SEMANTIC_RULES = SEMANTIC_RULES
     MISC_CHECKS = MISC_CHECKS
     CROSS_SPEC_DEPS = CROSS_SPEC_DEPS
+    
+    def _validate_cross_spec_consistency(self) -> None:
+        """Check project match, version pinning, module match, and dataSpecVersion match."""
+        super()._validate_cross_spec_consistency()
+        
+        data = self.extra_specs.get("data")
+        if not data:
+            return
+        
+        # Module name must match
+        api_module = self.spec.get("module", "")
+        data_module = data.get("module", "")
+        if api_module and data_module and api_module != data_module:
+            self.result.add("error", "module_mismatch",
+                f"ApiSpec module '{api_module}' does not match DataSpec module '{data_module}'.",
+                hint="Both specs must describe the same module.")
+        
+        # dataSpecVersion must match DataSpec version
+        api_data_ver = self.spec.get("dataSpecVersion")
+        data_ver = data.get("version")
+        if api_data_ver and data_ver and api_data_ver != data_ver:
+            self.result.add("error", "version_mismatch",
+                f"ApiSpec dataSpecVersion '{api_data_ver}' does not match DataSpec version '{data_ver}'.",
+                hint="Update dataSpecVersion in the API spec after updating the data spec.")
 
 
 # ── Backward-compatible entry point ───────────────────────────────────────────
