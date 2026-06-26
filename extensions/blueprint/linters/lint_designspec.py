@@ -126,6 +126,7 @@ SEMANTIC_RULES = [
         "type": "covers_all",
         "target": "userJourneys.usRefs",
         "should_cover_all": "goal:userStories",
+        "category": "us_uncovered",
         "covered_label": "GoalSpec US",
         "source_label": "user journey",
     },

@@ -103,14 +103,13 @@ class NotOrphanRule(TypedDict, total=False):
     """Check for isolated items (no *Refs outgoing, no *Refs incoming).
 
     Auto-discovers all *Refs/*Ref fields — no deps_field needed.
-    Note: uses 'warning' as the category field name (not 'category').
     """
     type: Literal["not_orphan"]
     target: str
     severity: str
+    category: str
     label: str
     hint: str
-    warning: str
 
 
 
@@ -1402,8 +1401,8 @@ def handle_orphans(resolved: Resolved, rule: dict, result: LayerResult) -> None:
     Auto-discovers all *Refs fields on items — no deps_field needed.
     """
     severity = rule.get("severity", "warning")
+    category = rule.get("category", "isolated")
     label = rule.get("label", resolved.parent_label)
-    warning = rule.get("warning", "isolated")
     hint = rule.get("hint", "")
 
     items = resolved.values
@@ -1435,7 +1434,7 @@ def handle_orphans(resolved: Resolved, rule: dict, result: LayerResult) -> None:
         has_outgoing = any(item.get(f) for f in ref_fields)
         is_referenced = iid in referenced_ids
         if not has_outgoing and not is_referenced:
-            result.add(severity, warning,
+            result.add(severity, category,
                 f"{label} '{iid}' is isolated: no dependencies and no dependents.",
                 hint=hint or f"An isolated {label.lower()} may indicate a design issue.")
 
@@ -1464,14 +1463,14 @@ _RULE_HANDLERS = {
 
 # Required fields per rule type (beyond 'type' itself)
 _REQUIRED_FIELDS: dict[str, list[str]] = {
-    "non_empty":         ["target"],
-    "exists":            ["target", "inside"],
-    "is_unique":         ["target"],
-    "not_shared":        ["target"],
-    "has_item_count":    ["target", "count"],
-    "contains_patterns": ["target", "patterns"],
-    "covers_all":        ["target", "should_cover_all"],
-    "not_orphan":        ["target"],
+    "non_empty":         ["target", "category"],
+    "exists":            ["target", "inside", "category"],
+    "is_unique":         ["target", "category"],
+    "not_shared":        ["target", "category"],
+    "has_item_count":    ["target", "count", "category"],
+    "contains_patterns": ["target", "patterns", "category"],
+    "covers_all":        ["target", "should_cover_all", "category"],
+    "not_orphan":        ["target", "category"],
 }
 
 # Known fields per rule type (for detecting typos — includes 'type' itself)
@@ -1487,7 +1486,7 @@ _KNOWN_FIELDS: dict[str, set[str]] = {
                           "label", "category", "severity", "hint"},
     "covers_all":        {"type", "target", "should_cover_all", "covered_label", "source_label",
                           "severity", "category", "hint"},
-    "not_orphan":        {"type", "target", "warning",
+    "not_orphan":        {"type", "target", "category",
                           "label", "severity", "hint"},
 }
 

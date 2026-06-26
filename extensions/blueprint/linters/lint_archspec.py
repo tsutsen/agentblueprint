@@ -65,6 +65,7 @@ SEMANTIC_RULES = [
         "type": "covers_all",
         "target": "overview.subsystems.componentRefs",
         "should_cover_all": "components",
+        "category": "component_unassigned",
         "covered_label": "Component",
         "source_label": "Subsystem",
     },
@@ -166,8 +167,8 @@ SEMANTIC_RULES = [
     {
         "type": "not_orphan",
         "target": "components",
+        "category": "isolated",
         "label": "Component",
-        "warning": "isolated",
         "hint": "An isolated component may indicate a design issue.",
     },
     # GoalSpec FRs must be covered by components
@@ -175,6 +176,7 @@ SEMANTIC_RULES = [
         "type": "covers_all",
         "target": "components.reqRefs",
         "should_cover_all": "goal:functionalRequirements",
+        "category": "fr_uncovered",
         "covered_label": "GoalSpec FR",
         "source_label": "component",
     },
@@ -183,6 +185,7 @@ SEMANTIC_RULES = [
         "type": "covers_all",
         "target": "components.nfrRefs",
         "should_cover_all": "goal:nonFunctionalRequirements",
+        "category": "nfr_uncovered",
         "covered_label": "GoalSpec NFR",
         "source_label": "component",
     },
