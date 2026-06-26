@@ -64,8 +64,7 @@ SEMANTIC_RULES = [
     {
         "type": "coverage",
         "covered": "components",
-        "covering": "overview.subsystems",
-        "ref_field": "componentRefs",
+        "covering": "overview.subsystems.componentRefs",
         "covered_label": "Component",
         "source_label": "Subsystem",
     },
@@ -176,8 +175,7 @@ SEMANTIC_RULES = [
     {
         "type": "coverage",
         "covered": "goal:functionalRequirements",
-        "covering": "components",
-        "ref_field": "reqRefs",
+        "covering": "components.reqRefs",
         "covered_label": "GoalSpec FR",
         "source_label": "component",
     },
@@ -185,8 +183,7 @@ SEMANTIC_RULES = [
     {
         "type": "coverage",
         "covered": "goal:nonFunctionalRequirements",
-        "covering": "components",
-        "ref_field": "nfrRefs",
+        "covering": "components.nfrRefs",
         "covered_label": "GoalSpec NFR",
         "source_label": "component",
     },

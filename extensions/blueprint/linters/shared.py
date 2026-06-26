@@ -83,11 +83,13 @@ class PatternsRule(_TargetRuleBase):
 
 
 class CoverageRule(TypedDict, total=False):
-    """Check that covered items are referenced by covering items."""
+    """Check that covered items are referenced by covering items.
+
+    covering path includes the ref field: "overview.subsystems.componentRefs"
+    """
     type: Literal["coverage"]
     covered: str
     covering: str
-    ref_field: str
     severity: str
     category: str
     hint: str
@@ -1360,31 +1362,25 @@ def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None
 
 
 def handle_coverage(resolved_covered: Resolved, resolved_covering: Resolved, rule: dict, result: LayerResult) -> None:
-    """Check that covered items are referenced by covering items."""
+    """Check that covered items are referenced by covering items.
+
+    covering path includes the ref field: "overview.subsystems.componentRefs"
+    This resolves to a flat list of all reference values.
+    """
     severity = rule.get("severity", "warning")
     category = rule.get("category", "uncovered")
     hint_template = rule.get("hint")
     covered_label = rule.get("covered_label", resolved_covered.parent_label)
-    source_label = rule.get("source_label", resolved_covering.parent_label)
-    ref_field = rule.get("ref_field", "refs")
+    source_label = rule.get("source_label", "source")
 
-    # Collect covered IDs
-    covered_ids = set()
-    covered_items = resolved_covered.values
-    for item in covered_items:
-        if isinstance(item, dict):
-            covered_ids.add(item.get("id", ""))
-        else:
-            covered_ids.add(str(item))
-
-    # Collect refs from covering items
+    # Collect refs from covering path (already flat list of ref values)
     covered_refs = set()
     for item in resolved_covering.values:
-        if isinstance(item, dict):
-            for ref in _normalize_ref(item.get(ref_field)):
-                covered_refs.add(ref)
+        for ref in _normalize_ref(item):
+            covered_refs.add(ref)
 
     # Find uncovered items
+    covered_items = resolved_covered.values
     for item in covered_items:
         iid = item.get("id", str(item)) if isinstance(item, dict) else str(item)
         desc = item.get("description", "") if isinstance(item, dict) else ""
@@ -1460,7 +1456,7 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
     "no_overlap": ["target"],
     "item_count": ["target", "count"],
     "patterns":   ["target", "patterns"],
-    "coverage":   ["covered", "covering", "ref_field"],
+    "coverage":   ["covered", "covering"],
     "orphans":    ["target", "deps_field"],
 }
 
@@ -1475,7 +1471,7 @@ _KNOWN_FIELDS: dict[str, set[str]] = {
                    "label", "category", "severity", "hint"},
     "patterns":   {"type", "target", "patterns", "negate", "extra_keys", "max_count",
                    "label", "category", "severity", "hint"},
-    "coverage":   {"type", "covered", "covering", "ref_field", "covered_label", "source_label",
+    "coverage":   {"type", "covered", "covering", "covered_label", "source_label",
                    "severity", "category", "hint"},
     "orphans":    {"type", "target", "deps_field", "id_field", "warning",
                    "label", "severity", "hint"},

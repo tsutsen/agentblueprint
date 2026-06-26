@@ -329,8 +329,7 @@ SEMANTIC_RULES = [
     {
         "type": "coverage",
         "covered": "api:functions",
-        "covering": "tests",
-        "ref_field": "fnRef",
+        "covering": "tests.fnRef",
         "covered_label": "ApiSpec function",
         "source_label": "Test",
         "category": "function_untested",
