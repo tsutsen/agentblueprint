@@ -838,6 +838,22 @@ def _resolve_valid_section(rule: dict, spec: dict, extra_specs: dict) -> set:
     return set()
 
 
+def _make_rule_kwargs(rule: dict, extra_keys: list[str] = None) -> dict:
+    """Extract common rule fields into kwargs for validation functions.
+    
+    Args:
+        rule: The rule dict.
+        extra_keys: Additional keys to include (e.g., ["ref_label", "covered_label"]).
+    
+    Returns:
+        Dict with severity, category, hint, label, and any extra keys.
+    """
+    common_keys = ["severity", "category", "hint", "label"]
+    if extra_keys:
+        common_keys = common_keys + extra_keys
+    return {k: v for k, v in rule.items() if k in common_keys}
+
+
 def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_specs: dict) -> None:
     """Execute declarative semantic rules against a spec.
     
@@ -851,6 +867,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
         severity: "error" (default) | "warning" | "info"
         category: Category name for the finding
         hint: Hint message shown to the user
+        label: Label for error messages
     
     Rule Types:
         non_empty: Check that a field is not empty.
@@ -930,7 +947,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 key,
                 rule.get("id_key", "id"),
                 result,
-                **{k: v for k, v in rule.items() if k in ("label", "category", "hint", "severity")}
+                **_make_rule_kwargs(rule)
             )
         
         elif rule_type == "unique":
@@ -941,7 +958,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
             find_duplicates(
                 values,
                 result=result,
-                **{k: v for k, v in rule.items() if k in ("label", "category", "hint", "severity")}
+                **_make_rule_kwargs(rule)
             )
         
         elif rule_type == "exists":
@@ -963,7 +980,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 key,
                 valid,
                 result,
-                **{k: v for k, v in rule.items() if k in ("label", "ref_label", "category", "hint", "severity")}
+                **_make_rule_kwargs(rule, extra_keys=["ref_label"])
             )
         
         elif rule_type == "no_overlap":
@@ -972,7 +989,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 rule["refs_key"],
                 rule.get("id_key", "id"),
                 result,
-                **{k: v for k, v in rule.items() if k in ("label", "category", "hint", "severity")}
+                **_make_rule_kwargs(rule)
             )
         
         elif rule_type == "item_count":
@@ -983,7 +1000,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 rule.get("compare_mode", 1),
                 rule.get("id_key", "id"),
                 result,
-                **{k: v for k, v in rule.items() if k in ("label", "category", "hint", "severity")}
+                **_make_rule_kwargs(rule)
             )
         
         elif rule_type == "patterns":
@@ -993,14 +1010,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 patterns=rule.get("patterns", []),
                 result=result,
                 id_key=rule.get("id_key", "id"),
-                label=rule.get("label", ""),
-                category=rule.get("category", "pattern_match"),
-                hint=rule.get("hint", ""),
-                match_fn=rule.get("match_fn"),
-                nested_key=rule.get("nested_key"),
-                max_count=rule.get("max_count"),
-                text_keys=rule.get("text_keys"),
-                severity=rule.get("severity", "warning"),
+                **_make_rule_kwargs(rule)
             )
         
         elif rule_type == "coverage":
@@ -1022,7 +1032,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 result,
                 rule.get("covered_label", ""),
                 rule.get("source_label", ""),
-                severity=rule.get("severity", "warning"),
+                **_make_rule_kwargs(rule)
             )
         
         elif rule_type == "orphans":
@@ -1034,7 +1044,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 rule.get("label", ""),
                 rule.get("warning", "isolated"),
                 rule.get("hint", ""),
-                severity=rule.get("severity", "warning"),
+                **_make_rule_kwargs(rule)
             )
 
 
