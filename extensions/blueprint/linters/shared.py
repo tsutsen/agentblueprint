@@ -7,11 +7,60 @@ Issue and LayerResult types. This ensures consistent output across all
 linters, which is critical for agents that parse lint results.
 
 Usage in a linter:
-    from shared import Issue, LayerResult, print_human, print_json_output
+    from shared import Issue, LayerResult, print_human, print_json_output, ID_PATTERNS
 """
 
 import json
+import re
 from dataclasses import dataclass, field
+
+
+# ── Canonical ID patterns (single source of truth) ────────────────────────────
+# All ID format patterns are defined here. Linters must use these instead of
+# hardcoding patterns. If a pattern changes, update it in one place.
+
+ID_PATTERNS = {
+    # GoalSpec
+    "req": {"pattern": r"^REQ-\d{3}$", "example": "REQ-001", "hint": "Format: REQ-NNN (3-digit zero-padded)"},
+    "nfr": {"pattern": r"^NFR-\d{3}$", "example": "NFR-001", "hint": "Format: NFR-NNN (3-digit zero-padded)"},
+    "us": {"pattern": r"^US-\d{3}$", "example": "US-001", "hint": "Format: US-NNN (3-digit zero-padded)"},
+    "sc": {"pattern": r"^SC-\d{3}$", "example": "SC-001", "hint": "Format: SC-NNN (3-digit zero-padded)"},
+    "ng": {"pattern": r"^NG-\d{3}$", "example": "NG-001", "hint": "Format: NG-NNN (3-digit zero-padded)"},
+    # Glossary
+    "gl": {"pattern": r"^GL-\d{3}$", "example": "GL-001", "hint": "Format: GL-NNN (3-digit zero-padded)"},
+    # DesignSpec
+    "dg": {"pattern": r"^DG-\d{3}$", "example": "DG-001", "hint": "Format: DG-NNN (3-digit zero-padded)"},
+    "scr": {"pattern": r"^SCR-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", "example": "SCR-001-landingPage", "hint": "Format: SCR-NNN-name (kebab-case name suffix)"},
+    "dcon": {"pattern": r"^DCON-\d{3}$", "example": "DCON-001", "hint": "Format: DCON-NNN (3-digit zero-padded)"},
+    # ArchitectureSpec
+    "comp": {"pattern": r"^[a-zA-Z][a-zA-Z0-9]*$", "example": "AuthService", "hint": "Format: PascalCase component name"},
+    "con": {"pattern": r"^CON-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", "example": "CON-001-AuthenticationRequired", "hint": "Format: CON-NNN-name (kebab-case name suffix)"},
+    "flw": {"pattern": r"^FLW-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", "example": "FLW-001-sessionCreation", "hint": "Format: FLW-NNN-name (kebab-case name suffix)"},
+    "dfw": {"pattern": r"^[a-z][a-z0-9-]*$", "example": "query-routing-flow", "hint": "Format: kebab-case lowercase"},
+    # DataSpec
+    "ent": {"pattern": r"^[a-zA-Z][a-zA-Z0-9]*$", "example": "User", "hint": "Format: PascalCase entity name"},
+    # ApiSpec
+    "fn": {"pattern": r"^FN-[a-z][A-Za-z0-9]*$", "example": "FN-authenticate", "hint": "Format: FN-lowerCamelCase"},
+    # TestSpec
+    "tst": {"pattern": r"^TST-\d{3}$", "example": "TST-001", "hint": "Format: TST-NNN (3-digit zero-padded)"},
+}
+
+
+def validate_id_format(id_value: str, id_type: str) -> tuple[bool, str]:
+    """Validate an ID against its canonical pattern.
+    
+    Returns (is_valid, error_message).
+    """
+    if id_type not in ID_PATTERNS:
+        return True, ""  # Unknown type, skip validation
+    pattern = ID_PATTERNS[id_type]["pattern"]
+    if re.match(pattern, id_value):
+        return True, ""
+    return False, f"ID '{id_value}' does not follow {ID_PATTERNS[id_type]['hint'].lower()}"
+
+
+# Backwards compatibility alias
+ID_FORMATS = ID_PATTERNS
 
 
 # ── Canonical types ───────────────────────────────────────────────────────────

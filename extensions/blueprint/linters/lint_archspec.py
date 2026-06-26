@@ -27,7 +27,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output
+from shared import Issue, LayerResult, print_human, print_json_output, validate_id_format
 from schema_validator import SchemaValidator
 
 
@@ -181,10 +181,9 @@ def check_data_flows(spec: dict, component_ids: set[str], result: LayerResult):
     # Validate FLW-NNN-name format
     for flow in flows:
         fid = flow.get("id", "")
-        if not re.match(r"^FLW-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", fid):
-            result.add("error", "flw_id_format",
-                f"Flow ID '{fid}' does not follow FLW-NNN-name pattern.",
-                hint="Flow IDs must follow the pattern 'FLW-NNN-flowName', e.g. 'FLW-001-sessionCreationSearchTags'.")
+        valid, msg = validate_id_format(fid, "flw")
+        if not valid:
+            result.add("error", "flw_id_format", msg, hint="Use format FLW-NNN-name (e.g. 'FLW-001-sessionCreation').")
 
     for flow in flows:
         fid = flow["id"]
@@ -212,10 +211,9 @@ def check_constraints(spec: dict, result: LayerResult):
     # Validate CON-NNN-name format
     for con in constraints:
         cid = con.get("id", "")
-        if not re.match(r"^CON-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", cid):
-            result.add("error", "con_id_format",
-                f"Constraint ID '{cid}' does not follow CON-NNN-name pattern.",
-                hint="Constraint IDs must follow the pattern 'CON-NNN-name', e.g. 'CON-001-SystemMustBeImplemented'.")
+        valid, msg = validate_id_format(cid, "con")
+        if not valid:
+            result.add("error", "con_id_format", msg, hint="Use format CON-NNN-name (e.g. 'CON-001-AuthenticationRequired').")
 
     # Implementation smells in constraints
     impl_smells = ["postgres", "mysql", "redis", "sqlite", "mongodb", "fastapi",

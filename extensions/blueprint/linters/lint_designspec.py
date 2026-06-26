@@ -32,7 +32,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output
+from shared import Issue, LayerResult, print_human, print_json_output, validate_id_format
 from schema_validator import SchemaValidator
 
 
@@ -94,10 +94,9 @@ def check_design_goals(spec: dict, result: LayerResult):
     # Validate DG-NNN format
     for g in goals:
         gid = g.get("id", "")
-        if not re.match(r"^DG-\d{3}$", gid):
-            result.add("error", "dg_id_format",
-                f"Design goal ID '{gid}' does not follow DG-NNN pattern.",
-                hint="Design goal IDs must follow the pattern 'DG-NNN', e.g. 'DG-001'.")
+        valid, msg = validate_id_format(gid, "dg")
+        if not valid:
+            result.add("error", "dg_id_format", msg, hint="Use format DG-NNN (e.g. 'DG-001').")
 
     forbidden = ["database", "api", "endpoint", "framework", "library",
                  "class", "function", "sql", "http", "rest", "json"]
@@ -198,10 +197,9 @@ def check_screen_inventory(spec: dict, ia_screen_refs: set[str],
     # Validate SCR-NNN-name format
     for s in screens:
         sid = s.get("id", "")
-        if not re.match(r"^SCR-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", sid):
-            result.add("error", "scr_id_format",
-                f"Screen ID '{sid}' does not follow SCR-NNN-name pattern.",
-                hint="Screen IDs must follow the pattern 'SCR-NNN-screenName', e.g. 'SCR-001-landingPage'.")
+        valid, msg = validate_id_format(sid, "scr")
+        if not valid:
+            result.add("error", "scr_id_format", msg, hint="Use format SCR-NNN-name (e.g. 'SCR-001-landingPage').")
 
     screen_ids = set(ids)
 
