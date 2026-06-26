@@ -305,18 +305,19 @@ def validate_exists(items: list[dict], refs: str | list[str], valid: set[str] | 
                         hint=f"Add '{ref}' to the target spec or correct the reference.")
 
 
-def validate_item_count(items: list[dict], key: str, count_limit: int, id_key: str,
-                        result: "LayerResult", label: str = "", category: str = "count",
-                        hint: str = "") -> None:
+def validate_item_count(items: list[dict], key: str, count: int, compare_mode: int,
+                        id_key: str, result: "LayerResult", label: str = "",
+                        category: str = "count", hint: str = "") -> None:
     """Validate list field counts with flexible comparison.
     
     Args:
         items: List of items to check.
         key: Key in each item that holds the list to check (e.g., "responsibilities").
-        count_limit: Count limit with comparison mode.
-            Positive: warn if count > limit (e.g., 8 means warn if > 8)
-            Zero: warn if count == 0 (must have at least one)
-            Negative: warn if count < abs(limit) (e.g., -1 means warn if < 1)
+        count: Count threshold.
+        compare_mode: Comparison mode.
+            1: warn if count > threshold (n > 8)
+            0: warn if count == threshold (n == 8)
+            -1: warn if count < threshold (n < 8)
         id_key: Key in each item that holds the ID (e.g., "id").
         result: LayerResult to append warnings to.
         label: Label for error messages (e.g., "Component").
@@ -326,20 +327,20 @@ def validate_item_count(items: list[dict], key: str, count_limit: int, id_key: s
     for item in items:
         iid = item.get(id_key, "?")
         refs = item.get(key, [])
-        count = len(refs)
+        n = len(refs)
         
-        if count_limit > 0 and count > count_limit:
+        if compare_mode == 1 and n > count:
             result.add("warning", category,
-                f"{label} '{iid}' has {count} {key} — consider splitting.",
-                hint=hint or f"A {label.lower()} with >{count_limit} {key} may be too complex. Consider splitting.")
-        elif count_limit == 0 and count == 0:
+                f"{label} '{iid}' has {n} {key} — consider splitting.",
+                hint=hint or f"A {label.lower()} with >{count} {key} may be too complex. Consider splitting.")
+        elif compare_mode == 0 and n == count:
             result.add("warning", category,
-                f"{label} '{iid}' has no {key}.",
-                hint=hint or f"A {label.lower()} should have at least one {key}.")
-        elif count_limit < 0 and count < abs(count_limit):
+                f"{label} '{iid}' has exactly {n} {key}.",
+                hint=hint or f"A {label.lower()} should not have exactly {count} {key}.")
+        elif compare_mode == -1 and n < count:
             result.add("warning", category,
-                f"{label} '{iid}' has {count} {key} (minimum {abs(count_limit)}).",
-                hint=hint or f"A {label.lower()} should have at least {abs(count_limit)} {key}.")
+                f"{label} '{iid}' has {n} {key} (minimum {count}).",
+                hint=hint or f"A {label.lower()} should have at least {count} {key}.")
     # Normalize to list of refs and dict of valid sets
     if isinstance(refs, str):
         refs = [refs]

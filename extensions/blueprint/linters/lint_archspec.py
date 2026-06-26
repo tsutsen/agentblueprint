@@ -361,7 +361,7 @@ def check_data_ref_valid(spec: dict, data_spec: Optional[dict], result: LayerRes
 def check_component_responsibility_count(spec: dict, result: LayerResult):
     """Warn if a component has too many responsibilities (>5)."""
     validate_item_count(
-        spec.get("components", []), "responsibilities", 8, "id",
+        spec.get("components", []), "responsibilities", 8, 1, "id",
         result, label="Component", category="component_responsibility_count"
     )
 
@@ -369,7 +369,7 @@ def check_component_responsibility_count(spec: dict, result: LayerResult):
 def check_data_flow_step_count(spec: dict, result: LayerResult):
     """Warn if a data flow has too many steps (>10)."""
     validate_item_count(
-        spec.get("dataFlow", []), "steps", 15, "id",
+        spec.get("dataFlow", []), "steps", 15, 1, "id",
         result, label="Flow", category="flow_step_count"
     )
 
