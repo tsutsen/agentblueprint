@@ -37,7 +37,7 @@ from shared import (
     print_human,
     print_json_output,
     validate_coverage,
-    validate_refs,
+    validate_exists,
     validate_no_overlap,
     validate_non_empty,
     validate_project_and_version,
@@ -286,7 +286,7 @@ def check_req_nfr_refs(spec: dict, goal: Optional[dict], result: LayerResult):
     goal_nfr_ids = {r["id"] for r in goal.get("nonFunctionalRequirements", [])}
     valid_refs = {"reqRefs": goal_req_ids, "nfrRefs": goal_nfr_ids}
 
-    validate_refs(
+    validate_exists(
         spec.get("components", []),
         ["reqRefs", "nfrRefs"],
         valid_refs,
@@ -295,7 +295,7 @@ def check_req_nfr_refs(spec: dict, goal: Optional[dict], result: LayerResult):
         ref_label="GoalSpec requirement",
         category="req_ref_missing"
     )
-    validate_refs(
+    validate_exists(
         spec.get("dataFlow", []),
         ["reqRefs"],
         valid_refs,
@@ -304,7 +304,7 @@ def check_req_nfr_refs(spec: dict, goal: Optional[dict], result: LayerResult):
         ref_label="GoalSpec requirement",
         category="req_ref_missing"
     )
-    validate_refs(
+    validate_exists(
         spec.get("constraints", []),
         ["nfrRefs"],
         valid_refs,

@@ -267,7 +267,7 @@ def validate_no_overlap(items: list[dict], refs_key: str, id_key: str, result: "
                 hint=hint or f"Each {label.lower() or 'item'} should belong to exactly one {label.lower() or 'group'}.")
 
 
-def validate_refs(items: list[dict], refs: str | list[str], valid: set[str] | dict[str, set[str]],
+def validate_exists(items: list[dict], refs: str | list[str], valid: set[str] | dict[str, set[str]],
                   result: "LayerResult", label: str = "", ref_label: str = "",
                   category: str = "missing", hint: str = "") -> None:
     """Validate that items reference values in the valid set(s).
@@ -284,10 +284,10 @@ def validate_refs(items: list[dict], refs: str | list[str], valid: set[str] | di
     
     Examples:
         # Single ref key
-        validate_refs(steps, "dataRef", entity_names, result, "Flow step", "DataSpec entity")
+        validate_exists(steps, "dataRef", entity_names, result, "Flow step", "DataSpec entity")
         
         # Multiple ref keys
-        validate_refs(components, ["reqRefs", "nfrRefs"], {"reqRefs": req_ids, "nfrRefs": nfr_ids}, result, "Component")
+        validate_exists(components, ["reqRefs", "nfrRefs"], {"reqRefs": req_ids, "nfrRefs": nfr_ids}, result, "Component")
     """
     # Normalize to list of refs and dict of valid sets
     if isinstance(refs, str):
