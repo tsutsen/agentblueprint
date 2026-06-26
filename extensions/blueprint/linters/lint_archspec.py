@@ -27,7 +27,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, check_duplicates, find_orphans, validate_coverage, validate_non_empty
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, check_duplicates, find_orphans, validate_coverage, validate_non_empty, validate_no_overlap
 from schema_validator import SchemaValidator
 
 
@@ -259,17 +259,12 @@ def check_subsystem_empty(spec: dict, component_ids: set[str], result: LayerResu
 
 def check_subsystem_overlap(spec: dict, result: LayerResult):
     """Warn if a component is assigned to multiple subsystems."""
-    subsystems = spec.get("overview", {}).get("subsystems", [])
-    comp_to_subs: dict[str, list[str]] = {}
-    for sub in subsystems:
-        for ref in sub.get("componentRefs", []):
-            comp_to_subs.setdefault(ref, []).append(sub["name"])
-    
-    for comp, subs in comp_to_subs.items():
-        if len(subs) > 1:
-            result.add("warning", "subsystem_overlap",
-                f"Component '{comp}' is assigned to multiple subsystems: {', '.join(subs)}.",
-                hint="Each component should belong to exactly one subsystem.")
+    validate_no_overlap(
+        spec.get("overview", {}).get("subsystems", []),
+        "componentRefs", "name",
+        result,
+        label="Subsystem"
+    )
 
 
 def check_data_ref_valid(spec: dict, data_spec: Optional[dict], result: LayerResult):

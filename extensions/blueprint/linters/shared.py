@@ -241,6 +241,32 @@ def validate_non_empty(items: list[dict], key: str, id_key: str, result: "LayerR
                 hint=hint or f"Assign items to this {label.lower() or 'item'} or remove it.")
 
 
+def validate_no_overlap(items: list[dict], refs_key: str, id_key: str, result: "LayerResult",
+                        label: str = "", category: str = "overlap", hint: str = "") -> None:
+    """Warn if an item is assigned to multiple groups.
+    
+    Args:
+        items: List of group items (e.g., subsystems).
+        refs_key: Key in each item that holds the list of refs (e.g., "componentRefs").
+        id_key: Key in each item that holds the group ID/name (e.g., "name").
+        result: LayerResult to append warnings to.
+        label: Label for error messages (e.g., "Subsystem").
+        category: Category for the warning (e.g., "overlap").
+        hint: Custom hint message (default: generic).
+    """
+    item_to_groups: dict[str, list[str]] = {}
+    for item in items:
+        iid = item.get(id_key, "?")
+        for ref in item.get(refs_key, []):
+            item_to_groups.setdefault(ref, []).append(iid)
+    
+    for item, groups in item_to_groups.items():
+        if len(groups) > 1:
+            result.add("warning", category,
+                f"Item '{item}' is assigned to multiple {label.lower() or 'groups'}: {', '.join(groups)}.",
+                hint=hint or f"Each {label.lower() or 'item'} should belong to exactly one {label.lower() or 'group'}.")
+
+
 def extract_ids(items: list, key: str) -> list[str]:
     """Extract a field from a list of dicts."""
     return [item[key] for item in items if key in item]
