@@ -30,12 +30,12 @@ ID_PATTERNS = {
     "gl": {"pattern": r"^GL-\d{3}$", "example": "GL-001", "hint": "Format: GL-NNN (3-digit zero-padded)"},
     # DesignSpec
     "dg": {"pattern": r"^DG-\d{3}$", "example": "DG-001", "hint": "Format: DG-NNN (3-digit zero-padded)"},
-    "scr": {"pattern": r"^SCR-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", "example": "SCR-001-landingPage", "hint": "Format: SCR-NNN-name (kebab-case name suffix)"},
+    "scr": {"pattern": r"^SCR-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "SCR-001-landingPage", "hint": "Format: SCR-NNN-lowerCamelCase"},
     "dcon": {"pattern": r"^DCON-\d{3}$", "example": "DCON-001", "hint": "Format: DCON-NNN (3-digit zero-padded)"},
     # ArchitectureSpec
     "comp": {"pattern": r"^[a-zA-Z][a-zA-Z0-9]*$", "example": "AuthService", "hint": "Format: PascalCase component name"},
-    "con": {"pattern": r"^CON-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", "example": "CON-001-AuthenticationRequired", "hint": "Format: CON-NNN-name (kebab-case name suffix)"},
-    "flw": {"pattern": r"^FLW-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", "example": "FLW-001-sessionCreation", "hint": "Format: FLW-NNN-name (kebab-case name suffix)"},
+    "con": {"pattern": r"^CON-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "CON-001-AuthenticationRequired", "hint": "Format: CON-NNN-PascalCase"},
+    "flw": {"pattern": r"^FLW-\d{3}-[a-z][a-z0-9]*(-[a-z0-9]+)*$", "example": "FLW-001-session-creation", "hint": "Format: FLW-NNN-kebab-case"},
     "dfw": {"pattern": r"^[a-z][a-z0-9-]*$", "example": "query-routing-flow", "hint": "Format: kebab-case lowercase"},
     # DataSpec
     "ent": {"pattern": r"^ENT-\d{3}-[A-Z][A-Za-z0-9]*$", "example": "ENT-001-User", "hint": "Format: ENT-NNN-PascalCase"},
