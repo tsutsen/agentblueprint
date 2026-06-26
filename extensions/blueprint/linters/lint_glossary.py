@@ -88,7 +88,7 @@ def check_gl_ids(glossary: dict, result: LayerResult) -> dict[str, dict]:
         
         # Validate ID format
         if not GL_ID_RE.match(term_id):
-            term_name = entry.get("term", "unknown")
+            term_name = entry.get("name", "unknown")
             result.add("error", "gl_id_format",
                 f"Term '{term_name}': ID '{term_id}' does not match GL-NNN format.",
                 hint="Use GL-NNN format (e.g., GL-001, GL-042).")
@@ -97,7 +97,7 @@ def check_gl_ids(glossary: dict, result: LayerResult) -> dict[str, dict]:
         # Check for duplicate IDs
         if term_id in seen_ids:
             result.add("error", "duplicate_gl_id",
-                f"Duplicate GL-NNN ID '{term_id}' (used by '{seen_ids[term_id].get('term', '?')}').",
+                f"Duplicate GL-NNN ID '{term_id}' (used by '{seen_ids[term_id].get('name', '?')}').",
                 hint="Each term must have a unique GL-NNN identifier.")
             continue
         
@@ -125,7 +125,7 @@ def check_duplicates(glossary: dict, result: LayerResult) -> dict[str, dict]:
     terms = glossary.get("terms", [])
     seen: dict[str, dict] = {}
     for entry in terms:
-        name = entry["term"]
+        name = entry["name"]
         if name in seen:
             result.add("error", "duplicate_term",
                 f"Duplicate term '{name}'.",
@@ -205,11 +205,11 @@ def check_related_terms(gl_id_map: dict[str, dict], result: LayerResult):
         for related in entry.get("relatedTerms", []):
             if not GL_ID_RE.match(related):
                 result.add("error", "related_term_format",
-                    f"Term '{entry['term']}': relatedTerm '{related}' is not a valid GL-NNN ID.",
+                    f"Term '{entry["name"]}': relatedTerm '{related}' is not a valid GL-NNN ID.",
                     hint="Use GL-NNN format (e.g., GL-001, GL-042).")
             elif related not in gl_id_map:
                 result.add("error", "related_term_missing",
-                    f"Term '{entry['term']}': relatedTerm '{related}' not found in glossary.",
+                    f"Term '{entry["name"]}': relatedTerm '{related}' not found in glossary.",
                     hint=f"Add GL-{related.split('-')[1]} as a glossary entry or correct the ID.")
 
 
@@ -219,10 +219,10 @@ def check_synonym_conflicts(gl_id_map: dict[str, dict], result: LayerResult):
         for syn in entry.get("synonyms", []):
             # Check if synonym text matches another term's name
             for other_id, other_entry in gl_id_map.items():
-                if other_id != term_id and syn == other_entry["term"]:
+                if other_id != term_id and syn == other_entry["name"]:
                     result.add("error", "synonym_conflict",
-                        f"Term '{entry['term']}': synonym '{syn}' also has its own glossary entry (GL-{other_id.split('-')[1]}).",
-                        hint=f"Either remove the '{syn}' entry and keep it as a synonym, or remove it from '{entry['term']}' synonyms.")
+                        f"Term '{entry["name"]}': synonym '{syn}' also has its own glossary entry (GL-{other_id.split('-')[1]}).",
+                        hint=f"Either remove the '{syn}' entry and keep it as a synonym, or remove it from '{entry["name"]}' synonyms.")
 
 
 def check_definition_quality(gl_id_map: dict[str, dict], result: LayerResult):
@@ -264,7 +264,7 @@ def check_cross_spec_coverage(
     # Build set of all known names: terms + their synonyms
     known_names: dict[str, str] = {}  # name_lower → canonical term
     for term_id, entry in gl_id_map.items():
-        known_names[entry["term"].lower()] = term_id
+        known_names[entry["name"].lower()] = term_id
         for syn in entry.get("synonyms", []):
             known_names[syn.lower()] = term_id
 
@@ -287,7 +287,7 @@ def check_cross_spec_coverage(
     for term_id in gl_id_map:
         if term_id not in referenced_terms:
             result.add("warning", "term_unused",
-                f"Term '{gl_id_map[term_id]['term']}' (GL-{term_id.split('-')[1]}) is not referenced by any loaded spec.",
+                f"Term '{gl_id_map[term_id]['name']}' (GL-{term_id.split('-')[1]}) is not referenced by any loaded spec.",
                 hint="If this term appears in specs, check spelling. If it's genuinely unused, consider removing it.")
 
 
@@ -322,7 +322,7 @@ def run_lint(
 
     # Structural checks
     gl_id_map = check_gl_ids(glossary, result)
-    term_map = {entry["term"]: entry for entry in gl_id_map.values()} if gl_id_map else {}
+    term_map = {entry["name"]: entry for entry in gl_id_map.values()} if gl_id_map else {}
     if gl_id_map:  # Only run name-based checks if GL-IDs are valid
         check_self_reference(term_map, result)
         check_circular_definitions(term_map, result)

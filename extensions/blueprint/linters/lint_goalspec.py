@@ -292,7 +292,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
     if glossary:
         for t in glossary.get("terms", []):
             gl_ids.add(t["id"])
-            gl_by_term[t["term"].lower()] = t["id"]
+            gl_by_term[t["name"].lower()] = t["id"]
 
     def validate_refs(refs, label, name):
         """Validate that each ref exists in the glossary (if glossary provided)."""

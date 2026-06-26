@@ -779,7 +779,7 @@ def match_glossary_term(name: str, glossary: dict) -> list[str]:
     matches = []
 
     for term in glossary.get("terms", []):
-        term_lower = term["term"].lower()
+        term_lower = term["name"].lower()
         # Exact match
         if name_lower == term_lower:
             return [term["id"]]  # Exact match is definitive
@@ -824,7 +824,7 @@ def check_field_glossary_refs(spec: dict, glossary: Optional[dict], result: Laye
         return
 
     # Build glossary term set for matching
-    glossary_lower = {t["term"].lower(): t["id"] for t in glossary.get("terms", [])}
+    glossary_lower = {t["name"].lower(): t["id"] for t in glossary.get("terms", [])}
 
     for entity in spec.get("entities", []):
         for field in entity.get("fields", []):
