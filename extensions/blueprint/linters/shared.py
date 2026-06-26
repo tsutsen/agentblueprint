@@ -289,6 +289,31 @@ def validate_exists(items: list[dict], key: str, valid: set[str], result: "Layer
                 hint=hint or f"Add '{ref}' to {ref_label} or correct the reference.")
 
 
+def validate_refs(items: list[dict], refs_keys: list[str], valid: dict[str, set[str]],
+                  result: "LayerResult", label: str = "", ref_label: str = "",
+                  category: str = "missing", hint: str = "") -> None:
+    """Validate multiple ref keys in items against valid sets.
+    
+    Args:
+        items: List of items to check.
+        refs_keys: List of keys in each item that hold refs (e.g., ["reqRefs", "nfrRefs"]).
+        valid: Dict mapping ref keys to valid sets (e.g., {"reqRefs": req_ids, "nfrRefs": nfr_ids}).
+        result: LayerResult to append warnings to.
+        label: Label for error messages (e.g., "Component").
+        ref_label: Label for the reference type (e.g., "GoalSpec FR").
+        category: Category for the warning (e.g., "req_ref_missing").
+        hint: Custom hint message (default: generic).
+    """
+    for item in items:
+        iid = item.get("id", "?")
+        for refs_key in refs_keys:
+            for ref in item.get(refs_key, []):
+                if ref not in valid.get(refs_key, set()):
+                    result.add("error", category,
+                        f"{label} '{iid}': {refs_key} ref '{ref}' not found.",
+                        hint=f"Add '{ref}' to the target spec or correct the reference.")
+
+
 def extract_ids(items: list, key: str) -> list[str]:
     """Extract a field from a list of dicts."""
     return [item[key] for item in items if key in item]
