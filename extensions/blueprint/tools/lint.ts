@@ -15,14 +15,12 @@ export function registerLint(pi: ExtensionAPI, extDir: string) {
       'mode: "assess" (default) — runs linter, interprets results, returns "block" or "proceed". ' +
       'mode: "raw" — returns raw JSON report.',
     parameters: Type.Object({
-      artifacts: Type.Optional(
-        Type.Array(Type.String(), {
-          description:
-            "Optional filter: only lint these artifact types. " +
-            "e.g. ['goal', 'design', 'arch']. Without this, lints all available artifacts.",
-        }),
-      ),
-      mode: Type.Optional(Type.String({
+      artifacts: Type.Optional(Type.Array(Type.String(), {
+        description: "Optional filter: only lint these artifact types. " +
+          "Valid values: goal, glossary, design, arch, data, api, test. " +
+          "e.g. ['goal', 'design', 'arch']. Without this, lints all available artifacts.",
+      })),
+      mode: Type.Optional(Type.Enum({ assess: "assess", raw: "raw" }, {
         description: 'Output mode: "assess" (default, decision-making) or "raw" (raw JSON report).',
         default: "assess",
       })),
@@ -157,7 +155,7 @@ export function registerLint(pi: ExtensionAPI, extDir: string) {
           },
         };
       } catch (err: any) {
-        const message = err.stdout || err.stderr || err.message;
+        const message = err.stderr || err.stdout || err.message;
         return {
           content: [{ type: "text", text: `Lint failed:\n${message}` }],
           details: { verified: false },
