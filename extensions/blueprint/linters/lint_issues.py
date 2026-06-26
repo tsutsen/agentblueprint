@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from shared import BaseLinter, Issue, LayerResult, print_human, print_json_output
-from json_validators.schema_validator import SchemaValidator
+from .lint_schemas import SchemaValidator
 
 
 @dataclass

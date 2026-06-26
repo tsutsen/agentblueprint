@@ -1090,7 +1090,7 @@ class BaseLinter:
         if not self.schema_path:
             return
         schema = json.loads(self.schema_path.read_text())
-        from json_validators.schema_validator import SchemaValidator
+        from .lint_schemas import SchemaValidator
         for issue in SchemaValidator(schema).validate(self.spec):
             self.result.add(issue.severity, issue.category, issue.message, issue.hint)
     
