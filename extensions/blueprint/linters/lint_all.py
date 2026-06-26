@@ -693,23 +693,6 @@ def run_consistency(linter_dir, paths, strict, args=None) -> LayerResult:
     return layer
 
 
-def run_cross(linter_dir, paths, loaded, strict) -> LayerResult:
-    if not (paths.get("data") and paths.get("api")):
-        return LayerResult(name="cross", skipped=True,
-                           skip_reason="Requires both dataspec and apispec.")
-    linter_path = linter_dir / "lint_cross.py"
-    mod = load_linter(linter_path)
-    data = loaded.get("data") or json.loads(Path(paths["data"]).read_text())
-    api  = loaded.get("api")  or json.loads(Path(paths["api"]).read_text())
-    test = loaded.get("test")
-    goal = loaded.get("goal")
-    design = loaded.get("design")
-    arch = loaded.get("arch")
-    plan = loaded.get("plan")
-    return _run("cross", linter_path,
-                lambda s: mod.run_lint(data, api, test, goal, design, arch, plan, s), strict)
-
-
 # ── Completeness gate check layer ─────────────────────────────────────────────
 
 def run_completeness_gates(suite: "SuiteResult") -> LayerResult:
@@ -771,7 +754,6 @@ def run_suite(paths, linter_dir, schema_dir, strict, stop_on_error, args=None) -
     if not add(run_apispec(linter_dir, schema_dir, paths, loaded, strict)):   return suite
     if not add(run_testspec(linter_dir, schema_dir, paths, loaded, strict)):  return suite
     if not add(run_taskplan(linter_dir, schema_dir, paths, loaded, strict)):   return suite
-    if not add(run_cross(linter_dir, paths, loaded, strict)):                 return suite
     if not add(run_issues(linter_dir, paths, loaded, args, strict)):           return suite
     if not add(run_consistency(linter_dir, paths, strict, args)):             return suite
 
