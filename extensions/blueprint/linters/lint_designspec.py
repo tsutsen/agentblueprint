@@ -367,71 +367,6 @@ def check_screens_reachable(spec: dict, screen_ids: set[str], result: LayerResul
                 hint="Add a journey step that passes through this screen, or reconsider whether it is needed.")
 
 
-def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResult):
-    """Check that personas, screens, components, and journey steps link to glossary terms.
-
-    Severity levels:
-      - Error: glossary provided but ref doesn't exist in it
-      - Warning: field has no glossaryRefs
-    """
-    gl_ids = set()
-    gl_by_term = {}  # term_lower -> id
-    if glossary:
-        for t in glossary.get("terms", []):
-            gl_ids.add(t["id"])
-            gl_by_term[t["term"].lower()] = t["id"]
-        for ref in refs:
-            if gl_ids and ref not in gl_ids:
-                result.add("error", "glossary_ref_missing",
-                    f"{label} '{name}': glossaryRef '{ref}' not found in Glossary.",
-                    hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
-
-    # ── Personas[].role → glossaryRefs ────────────────────────────────
-    for persona in spec.get("personas", []):
-        pid = persona["id"]
-        refs = persona.get("glossaryRefs", [])
-        if not refs:
-            result.add("warning", "persona_no_glossary_refs",
-                f"Persona '{pid}': no glossaryRefs — role '{persona['role']}' not linked to glossary.",
-                hint="Add glossaryRefs (GL-NNN) for the actor role this persona represents.")
-        validate_glossary_refs(refs, f"Persona {pid}", pid, gl_ids, result)
-
-    # ── ScreenInventory[].purpose → glossaryRefs ──────────────────────
-    for screen in spec.get("screenInventory", []):
-        sid = screen["id"]
-        refs = screen.get("glossaryRefs", [])
-        if not refs:
-            result.add("warning", "screen_no_glossary_refs",
-                f"Screen '{sid}': no glossaryRefs — purpose not linked to glossary.",
-                hint="Add glossaryRefs (GL-NNN) for domain concepts in the screen's purpose.")
-        validate_glossary_refs(refs, f"Screen {sid}", sid, gl_ids, result)
-
-    # ── ScreenSpecs[].components[].purpose → glossaryRefs ─────────────
-    for ss in spec.get("screenSpecs", []):
-        screen_ref = ss["screenRef"]
-        for comp in ss.get("components", []):
-            cname = comp["name"]
-            refs = comp.get("glossaryRefs", [])
-            if not refs:
-                result.add("warning", "component_no_glossary_refs",
-                    f"Screen '{screen_ref}' component '{cname}': no glossaryRefs — purpose not linked to glossary.",
-                    hint="Add glossaryRefs (GL-NNN) for domain concepts in the component's purpose.")
-            validate_glossary_refs(refs, f"Component '{cname}' in {screen_ref}", cname, gl_ids, result)
-
-    # ── UserJourneys[].steps[].action → glossaryRefs ──────────────────
-    for journey in spec.get("userJourneys", []):
-        jid = journey["id"]
-        for i, step in enumerate(journey.get("steps", [])):
-            action = step.get("action", "")[:50]
-            refs = step.get("glossaryRefs", [])
-            if not refs:
-                result.add("warning", "journey_step_no_glossary_refs",
-                    f"{jid} step {i+1} ({step['actor']}): '{action}...' has no glossaryRefs.",
-                    hint="Add glossaryRefs (GL-NNN) for domain concepts in this step's action.")
-            validate_glossary_refs(refs, f"Journey step {jid}:{i+1}", f"{jid}:{i+1}", gl_ids, result)
-
-
-# ── Runner ────────────────────────────────────────────────────────────────────
 
 def run_lint(spec: dict, schema_path: Optional[Path],
              goal: Optional[dict], strict: bool,
@@ -470,7 +405,10 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     check_us_journey_coverage(goal, covered_us_ids, result)
     check_screens_reachable(spec, screen_ids, result)
     check_forbidden_content(spec, result)
-    check_glossary_refs(spec, glossary, result)
+    check_glossary_refs_batch(spec, glossary, result, [
+            ("personas", "Persona", "glossaryRefs"),
+            ("screenInventory", "Screen", "glossaryRefs"),
+        ])
 
     if strict:
         for w in result.warnings:

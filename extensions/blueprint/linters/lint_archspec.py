@@ -503,41 +503,6 @@ def check_cross_spec_versions(spec: dict, data_spec: Optional[dict], api_spec: O
                 hint="Update apiSpecVersion to match the ApiSpec's version.")
 
 
-def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResult):
-    """Warn if components/flows/constraints have no glossaryRefs.
-    If a glossary is provided, also validate that refs point to valid GL-NNN IDs."""
-    gl_ids = set()
-    if glossary:
-        gl_ids = {t["id"] for t in glossary.get("terms", [])}
-        
-    # Warn: components with no glossaryRefs at all
-    for comp in spec.get("components", []):
-        refs = comp.get("glossaryRefs", [])
-        if not refs:
-            result.add("warning", "glossary_ref_missing_component",
-                f"Component '{comp['id']}' has no glossaryRefs.",
-                hint="Link this component's key concepts to glossary entries (GL-NNN) for cross-spec traceability.")
-        validate_glossary_refs(refs, "Component", comp["id"], gl_ids, result)
-    
-    # Warn: flows with no glossaryRefs at all
-    for flow in spec.get("dataFlow", []):
-        refs = flow.get("glossaryRefs", [])
-        if not refs:
-            result.add("warning", "glossary_ref_missing_flow",
-                f"Flow '{flow['id']}' has no glossaryRefs.",
-                hint="Link this flow's data entities to glossary entries (GL-NNN) for cross-spec traceability.")
-        validate_glossary_refs(refs, "Flow", flow["id"], gl_ids, result)
-    
-    # Warn: constraints with no glossaryRefs at all
-    for con in spec.get("constraints", []):
-        refs = con.get("glossaryRefs", [])
-        if not refs:
-            result.add("warning", "glossary_ref_missing_constraint",
-                f"Constraint '{con['id']}' has no glossaryRefs.",
-                hint="Link this constraint's key concepts to glossary entries (GL-NNN) for cross-spec traceability.")
-        validate_glossary_refs(refs, "Constraint", con["id"], gl_ids, result)
-
-# ── Runner ────────────────────────────────────────────────────────────────────
 
 def run_lint(spec: dict, schema_path: Optional[Path],
              goal: Optional[dict], strict: bool,
@@ -580,7 +545,11 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     check_inline_req_refs_in_responsibilities(spec, result)
     check_components_in_data_flows(spec, result)
     check_cross_spec_versions(spec, data_spec, api_spec, result)
-    check_glossary_refs(spec, glossary, result)
+    check_glossary_refs_batch(spec, glossary, result, [
+            ("components", "Component", "glossaryRefs"),
+            ("dataFlow", "Flow", "glossaryRefs"),
+            ("constraints", "Constraint", "glossaryRefs"),
+        ])
 
     if strict:
         for w in result.warnings:

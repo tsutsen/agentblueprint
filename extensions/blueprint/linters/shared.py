@@ -198,6 +198,42 @@ def validate_glossary_refs(refs: list, label: str, name: str, gl_ids: set,
     return True
 
 
+def check_glossary_refs_batch(spec: dict, glossary: dict, result: "LayerResult",
+                              checks: list[tuple[str, str, str]]) -> None:
+    """Check glossary refs for multiple fields in a spec.
+    
+    Args:
+        spec: The spec dict.
+        glossary: The Glossary dict (or None).
+        result: LayerResult to append errors/warnings to.
+        checks: List of (field_name, label, item_key) tuples.
+            field_name: The field in spec containing items.
+            label: Label for error messages.
+            item_key: Key in each item that holds the refs list.
+    
+    Example:
+        check_glossary_refs_batch(spec, glossary, result, [
+            ("components", "Component", "glossaryRefs"),
+            ("dataFlow", "Flow", "glossaryRefs"),
+        ])
+    """
+    gl_ids = set()
+    if glossary:
+        gl_ids = {t["id"] for t in glossary.get("terms", [])}
+    
+    for field_name, label, item_key in checks:
+        items = spec.get(field_name, [])
+        for item in items:
+            item_id = item.get("id", item.get("screenRef", "?"))
+            refs = item.get(item_key, [])
+            if not refs:
+                result.add("warning", "glossary_ref_missing",
+                    f"{label} '{item_id}': no glossaryRefs.",
+                    hint=f"Add glossaryRefs (GL-NNN) for domain concepts.")
+            else:
+                validate_glossary_refs(refs, label, item_id, gl_ids, result)
+
+
 # Backwards compatibility alias
 ID_FORMATS = ID_PATTERNS
 
