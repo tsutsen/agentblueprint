@@ -24,7 +24,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, check_duplicates
 from schema_validator import SchemaValidator
 
 
@@ -37,15 +37,6 @@ def numeric(id_str: str) -> int:
     """Extract the numeric part from REQ-001, NFR-002, etc."""
     m = re.search(r"(\d+)$", id_str)
     return int(m.group(1)) if m else -1
-
-def check_duplicates(ids: list[str], label: str, result: LayerResult):
-    seen = set()
-    for id_ in ids:
-        if id_ in seen:
-            result.add("error", "duplicate_id",
-                f"Duplicate {label} id '{id_}'.",
-                hint=f"Each {label} must have a unique identifier.")
-        seen.add(id_)
 
 def check_sequential(ids: list[str], label: str, result: LayerResult):
     """Warn when IDs skip numbers, e.g. REQ-001, REQ-003 (missing REQ-002)."""

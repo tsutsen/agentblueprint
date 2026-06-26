@@ -26,7 +26,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional, Set
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, check_duplicates
 from schema_validator import SchemaValidator
 
 
@@ -34,15 +34,6 @@ from schema_validator import SchemaValidator
 
 def extract_ids(items: list, key: str) -> list[str]:
     return [item[key] for item in items if key in item]
-
-def check_duplicates(ids: list[str], label: str, result: LayerResult):
-    seen = set()
-    for id_ in ids:
-        if id_ in seen:
-            result.add("error", "duplicate_id",
-                f"Duplicate {label} name '{id_}'.",
-                hint=f"Each {label} must have a unique name.")
-        seen.add(id_)
 
 
 # ── Semantic checks ───────────────────────────────────────────────────────────

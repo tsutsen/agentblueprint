@@ -32,20 +32,11 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, check_duplicates
 from schema_validator import SchemaValidator
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
-
-def check_duplicates(ids: list[str], label: str, result: LayerResult):
-    seen = set()
-    for id_ in ids:
-        if id_ in seen:
-            result.add("error", "duplicate_id",
-                f"Duplicate {label} id '{id_}'.",
-                hint=f"Each {label} must have a unique identifier.")
-        seen.add(id_)
 
 
 def collect_ia_screen_refs(nodes: list) -> set[str]:

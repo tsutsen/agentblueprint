@@ -117,6 +117,23 @@ def validate_spec_ids(spec: dict, id_map: dict[str, str],
             validate_ids(items, "id", id_type, f"{field_name}_id_format", result)
 
 
+def check_duplicates(ids: list[str], label: str, result: "LayerResult") -> None:
+    """Check for duplicate IDs in a list.
+    
+    Args:
+        ids: List of ID strings.
+        label: Label for the error message (e.g. "component", "REQ").
+        result: LayerResult to append errors to.
+    """
+    seen = set()
+    for id_ in ids:
+        if id_ in seen:
+            result.add("error", "duplicate_id",
+                f"Duplicate {label} id '{id_}'.",
+                hint=f"Each {label} must have a unique identifier.")
+        seen.add(id_)
+
+
 # Backwards compatibility alias
 ID_FORMATS = ID_PATTERNS
 
