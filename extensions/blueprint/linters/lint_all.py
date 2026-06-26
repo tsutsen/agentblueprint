@@ -14,8 +14,8 @@ Dependency order:
   6. apispec     (schema validation + cross-check with dataspec)
   7. testspec    (← apispec, dataspec)
   8. taskplan    (← all prior specs)
-  9. cross       (dataspec ↔ apispec ↔ testspec)
- 10. issues     (← taskplan, requires --epic)
+  9. issues      (← taskplan, requires --epic)
+ 10. consistency (Markdown/JSON consistency)
  11. completeness (← all layers)
 
 Completeness gates:

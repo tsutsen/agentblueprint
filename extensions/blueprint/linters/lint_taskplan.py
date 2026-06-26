@@ -23,27 +23,6 @@ from typing import Optional
 from shared import BaseLinter, LayerResult, validate_spec_ids
 
 
-class TaskPlanLinter(BaseLinter):
-    """Linter for TaskPlan artifacts."""
-    
-    SPEC_NAME = "taskplan"
-    SEMANTIC_RULES = []
-    MISC_CHECKS = [
-        ("requirement_coverage", _check_requirement_coverage),
-        ("epic_coverage", _check_epic_coverage),
-        ("non_goal_check", _check_non_goal_check),
-        ("dependency_order", _check_dependency_order),
-        ("milestone_outcomes", _check_milestone_outcomes),
-        ("epic_milestone_assignment", _check_epic_milestone_assignment),
-        ("req_id_reference", _check_req_id_reference),
-    ]
-    CROSS_SPEC_DEPS = ["goal"]
-    GLOSSARY_CHECKS = [
-        ("Epic", "glossaryRefs", "epics"),
-        ("Milestone", "glossaryRefs", "milestones"),
-    ]
-
-
 def _check_requirement_coverage(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
     """Check that every GoalSpec requirement appears in at least one epic's coverage list."""
     goal = extra_specs.get("goal")
@@ -155,8 +134,32 @@ def _check_req_id_reference(spec: dict, result: LayerResult, extra_specs: dict =
 # Uses shared.print_human and shared.print_json_output
 
 
+class TaskPlanLinter(BaseLinter):
+    """Linter for TaskPlan artifacts."""
+    
+    SPEC_NAME = "taskplan"
+    SEMANTIC_RULES = []
+    MISC_CHECKS = [
+        ("requirement_coverage", _check_requirement_coverage),
+        ("epic_coverage", _check_epic_coverage),
+        ("non_goal_check", _check_non_goal_check),
+        ("dependency_order", _check_dependency_order),
+        ("milestone_outcomes", _check_milestone_outcomes),
+        ("epic_milestone_assignment", _check_epic_milestone_assignment),
+        ("req_id_reference", _check_req_id_reference),
+    ]
+    CROSS_SPEC_DEPS = ["goal"]
+    GLOSSARY_CHECKS = [
+        ("Epic", "glossaryRefs", "epics"),
+        ("Milestone", "glossaryRefs", "milestones"),
+    ]
+
+
 def run_lint(spec: dict, schema_path: Optional[Path],
-             goal: Optional[dict], strict: bool) -> LayerResult:
+             goal: Optional[dict] = None, design: Optional[dict] = None,
+             arch: Optional[dict] = None, data: Optional[dict] = None,
+             api: Optional[dict] = None, test: Optional[dict] = None,
+             glossary: Optional[dict] = None, strict: bool = False) -> LayerResult:
     """Backward-compatible entry point for lint_all.py."""
     linter = TaskPlanLinter(spec, schema_path, strict)
     return linter.run(goal=goal)
