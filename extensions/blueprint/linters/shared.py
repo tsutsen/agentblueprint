@@ -83,13 +83,13 @@ class PatternsRule(_TargetRuleBase):
 
 
 class CoverageRule(TypedDict, total=False):
-    """Check that covered items are referenced by covering items.
+    """Check that target items reference all items in should_cover_all.
 
-    covering path includes the ref field: "overview.subsystems.componentRefs"
+    target path includes the ref field: "overview.subsystems.componentRefs"
     """
     type: Literal["coverage"]
-    covered: str
-    covering: str
+    target: str
+    should_cover_all: str
     severity: str
     category: str
     hint: str
@@ -1361,26 +1361,25 @@ def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None
                 result.add(severity, category, msg, hint=hint or f"Review {label.lower()} for {category}.")
 
 
-def handle_coverage(resolved_covered: Resolved, resolved_covering: Resolved, rule: dict, result: LayerResult) -> None:
-    """Check that covered items are referenced by covering items.
+def handle_coverage(resolved_should_cover_all: Resolved, resolved_target: Resolved, rule: dict, result: LayerResult) -> None:
+    """Check that target items reference all items in should_cover_all.
 
-    covering path includes the ref field: "overview.subsystems.componentRefs"
-    This resolves to a flat list of all reference values.
+    target path includes the ref field: "overview.subsystems.componentRefs"
     """
     severity = rule.get("severity", "warning")
     category = rule.get("category", "uncovered")
     hint_template = rule.get("hint")
-    covered_label = rule.get("covered_label", resolved_covered.parent_label)
+    covered_label = rule.get("covered_label", resolved_should_cover_all.parent_label)
     source_label = rule.get("source_label", "source")
 
-    # Collect refs from covering path (already flat list of ref values)
+    # Collect refs from target path (already flat list of ref values)
     covered_refs = set()
-    for item in resolved_covering.values:
+    for item in resolved_target.values:
         for ref in _normalize_ref(item):
             covered_refs.add(ref)
 
     # Find uncovered items
-    covered_items = resolved_covered.values
+    covered_items = resolved_should_cover_all.values
     for item in covered_items:
         iid = item.get("id", str(item)) if isinstance(item, dict) else str(item)
         desc = item.get("description", "") if isinstance(item, dict) else ""
@@ -1456,7 +1455,7 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
     "no_overlap": ["target"],
     "item_count": ["target", "count"],
     "patterns":   ["target", "patterns"],
-    "coverage":   ["covered", "covering"],
+    "coverage":   ["target", "should_cover_all"],
     "orphans":    ["target", "deps_field"],
 }
 
@@ -1471,7 +1470,7 @@ _KNOWN_FIELDS: dict[str, set[str]] = {
                    "label", "category", "severity", "hint"},
     "patterns":   {"type", "target", "patterns", "negate", "extra_keys", "max_count",
                    "label", "category", "severity", "hint"},
-    "coverage":   {"type", "covered", "covering", "covered_label", "source_label",
+    "coverage":   {"type", "target", "should_cover_all", "covered_label", "source_label",
                    "severity", "category", "hint"},
     "orphans":    {"type", "target", "deps_field", "id_field", "warning",
                    "label", "severity", "hint"},
@@ -1532,9 +1531,9 @@ def _run_new_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_
 
         try:
             if handler.needs_coverage:
-                covered = resolve_path(rule["covered"], spec, extra_specs)
-                covering = resolve_path(rule["covering"], spec, extra_specs)
-                handle_coverage(covered, covering, rule, result)
+                should_cover_all = resolve_path(rule["should_cover_all"], spec, extra_specs)
+                resolved = resolve_path(rule["target"], spec, extra_specs)
+                handle_coverage(should_cover_all, resolved, rule, result)
             elif handler.needs_orphans:
                 resolved = resolve_path(rule["target"], spec, extra_specs)
                 handle_orphans(resolved, rule, result)
@@ -1555,7 +1554,7 @@ def _run_new_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_
                     handler.func(resolved, rule, result)
         except Exception as e:
             result.add("error", "rule_bug",
-                f"Rule '{rule_type}' ({rule.get('target', rule.get('covered', '?'))}): {e}")
+                f"Rule '{rule_type}' ({rule.get('target', '?')}): {e}")
 
 
 def _make_rule_kwargs(rule: dict, extra_keys: list[str] = None) -> dict:
@@ -1578,7 +1577,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
     Routes new-format rules (with 'target') to the path-based dispatcher,
     and falls back to the legacy dispatcher for old-format rules (with 'section').
     """
-    new_rules = [r for r in rules if "target" in r or "covered" in r]
+    new_rules = [r for r in rules if "target" in r or "should_cover_all" in r]
     old_rules = [r for r in rules if "section" in r or "key" in r]
 
     if new_rules:

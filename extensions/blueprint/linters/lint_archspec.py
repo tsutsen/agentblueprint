@@ -63,8 +63,8 @@ SEMANTIC_RULES = [
     # Components not assigned to any subsystem
     {
         "type": "coverage",
-        "covered": "components",
-        "covering": "overview.subsystems.componentRefs",
+        "target": "overview.subsystems.componentRefs",
+        "should_cover_all": "components",
         "covered_label": "Component",
         "source_label": "Subsystem",
     },
@@ -174,16 +174,16 @@ SEMANTIC_RULES = [
     # GoalSpec FRs must be covered by components
     {
         "type": "coverage",
-        "covered": "goal:functionalRequirements",
-        "covering": "components.reqRefs",
+        "target": "components.reqRefs",
+        "should_cover_all": "goal:functionalRequirements",
         "covered_label": "GoalSpec FR",
         "source_label": "component",
     },
     # GoalSpec NFRs must be covered by components or constraints
     {
         "type": "coverage",
-        "covered": "goal:nonFunctionalRequirements",
-        "covering": "components.nfrRefs",
+        "target": "components.nfrRefs",
+        "should_cover_all": "goal:nonFunctionalRequirements",
         "covered_label": "GoalSpec NFR",
         "source_label": "component",
     },

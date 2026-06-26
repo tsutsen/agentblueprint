@@ -124,8 +124,8 @@ SEMANTIC_RULES = [
     # User stories must be covered by journeys
     {
         "type": "coverage",
-        "covered": "goal:userStories",
-        "covering": "userJourneys.usRefs",
+        "target": "userJourneys.usRefs",
+        "should_cover_all": "goal:userStories",
         "covered_label": "GoalSpec US",
         "source_label": "user journey",
     },

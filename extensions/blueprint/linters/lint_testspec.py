@@ -328,8 +328,8 @@ SEMANTIC_RULES = [
     # Every ApiSpec function must have tests
     {
         "type": "coverage",
-        "covered": "api:functions",
-        "covering": "tests.fnRef",
+        "target": "tests.fnRef",
+        "should_cover_all": "api:functions",
         "covered_label": "ApiSpec function",
         "source_label": "Test",
         "category": "function_untested",
