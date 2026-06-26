@@ -100,17 +100,16 @@ class CoverageRule(TypedDict, total=False):
 
 
 class OrphansRule(TypedDict, total=False):
-    """Check for isolated items (no deps, no dependents).
+    """Check for isolated items (no *Refs outgoing, no *Refs incoming).
 
+    Auto-discovers all *Refs/*Ref fields — no deps_field needed.
     Note: uses 'warning' as the category field name (not 'category').
     """
     type: Literal["orphans"]
     target: str
-    deps_field: str
     severity: str
     label: str
     hint: str
-    id_field: str
     warning: str
 
 
@@ -1395,33 +1394,44 @@ def handle_coverage(resolved_should_cover_all: Resolved, resolved_target: Resolv
 
 
 def handle_orphans(resolved: Resolved, rule: dict, result: LayerResult) -> None:
-    """Warn if items are isolated (no dependencies and no dependents)."""
+    """Warn if items are isolated (no *Refs outgoing, no *Refs incoming).
+
+    Auto-discovers all *Refs fields on items — no deps_field needed.
+    """
     severity = rule.get("severity", "warning")
     label = rule.get("label", resolved.parent_label)
     warning = rule.get("warning", "isolated")
     hint = rule.get("hint", "")
-    deps_field = rule.get("deps_field", "dependencies")
-    id_field = rule.get("id_field", "id")
 
     items = resolved.values
     if not items:
         return
 
-    item_ids = {item.get(id_field, "") for item in items if isinstance(item, dict)}
-    depended_upon = set()
+    # Discover all *Refs fields from the items
+    ref_fields = set()
+    for item in items:
+        if isinstance(item, dict):
+            for key in item:
+                if key.endswith("Refs") or key.endswith("Ref"):
+                    ref_fields.add(key)
+
+    # Collect all IDs referenced by any *Refs field
+    referenced_ids = set()
     for item in items:
         if not isinstance(item, dict):
             continue
-        for dep in item.get(deps_field, []):
-            depended_upon.add(dep)
+        for field in ref_fields:
+            for ref in _normalize_ref(item.get(field)):
+                referenced_ids.add(ref)
 
     for item in items:
         if not isinstance(item, dict):
             continue
-        iid = item.get(id_field, "")
-        has_deps = len(item.get(deps_field, [])) > 0
-        is_depended_on = iid in depended_upon
-        if not has_deps and not is_depended_on:
+        iid = item.get("id", "")
+        # Check if this item references anything via any *Refs field
+        has_outgoing = any(item.get(f) for f in ref_fields)
+        is_referenced = iid in referenced_ids
+        if not has_outgoing and not is_referenced:
             result.add(severity, warning,
                 f"{label} '{iid}' is isolated: no dependencies and no dependents.",
                 hint=hint or f"An isolated {label.lower()} may indicate a design issue.")
@@ -1458,7 +1468,7 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
     "item_count": ["target", "count"],
     "patterns":   ["target", "patterns"],
     "coverage":   ["target", "should_cover_all"],
-    "orphans":    ["target", "deps_field"],
+    "orphans":    ["target"],
 }
 
 # Known fields per rule type (for detecting typos — includes 'type' itself)
@@ -1474,7 +1484,7 @@ _KNOWN_FIELDS: dict[str, set[str]] = {
                    "label", "category", "severity", "hint"},
     "coverage":   {"type", "target", "should_cover_all", "covered_label", "source_label",
                    "severity", "category", "hint"},
-    "orphans":    {"type", "target", "deps_field", "id_field", "warning",
+    "orphans":    {"type", "target", "warning",
                    "label", "severity", "hint"},
 }
 

@@ -166,7 +166,6 @@ SEMANTIC_RULES = [
     {
         "type": "orphans",
         "target": "components",
-        "deps_field": "dependencies",
         "label": "Component",
         "warning": "isolated",
         "hint": "An isolated component may indicate a design issue.",
