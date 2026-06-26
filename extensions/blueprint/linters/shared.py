@@ -124,6 +124,30 @@ def check_duplicates(ids: list[str], label: str, result: "LayerResult") -> None:
         seen.add(id_)
 
 
+def _extract_num(id_str: str) -> int:
+    """Extract the numeric part from REQ-001, NFR-002, etc."""
+    m = re.search(r"(\d+)$", id_str)
+    return int(m.group(1)) if m else -1
+
+
+def check_sequential(ids: list[str], label: str, result: "LayerResult") -> None:
+    """Warn when IDs skip numbers, e.g. REQ-001, REQ-003 (missing REQ-002).
+    
+    Args:
+        ids: List of ID strings.
+        label: Label for the warning message (e.g. "REQ", "US").
+        result: LayerResult to append warnings to.
+    """
+    nums = sorted([_extract_num(i) for i in ids])
+    for i, n in enumerate(nums):
+        expected = i + 1
+        if n != expected:
+            result.add("warning", "id_gap",
+                f"{label} numbering skips from {expected-1:03d} to {n:03d}.",
+                hint=f"Consider renumbering to keep {label} IDs sequential.")
+            break  # report first gap only
+
+
 # Backwards compatibility alias
 ID_FORMATS = ID_PATTERNS
 

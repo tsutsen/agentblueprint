@@ -24,7 +24,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, check_duplicates
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, check_duplicates, check_sequential
 from schema_validator import SchemaValidator
 
 
@@ -32,23 +32,6 @@ from schema_validator import SchemaValidator
 
 def extract_ids(items: list, key: str) -> list[str]:
     return [item[key] for item in items if key in item]
-
-def numeric(id_str: str) -> int:
-    """Extract the numeric part from REQ-001, NFR-002, etc."""
-    m = re.search(r"(\d+)$", id_str)
-    return int(m.group(1)) if m else -1
-
-def check_sequential(ids: list[str], label: str, result: LayerResult):
-    """Warn when IDs skip numbers, e.g. REQ-001, REQ-003 (missing REQ-002)."""
-    nums = sorted([numeric(i) for i in ids])
-    for i, n in enumerate(nums):
-        expected = i + 1
-        if n != expected:
-            result.add("warning", "id_gap",
-                f"{label} numbering skips from {expected-1:03d} to {n:03d}.",
-                hint=f"Consider renumbering to keep {label} IDs sequential.")
-            break  # report first gap only
-
 
 # ── Semantic checks ───────────────────────────────────────────────────────────
 
