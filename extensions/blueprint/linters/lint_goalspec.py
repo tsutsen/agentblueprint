@@ -279,12 +279,12 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
     sc_covered_reqs = check_success_criteria(spec, req_ids, nfr_ids, result)
     check_coverage(spec, req_ids, story_req_refs, sc_covered_reqs, result)
     check_non_goals(spec, result)
-    validate_glossary_refs(spec, glossary, result, [
-            ("functionalRequirements", "FR", "glossaryRefs"),
-            ("userStories", "US", "glossaryRefs"),
-            ("nonGoals", "Non-goal", "glossaryRefs"),
-            ("nonFunctionalRequirements", "NFR", "glossaryRefs"),
-        ])
+    validate_glossary_refs(glossary, result, [
+                ("FR", "glossaryRefs", spec.get("functionalRequirements", [])),
+                ("US", "glossaryRefs", spec.get("userStories", [])),
+                ("Non-goal", "glossaryRefs", spec.get("nonGoals", [])),
+                ("NFR", "glossaryRefs", spec.get("nonFunctionalRequirements", [])),
+            ])
 
     if strict:
         for w in result.warnings:

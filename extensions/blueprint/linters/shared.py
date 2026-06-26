@@ -187,34 +187,32 @@ def _validate_glossary_ref(refs: list, label: str, name: str, gl_ids: set,
     return True
 
 
-def validate_glossary_refs(spec: dict, glossary: dict, result: "LayerResult",
-                           checks: list[tuple[str, str, str]]) -> None:
-    """Validate glossary refs for multiple fields in a spec.
+def validate_glossary_refs(glossary: dict, result: "LayerResult",
+                           checks: list[tuple[str, str, list]]) -> None:
+    """Validate glossary refs for multiple fields.
     
     Args:
-        spec: The spec dict.
         glossary: The Glossary dict (or None).
         result: LayerResult to append errors/warnings to.
-        checks: List of (field_name, label, item_key) tuples.
-            field_name: The field in spec containing items.
+        checks: List of (label, refs_key, items) tuples.
             label: Label for error messages.
-            item_key: Key in each item that holds the refs list.
+            refs_key: Key in each item that holds the refs list.
+            items: List of items to check.
     
     Example:
-        validate_glossary_refs(spec, glossary, result, [
-            ("components", "Component", "glossaryRefs"),
-            ("dataFlow", "Flow", "glossaryRefs"),
+        validate_glossary_refs(glossary, result, [
+            ("Component", "glossaryRefs", spec.get("components", [])),
+            ("Flow", "glossaryRefs", spec.get("dataFlow", [])),
         ])
     """
     gl_ids = set()
     if glossary:
         gl_ids = {t["id"] for t in glossary.get("terms", [])}
     
-    for field_name, label, item_key in checks:
-        items = spec.get(field_name, [])
+    for label, refs_key, items in checks:
         for item in items:
             item_id = item.get("id", item.get("screenRef", "?"))
-            refs = item.get(item_key, [])
+            refs = item.get(refs_key, [])
             if not refs:
                 result.add("warning", "glossary_ref_missing",
                     f"{label} '{item_id}': no glossaryRefs.",

@@ -405,10 +405,12 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     check_us_journey_coverage(goal, covered_us_ids, result)
     check_screens_reachable(spec, screen_ids, result)
     check_forbidden_content(spec, result)
-    validate_glossary_refs(spec, glossary, result, [
-            ("personas", "Persona", "glossaryRefs"),
-            ("screenInventory", "Screen", "glossaryRefs"),
-        ])
+    validate_glossary_refs(glossary, result, [
+                ("Persona", "glossaryRefs", spec.get("personas", [])),
+                ("Screen", "glossaryRefs", spec.get("screenInventory", [])),
+                ("Component", "glossaryRefs", sum([s.get("components", []) for s in spec.get("screenSpecs", [])], [])),
+                ("Journey step", "glossaryRefs", sum([step for j in spec.get("userJourneys", []) for step in j.get("steps", [])], [])),
+            ])
 
     if strict:
         for w in result.warnings:
