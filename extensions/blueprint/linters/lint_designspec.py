@@ -91,12 +91,8 @@ def check_design_goals(spec: dict, result: LayerResult):
     ids = [g["id"] for g in goals]
     check_duplicates(ids, "DG", result)
 
-    # Validate DG-NNN format
-    for g in goals:
-        gid = g.get("id", "")
-        valid, msg = validate_id_format(gid, "dg")
-        if not valid:
-            result.add("error", "dg_id_format", msg, hint="Use format DG-NNN (e.g. 'DG-001').")
+    # Validate DG-NNN-PascalCase format
+    check_id_format(goals, "id", "dg", "dg_id_format", result)
 
     forbidden = ["database", "api", "endpoint", "framework", "library",
                  "class", "function", "sql", "http", "rest", "json"]
@@ -115,12 +111,7 @@ def check_personas(spec: dict, goal: Optional[dict], result: LayerResult) -> set
     check_duplicates(ids, "persona", result)
 
     # Validate PRS-NNN-PascalCase format
-    for p in personas:
-        pid = p.get("id", "")
-        valid, msg = validate_id_format(pid, "prs")
-        if not valid:
-            result.add("error", "prs_id_format", msg,
-                hint="Use format PRS-NNN-PascalCase (e.g. 'PRS-001-PowerDeveloper').")
+    check_id_format(personas, "id", "prs", "prs_id_format", result)
 
     if goal:
         goal_actors = {fr["actor"] for fr in goal.get("functionalRequirements", [])}
@@ -202,12 +193,8 @@ def check_screen_inventory(spec: dict, ia_screen_refs: set[str],
     ids = [s["id"] for s in screens]
     check_duplicates(ids, "SCR", result)
 
-    # Validate SCR-NNN-name format
-    for s in screens:
-        sid = s.get("id", "")
-        valid, msg = validate_id_format(sid, "scr")
-        if not valid:
-            result.add("error", "scr_id_format", msg, hint="Use format SCR-NNN-PascalCase (e.g. 'SCR-001-LandingPage').")
+    # Validate SCR-NNN-PascalCase format
+    check_id_format(screens, "id", "scr", "scr_id_format", result)
 
     screen_ids = set(ids)
 
@@ -335,12 +322,7 @@ def check_visual_design_requirements(spec: dict, result: LayerResult):
     check_duplicates(ids, "VDR", result)
 
     # Validate VDR-NNN format
-    for v in vdrs:
-        vid = v.get("id", "")
-        valid, msg = validate_id_format(vid, "vdr")
-        if not valid:
-            result.add("error", "vdr_id_format", msg,
-                hint="Use format VDR-NNN (e.g. 'VDR-001').")
+    check_id_format(vdrs, "id", "vdr", "vdr_id_format", result)
 
 
 def check_us_journey_coverage(goal: Optional[dict], covered_us_ids: set[str], result: LayerResult):

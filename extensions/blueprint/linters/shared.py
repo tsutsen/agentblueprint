@@ -72,6 +72,25 @@ def validate_id_format(id_value: str, id_type: str) -> tuple[bool, str]:
     return False, f"ID '{id_value}' does not follow {ID_PATTERNS[id_type]['hint'].lower()}"
 
 
+def check_id_format(items: list[dict], id_key: str, id_type: str,
+                    category: str, result: "LayerResult") -> None:
+    """Validate ID format for a list of items.
+    
+    Args:
+        items: List of dicts, each with an 'id' field.
+        id_key: Key in each item that holds the ID (default: 'id').
+        id_type: Key in ID_PATTERNS to validate against.
+        category: Category prefix for lint errors (e.g. 'comp_id_format').
+        result: LayerResult to append errors to.
+    """
+    for item in items:
+        iid = item.get(id_key, "")
+        valid, msg = validate_id_format(iid, id_type)
+        if not valid:
+            result.add("error", f"{category}", msg,
+                hint=f"Use format {ID_PATTERNS[id_type]['hint'].replace('Format: ', '').lower()} (e.g. '{ID_PATTERNS[id_type]['example']}").")
+
+
 # Backwards compatibility alias
 ID_FORMATS = ID_PATTERNS
 

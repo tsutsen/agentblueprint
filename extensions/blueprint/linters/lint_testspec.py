@@ -91,16 +91,17 @@ def check_duplicate_ids(spec: dict, result: LayerResult):
 
 def check_test_id_format(spec: dict, result: LayerResult):
     """Test IDs must follow TST-NNN-testName pattern."""
-    for t in spec.get("tests", []):
+    tests = spec.get("tests", [])
+    
+    # Validate TST-NNN-lowerCamelCase format
+    check_id_format(tests, "id", "tst", "test_id_format", result)
+    
+    for t in tests:
         tid = t.get("id", "")
         if not tid:
             result.add("error", "test_missing_id",
                 f"Test is missing an 'id' field.",
                 hint="Add an ID in the format 'TST-NNN-testName', e.g. 'TST-001-exportReportAsPDF'.")
-        elif not validate_id_format(tid, "tst")[0]:
-            result.add("error", "test_id_format",
-                f"Test ID '{tid}' does not follow TST-NNN-testName pattern.",
-                hint="Test IDs must follow the pattern 'TST-NNN-testName', e.g. 'TST-001-exportReportAsPDF'.")
 
 
 def check_id_fn_consistency(spec: dict, result: LayerResult):

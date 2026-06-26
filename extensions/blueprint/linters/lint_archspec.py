@@ -93,12 +93,7 @@ def check_components(spec: dict, result: LayerResult) -> set[str]:
     check_duplicates(ids, "component", result)
     
     # Validate COMP-NNN-PascalCase format
-    for comp in components:
-        cid = comp.get("id", "")
-        valid, msg = validate_id_format(cid, "comp")
-        if not valid:
-            result.add("error", "comp_id_format", msg,
-                hint="Use format COMP-NNN-PascalCase (e.g. 'COMP-001-AuthService').")
+    check_id_format(components, "id", "comp", "comp_id_format", result)
     
     component_ids = set(ids)
 
@@ -187,12 +182,8 @@ def check_data_flows(spec: dict, component_ids: set[str], result: LayerResult):
     ids = [f["id"] for f in flows]
     check_duplicates(ids, "FLW", result)
 
-    # Validate FLW-NNN-name format
-    for flow in flows:
-        fid = flow.get("id", "")
-        valid, msg = validate_id_format(fid, "flw")
-        if not valid:
-            result.add("error", "flw_id_format", msg, hint="Use format FLW-NNN-PascalCase (e.g. 'FLW-001-SessionCreation').")
+    # Validate FLW-NNN-PascalCase format
+    check_id_format(flows, "id", "flw", "flw_id_format", result)
 
     for flow in flows:
         fid = flow["id"]
@@ -217,12 +208,8 @@ def check_constraints(spec: dict, result: LayerResult):
     ids = [c["id"] for c in constraints]
     check_duplicates(ids, "CON", result)
 
-    # Validate CON-NNN-name format
-    for con in constraints:
-        cid = con.get("id", "")
-        valid, msg = validate_id_format(cid, "con")
-        if not valid:
-            result.add("error", "con_id_format", msg, hint="Use format CON-NNN-PascalCase (e.g. 'CON-001-AuthenticationRequired').")
+    # Validate CON-NNN-PascalCase format
+    check_id_format(constraints, "id", "con", "con_id_format", result)
 
     # Implementation smells in constraints
     impl_smells = ["postgres", "mysql", "redis", "sqlite", "mongodb", "fastapi",

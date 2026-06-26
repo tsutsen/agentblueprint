@@ -26,11 +26,8 @@ import sys
 import argparse
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output
+from shared import Issue, LayerResult, print_human, print_json_output, check_id_format
 from schema_validator import SchemaValidator
-
-# Regex for GL-NNN ID format (e.g. GL-001)
-GL_ID_RE = re.compile(r"^GL-\d{3}$")
 
 
 # ── Term extraction from other specs ─────────────────────────────────────────
@@ -83,16 +80,11 @@ def check_gl_ids(glossary: dict, result: LayerResult) -> dict[str, dict]:
     seen_ids: dict[str, dict] = {}
     ids_found: list[int] = []
 
+    # Validate GL-NNN-PascalCase format
+    check_id_format(terms, "id", "gl", "gl_id_format", result)
+
     for entry in terms:
         term_id = entry.get("id", "")
-        
-        # Validate ID format
-        if not GL_ID_RE.match(term_id):
-            term_name = entry.get("name", "unknown")
-            result.add("error", "gl_id_format",
-                f"Term '{term_name}': ID '{term_id}' does not match GL-NNN format.",
-                hint="Use GL-NNN format (e.g., GL-001, GL-042).")
-            continue
         
         # Check for duplicate IDs
         if term_id in seen_ids:

@@ -53,17 +53,15 @@ def check_entities(spec: dict, enums: list, result: LayerResult) -> Set[str]:
     entity_names: Set[str] = set()
     entity_map: dict = {}
 
+    # Validate ENT-NNN-PascalCase format
+    check_id_format(entities, "id", "ent", "entity_id_format", result)
+
     for entity in entities:
-        # Entity must have an ID in the format ENT-NNN-entityName
         eid = entity.get("id", "")
         if not eid:
             result.add("error", "entity_missing_id",
                 f"Entity '{entity.get('name', '<unknown>')}'' is missing an 'id' field.",
                 hint="Add an ID in the format 'ENT-NNN-entityName', e.g. 'ENT-001-ResearchSession'.")
-        elif not validate_id_format(eid, "ent")[0]:
-            result.add("error", "entity_id_format",
-                f"Entity '{entity.get('name', '<unknown>')}'' has invalid ID format: '{eid}'.",
-                hint="Entity IDs must follow the pattern 'ENT-NNN-entityName', e.g. 'ENT-001-ResearchSession'.")
 
         name = entity["name"]
         entity_names.add(name)
@@ -136,17 +134,15 @@ def check_enums(spec: dict, result: LayerResult) -> Set[str]:
     enums = spec.get("enums", [])
     enum_names: Set[str] = set()
 
+    # Validate NUM-NNN-PascalCase format
+    check_id_format(enums, "id", "num", "enum_id_format", result)
+
     for enum in enums:
-        # Enum must have an ID in the format NUM-NNN-enumName
         eid = enum.get("id", "")
         if not eid:
             result.add("error", "enum_missing_id",
                 f"Enum '{enum.get('name', '<unknown>')}'' is missing an 'id' field.",
                 hint="Add an ID in the format 'NUM-NNN-enumName', e.g. 'NUM-001-EvidenceType'.")
-        elif not validate_id_format(eid, "num")[0]:
-            result.add("error", "enum_id_format",
-                f"Enum '{enum.get('name', '<unknown>')}'' has invalid ID format: '{eid}'.",
-                hint="Enum IDs must follow the pattern 'NUM-NNN-enumName', e.g. 'NUM-001-EvidenceType'.")
 
         ename = enum["name"]
         enum_names.add(ename)

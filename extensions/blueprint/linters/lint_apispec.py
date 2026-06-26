@@ -52,15 +52,12 @@ def check_functions(spec: dict, result: LayerResult) -> Set[str]:
     functions = spec.get("functions", [])
     fn_ids: Set[str] = set()
 
+    # Validate FN-NNN-lowerCamelCase format
+    check_id_format(functions, "id", "fn", "fn_id_format", result)
+
     for fn in functions:
         fid = fn["id"]
         fn_ids.add(fid)
-
-        # Function ID must follow FN-NNN-<camelCase>
-        if not validate_id_format(fid, "fn")[0]:
-            result.add("error", "fn_id_format",
-                f"Function ID '{fid}' does not follow FN-NNN-<camelCase>.",
-                hint="Function IDs must follow the pattern 'FN-NNN-functionName', e.g. 'FN-001-createUser'.")
 
         # Function name must be camelCase
         fname = fn.get("name", "")

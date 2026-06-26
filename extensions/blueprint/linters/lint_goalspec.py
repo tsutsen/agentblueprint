@@ -24,7 +24,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output
+from shared import Issue, LayerResult, print_human, print_json_output, check_id_format
 from schema_validator import SchemaValidator
 
 
@@ -263,6 +263,11 @@ def check_coverage(spec: dict, req_ids: set[str], story_req_refs: set[str],
 
 def check_non_goals(spec: dict, result: LayerResult):
     non_goals = spec.get("nonGoals", [])
+    ids = extract_ids(non_goals, "id")
+
+    check_duplicates(ids, "NG", result)
+    check_sequential(ids, "NG", result)
+    check_id_format(non_goals, "id", "ng", "ng_id_format", result)
 
     vague_smells = ["everything", "advanced", "features", "stuff",
                     "things", "all", "etc", "misc"]
