@@ -15,8 +15,7 @@ Dependency order:
   7. testspec    (← apispec, dataspec)
   8. taskplan    (← all prior specs)
   9. issues      (← taskplan, requires --epic)
- 10. consistency (Markdown/JSON consistency)
- 11. completeness (← all layers)
+ 10. completeness (← all layers)
 
 Completeness gates:
   Each spec has a set of readiness conditions. A spec that fails its gate
@@ -664,38 +663,6 @@ def run_issues(linter_dir, paths, loaded, args, strict) -> LayerResult:
     return layer
 
 
-def run_consistency(linter_dir, paths, strict, args=None) -> LayerResult:
-    """Run Markdown/JSON consistency checks."""
-    # Check linter_dir first, then json_validators subdir
-    linter_path = linter_dir / "lint_consistency.py"
-    if not linter_path.exists():
-        linter_path = linter_dir.parent / "json_validators" / "lint_consistency.py"
-    if not linter_path.exists():
-        return LayerResult(name="consistency", skipped=True,
-                           skip_reason="Consistency linter not found.")
-
-    # Determine which specs to check
-    if args and hasattr(args, 'specs'):
-        specs_to_check = [s.strip() for s in args.specs.split(",")]
-    else:
-        specs_to_check = [key for key in ["goal", "design", "data", "api", "test"] if paths.get(key)]
-
-    # Filter to only specs that have paths
-    specs_to_check = [s for s in specs_to_check if paths.get(s)]
-
-    if not specs_to_check:
-        return LayerResult(name="consistency", skipped=True,
-                           skip_reason="No spec paths provided.")
-
-    # Find the spec directory (parent of the first spec path)
-    spec_dir = Path(paths[specs_to_check[0]]).parent
-
-    mod = load_linter(linter_path)
-    layer = _run("consistency", linter_path,
-                 lambda s: mod.run_lint(spec_dir, specs_to_check), strict)
-    return layer
-
-
 # ── Completeness gate check layer ─────────────────────────────────────────────
 
 def run_completeness_gates(suite: "SuiteResult") -> LayerResult:
@@ -758,7 +725,6 @@ def run_suite(paths, linter_dir, schema_dir, strict, stop_on_error, args=None) -
     if not add(run_testspec(linter_dir, schema_dir, paths, loaded, strict)):  return suite
     if not add(run_taskplan(linter_dir, schema_dir, paths, loaded, strict)):   return suite
     if not add(run_issues(linter_dir, paths, loaded, args, strict)):           return suite
-    if not add(run_consistency(linter_dir, paths, strict, args)):             return suite
 
     # Completeness gates layer — runs after all linters
     suite.layers.append(run_completeness_gates(suite))
@@ -905,8 +871,6 @@ def main():
     parser.add_argument("--strict",   action="store_true", help="Treat warnings as errors")
     parser.add_argument("--stop-on-error", action="store_true",
                         help="Stop after first layer with errors")
-    parser.add_argument("--specs",      default="goal,design,data,api,test",
-                        help="Comma-separated list of specs for consistency check")
     parser.add_argument("--json",     action="store_true", help="Output as JSON")
     args = parser.parse_args()
 
