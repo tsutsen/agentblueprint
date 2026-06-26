@@ -221,148 +221,32 @@ def validate_coverage(covered_items: list[dict], source_items: list[dict],
 
 def validate_non_empty(items: list[dict], key: str, id_key: str, result: "LayerResult",
                        label: str = "", category: str = "empty", hint: str = "") -> None:
-    """Warn if items have an empty list field.
+    """Warn if items have an empty list or string field.
     
     Args:
         items: List of items to check.
-        key: Key in each item that holds the list to check (e.g., "componentRefs").
+        key: Key in each item that holds the field to check (e.g., "componentRefs" or "dataRef").
         id_key: Key in each item that holds the ID/name (e.g., "id" or "name").
         result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Subsystem").
-        category: Category for the warning (e.g., "empty").
+        label: Label for error messages (e.g., "Subsystem" or "Flow step").
+        category: Category for the warning (e.g., "empty" or "empty_field").
         hint: Custom hint message (default: generic).
     """
     for item in items:
         iid = item.get(id_key, "?")
-        refs = item.get(key, [])
-        if not refs:
+        field = item.get(key)
+        
+        if field is None:
+            result.add("warning", category,
+                f"{label or iid} '{iid}': {key} is missing.",
+                hint=hint or f"Provide a value for {key}.")
+        elif isinstance(field, list) and not field:
             result.add("warning", category,
                 f"{label or iid} '{iid}' has no {key}.",
                 hint=hint or f"Assign items to this {label.lower() or 'item'} or remove it.")
-
-
-def validate_no_overlap(items: list[dict], refs_key: str, id_key: str, result: "LayerResult",
-                        label: str = "", category: str = "overlap", hint: str = "") -> None:
-    """Warn if an item is assigned to multiple groups.
-    
-    Args:
-        items: List of group items (e.g., subsystems).
-        refs_key: Key in each item that holds the list of refs (e.g., "componentRefs").
-        id_key: Key in each item that holds the group ID/name (e.g., "name").
-        result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Subsystem").
-        category: Category for the warning (e.g., "overlap").
-        hint: Custom hint message (default: generic).
-    """
-    item_to_groups: dict[str, list[str]] = {}
-    for item in items:
-        iid = item.get(id_key, "?")
-        for ref in item.get(refs_key, []):
-            item_to_groups.setdefault(ref, []).append(iid)
-    
-    for item, groups in item_to_groups.items():
-        if len(groups) > 1:
+        elif isinstance(field, str) and not field.strip():
             result.add("warning", category,
-                f"Item '{item}' is assigned to multiple {label.lower() or 'groups'}: {', '.join(groups)}.",
-                hint=hint or f"Each {label.lower() or 'item'} should belong to exactly one {label.lower() or 'group'}.")
-
-
-def validate_exists(items: list[dict], refs: str | list[str], valid: set[str] | dict[str, set[str]],
-                  result: "LayerResult", label: str = "", ref_label: str = "",
-                  category: str = "missing", hint: str = "") -> None:
-    """Validate that items reference values in the valid set(s).
-    
-    Args:
-        items: List of items to check.
-        refs: Single ref key (e.g., "dataRef") or list of ref keys (e.g., ["reqRefs", "nfrRefs"]).
-        valid: Single valid set (for single ref key) or dict mapping ref keys to valid sets.
-        result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Component").
-        ref_label: Label for the reference type (e.g., "DataSpec entity").
-        category: Category for the warning (e.g., "missing").
-        hint: Custom hint message (default: generic).
-    
-    Examples:
-        # Single ref key
-        validate_exists(steps, "dataRef", entity_names, result, "Flow step", "DataSpec entity")
-        
-        # Multiple ref keys
-        validate_exists(components, ["reqRefs", "nfrRefs"], {"reqRefs": req_ids, "nfrRefs": nfr_ids}, result, "Component")
-    """
-    # Normalize to list of refs and dict of valid sets
-    if isinstance(refs, str):
-        refs = [refs]
-        if isinstance(valid, set):
-            valid = {refs[0]: valid}
-    
-    for item in items:
-        iid = item.get("id", "?")
-        for refs_key in refs:
-            for ref in item.get(refs_key, []):
-                if ref not in valid.get(refs_key, set()):
-                    result.add("error", category,
-                        f"{label} '{iid}': {refs_key} ref '{ref}' not found.",
-                        hint=f"Add '{ref}' to the target spec or correct the reference.")
-
-
-def validate_item_count(items: list[dict], key: str, count: int, compare_mode: int,
-                        id_key: str, result: "LayerResult", label: str = "",
-                        category: str = "count", hint: str = "") -> None:
-    """Validate list field counts with flexible comparison.
-    
-    Args:
-        items: List of items to check.
-        key: Key in each item that holds the list to check (e.g., "responsibilities").
-        count: Count threshold.
-        compare_mode: Comparison mode.
-            1: warn if count > threshold (n > 8)
-            0: warn if count == threshold (n == 8)
-            -1: warn if count < threshold (n < 8)
-        id_key: Key in each item that holds the ID (e.g., "id").
-        result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Component").
-        category: Category for the warning (e.g., "too_many").
-        hint: Custom hint message (default: generic).
-    """
-    for item in items:
-        iid = item.get(id_key, "?")
-        refs = item.get(key, [])
-        n = len(refs)
-        
-        if compare_mode == 1 and n > count:
-            result.add("warning", category,
-                f"{label} '{iid}' has {n} {key} — consider splitting.",
-                hint=hint or f"A {label.lower()} with >{count} {key} may be too complex. Consider splitting.")
-        elif compare_mode == 0 and n == count:
-            result.add("warning", category,
-                f"{label} '{iid}' has exactly {n} {key}.",
-                hint=hint or f"A {label.lower()} should not have exactly {count} {key}.")
-        elif compare_mode == -1 and n < count:
-            result.add("warning", category,
-                f"{label} '{iid}' has {n} {key} (minimum {count}).",
-                hint=hint or f"A {label.lower()} should have at least {count} {key}.")
-
-
-def validate_non_empty_field(items: list[dict], key: str, id_key: str, result: "LayerResult",
-                             label: str = "", category: str = "empty_field",
-                             hint: str = "") -> None:
-    """Warn if items have an empty string field.
-    
-    Args:
-        items: List of items to check.
-        key: Key in each item that holds the string field (e.g., "dataRef").
-        id_key: Key in each item that holds the ID (e.g., "id").
-        result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Flow step").
-        category: Category for the warning (e.g., "empty_field").
-        hint: Custom hint message (default: generic).
-    """
-    for item in items:
-        iid = item.get(id_key, "?")
-        field = item.get(key, "")
-        if field is not None and not field.strip():
-            result.add("warning", category,
-                f"{label} '{iid}' has an empty {key}.",
+                f"{label or iid} '{iid}' has an empty {key}.",
                 hint=hint or f"Provide a value for {key}.")
     # Normalize to list of refs and dict of valid sets
     if isinstance(refs, str):

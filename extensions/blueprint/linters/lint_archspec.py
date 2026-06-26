@@ -30,7 +30,7 @@ from typing import Optional
 
 from schema_validator import SchemaValidator
 from shared import (
-    validate_non_empty_field,
+    validate_non_empty,
     validate_item_count,
     Issue,
     LayerResult,
@@ -433,7 +433,7 @@ def check_flow_descriptions(spec: dict, result: LayerResult):
 def check_flow_data_refs(spec: dict, result: LayerResult):
     """Warn if flow steps have empty dataRef fields."""
     all_steps = [step for flow in spec.get("dataFlow", []) for step in flow.get("steps", [])]
-    validate_non_empty_field(
+    validate_non_empty(
         all_steps, "dataRef", "componentRef",
         result, label="Flow step", category="flow_step_empty_data_ref"
     )
