@@ -122,6 +122,10 @@ def validate_sequential(ids: list[str], label: str, result: "LayerResult") -> No
         result: LayerResult to append warnings to.
     """
     nums = sorted([_extract_num(i) for i in ids])
+    # Skip IDs that don't have numbers (e.g., "solo-developer")
+    nums = [n for n in nums if n >= 0]
+    if not nums:
+        return
     for i, n in enumerate(nums):
         expected = i + 1
         if n != expected:
@@ -994,6 +998,7 @@ def _validate_all_ids(spec: dict, result: LayerResult) -> None:
     """Validate all IDs in a spec against canonical patterns.
     
     Automatically extracts IDs from all sections defined in SECTION_ID_PATTERNS.
+    Also checks that IDs are sequential (warns if gaps exist).
     """
     items_by_type = {}
     for section_path, pattern_type in SECTION_ID_PATTERNS.items():
@@ -1003,6 +1008,10 @@ def _validate_all_ids(spec: dict, result: LayerResult) -> None:
     
     if items_by_type:
         validate_spec_ids(items_by_type, result)
+        # Check sequential numbering for all ID types
+        for id_type, items in items_by_type.items():
+            ids = [item.get("id", "") for item in items]
+            validate_sequential(ids, id_type.upper(), result)
 
 
 def _strict_mode(result: LayerResult) -> None:
