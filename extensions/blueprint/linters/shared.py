@@ -388,6 +388,47 @@ def find_patterns(items: list[dict], key: str, patterns: list[tuple[str, str]],
             result.add("warning", category,
                 f"{label or iid} '{iid}': {', '.join(f'{label}: {m}' for label, m in matches)}.",
                 hint=hint or f"Review {label.lower() or 'item'} for {category}.")
+
+
+def find_patterns_nested(items: list[dict], nested_key: str, patterns: list[tuple[str, str]],
+                         id_key: str, result: "LayerResult", label: str = "",
+                         category: str = "pattern_match", hint: str = "",
+                         match_fn: callable = None) -> None:
+    """Warn if nested list items match patterns in a text field.
+    
+    Args:
+        items: List of parent items to check.
+        nested_key: Key in each item that holds the list of nested items (e.g., "responsibilities").
+        patterns: List of (regex_pattern, label) tuples.
+        id_key: Key in each item that holds the ID (e.g., "id").
+        result: LayerResult to append warnings to.
+        label: Label for error messages (e.g., "Component").
+        category: Category for the warning (e.g., "inline_ref").
+        hint: Custom hint message (default: generic).
+        match_fn: Optional custom match function(text, patterns) -> list[match_info].
+    """
+    import re
+    
+    for item in items:
+        iid = item.get(id_key, "?")
+        nested_items = item.get(nested_key, [])
+        
+        for nested_item in nested_items:
+            text = nested_item if isinstance(nested_item, str) else nested_item.get("text", "")
+            
+            if match_fn:
+                matches = match_fn(text, patterns)
+            else:
+                matches = []
+                for pattern, pattern_label in patterns:
+                    found = re.findall(pattern, text.lower())
+                    if found:
+                        matches.append((pattern_label, found))
+            
+            if matches:
+                result.add("warning", category,
+                    f"{label or iid} '{iid}': {', '.join(f'{label}: {m}' for label, m in matches)}.",
+                    hint=hint or f"Review {label.lower() or 'item'} for {category}.")
     # Normalize to list of refs and dict of valid sets
     if isinstance(refs, str):
         refs = [refs]

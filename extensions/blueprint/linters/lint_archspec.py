@@ -30,6 +30,7 @@ from typing import Optional
 
 from schema_validator import SchemaValidator
 from shared import (
+    find_patterns_nested,
     find_patterns,
     validate_non_empty,
     validate_item_count,
@@ -450,26 +451,16 @@ def check_vague_responsibilities(spec: dict, result: LayerResult):
 
 def check_inline_req_refs_in_responsibilities(spec: dict, result: LayerResult):
     """Warn if responsibilities contain text that looks like non-standard refs (e.g. 'key flow 9b')."""
-    import re
-
-    # Patterns that look like refs but aren't REQ/NFR/GL
     non_standard_patterns = [
         (r"\bkey\s+flow\s+\w+\b", "key flow references"),
         (r"\bflow\s+\d+[a-z]?\b", "flow number references"),
         (r"\bsection\s+\d+\b", "section references"),
     ]
-
-    for comp in spec.get("components", []):
-        for resp in comp.get("responsibilities", []):
-            for pattern, label in non_standard_patterns:
-                matches = re.findall(pattern, resp.lower())
-                if matches:
-                    result.add(
-                        "warning",
-                        "inline_ref_in_responsibility",
-                        f"Component '{comp['id']}' responsibility references '{matches[0]}' — use reqRefs/nfrRefs arrays instead.",
-                        hint="Move requirement references to the reqRefs/nfrRefs arrays. Use glossaryRefs for term references.",
-                    )
+    find_patterns_nested(
+        spec.get("components", []), "responsibilities", non_standard_patterns,
+        "id", result, label="Component", category="inline_ref_in_responsibility",
+        hint="Move requirement references to the reqRefs/nfrRefs arrays. Use glossaryRefs for term references."
+    )
 
 
 def check_components_in_data_flows(spec: dict, result: LayerResult):
