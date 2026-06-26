@@ -183,7 +183,7 @@ def check_data_flows(spec: dict, component_ids: set[str], result: LayerResult):
         fid = flow.get("id", "")
         valid, msg = validate_id_format(fid, "flw")
         if not valid:
-            result.add("error", "flw_id_format", msg, hint="Use format FLW-NNN-kebab-case (e.g. 'FLW-001-session-creation').")
+            result.add("error", "flw_id_format", msg, hint="Use format FLW-NNN-PascalCase (e.g. 'FLW-001-SessionCreation').")
 
     for flow in flows:
         fid = flow["id"]
