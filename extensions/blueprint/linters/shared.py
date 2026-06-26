@@ -107,23 +107,6 @@ def validate_spec_ids(items_by_type: dict[str, list],
             _validate_ids(items, "id", id_type, f"{id_type}_id_format", result)
 
 
-def find_duplicates(ids: list[str], label: str, result: "LayerResult") -> None:
-    """Check for duplicate IDs in a list.
-    
-    Args:
-        ids: List of ID strings.
-        label: Label for the error message (e.g. "component", "REQ").
-        result: LayerResult to append errors to.
-    """
-    seen = set()
-    for id_ in ids:
-        if id_ in seen:
-            result.add("error", "duplicate_id",
-                f"Duplicate {label} id '{id_}'.",
-                hint=f"Each {label} must have a unique identifier.")
-        seen.add(id_)
-
-
 def _extract_num(id_str: str) -> int:
     """Extract the numeric part from REQ-001, NFR-002, etc."""
     m = re.search(r"(\d+)$", id_str)
@@ -180,63 +163,58 @@ def find_orphans(items: list[dict], id_key: str, deps_key: str, result: "LayerRe
                 hint=hint or f"An isolated {label.lower() or 'item'} may indicate a design issue.")
 
 
-def find_duplicates(ids: list[str], label: str, result: "LayerResult", normalize: callable = None) -> None:
-    """Warn if IDs have duplicates (with optional normalization).
+def find_duplicates(items: list, id_key: str = None, result: "LayerResult" = None,
+                    label: str = "", category: str = "duplicate", hint: str = "",
+                    normalize: callable = None) -> None:
+    """Warn if items have duplicate values (flat list or nested).
     
     Args:
-        ids: List of IDs to check.
-        label: Label for the IDs (e.g., "REQ", "FLW").
+        items: List of IDs (flat) or list of items with nested lists.
+        id_key: If flat list, key to extract IDs from (e.g., "id"). If nested, key for nested list.
         result: LayerResult to append warnings to.
-        normalize: Optional function to normalize IDs (e.g., str.lower). Default: identity.
-    """
-    seen: dict[str, str] = {}  # normalized ID → first ID
-    
-    for id_str in ids:
-        norm = normalize(id_str) if normalize else id_str
-        if norm in seen:
-            result.add(
-                "warning", "duplicate_id",
-                f"Duplicate {label} ID '{id_str}' (also '{seen[norm]}').",
-                hint=f"Each {label} must have a unique ID."
-            )
-        else:
-            seen[norm] = id_str
-
-
-def find_duplicates_nested(items: list[dict], nested_key: str, id_key: str,
-                           result: "LayerResult", label: str = "", category: str = "duplicate",
-                           hint: str = "", normalize: callable = None) -> None:
-    """Warn if nested items have duplicate values (with optional normalization).
-    
-    Args:
-        items: List of parent items to check.
-        nested_key: Key in each item that holds the list of nested items.
-        id_key: Key in each item that holds the ID.
-        result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Component").
+        label: Label for the IDs (e.g., "REQ", "FLW") or parent items (e.g., "Component").
         category: Category for the warning.
         hint: Custom hint message.
         normalize: Optional function to normalize values (e.g., str.lower). Default: identity.
     """
-    seen: dict[str, str] = {}  # normalized value → first item ID
+    seen: dict[str, str] = {}  # normalized value → first value
     
-    for item in items:
-        iid = item.get(id_key, "?")
-        nested_items = item.get(nested_key, [])
-        
-        for nested_item in nested_items:
-            text = nested_item if isinstance(nested_item, str) else nested_item.get("text", "")
-            norm = normalize(text) if normalize else text
-            
+    # Determine if flat list or nested
+    if not items:
+        return
+    
+    first = items[0]
+    if isinstance(first, str):
+        # Flat list of strings
+        for id_str in items:
+            norm = normalize(id_str) if normalize else id_str
             if norm in seen:
                 result.add(
                     "warning", category,
-                    f"{label} '{iid}' has a duplicate {nested_key}: '{text}' "
-                    f"is identical to one claimed by '{seen[norm]}'.",
-                    hint=hint or f"Each {nested_key} must be owned by exactly one {label.lower()}.",
+                    f"Duplicate {label} ID '{id_str}' (also '{seen[norm]}').",
+                    hint=hint or f"Each {label} must have a unique ID."
                 )
             else:
-                seen[norm] = iid
+                seen[norm] = id_str
+    elif isinstance(first, dict):
+        # List of dicts - check nested items
+        for item in items:
+            iid = item.get(id_key, "?") if id_key else "?"
+            nested_items = item.get(id_key, []) if id_key else []
+            
+            for nested_item in nested_items:
+                text = nested_item if isinstance(nested_item, str) else nested_item.get("text", "")
+                norm = normalize(text) if normalize else text
+                
+                if norm in seen:
+                    result.add(
+                        "warning", category,
+                        f"{label} '{iid}' has a duplicate {id_key}: '{text}' "
+                        f"is identical to one claimed by '{seen[norm]}'.",
+                        hint=hint or f"Each {id_key} must be owned by exactly one {label.lower()}.",
+                    )
+                else:
+                    seen[norm] = iid
 
 
 def find_cycles(items: list[dict], id_key: str, deps_key: str, valid: set[str],
