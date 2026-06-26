@@ -25,19 +25,18 @@ import re
 import sys
 import argparse
 from pathlib import Path
-from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, _validate_id as validate_id_format
-from schema_validator import SchemaValidator
+from typing import Optional, Dict
+from shared import BaseLinter, LayerResult, validate_spec_ids
 
 
 # ── Term extraction from other specs ─────────────────────────────────────────
 
-def extract_domain_terms(specs: dict) -> dict[str, list[str]]:
+def extract_domain_terms(specs: dict) -> Dict[str, list]:
     """
     Extract named domain concepts from other specs that should have glossary entries.
     Returns {term: [source_label, ...]}
     """
-    terms: dict[str, list[str]] = {}
+    terms: Dict[str, list] = {}
 
     def add(term: str, source: str):
         terms.setdefault(term, []).append(source)
@@ -74,156 +73,46 @@ def extract_domain_terms(specs: dict) -> dict[str, list[str]]:
 
 # ── Checks ────────────────────────────────────────────────────────────────────
 
-def check_gl_ids(glossary: dict, result: LayerResult) -> dict[str, dict]:
-    """Check GL-NNN IDs are sequential and unique. Returns term_id → entry map."""
-    terms = glossary.get("terms", [])
-    seen_ids: dict[str, dict] = {}
-    ids_found: list[int] = []
-
-    # Validate GL-NNN-PascalCase format
-    validate_spec_ids({"gl": glossary.get("terms", [])}, result)
-
-    for entry in terms:
-        term_id = entry.get("id", "")
-        
-        # Check for duplicate IDs
-        if term_id in seen_ids:
-            result.add("error", "duplicate_gl_id",
-                f"Duplicate GL-NNN ID '{term_id}' (used by '{seen_ids[term_id].get('name', '?')}').",
-                hint="Each term must have a unique GL-NNN identifier.")
-            continue
-        
-        seen_ids[term_id] = entry
-        ids_found.append(int(term_id.split("-")[1]))
-
-    # Check for sequential numbering gaps
-    if ids_found:
-        min_id = min(ids_found)
-        max_id = max(ids_found)
-        expected = set(range(min_id, max_id + 1))
-        actual = set(ids_found)
-        missing = expected - actual
-        
-        for gap in sorted(missing):
-            result.add("warning", "gl_id_gap",
-                f"Gap in GL-NNN sequence: GL-{gap:03d} is missing.",
-                hint="GL-NNN IDs should be sequential with no gaps.")
-
-    return seen_ids
-
-
-def find_duplicates(glossary: dict, result: LayerResult) -> dict[str, dict]:
-    """Check for duplicate term names. Returns term_name → entry map."""
-    terms = glossary.get("terms", [])
-    seen: dict[str, dict] = {}
-    for entry in terms:
-        name = entry["name"]
-        if name in seen:
-            result.add("error", "duplicate_term",
-                f"Duplicate term '{name}'.",
-                hint="Each term must appear exactly once. Combine the definitions or remove one.")
-        else:
-            seen[name] = entry
-    return seen
-
-
-def check_self_reference(term_map: dict[str, dict], result: LayerResult):
-    """A term must not appear in its own definition."""
-    for name, entry in term_map.items():
-        defn = entry.get("definition", "")
-        # Case-insensitive whole-word check
-        import re
-        pattern = re.compile(r'\b' + re.escape(name) + r'\b', re.IGNORECASE)
-        if pattern.search(defn):
-            result.add("warning", "self_reference",
-                f"Term '{name}': definition contains the term itself.",
-                hint="Definitions must not use the term being defined. Rewrite using other words.")
-
-
-def check_circular_definitions(term_map: dict[str, dict], result: LayerResult):
-    """Detect circular definitions: A defined using B defined using A."""
-    import re
-
-    def terms_used_in(definition: str, all_terms: set[str]) -> set[str]:
-        found = set()
-        for t in all_terms:
-            if re.search(r'\b' + re.escape(t) + r'\b', definition, re.IGNORECASE):
-                found.add(t)
-        return found
-
-    all_term_names = set(term_map.keys())
-
-    # Build usage graph: term → set of terms used in its definition
-    usage_graph: dict[str, set[str]] = {}
-    for name, entry in term_map.items():
-        used = terms_used_in(entry.get("definition", ""), all_term_names)
-        used.discard(name)  # self-reference handled separately
-        usage_graph[name] = used
-
-    # DFS cycle detection
-    visited = set()
-    path: list[str] = []
-
-    def dfs(node: str) -> Optional[list[str]]:
-        if node in path:
-            return path[path.index(node):]
-        if node in visited:
-            return None
-        visited.add(node)
-        path.append(node)
-        for dep in usage_graph.get(node, set()):
-            cycle = dfs(dep)
-            if cycle:
-                return cycle
-        path.pop()
-        return None
-
-    reported = set()
-    for term in term_map:
-        if term not in visited:
-            cycle = dfs(term)
-            if cycle:
-                key = frozenset(cycle)
-                if key not in reported:
-                    reported.add(key)
-                    result.add("warning", "circular_definition",
-                        f"Circular definition detected: {' → '.join(cycle + [cycle[0]])}.",
-                        hint="Rewrite one definition to break the cycle.")
-
-
-def check_related_terms(gl_id_map: dict[str, dict], result: LayerResult):
+def _check_related_terms(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
     """All relatedTerms must be valid GL-NNN IDs that exist in the glossary."""
-    for term_id, entry in gl_id_map.items():
+    terms = spec.get("terms", [])
+    valid_ids = {t["id"] for t in terms}
+    
+    for entry in terms:
         for related in entry.get("relatedTerms", []):
-            valid, _ = validate_id_format(related, "gl")
-            if not valid:
+            # Check format
+            if not re.match(r"^GL-\d{3,}$", related):
                 result.add("error", "related_term_format",
                     f"Term '{entry['name']}': relatedTerm '{related}' is not a valid GL-NNN ID.",
                     hint="Use GL-NNN format (e.g., GL-001, GL-042).")
-            elif related not in gl_id_map:
+            elif related not in valid_ids:
                 result.add("error", "related_term_missing",
-                    f"Term '{entry["name"]}': relatedTerm '{related}' not found in glossary.",
+                    f"Term '{entry['name']}': relatedTerm '{related}' not found in glossary.",
                     hint=f"Add GL-{related.split('-')[1]} as a glossary entry or correct the ID.")
 
 
-def check_synonym_conflicts(gl_id_map: dict[str, dict], result: LayerResult):
-    """Synonyms must not also have their own glossary entry — that creates ambiguity."""
-    for term_id, entry in gl_id_map.items():
+def _check_synonym_conflicts(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Synonyms must not also have their own glossary entry."""
+    terms = spec.get("terms", [])
+    term_names = {t["name"] for t in terms}
+    
+    for entry in terms:
         for syn in entry.get("synonyms", []):
-            # Check if synonym text matches another term's name
-            for other_id, other_entry in gl_id_map.items():
-                if other_id != term_id and syn == other_entry["name"]:
+            if syn in term_names and syn != entry["name"]:
+                other = next((t for t in terms if t["name"] == syn), None)
+                if other:
                     result.add("error", "synonym_conflict",
-                        f"Term '{entry["name"]}': synonym '{syn}' also has its own glossary entry (GL-{other_id.split('-')[1]}).",
-                        hint=f"Either remove the '{syn}' entry and keep it as a synonym, or remove it from '{entry["name"]}' synonyms.")
+                        f"Term '{entry['name']}': synonym '{syn}' also has its own glossary entry (GL-{other['id'].split('-')[1]}).",
+                        hint=f"Either remove the '{syn}' entry and keep it as a synonym, or remove it from '{entry['name']}' synonyms.")
 
 
-def check_definition_quality(gl_id_map: dict[str, dict], result: LayerResult):
+def _check_definition_quality(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
     """Flag definitions that are suspiciously short or placeholder-like."""
     placeholder_patterns = ["tbd", "todo", "see above", "see below", "n/a", "same as"]
     vague_starters = ["a thing", "something that", "refers to", "relates to"]
 
-    for name, entry in gl_id_map.items():
+    for entry in spec.get("terms", []):
+        name = entry.get("name", "")
         defn = entry.get("definition", "")
         defn_lower = defn.lower().strip()
 
@@ -245,23 +134,89 @@ def check_definition_quality(gl_id_map: dict[str, dict], result: LayerResult):
                 hint="Definitions should be precise and complete — aim for at least one full sentence.")
 
 
-def check_cross_spec_coverage(
-    gl_id_map: dict[str, dict],
-    domain_terms: dict[str, list[str]],
-    result: LayerResult
-):
+def _check_self_reference(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """A term must not appear in its own definition."""
+    for entry in spec.get("terms", []):
+        name = entry.get("name", "")
+        defn = entry.get("definition", "")
+        pattern = re.compile(r'\b' + re.escape(name) + r'\b', re.IGNORECASE)
+        if pattern.search(defn):
+            result.add("warning", "self_reference",
+                f"Term '{name}': definition contains the term itself.",
+                hint="Definitions must not use the term being defined. Rewrite using other words.")
+
+
+def _check_circular_definitions(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Detect circular definitions: A defined using B defined using A."""
+    terms = spec.get("terms", [])
+    all_term_names = {t["name"] for t in terms}
+    
+    def terms_used_in(definition: str, term_names: set) -> set:
+        found = set()
+        for t in term_names:
+            if re.search(r'\b' + re.escape(t) + r'\b', definition, re.IGNORECASE):
+                found.add(t)
+        return found
+
+    # Build usage graph
+    usage_graph = {}
+    for entry in terms:
+        name = entry["name"]
+        used = terms_used_in(entry.get("definition", ""), all_term_names)
+        used.discard(name)  # self-reference handled separately
+        usage_graph[name] = used
+
+    # DFS cycle detection
+    visited = set()
+    path = []
+
+    def dfs(node: str) -> Optional[list]:
+        if node in path:
+            return path[path.index(node):]
+        if node in visited:
+            return None
+        visited.add(node)
+        path.append(node)
+        for dep in usage_graph.get(node, set()):
+            cycle = dfs(dep)
+            if cycle:
+                return cycle
+        path.pop()
+        return None
+
+    reported = set()
+    for term in terms:
+        name = term["name"]
+        if name not in visited:
+            cycle = dfs(name)
+            if cycle:
+                key = frozenset(cycle)
+                if key not in reported:
+                    reported.add(key)
+                    result.add("warning", "circular_definition",
+                        f"Circular definition detected: {' → '.join(cycle + [cycle[0]])}.",
+                        hint="Rewrite one definition to break the cycle.")
+
+
+def _check_cross_spec_coverage(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
     """
     Domain terms extracted from other specs should have glossary entries.
     Glossary entries not referenced anywhere are flagged as unused.
     """
-    # Build set of all known names: terms + their synonyms
-    known_names: dict[str, str] = {}  # name_lower → canonical term
-    for term_id, entry in gl_id_map.items():
-        known_names[entry["name"].lower()] = term_id
-        for syn in entry.get("synonyms", []):
-            known_names[syn.lower()] = term_id
+    # Only run if other specs are loaded
+    if not any(extra_specs.values()):
+        return
 
-    referenced_terms: set[str] = set()
+    domain_terms = extract_domain_terms(extra_specs)
+    
+    # Build set of all known names: terms + their synonyms
+    known_names = {}  # name_lower → canonical term
+    for entry in spec.get("terms", []):
+        known_names[entry["name"].lower()] = entry["id"]
+        for syn in entry.get("synonyms", []):
+            known_names[syn.lower()] = entry["id"]
+
+    referenced_terms = set()
 
     for term, sources in domain_terms.items():
         canonical = known_names.get(term.lower())
@@ -269,7 +224,6 @@ def check_cross_spec_coverage(
             referenced_terms.add(canonical)
         else:
             # Only warn if the term looks like a meaningful domain noun
-            # (skip single-word all-caps enum values like PENDING, PAID)
             if not (term.isupper() and "_" not in term and len(term) < 15):
                 source_summary = sources[0] if sources else "unknown"
                 result.add("warning", "term_undefined",
@@ -277,101 +231,74 @@ def check_cross_spec_coverage(
                     hint=f"Add a glossary entry for '{term}'.")
 
     # Unused terms
-    for term_id in gl_id_map:
+    for entry in spec.get("terms", []):
+        term_id = entry["id"]
         if term_id not in referenced_terms:
             result.add("warning", "term_unused",
-                f"Term '{gl_id_map[term_id]['name']}' (GL-{term_id.split('-')[1]}) is not referenced by any loaded spec.",
+                f"Term '{entry['name']}' (GL-{term_id.split('-')[1]}) is not referenced by any loaded spec.",
                 hint="If this term appears in specs, check spelling. If it's genuinely unused, consider removing it.")
 
 
-# ── Runner ────────────────────────────────────────────────────────────────────
+# ── Semantic Rules ────────────────────────────────────────────────────────────
 
-def run_lint(
-    glossary: dict,
-    schema_path: Optional[Path],
-    other_specs: dict,
-    strict: bool
-) -> LayerResult:
-    result = LayerResult()
-
-    # JSON Schema validation (auto-generated from schema)
-    if schema_path:
-        schema = json.loads(Path(schema_path).read_text())
-        schema_issues = SchemaValidator(schema).validate(glossary)
-        for issue in schema_issues:
-            result.add(issue.severity, issue.category, issue.message, issue.hint)
-
-    # 
-    # Project match — goalspec/archspec/designspec use "project"; dataspec/apispec use "module"
-    glossary_project = glossary.get("project")
-    for label, spec in other_specs.items():
-        if not spec:
-            continue
-        spec_name = spec.get("project") or spec.get("module")
-        if spec_name and glossary_project and spec_name != glossary_project:
-            result.add("error", "project_match",
-                f"Project mismatch: glossary='{glossary_project}' {label}='{spec_name}'.",
-                hint="All specs must have identical project/module values.")
-
-    # Structural checks
-    gl_id_map = check_gl_ids(glossary, result)
-    term_map = {entry["name"]: entry for entry in gl_id_map.values()} if gl_id_map else {}
-    if gl_id_map:  # Only run name-based checks if GL-IDs are valid
-        check_self_reference(term_map, result)
-        check_circular_definitions(term_map, result)
-    check_related_terms(gl_id_map, result)
-    check_synonym_conflicts(gl_id_map, result)
-    check_definition_quality(gl_id_map, result)
-
-    # Cross-spec coverage
-    if any(other_specs.values()):
-        domain_terms = extract_domain_terms(other_specs)
-        check_cross_spec_coverage(gl_id_map, domain_terms, result)
-
-    if strict:
-        for w in result.warnings:
-            w.severity = "error"
-            result.errors.append(w)
-        result.warnings.clear()
-
-    return result
+SEMANTIC_RULES = [
+    # Related terms must reference existing glossary terms
+    {
+        "type": "exists",
+        "section": "terms",
+        "key": "relatedTerms",
+        "valid_section": "terms",
+        "valid_key": "id",
+        "label": "Term",
+        "ref_label": "Glossary term",
+        "category": "related_term_missing",
+        "hint": "Add the referenced term to the glossary or correct the ID.",
+    },
+]
 
 
-# ── Output
-# Uses shared.print_human and shared.print_json_output
+# ── Misc Checks ───────────────────────────────────────────────────────────────
+
+MISC_CHECKS = [
+    ("related_terms_format", _check_related_terms),
+    ("synonym_conflicts", _check_synonym_conflicts),
+    ("definition_quality", _check_definition_quality),
+    ("self_reference", _check_self_reference),
+    ("circular_definitions", _check_circular_definitions),
+    ("cross_spec_coverage", _check_cross_spec_coverage),
+]
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Lint a Glossary JSON.")
-    parser.add_argument("input",     help="Path to glossary JSON")
-    parser.add_argument("--schema",  help="Path to glossary.schema.json")
-    parser.add_argument("--goal",    help="Path to goalspec JSON")
-    parser.add_argument("--arch",    help="Path to archspec JSON")
-    parser.add_argument("--data",    help="Path to dataspec JSON")
-    parser.add_argument("--api",     help="Path to apispec JSON")
-    parser.add_argument("--strict",  action="store_true")
-    parser.add_argument("--json",    action="store_true")
-    args = parser.parse_args()
+# ── Cross-spec dependency ─────────────────────────────────────────────────────
 
-    glossary = json.loads(Path(args.input).read_text())
-    schema_path = Path(args.schema) if args.schema else None
+CROSS_SPEC_DEPS = ["goal", "arch", "data", "api"]
 
-    other_specs = {
-        "goalspec":  json.loads(Path(args.goal).read_text()) if args.goal else None,
-        "archspec":  json.loads(Path(args.arch).read_text()) if args.arch else None,
-        "dataspec":  json.loads(Path(args.data).read_text()) if args.data else None,
-        "apispec":   json.loads(Path(args.api).read_text())  if args.api  else None,
-    }
 
-    result = run_lint(glossary, schema_path, other_specs, args.strict)
+# ── Linter Class ──────────────────────────────────────────────────────────────
 
-    if args.json:
-        print_json_output(result)
-    else:
-        print_human(result, args.input)
+class GlossaryLinter(BaseLinter):
+    """Linter for Glossary artifacts."""
+    
+    SPEC_NAME = "glossary"
+    SEMANTIC_RULES = SEMANTIC_RULES
+    MISC_CHECKS = MISC_CHECKS
+    CROSS_SPEC_DEPS = CROSS_SPEC_DEPS
 
-    sys.exit(0 if result.clean else 1)
 
+# ── Backward-compatible entry point ───────────────────────────────────────────
+
+def run_lint(glossary, schema_path, other_specs, strict):
+    """Backward-compatible entry point for lint_all.py."""
+    linter = GlossaryLinter(glossary, schema_path, strict)
+    return linter.run(**other_specs)
+
+
+# ── CLI ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    main()
+    GlossaryLinter.main([
+        ("--goal", {"help": "Path to goalspec JSON", "spec_name": "goal"}),
+        ("--arch", {"help": "Path to archspec JSON", "spec_name": "arch"}),
+        ("--data", {"help": "Path to dataspec JSON", "spec_name": "data"}),
+        ("--api", {"help": "Path to apispec JSON", "spec_name": "api"}),
+    ])
