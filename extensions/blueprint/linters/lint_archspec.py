@@ -183,14 +183,11 @@ def check_subsystems(spec: dict, component_ids: set[str], result: LayerResult):
         refs = sub.get("componentRefs", [])
 
         # Check for invalid component refs
-        for ref in refs:
-            if ref not in component_ids:
-                result.add(
-                    "error",
-                    "subsystem_ref",
-                    f"Subsystem '{sub['name']}': componentRef '{ref}' is not a defined component.",
-                    hint=f"Add a component with id='{ref}' or correct the reference.",
-                )
+        validate_exists(
+            [{"id": ref} for ref in refs], "id", component_ids,
+            result, label=f"Subsystem '{sub['name']}'", ref_label="component",
+            category="subsystem_ref"
+        )
 
         for ref in refs:
             all_comp_refs.append(ref)
