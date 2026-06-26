@@ -180,15 +180,41 @@ def find_orphans(items: list[dict], id_key: str, deps_key: str, result: "LayerRe
                 hint=hint or f"An isolated {label.lower() or 'item'} may indicate a design issue.")
 
 
-def find_cycles(graph: dict[str, list[str]]) -> Optional[list[str]]:
-    """Return a cycle path if one exists in the dependency graph, else None.
+def find_cycles(items: list[dict], id_key: str, deps_key: str, valid: set[str],
+                result: "LayerResult", label: str = "", category: str = "circular_dependency",
+                hint: str = "") -> bool:
+    """Build dependency graph, validate refs, check for cycles, and report issues.
     
     Args:
-        graph: Dict mapping node IDs to list of dependency node IDs.
+        items: List of items with dependencies.
+        id_key: Key in each item that holds the ID.
+        deps_key: Key in each item that holds the list of dependencies.
+        valid: Set of valid dependency IDs.
+        result: LayerResult to append errors/warnings to.
+        label: Label for error messages (e.g., "Component").
+        category: Category for the warning (e.g., "circular_dependency").
+        hint: Custom hint message (default: generic).
     
     Returns:
-        List of node IDs forming the cycle, or None if no cycle exists.
+        True if a cycle was found, False otherwise.
     """
+    # Build dependency graph and validate refs
+    graph: dict[str, list[str]] = {}
+    for item in items:
+        iid = item.get(id_key, "")
+        deps = item.get(deps_key, [])
+        graph[iid] = deps
+        
+        # Validate dependency refs
+        for dep in deps:
+            if dep not in valid:
+                result.add(
+                    "error", "dependency_ref",
+                    f"{label} '{iid}': dependency '{dep}' is not defined.",
+                    hint=f"Add an item with id='{dep}' or correct the dependency reference."
+                )
+    
+    # Check for cycles
     visited = set()
     path = []
     
@@ -210,8 +236,14 @@ def find_cycles(graph: dict[str, list[str]]) -> Optional[list[str]]:
         if node not in visited:
             cycle = dfs(node)
             if cycle:
-                return cycle
-    return None
+                cycle_str = " → ".join(cycle + [cycle[0]])
+                result.add(
+                    "error", category,
+                    f"Circular {label.lower()} dependency detected: {cycle_str}.",
+                    hint=hint or "Refactor to break the cycle — introduce an abstraction or invert a dependency."
+                )
+                return True
+    return False
 
 
 def validate_coverage(covered_items: list[dict], source_items: list[dict],

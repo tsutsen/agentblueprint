@@ -62,35 +62,19 @@ def check_components(spec: dict, result: LayerResult) -> set[str]:
 
     component_ids = set(ids)
 
-    # Build dependency graph for cycle detection
-    dep_graph: dict[str, list[str]] = {}
+    # Build dependency graph, validate refs, and check for cycles
+    find_cycles(
+        components, "id", "dependencies", component_ids,
+        result, label="Component", category="circular_dependency",
+        hint="Refactor to break the cycle — introduce an abstraction or invert a dependency."
+    )
+
+    # Warn: component with no reqRefs
     for comp in components:
-        cid = comp["id"]
-        deps = comp.get("dependencies", [])
-        dep_graph[cid] = deps
-
-        # Dependency references must exist
-        validate_exists(
-            [{"id": dep} for dep in deps], "id", component_ids,
-            result, label=f"Component '{cid}'", ref_label="component",
-            category="dependency_ref"
-        )
-
-        # Warn: component with no reqRefs
         validate_non_empty(
             [comp], "reqRefs", "id", result,
             label="Component", category="component_no_reqs",
             hint="Link each component to the requirements it helps satisfy."
-        )
-
-    # Circular dependency check
-    cycle = find_cycles(dep_graph)
-    if cycle:
-        result.add(
-            "error",
-            "circular_dependency",
-            f"Circular component dependency detected: {' → '.join(cycle + [cycle[0]])}.",
-            hint="Refactor to break the cycle — introduce an abstraction or invert a dependency.",
         )
 
     # Overlapping responsibilities
