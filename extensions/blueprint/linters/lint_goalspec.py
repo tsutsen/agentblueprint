@@ -96,8 +96,7 @@ SEMANTIC_RULES = [
     # FRs must not contain implementation details
     {
         "type": "patterns",
-        "target": "functionalRequirements",
-        "text_key": "description",
+        "target": "functionalRequirements.description",
         "patterns": [
             "use ", "using ", "call ", "via ", "with ", "implement", "library", "framework",
         ],
@@ -105,12 +104,11 @@ SEMANTIC_RULES = [
         "category": "fr_implementation_smell",
         "hint": "FRs must describe observable behaviour, not how it is achieved.",
     },
-    
+
     # User stories must not contain feature-like language
     {
         "type": "patterns",
-        "target": "userStories",
-        "text_key": "capability",
+        "target": "userStories.capability",
         "patterns": [
             "use ", "using ", "implement", "button", "dropdown",
             "api", "endpoint", "library", "framework", "click",
@@ -119,12 +117,11 @@ SEMANTIC_RULES = [
         "category": "story_feature_smell",
         "hint": "User stories must express what the actor wants to achieve, not how.",
     },
-    
+
     # Success criteria must not contain subjective language
     {
         "type": "patterns",
-        "target": "successCriteria",
-        "text_key": "description",
+        "target": "successCriteria.description",
         "patterns": [
             "feel", "feels", "fast", "slow", "good", "happy",
             "nice", "smooth", "intuitive", "easy", "simple",
@@ -133,12 +130,11 @@ SEMANTIC_RULES = [
         "category": "sc_subjective",
         "hint": "Success criteria must be binary and independently verifiable.",
     },
-    
+
     # Non-goals must not be vague
     {
         "type": "patterns",
-        "target": "nonGoals",
-        "text_key": "capability",
+        "target": "nonGoals.capability",
         "patterns": [
             "everything", "advanced", "features", "stuff",
             "things", "all", "etc", "misc",

@@ -69,13 +69,16 @@ class ItemCountRule(_TargetRuleBase):
 
 
 class PatternsRule(_TargetRuleBase):
-    """Check text against regex patterns."""
+    """Check text against regex patterns.
+
+    For single-property checks, append to target path (e.g. "entities.fields.name").
+    For multi-property checks on the same item, use extra_keys.
+    """
     type: Literal["patterns"]
     target: str
     patterns: list
     negate: bool
-    text_key: str
-    text_keys: list[str]
+    extra_keys: list[str]
     max_count: int
 
 
@@ -1299,6 +1302,9 @@ def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None
 
     When `negate` is True (format validation): flag values that DON'T match any pattern.
     When `negate` is False (default, forbidden content): flag values that DO match.
+
+    For single-property checks, use target path: "entities.fields.name"
+    For multi-property checks on the same item, use extra_keys: ["layout", "wireframe"]
     """
     import re
     severity = rule.get("severity", "warning")
@@ -1306,8 +1312,7 @@ def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None
     label = rule.get("label", resolved.parent_label)
     hint = rule.get("hint", "")
     patterns = rule.get("patterns", [])
-    text_key = rule.get("text_key")
-    text_keys = rule.get("text_keys") or [text_key] if text_key else []
+    extra_keys = rule.get("extra_keys", [])
     max_count = rule.get("max_count")
     negate = rule.get("negate", False)
 
@@ -1317,9 +1322,9 @@ def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None
             if resolved.group_sizes[idx] > max_count:
                 continue
 
-        # Extract text — support text_key (single), text_keys (list), or raw string
-        if text_keys and isinstance(val, dict):
-            texts = [val.get(k, "") for k in text_keys]
+        # Extract text — extra_keys for multi-property, or raw string from path
+        if extra_keys and isinstance(val, dict):
+            texts = [val.get(k, "") for k in extra_keys]
         elif isinstance(val, str):
             texts = [val]
         else:
@@ -1346,7 +1351,7 @@ def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None
 
             if negate and not any_match:
                 # Format validation failed — text didn't match any pattern
-                msg = f"{label} '{pid}': {text_key or 'value'} '{text}' doesn't match expected pattern: {', '.join(str(p) for p in patterns)}"
+                msg = f"{label} '{pid}': value '{text}' doesn't match expected pattern: {', '.join(str(p) for p in patterns)}"
                 result.add(severity, category, msg, hint=hint or f"Review {label.lower()} for {category}.")
             elif not negate and matches:
                 # Forbidden content found
@@ -1468,7 +1473,7 @@ _KNOWN_FIELDS: dict[str, set[str]] = {
     "no_overlap": {"type", "target", "label", "category", "severity", "hint"},
     "item_count": {"type", "target", "count", "compare_mode",
                    "label", "category", "severity", "hint"},
-    "patterns":   {"type", "target", "patterns", "negate", "text_key", "text_keys", "max_count",
+    "patterns":   {"type", "target", "patterns", "negate", "extra_keys", "max_count",
                    "label", "category", "severity", "hint"},
     "coverage":   {"type", "covered", "covering", "ref_field", "covered_label", "source_label",
                    "severity", "category", "hint"},

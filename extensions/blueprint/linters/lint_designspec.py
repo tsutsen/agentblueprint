@@ -49,8 +49,7 @@ SEMANTIC_RULES = [
     # Design goals must not contain implementation details
     {
         "type": "patterns",
-        "target": "designGoals",
-        "text_key": "goal",
+        "target": "designGoals.goal",
         "patterns": [
             "database", "api", "endpoint", "framework", "library",
             "class", "function", "sql", "http", "rest", "json",
@@ -59,12 +58,11 @@ SEMANTIC_RULES = [
         "category": "design_goal_implementation_smell",
         "hint": "Design goals must describe UX qualities, not technology choices.",
     },
-    
+
     # UXAC must not contain subjective language
     {
         "type": "patterns",
-        "target": "uxAcceptanceCriteria",
-        "text_key": "description",
+        "target": "uxAcceptanceCriteria.description",
         "patterns": [
             "feel", "feels", "intuitive", "easy", "simple", "nice",
             "smooth", "fast", "slow", "good", "beautiful", "clean",
@@ -170,7 +168,7 @@ SEMANTIC_RULES = [
     {
         "type": "patterns",
         "target": "screenSpecs",
-        "text_keys": ["layout", "wireframe"],
+        "extra_keys": ["layout", "wireframe"],
         "patterns": [
             ("create table", "database schema"),
             ("alter table", "database schema"),

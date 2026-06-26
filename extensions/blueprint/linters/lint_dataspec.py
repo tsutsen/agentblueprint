@@ -230,8 +230,7 @@ SEMANTIC_RULES = [
     # Entity names must be PascalCase
     {
         "type": "patterns",
-        "target": "entities",
-        "text_key": "name",
+        "target": "entities.name",
         "patterns": [r"^[A-Z][A-Za-z0-9]*$"],
         "negate": True,
         "label": "Entity",
@@ -241,8 +240,7 @@ SEMANTIC_RULES = [
     # Field names must be camelCase
     {
         "type": "patterns",
-        "target": "entities.fields",
-        "text_key": "name",
+        "target": "entities.fields.name",
         "patterns": [r"^[a-z][A-Za-z0-9]*$"],
         "negate": True,
         "label": "Field",
@@ -252,8 +250,7 @@ SEMANTIC_RULES = [
     # Method names must be camelCase
     {
         "type": "patterns",
-        "target": "entities.methods",
-        "text_key": "name",
+        "target": "entities.methods.name",
         "patterns": [r"^[a-z][A-Za-z0-9]*$"],
         "negate": True,
         "label": "Method",
@@ -263,8 +260,7 @@ SEMANTIC_RULES = [
     # Enum names must be PascalCase
     {
         "type": "patterns",
-        "target": "enums",
-        "text_key": "name",
+        "target": "enums.name",
         "patterns": [r"^[A-Z][A-Za-z0-9]*$"],
         "negate": True,
         "label": "Enum",
@@ -274,8 +270,7 @@ SEMANTIC_RULES = [
     # Enum values must be SCREAMING_SNAKE_CASE
     {
         "type": "patterns",
-        "target": "enums.values",
-        "text_key": "name",
+        "target": "enums.values.name",
         "patterns": [r"^[A-Z][A-Z0-9_]*$"],
         "negate": True,
         "label": "Enum value",
