@@ -846,12 +846,7 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
             result.add(issue.severity, issue.category, issue.message, issue.hint)
 
     # ID format validation
-    validate_spec_ids(spec, {
-        "primitives": "prim",
-        "enums": "num",
-        "entities": "ent",
-        "relationships": "rel",
-    }, result)
+    validate_spec_ids({"prim": spec.get("primitives", []), "num": spec.get("enums", []), "ent": spec.get("entities", []), "rel": spec.get("relationships", [])}, result)
 
     # Semantic checks
     check_primitives(spec, result)

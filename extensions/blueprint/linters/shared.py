@@ -87,26 +87,24 @@ def _validate_ids(items: list[dict], id_key: str, id_type: str,
 
 
 
-def validate_spec_ids(spec: dict, id_map: dict[str, str],
+def validate_spec_ids(items_by_type: dict[str, list],
                       result: "LayerResult") -> None:
     """Validate all IDs in a spec at once.
     
     Args:
-        spec: The spec dict to validate.
-        id_map: Mapping of field_name → id_type (e.g. {"components": "comp", "flows": "flw"}).
+        items_by_type: Mapping of id_type → items list (e.g. {"comp": components, "flw": flows}).
         result: LayerResult to append errors to.
     
     Example:
-        validate_spec_ids(spec, {
-            "components": "comp",
-            "dataFlow": "flw",
-            "constraints": "con",
+        validate_spec_ids({
+            "comp": spec.get("components", []),
+            "flw": spec.get("dataFlow", []),
+            "con": spec.get("constraints", []),
         }, result)
     """
-    for field_name, id_type in id_map.items():
-        items = spec.get(field_name, [])
+    for id_type, items in items_by_type.items():
         if items:
-            validate_ids(items, "id", id_type, f"{field_name}_id_format", result)
+            _validate_ids(items, "id", id_type, f"{id_type}_id_format", result)
 
 
 def check_duplicates(ids: list[str], label: str, result: "LayerResult") -> None:

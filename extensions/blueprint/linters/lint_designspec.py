@@ -451,17 +451,7 @@ def run_lint(spec: dict, schema_path: Optional[Path],
             result.add(issue.severity, issue.category, issue.message, issue.hint)
 
     # ID format validation
-    validate_spec_ids(spec, {
-        "designGoals": "dg",
-        "personas": "prs",
-        "userJourneys": "uj",
-        "screenInventory": "scr",
-        "screenSpecs": "spc",
-        "interactionPatterns": "pat",
-        "uxAcceptanceCriteria": "uxac",
-        "designTokens": "dt",
-        "visualDesignRequirements": "vdr",
-    }, result)
+    validate_spec_ids({"dg": spec.get("designGoals", []), "prs": spec.get("personas", []), "uj": spec.get("userJourneys", []), "scr": spec.get("screenInventory", []), "spc": spec.get("screenSpecs", []), "pat": spec.get("interactionPatterns", []), "uxac": spec.get("uxAcceptanceCriteria", []), "dt": spec.get("designTokens", []), "vdr": spec.get("visualDesignRequirements", [])}, result)
 
     # 
     # Cross-spec version checks

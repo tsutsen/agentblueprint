@@ -94,7 +94,7 @@ def check_test_id_format(spec: dict, result: LayerResult):
     tests = spec.get("tests", [])
     
     # Validate TST-NNN-lowerCamelCase format
-    validate_spec_ids(spec, {"tests": "tst"}, result)
+    validate_spec_ids({"tst": spec.get("tests", [])}, result)
     
     for t in tests:
         tid = t.get("id", "")

@@ -370,13 +370,7 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
             result.add(issue.severity, issue.category, issue.message, issue.hint)
 
     # ID format validation
-    validate_spec_ids(spec, {
-        "functionalRequirements": "req",
-        "nonFunctionalRequirements": "nfr",
-        "userStories": "us",
-        "successCriteria": "sc",
-        "nonGoals": "ng",
-    }, result)
+    validate_spec_ids({"req": spec.get("functionalRequirements", []), "nfr": spec.get("nonFunctionalRequirements", []), "us": spec.get("userStories", []), "sc": spec.get("successCriteria", []), "ng": spec.get("nonGoals", [])}, result)
 
     # Semantic checks
     check_objective(spec, result)

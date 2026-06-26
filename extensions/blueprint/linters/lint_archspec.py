@@ -564,11 +564,7 @@ def run_lint(spec: dict, schema_path: Optional[Path],
             result.add(issue.severity, issue.category, issue.message, issue.hint)
 
     # ID format validation
-    validate_spec_ids(spec, {
-        "components": "comp",
-        "dataFlow": "flw",
-        "constraints": "con",
-    }, result)
+    validate_spec_ids({"comp": spec.get("components", []), "flw": spec.get("dataFlow", []), "con": spec.get("constraints", [])}, result)
 
     # 
     # GoalSpec cross-checks

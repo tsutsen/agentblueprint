@@ -44,7 +44,7 @@ def check_functions(spec: dict, result: LayerResult) -> Set[str]:
     fn_ids: Set[str] = set()
 
     # Validate FN-NNN-lowerCamelCase format
-    validate_spec_ids(spec, {"functions": "fn"}, result)
+    validate_spec_ids({"fn": spec.get("functions", [])}, result)
 
     for fn in functions:
         fid = fn["id"]

@@ -81,7 +81,7 @@ def check_gl_ids(glossary: dict, result: LayerResult) -> dict[str, dict]:
     ids_found: list[int] = []
 
     # Validate GL-NNN-PascalCase format
-    validate_spec_ids(glossary, {"terms": "gl"}, result)
+    validate_spec_ids({"gl": glossary.get("terms", [])}, result)
 
     for entry in terms:
         term_id = entry.get("id", "")

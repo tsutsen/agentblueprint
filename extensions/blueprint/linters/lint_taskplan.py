@@ -38,10 +38,7 @@ def run_lint(spec: dict, schema_path: Optional[Path],
             result.add(issue.severity, issue.category, issue.message, issue.hint)
 
     # ID format validation
-    validate_spec_ids(spec, {
-        "epics": "ep",
-        "milestones": "milestone",
-    }, result)
+    validate_spec_ids({"ep": spec.get("epics", []), "milestone": spec.get("milestones", [])}, result)
 
     if strict:
         for w in result.warnings:
