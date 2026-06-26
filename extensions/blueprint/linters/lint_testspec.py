@@ -76,16 +76,12 @@ def _check_id_fn_consistency(spec: dict, result: LayerResult, extra_specs: dict 
 
 
 def _check_category_rules(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
-    """Enforce per-category required fields."""
+    """Enforce per-category conditional rules."""
     for t in spec.get("tests", []):
         tid = t.get("id", "?")
         cat = t.get("category", "")
 
         if cat == "error-path":
-            if not t.get("errorCode"):
-                result.add("error", "error_path_missing_code",
-                    f"Test '{tid}' (error-path): missing errorCode.",
-                    hint="Every error-path test must declare the errorCode it exercises.")
             if not t.get("expectedError"):
                 result.add("warning", "error_path_missing_expected",
                     f"Test '{tid}' (error-path): missing expectedError.",
@@ -96,10 +92,6 @@ def _check_category_rules(spec: dict, result: LayerResult, extra_specs: dict = N
                     hint="Remove expectedOutput from error-path tests.")
 
         elif cat in ("happy-path", "edge-case"):
-            if t.get("expectedOutput") is None:
-                result.add("error", "missing_expected_output",
-                    f"Test '{tid}' ({cat}): missing expectedOutput.",
-                    hint="Every happy-path and edge-case test must assert a concrete expected output.")
             if t.get("errorCode"):
                 result.add("warning", "non_error_has_error_code",
                     f"Test '{tid}' ({cat}): has errorCode — only error-path tests should declare error codes.",
@@ -349,6 +341,26 @@ SEMANTIC_RULES = [
         "source_label": "Test",
         "category": "function_untested",
         "hint": "Add at least one test with fnRef set to this function.",
+    },
+    # Error-path tests must have errorCode
+    {
+        "type": "non_empty",
+        "section": "tests",
+        "key": "errorCode",
+        "id_key": "id",
+        "label": "Test",
+        "category": "error_path_missing_code",
+        "hint": "Every error-path test must declare the errorCode it exercises.",
+    },
+    # Happy-path/edge-case tests must have expectedOutput
+    {
+        "type": "non_empty",
+        "section": "tests",
+        "key": "expectedOutput",
+        "id_key": "id",
+        "label": "Test",
+        "category": "missing_expected_output",
+        "hint": "Every happy-path and edge-case test must assert a concrete expected output.",
     },
 ]
 
