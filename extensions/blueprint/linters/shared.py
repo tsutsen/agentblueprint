@@ -348,15 +348,17 @@ def validate_no_overlap(items: list[dict], refs_key: str, id_key: str, result: "
                 hint=hint or f"Each {label.lower() or 'item'} should belong to exactly one {label.lower() or 'group'}.")
 
 
-def validate_exists(items: list[dict], refs: str | list[str], valid: set[str] | dict[str, set[str]],
-                  result: "LayerResult", label: str = "", ref_label: str = "",
+def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] | dict[str, set[str]] = None,
+                  result: "LayerResult" = None, label: str = "", ref_label: str = "",
                   category: str = "missing", hint: str = "") -> None:
     """Validate that items reference values in the valid set(s).
     
     Args:
-        items: List of items to check.
-        refs: Single ref key (e.g., "dataRef") or list of ref keys (e.g., ["reqRefs", "nfrRefs"]).
-        valid: Single valid set (for single ref key) or dict mapping ref keys to valid sets.
+        items: List of items to check (dicts with keys, or flat list of strings).
+        refs: If items are dicts, ref key or keys (e.g., "dataRef" or ["reqRefs"]).
+              If items are strings, this is the valid set.
+        valid: If items are dicts, valid sets mapping ref keys to sets.
+               If items are strings, this is the valid set.
         result: LayerResult to append warnings to.
         label: Label for error messages (e.g., "Component").
         ref_label: Label for the reference type (e.g., "DataSpec entity").
@@ -364,26 +366,43 @@ def validate_exists(items: list[dict], refs: str | list[str], valid: set[str] | 
         hint: Custom hint message (default: generic).
     
     Examples:
-        # Single ref key
+        # Flat list of strings
+        validate_exists(refs, component_ids, result, label="Subsystem", ref_label="component")
+        
+        # Dicts with ref keys
         validate_exists(steps, "dataRef", entity_names, result, "Flow step", "DataSpec entity")
         
         # Multiple ref keys
         validate_exists(components, ["reqRefs", "nfrRefs"], {"reqRefs": req_ids, "nfrRefs": nfr_ids}, result, "Component")
     """
-    # Normalize to list of refs and dict of valid sets
-    if isinstance(refs, str):
-        refs = [refs]
-        if isinstance(valid, set):
-            valid = {refs[0]: valid}
+    # Determine if flat list or dicts
+    if not items:
+        return
     
-    for item in items:
-        iid = item.get("id", "?")
-        for refs_key in refs:
-            for ref in item.get(refs_key, []):
-                if ref not in valid.get(refs_key, set()):
-                    result.add("error", category,
-                        f"{label} '{iid}': {refs_key} ref '{ref}' not found.",
-                        hint=f"Add '{ref}' to the target spec or correct the reference.")
+    first = items[0]
+    if isinstance(first, str):
+        # Flat list of strings
+        valid_set = valid if valid else set()
+        for item in items:
+            if item not in valid_set:
+                result.add("error", category,
+                    f"{label}: '{item}' not found in {ref_label or 'valid set'}.",
+                    hint=f"Add '{item}' to {ref_label or 'the target'} or correct the reference.")
+    elif isinstance(first, dict):
+        # List of dicts with ref keys
+        if isinstance(refs, str):
+            refs = [refs]
+            if isinstance(valid, set):
+                valid = {refs[0]: valid}
+        
+        for item in items:
+            iid = item.get("id", "?")
+            for refs_key in refs:
+                for ref in item.get(refs_key, []):
+                    if ref not in valid.get(refs_key, set()):
+                        result.add("error", category,
+                            f"{label} '{iid}': {refs_key} ref '{ref}' not found.",
+                            hint=f"Add '{ref}' to the target spec or correct the reference.")
 
 
 def validate_item_count(items: list[dict], key: str, count: int, compare_mode: int,

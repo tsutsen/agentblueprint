@@ -118,8 +118,7 @@ def check_subsystems(spec: dict, component_ids: set[str], result: LayerResult):
 
         # Check for invalid component refs
         validate_exists(
-            [{"id": ref} for ref in refs],
-            "id",
+            refs,
             component_ids,
             result,
             label=f"Subsystem '{sub['name']}'",
