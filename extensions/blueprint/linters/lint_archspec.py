@@ -222,28 +222,20 @@ def check_data_flows(spec: dict, component_ids: set[str], result: LayerResult):
     ids = [f["id"] for f in flows]
     find_duplicates(ids, "FLW", result)
 
-    for flow in flows:
-        fid = flow["id"]
-        steps = flow.get("steps", [])
+    # Validate componentRef exists
+    all_steps = [step for flow in flows for step in flow.get("steps", [])]
+    validate_exists(
+        all_steps, "componentRef", component_ids,
+        result, label="Flow step", ref_label="component",
+        category="flow_component_ref"
+    )
 
-        for i, step in enumerate(steps):
-            ref = step.get("componentRef")
-            if ref and ref not in component_ids:
-                result.add(
-                    "error",
-                    "flow_component_ref",
-                    f"Flow '{fid}' step {i + 1}: componentRef '{ref}' is not a defined component.",
-                    hint=f"Add a component with id='{ref}' or correct the reference.",
-                )
-
-        # Flow with only one step is not a flow
-        if len(steps) < 2:
-            result.add(
-                "error",
-                "flow_too_short",
-                f"Flow '{fid}' has fewer than 2 steps — not a valid flow.",
-                hint="A data flow must show at least a source and a sink step.",
-            )
+    # Validate flow has at least 2 steps
+    validate_item_count(
+        flows, "steps", 2, -1, "id", result,
+        label="Flow", category="flow_too_short",
+        hint="A data flow must show at least a source and a sink step."
+    )
 
 
 def check_constraints(spec: dict, result: LayerResult):
