@@ -32,6 +32,7 @@ from schema_validator import SchemaValidator
 from shared import (
     Issue,
     LayerResult,
+    find_cycles,
     find_duplicates,
     find_orphans,
     find_patterns,
