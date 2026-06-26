@@ -180,6 +180,40 @@ def find_orphans(items: list[dict], id_key: str, deps_key: str, result: "LayerRe
                 hint=hint or f"An isolated {label.lower() or 'item'} may indicate a design issue.")
 
 
+def find_cycles(graph: dict[str, list[str]]) -> Optional[list[str]]:
+    """Return a cycle path if one exists in the dependency graph, else None.
+    
+    Args:
+        graph: Dict mapping node IDs to list of dependency node IDs.
+    
+    Returns:
+        List of node IDs forming the cycle, or None if no cycle exists.
+    """
+    visited = set()
+    path = []
+    
+    def dfs(node):
+        if node in path:
+            return path[path.index(node):]
+        if node in visited:
+            return None
+        visited.add(node)
+        path.append(node)
+        for dep in graph.get(node, []):
+            cycle = dfs(dep)
+            if cycle:
+                return cycle
+        path.pop()
+        return None
+    
+    for node in graph:
+        if node not in visited:
+            cycle = dfs(node)
+            if cycle:
+                return cycle
+    return None
+
+
 def validate_coverage(covered_items: list[dict], source_items: list[dict],
                       covered_key: str, refs_key: str,
                       result: "LayerResult", covered_label: str,

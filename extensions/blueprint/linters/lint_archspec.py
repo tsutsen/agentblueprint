@@ -51,7 +51,7 @@ from shared import (
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 
-def detect_cycle(graph: dict[str, list[str]]) -> Optional[list[str]]:
+def find_cycles(graph: dict[str, list[str]]) -> Optional[list[str]]:
     """Return a cycle path if one exists in the dependency graph, else None."""
     visited = set()
     path = []
@@ -110,7 +110,7 @@ def check_components(spec: dict, result: LayerResult) -> set[str]:
         )
 
     # Circular dependency check
-    cycle = detect_cycle(dep_graph)
+    cycle = find_cycles(dep_graph)
     if cycle:
         result.add(
             "error",
