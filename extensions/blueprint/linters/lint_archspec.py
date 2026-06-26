@@ -102,8 +102,6 @@ def check_components(spec: dict, result: LayerResult) -> set[str]:
 
 def check_subsystems(spec: dict, component_ids: set[str], result: LayerResult):
     subsystems = spec.get("overview", {}).get("subsystems", [])
-    all_comp_refs = []
-    comp_to_subs: dict[str, list[str]] = {}
 
     # Check for empty subsystems
     validate_non_empty(
@@ -128,10 +126,6 @@ def check_subsystems(spec: dict, component_ids: set[str], result: LayerResult):
             ref_label="component",
             category="subsystem_ref",
         )
-
-        for ref in refs:
-            all_comp_refs.append(ref)
-            comp_to_subs.setdefault(ref, []).append(sub["name"])
 
     # Warn: components not assigned to any subsystem
     validate_coverage(
