@@ -307,7 +307,8 @@
               "$ref": "#/definitions/glId"
             }
           }
-        }
+        },
+        "x_idPattern": "persona"
       }
     },
     "userJourneys": {
