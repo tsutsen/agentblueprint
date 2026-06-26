@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-schema_validator.py — JSON Schema-driven validation for linters.
+lint_schemas.py — JSON Schema-driven validation for linters.
 
 Reads a JSON schema and validates a document against it, returning
 Issue objects with structured categories, messages, and hints.
@@ -9,7 +9,7 @@ This eliminates duplication between schema definitions and linter checks.
 When a schema constraint changes, validation updates automatically.
 
 Usage:
-    from schema_validator import SchemaValidator
+    from lint_schemas import SchemaValidator
 
     validator = SchemaValidator(schema_path="path/to/schema.json")
     issues = validator.validate(document)
@@ -23,7 +23,7 @@ import re
 from pathlib import Path
 from typing import Any, Optional
 
-from linters.shared import Issue, LayerResult
+from shared import Issue, LayerResult
 
 
 # ── Constraint metadata ──────────────────────────────────────────────────────
