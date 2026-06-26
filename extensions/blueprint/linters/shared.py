@@ -856,6 +856,148 @@ def _extract_nested_items(items: list, nested_key: str) -> list:
     return nested_items
 
 
+# ── Rule Factory ──────────────────────────────────────────────────────────────
+
+_RuleKwargs = dict[str, str | int | list]
+
+def rule(type: str, section: str = None, **kwargs) -> dict:
+    """Create a semantic rule dict with sensible defaults.
+    
+    Args:
+        type: Rule type (non_empty, exists, unique, etc.)
+        section: Section path in the spec
+        **kwargs: Rule-specific fields
+    
+    Returns:
+        Rule dict ready for SEMANTIC_RULES.
+    
+    Examples:
+        rule("non_empty", section="components", key="reqRefs", label="Component")
+        rule("exists", section="dataFlow", key="componentRef", valid_section="components")
+    """
+    if section:
+        kwargs["section"] = section
+    return kwargs
+
+
+def non_empty(section: str, key: str, **kwargs) -> dict:
+    """Rule: check that a field is not empty.
+    
+    Args:
+        section: Section path in the spec
+        key: Field key to check
+        **kwargs: Extra fields (label, category, hint, severity, id_key)
+    
+    Examples:
+        non_empty("components", "reqRefs", label="Component")
+    """
+    return rule("non_empty", section=section, key=key, id_key="id", severity="warning", **kwargs)
+
+
+def exists(section: str, key: str, **kwargs) -> dict:
+    """Rule: check that refs exist in a valid set.
+    
+    Args:
+        section: Section path in the spec
+        key: Ref key to check
+        **kwargs: Extra fields (valid_section, valid_extra_spec, valid_key, label, ref_label, category, severity)
+    
+    Examples:
+        exists("dataFlow", "componentRef", valid_section="components", label="Flow step")
+        exists("components", "reqRefs", valid_extra_spec="goal", valid_section="functionalRequirements")
+    """
+    return rule("exists", section=section, key=key, id_key="id", severity="error", **kwargs)
+
+
+def unique(section: str, key: str = "id", **kwargs) -> dict:
+    """Rule: check that values in a field are unique.
+    
+    Args:
+        section: Section path in the spec
+        key: Field key to check for uniqueness (default: "id")
+        **kwargs: Extra fields (label, category, hint, severity)
+    
+    Examples:
+        unique("components", key="name", label="Component")
+    """
+    return rule("unique", section=section, key=key, severity="warning", **kwargs)
+
+
+def patterns(section: str, patterns: list[str], **kwargs) -> dict:
+    """Rule: check that text matches regex patterns.
+    
+    Args:
+        section: Section path in the spec
+        patterns: List of regex patterns to match
+        **kwargs: Extra fields (text_key, nested_key, max_count, label, category, hint, severity)
+    
+    Examples:
+        patterns("designGoals", ["database", "api"], text_key="goal", label="Design goal")
+    """
+    return rule("patterns", section=section, patterns=patterns, severity="warning", **kwargs)
+
+
+def coverage(covered_section: str, source_section: str, refs_key: str, **kwargs) -> dict:
+    """Rule: check that covered items are referenced by source items.
+    
+    Args:
+        covered_section: Section path for covered items
+        source_section: Section path for source items
+        refs_key: Key in source items that holds the refs
+        **kwargs: Extra fields (covered_key, covered_label, source_label, valid_extra_spec, severity)
+    
+    Examples:
+        coverage("functionalRequirements", "components", "reqRefs",
+                 covered_label="FR", source_label="component")
+    """
+    return rule("coverage", covered_section=covered_section, source_section=source_section,
+                 refs_key=refs_key, severity="warning", **kwargs)
+
+
+def orphans(section: str, **kwargs) -> dict:
+    """Rule: check that items have dependencies or dependents.
+    
+    Args:
+        section: Section path in the spec
+        **kwargs: Extra fields (id_key, deps_key, label, warning, hint, severity)
+    
+    Examples:
+        orphans("components", label="Component", deps_key="dependencies")
+    """
+    return rule("orphans", section=section, id_key="id", severity="warning", **kwargs)
+
+
+def item_count(section: str, key: str, count: int, compare_mode: int = 1, **kwargs) -> dict:
+    """Rule: check that a list field has a specific count.
+    
+    Args:
+        section: Section path in the spec
+        key: Field key to check
+        count: Count threshold
+        compare_mode: 1=warn if >count, -1=warn if <count, 0=warn if ==count
+        **kwargs: Extra fields (id_key, label, category, hint, severity)
+    
+    Examples:
+        item_count("components", "responsibilities", count=8, compare_mode=1, label="Component")
+    """
+    return rule("item_count", section=section, key=key, count=count,
+                 compare_mode=compare_mode, id_key="id", severity="warning", **kwargs)
+
+
+def no_overlap(section: str, refs_key: str, **kwargs) -> dict:
+    """Rule: check that items don't overlap across groups.
+    
+    Args:
+        section: Section path in the spec
+        refs_key: Key in each item that holds the list of refs
+        **kwargs: Extra fields (id_key, label, category, hint, severity)
+    
+    Examples:
+        no_overlap("subsystems", "componentRefs", label="Subsystem")
+    """
+    return rule("no_overlap", section=section, refs_key=refs_key, id_key="id", severity="warning", **kwargs)
+
+
 def _resolve_valid_section(rule: dict, spec: dict, extra_specs: dict) -> set:
     """Resolve a 'valid' value for exists/no_overlap rules.
     
