@@ -42,11 +42,11 @@ class NonEmptyRule(_TargetRuleBase):
 class ExistsRule(_TargetRuleBase):
     """Check that field values resolve to valid targets.
 
-    valid_section path includes the ID field: "components.id"
+    'inside' path includes the ID field: "components.id"
     """
     type: Literal["exists"]
     target: str
-    valid_section: str
+    inside: str
     ref_label: str
 
 
@@ -1452,7 +1452,7 @@ _RULE_HANDLERS = {
 # Required fields per rule type (beyond 'type' itself)
 _REQUIRED_FIELDS: dict[str, list[str]] = {
     "non_empty":  ["target"],
-    "exists":     ["target", "valid_section"],
+    "exists":     ["target", "inside"],
     "unique":     ["target"],
     "no_overlap": ["target"],
     "item_count": ["target", "count"],
@@ -1464,7 +1464,7 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
 # Known fields per rule type (for detecting typos — includes 'type' itself)
 _KNOWN_FIELDS: dict[str, set[str]] = {
     "non_empty":  {"type", "target", "label", "category", "severity", "hint"},
-    "exists":     {"type", "target", "valid_section", "ref_label",
+    "exists":     {"type", "target", "inside", "ref_label",
                    "label", "category", "severity", "hint"},
     "unique":     {"type", "target", "label", "category", "severity", "hint"},
     "no_overlap": {"type", "target", "label", "category", "severity", "hint"},
@@ -1542,7 +1542,7 @@ def _run_new_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_
             else:
                 resolved = resolve_path(rule["target"], spec, extra_specs)
                 if handler.needs_valid:
-                    valid_path = rule["valid_section"]
+                    valid_path = rule["inside"]
                     valid_resolved = resolve_path(valid_path, spec, extra_specs)
                     valid = set()
                     for v in valid_resolved.values:

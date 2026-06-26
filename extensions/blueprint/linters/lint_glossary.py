@@ -246,7 +246,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "terms.relatedTerms",
-        "valid_section": "terms",
+        "inside": "terms.id",
         "label": "Term",
         "ref_label": "Glossary term",
         "category": "related_term_missing",

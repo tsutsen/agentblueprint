@@ -76,7 +76,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "screenSpecs.screenRef",
-        "valid_section": "screenInventory.id",
+        "inside": "screenInventory.id",
         "label": "Screen spec",
         "ref_label": "screen inventory",
         "category": "screen_spec_ref",
@@ -105,7 +105,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "uxAcceptanceCriteria.refs.usRefs",
-        "valid_section": "goal:userStories.id",
+        "inside": "goal:userStories.id",
         "label": "UXAC",
         "ref_label": "GoalSpec userStory",
         "category": "uxac_us_ref",
@@ -114,7 +114,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "uxAcceptanceCriteria.refs.reqRefs",
-        "valid_section": "goal:functionalRequirements.id",
+        "inside": "goal:functionalRequirements.id",
         "label": "UXAC",
         "ref_label": "GoalSpec requirement",
         "category": "uxac_req_ref",
@@ -134,7 +134,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "userJourneys.personaRef",
-        "valid_section": "personas.id",
+        "inside": "personas.id",
         "label": "User journey",
         "ref_label": "persona",
         "category": "journey_persona_ref",
@@ -145,7 +145,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "userJourneys.usRefs",
-        "valid_section": "goal:userStories.id",
+        "inside": "goal:userStories.id",
         "label": "User journey",
         "ref_label": "GoalSpec userStory",
         "category": "journey_us_ref",
@@ -156,7 +156,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "userJourneys.steps.screenRef",
-        "valid_section": "screenInventory.id",
+        "inside": "screenInventory.id",
         "label": "Journey step",
         "ref_label": "screen inventory",
         "category": "journey_screen_ref",
