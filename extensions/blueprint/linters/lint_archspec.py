@@ -27,7 +27,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, check_duplicates, find_orphans, validate_coverage, validate_non_empty, validate_no_overlap
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, check_duplicates, find_orphans, validate_coverage, validate_non_empty, validate_no_overlap, validate_exists
 from schema_validator import SchemaValidator
 
 
@@ -273,13 +273,14 @@ def check_data_ref_valid(spec: dict, data_spec: Optional[dict], result: LayerRes
         return
     
     entity_names = {e["name"] for e in data_spec.get("entities", [])}
-    for flow in spec.get("dataFlow", []):
-        for step in flow.get("steps", []):
-            data_ref = step.get("dataRef", "")
-            if data_ref and data_ref not in entity_names:
-                result.add("warning", "data_ref_missing",
-                    f"Flow '{flow['id']}' step references data '{data_ref}' which is not a defined DataSpec entity.",
-                    hint=f"Add '{data_ref}' to DataSpec or correct the dataRef.")
+    all_steps = [step for flow in spec.get("dataFlow", []) for step in flow.get("steps", [])]
+    validate_exists(
+        all_steps, "dataRef", entity_names,
+        result,
+        label="Flow step",
+        ref_label="DataSpec entity",
+        category="data_ref_missing"
+    )
 
 
 def check_component_responsibility_count(spec: dict, result: LayerResult):

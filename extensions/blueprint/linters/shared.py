@@ -267,6 +267,28 @@ def validate_no_overlap(items: list[dict], refs_key: str, id_key: str, result: "
                 hint=hint or f"Each {label.lower() or 'item'} should belong to exactly one {label.lower() or 'group'}.")
 
 
+def validate_exists(items: list[dict], key: str, valid: set[str], result: "LayerResult",
+                    label: str = "", ref_label: str = "", category: str = "missing", hint: str = "") -> None:
+    """Warn if items reference values not in the valid set.
+    
+    Args:
+        items: List of items to check.
+        key: Key in each item that holds the reference value (e.g., "dataRef").
+        valid: Set of valid reference values.
+        result: LayerResult to append warnings to.
+        label: Label for error messages (e.g., "Flow step").
+        ref_label: Label for the reference type (e.g., "DataSpec entity").
+        category: Category for the warning (e.g., "missing").
+        hint: Custom hint message (default: generic).
+    """
+    for item in items:
+        ref = item.get(key, "")
+        if ref and ref not in valid:
+            result.add("warning", category,
+                f"{label} references '{ref}' which is not a defined {ref_label}.",
+                hint=hint or f"Add '{ref}' to {ref_label} or correct the reference.")
+
+
 def extract_ids(items: list, key: str) -> list[str]:
     """Extract a field from a list of dicts."""
     return [item[key] for item in items if key in item]
