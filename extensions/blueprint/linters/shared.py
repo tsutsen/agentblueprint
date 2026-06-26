@@ -20,30 +20,47 @@ from dataclasses import dataclass, field
 # hardcoding patterns. If a pattern changes, update it in one place.
 
 ID_PATTERNS = {
-    # GoalSpec
+    # ── GoalSpec ──────────────────────────────────────────────────────────────
     "req": {"pattern": r"^REQ-\d{3}$", "example": "REQ-001", "hint": "Format: REQ-NNN (3-digit zero-padded)"},
     "nfr": {"pattern": r"^NFR-\d{3}$", "example": "NFR-001", "hint": "Format: NFR-NNN (3-digit zero-padded)"},
     "us": {"pattern": r"^US-\d{3}$", "example": "US-001", "hint": "Format: US-NNN (3-digit zero-padded)"},
     "sc": {"pattern": r"^SC-\d{3}$", "example": "SC-001", "hint": "Format: SC-NNN (3-digit zero-padded)"},
     "ng": {"pattern": r"^NG-\d{3}$", "example": "NG-001", "hint": "Format: NG-NNN (3-digit zero-padded)"},
-    # Glossary
+    # ── Glossary ──────────────────────────────────────────────────────────────
     "gl": {"pattern": r"^GL-\d{3}$", "example": "GL-001", "hint": "Format: GL-NNN (3-digit zero-padded)"},
-    # DesignSpec
+    # ── DesignSpec ────────────────────────────────────────────────────────────
     "dg": {"pattern": r"^DG-\d{3}$", "example": "DG-001", "hint": "Format: DG-NNN (3-digit zero-padded)"},
     "scr": {"pattern": r"^SCR-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "SCR-001-LandingPage", "hint": "Format: SCR-NNN-PascalCase"},
     "dcon": {"pattern": r"^DCON-\d{3}$", "example": "DCON-001", "hint": "Format: DCON-NNN (3-digit zero-padded)"},
-    # ArchitectureSpec
+    "ar": {"pattern": r"^AR-\d{3}$", "example": "AR-001", "hint": "Format: AR-NNN (3-digit zero-padded)"},
+    "dt": {"pattern": r"^DT-\d{3}-[a-z][a-z0-9-]*$", "example": "DT-001-primary-color", "hint": "Format: DT-NNN-kebab-case"},
+    "pat": {"pattern": r"^PAT-\d{3}$", "example": "PAT-001", "hint": "Format: PAT-NNN (3-digit zero-padded)"},
+    "spc": {"pattern": r"^SPC-\d{3}$", "example": "SPC-001", "hint": "Format: SPC-NNN (3-digit zero-padded)"},
+    "uj": {"pattern": r"^UJ-\d{3}$", "example": "UJ-001", "hint": "Format: UJ-NNN (3-digit zero-padded)"},
+    "uxac": {"pattern": r"^UXAC-\d{3}$", "example": "UXAC-001", "hint": "Format: UXAC-NNN (3-digit zero-padded)"},
+    "vdr": {"pattern": r"^VDR-\d{3}$", "example": "VDR-001", "hint": "Format: VDR-NNN (3-digit zero-padded)"},
+    # ── ArchitectureSpec ──────────────────────────────────────────────────────
     "comp": {"pattern": r"^[a-zA-Z][a-zA-Z0-9]*$", "example": "AuthService", "hint": "Format: PascalCase component name"},
     "con": {"pattern": r"^CON-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "CON-001-AuthenticationRequired", "hint": "Format: CON-NNN-PascalCase"},
     "flw": {"pattern": r"^FLW-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "FLW-001-SessionCreation", "hint": "Format: FLW-NNN-PascalCase"},
+    "comp_id": {"pattern": r"^COMP-\d{3}-[a-z][a-z0-9-]*$", "example": "COMP-001-auth-service", "hint": "Format: COMP-NNN-kebab-case"},
+    "flow": {"pattern": r"^FLOW-\d{3}-[a-z][a-z0-9-]*$", "example": "FLOW-001-user-login", "hint": "Format: FLOW-NNN-kebab-case"},
+    "ent_arch": {"pattern": r"^ENT-\d{3}-[a-z][a-z0-9-]*$", "example": "ENT-001-user-data", "hint": "Format: ENT-NNN-kebab-case (archspec)"},
     "dfw": {"pattern": r"^[a-z][a-z0-9-]*$", "example": "query-routing-flow", "hint": "Format: kebab-case lowercase"},
-    # DataSpec
+    # ── DataSpec ──────────────────────────────────────────────────────────────
     "ent": {"pattern": r"^ENT-\d{3}-[A-Z][A-Za-z0-9]*$", "example": "ENT-001-User", "hint": "Format: ENT-NNN-PascalCase"},
-    "num": {"pattern": r"^NUM-\d{3}-[A-Z][A-Za-z0-9]*$", "example": "NUM-001-UserName", "hint": "Format: NUM-NNN-PascalCase"},
-    # ApiSpec
+    "num": {"pattern": r"^NUM-\d{3}-[A-Z][A-Za-z0-9]*$", "example": "NUM-001-Status", "hint": "Format: NUM-NNN-PascalCase"},
+    "prim": {"pattern": r"^PRIM-\d{3}-[a-z][a-z0-9-]*$", "example": "PRIM-001-user-id", "hint": "Format: PRIM-NNN-kebab-case"},
+    "rel": {"pattern": r"^REL-\d{3}-[a-z][a-z0-9-]*$", "example": "REL-001-user-orders", "hint": "Format: REL-NNN-kebab-case"},
+    # ── ApiSpec ───────────────────────────────────────────────────────────────
     "fn": {"pattern": r"^FN-\d{3}-[a-z][A-Za-z0-9]*$", "example": "FN-001-authenticate", "hint": "Format: FN-NNN-lowerCamelCase"},
-    # TestSpec
-    "tst": {"pattern": r"^TST-\d{3}-[a-z][A-Za-z0-9]*$", "example": "TST-001-exportReportAsPDF", "hint": "Format: TST-NNN-testName (lowerCamelCase name suffix)"},
+    # ── TestSpec ──────────────────────────────────────────────────────────────
+    "tst": {"pattern": r"^TST-\d{3}-[a-z][A-Za-z0-9]*$", "example": "TST-001-exportReportAsPDF", "hint": "Format: TST-NNN-lowerCamelCase"},
+    "fc": {"pattern": r"^FC-\d{3}$", "example": "FC-001", "hint": "Format: FC-NNN (3-digit zero-padded)"},
+    # ── TaskPlan / Issues ─────────────────────────────────────────────────────
+    "ep": {"pattern": r"^EP-\d{3}$", "example": "EP-001", "hint": "Format: EP-NNN (3-digit zero-padded)"},
+    "is": {"pattern": r"^IS-\d{3}$", "example": "IS-001", "hint": "Format: IS-NNN (3-digit zero-padded)"},
+    "milestone": {"pattern": r"^M\d+$", "example": "M1", "hint": "Format: M followed by digits (e.g. M1, M12)"},
 }
 
 
