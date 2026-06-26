@@ -533,21 +533,6 @@ def find_patterns(items: list[dict], text_key: str = None, patterns: list[tuple[
                     msg = f"{label or iid} '{iid}': {', '.join(f'{l}: {m}' for l, m in matches)}."
                 
                 result.add("warning", category, msg, hint=hint or f"Review {label.lower() or 'item'} for {category}.")
-    
-    # Normalize to list of refs and dict of valid sets
-    if isinstance(refs, str):
-        refs = [refs]
-        if isinstance(valid, set):
-            valid = {refs[0]: valid}
-    
-    for item in items:
-        iid = item.get("id", "?")
-        for refs_key in refs:
-            for ref in item.get(refs_key, []):
-                if ref not in valid.get(refs_key, set()):
-                    result.add("error", category,
-                        f"{label} '{iid}': {refs_key} ref '{ref}' not found.",
-                        hint=f"Add '{ref}' to the target spec or correct the reference.")
 
 
 def extract_ids(items: list, key: str) -> list[str]:
@@ -621,10 +606,6 @@ def validate_glossary_refs(glossary: dict, result: "LayerResult",
                     hint=f"Add glossaryRefs (GL-NNN) for domain concepts.")
             else:
                 _validate_glossary_ref(refs, label, item_id, gl_ids, result)
-
-
-# Backwards compatibility alias
-ID_FORMATS = ID_PATTERNS
 
 
 # ── Canonical types ───────────────────────────────────────────────────────────
