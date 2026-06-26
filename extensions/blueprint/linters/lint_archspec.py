@@ -62,7 +62,7 @@ SEMANTIC_RULES = [
     },
     # Components not assigned to any subsystem
     {
-        "type": "coverage",
+        "type": "covers_all",
         "target": "overview.subsystems.componentRefs",
         "should_cover_all": "components",
         "covered_label": "Component",
@@ -70,14 +70,14 @@ SEMANTIC_RULES = [
     },
     # Subsystems must not overlap
     {
-        "type": "no_overlap",
+        "type": "not_shared",
         "target": "overview.subsystems.componentRefs",
         "label": "Subsystem",
         "category": "subsystem_overlap",
     },
     # Flow must have at least 2 steps
     {
-        "type": "item_count",
+        "type": "has_item_count",
         "target": "dataFlow.steps",
         "count": 2,
         "compare_mode": -1,
@@ -87,7 +87,7 @@ SEMANTIC_RULES = [
     },
     # Constraints must not mention implementation
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "constraints.description",
         "patterns": [
             "postgres", "mysql", "redis", "sqlite", "mongodb",
@@ -115,7 +115,7 @@ SEMANTIC_RULES = [
     },
     # Components must not have too many responsibilities
     {
-        "type": "item_count",
+        "type": "has_item_count",
         "target": "components.responsibilities",
         "count": 8,
         "compare_mode": 1,
@@ -124,7 +124,7 @@ SEMANTIC_RULES = [
     },
     # Flows must not have too many steps
     {
-        "type": "item_count",
+        "type": "has_item_count",
         "target": "dataFlow.steps",
         "count": 15,
         "compare_mode": 1,
@@ -133,7 +133,7 @@ SEMANTIC_RULES = [
     },
     # Components must not have vague responsibilities
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "components.responsibilities",
         "patterns": [
             (r"\bconsist(?:ent|ently)\b", "consistent/consistently"),
@@ -151,7 +151,7 @@ SEMANTIC_RULES = [
     },
     # Responsibilities must not contain inline refs
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "components.responsibilities",
         "patterns": [
             (r"\bkey\s+flow\s+\w+\b", "key flow references"),
@@ -164,7 +164,7 @@ SEMANTIC_RULES = [
     },
     # Components must not be isolated (no deps, no dependents)
     {
-        "type": "orphans",
+        "type": "not_orphan",
         "target": "components",
         "label": "Component",
         "warning": "isolated",
@@ -172,7 +172,7 @@ SEMANTIC_RULES = [
     },
     # GoalSpec FRs must be covered by components
     {
-        "type": "coverage",
+        "type": "covers_all",
         "target": "components.reqRefs",
         "should_cover_all": "goal:functionalRequirements",
         "covered_label": "GoalSpec FR",
@@ -180,7 +180,7 @@ SEMANTIC_RULES = [
     },
     # GoalSpec NFRs must be covered by components or constraints
     {
-        "type": "coverage",
+        "type": "covers_all",
         "target": "components.nfrRefs",
         "should_cover_all": "goal:nonFunctionalRequirements",
         "covered_label": "GoalSpec NFR",

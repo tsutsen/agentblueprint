@@ -48,7 +48,7 @@ from shared import (
 SEMANTIC_RULES = [
     # Design goals must not contain implementation details
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "designGoals.goal",
         "patterns": [
             "database", "api", "endpoint", "framework", "library",
@@ -61,7 +61,7 @@ SEMANTIC_RULES = [
 
     # UXAC must not contain subjective language
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "uxAcceptanceCriteria.description",
         "patterns": [
             "feel", "feels", "intuitive", "easy", "simple", "nice",
@@ -123,7 +123,7 @@ SEMANTIC_RULES = [
     
     # User stories must be covered by journeys
     {
-        "type": "coverage",
+        "type": "covers_all",
         "target": "userJourneys.usRefs",
         "should_cover_all": "goal:userStories",
         "covered_label": "GoalSpec US",
@@ -165,7 +165,7 @@ SEMANTIC_RULES = [
     
     # Screen specs must not contain forbidden content
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "screenSpecs",
         "extra_keys": ["layout", "wireframe"],
         "patterns": [

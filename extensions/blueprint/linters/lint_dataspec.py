@@ -229,7 +229,7 @@ def _check_entity_visibility(spec: dict, result: LayerResult, extra_specs: dict 
 SEMANTIC_RULES = [
     # Entity names must be PascalCase
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "entities.name",
         "patterns": [r"^[A-Z][A-Za-z0-9]*$"],
         "negate": True,
@@ -239,7 +239,7 @@ SEMANTIC_RULES = [
     },
     # Field names must be camelCase
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "entities.fields.name",
         "patterns": [r"^[a-z][A-Za-z0-9]*$"],
         "negate": True,
@@ -249,7 +249,7 @@ SEMANTIC_RULES = [
     },
     # Method names must be camelCase
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "entities.methods.name",
         "patterns": [r"^[a-z][A-Za-z0-9]*$"],
         "negate": True,
@@ -259,7 +259,7 @@ SEMANTIC_RULES = [
     },
     # Enum names must be PascalCase
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "enums.name",
         "patterns": [r"^[A-Z][A-Za-z0-9]*$"],
         "negate": True,
@@ -269,7 +269,7 @@ SEMANTIC_RULES = [
     },
     # Enum values must be SCREAMING_SNAKE_CASE
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "enums.values.name",
         "patterns": [r"^[A-Z][A-Z0-9_]*$"],
         "negate": True,

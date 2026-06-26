@@ -50,33 +50,33 @@ class ExistsRule(_TargetRuleBase):
     ref_label: str
 
 
-class UniqueRule(_TargetRuleBase):
+class IsUniqueRule(_TargetRuleBase):
     """Check that values in a field are unique."""
-    type: Literal["unique"]
+    type: Literal["is_unique"]
     target: str
 
 
-class NoOverlapRule(_TargetRuleBase):
-    """Check that list fields don't share values across items."""
-    type: Literal["no_overlap"]
+class NotSharedRule(_TargetRuleBase):
+    """Check that list items are not shared across parent items."""
+    type: Literal["not_shared"]
     target: str
 
 
-class ItemCountRule(_TargetRuleBase):
+class HasItemCountRule(_TargetRuleBase):
     """Check list length against threshold."""
-    type: Literal["item_count"]
+    type: Literal["has_item_count"]
     target: str
     count: int
     compare_mode: int
 
 
-class PatternsRule(_TargetRuleBase):
+class ContainsPatternsRule(_TargetRuleBase):
     """Check text against regex patterns.
 
     For single-property checks, append to target path (e.g. "entities.fields.name").
     For multi-property checks on the same item, use extra_keys.
     """
-    type: Literal["patterns"]
+    type: Literal["contains_patterns"]
     target: str
     patterns: list
     negate: bool
@@ -84,12 +84,12 @@ class PatternsRule(_TargetRuleBase):
     max_count: int
 
 
-class CoverageRule(TypedDict, total=False):
+class CoversAllRule(TypedDict, total=False):
     """Check that target items reference all items in should_cover_all.
 
     target path includes the ref field: "overview.subsystems.componentRefs"
     """
-    type: Literal["coverage"]
+    type: Literal["covers_all"]
     target: str
     should_cover_all: str
     severity: str
@@ -99,13 +99,13 @@ class CoverageRule(TypedDict, total=False):
     source_label: str
 
 
-class OrphansRule(TypedDict, total=False):
+class NotOrphanRule(TypedDict, total=False):
     """Check for isolated items (no *Refs outgoing, no *Refs incoming).
 
     Auto-discovers all *Refs/*Ref fields — no deps_field needed.
     Note: uses 'warning' as the category field name (not 'category').
     """
-    type: Literal["orphans"]
+    type: Literal["not_orphan"]
     target: str
     severity: str
     label: str
@@ -113,16 +113,19 @@ class OrphansRule(TypedDict, total=False):
     warning: str
 
 
+
+
+
 # Union of all rule types
 SemanticRule = Union[
     NonEmptyRule,
     ExistsRule,
-    UniqueRule,
-    NoOverlapRule,
-    ItemCountRule,
-    PatternsRule,
-    CoverageRule,
-    OrphansRule,
+    IsUniqueRule,
+    NotSharedRule,
+    HasItemCountRule,
+    ContainsPatternsRule,
+    CoversAllRule,
+    NotOrphanRule,
 ]
 
 
@@ -130,12 +133,12 @@ SemanticRule = Union[
 _RULE_TYPE_MAP: dict[str, type] = {
     "non_empty": NonEmptyRule,
     "exists": ExistsRule,
-    "unique": UniqueRule,
-    "no_overlap": NoOverlapRule,
-    "item_count": ItemCountRule,
-    "patterns": PatternsRule,
-    "coverage": CoverageRule,
-    "orphans": OrphansRule,
+    "is_unique": IsUniqueRule,
+    "not_shared": NotSharedRule,
+    "has_item_count": HasItemCountRule,
+    "contains_patterns": ContainsPatternsRule,
+    "covers_all": CoversAllRule,
+    "not_orphan": NotOrphanRule,
 }
 
 
@@ -1448,44 +1451,44 @@ class RuleHandler:
 
 
 _RULE_HANDLERS = {
-    "non_empty":    RuleHandler(handle_non_empty),
-    "exists":       RuleHandler(handle_exists, needs_valid=True),
-    "unique":       RuleHandler(handle_unique),
-    "no_overlap":   RuleHandler(handle_no_overlap),
-    "item_count":   RuleHandler(handle_item_count),
-    "patterns":     RuleHandler(handle_patterns),
-    "coverage":     RuleHandler(handle_coverage, needs_coverage=True),
-    "orphans":      RuleHandler(handle_orphans, needs_orphans=True),
+    "non_empty":         RuleHandler(handle_non_empty),
+    "exists":            RuleHandler(handle_exists, needs_valid=True),
+    "is_unique":         RuleHandler(handle_unique),
+    "not_shared":        RuleHandler(handle_no_overlap),
+    "has_item_count":    RuleHandler(handle_item_count),
+    "contains_patterns": RuleHandler(handle_patterns),
+    "covers_all":        RuleHandler(handle_coverage, needs_coverage=True),
+    "not_orphan":        RuleHandler(handle_orphans, needs_orphans=True),
 }
 
 
 # Required fields per rule type (beyond 'type' itself)
 _REQUIRED_FIELDS: dict[str, list[str]] = {
-    "non_empty":  ["target"],
-    "exists":     ["target", "inside"],
-    "unique":     ["target"],
-    "no_overlap": ["target"],
-    "item_count": ["target", "count"],
-    "patterns":   ["target", "patterns"],
-    "coverage":   ["target", "should_cover_all"],
-    "orphans":    ["target"],
+    "non_empty":         ["target"],
+    "exists":            ["target", "inside"],
+    "is_unique":         ["target"],
+    "not_shared":        ["target"],
+    "has_item_count":    ["target", "count"],
+    "contains_patterns": ["target", "patterns"],
+    "covers_all":        ["target", "should_cover_all"],
+    "not_orphan":        ["target"],
 }
 
 # Known fields per rule type (for detecting typos — includes 'type' itself)
 _KNOWN_FIELDS: dict[str, set[str]] = {
-    "non_empty":  {"type", "target", "label", "category", "severity", "hint"},
-    "exists":     {"type", "target", "inside", "ref_label",
-                   "label", "category", "severity", "hint"},
-    "unique":     {"type", "target", "label", "category", "severity", "hint"},
-    "no_overlap": {"type", "target", "label", "category", "severity", "hint"},
-    "item_count": {"type", "target", "count", "compare_mode",
-                   "label", "category", "severity", "hint"},
-    "patterns":   {"type", "target", "patterns", "negate", "extra_keys", "max_count",
-                   "label", "category", "severity", "hint"},
-    "coverage":   {"type", "target", "should_cover_all", "covered_label", "source_label",
-                   "severity", "category", "hint"},
-    "orphans":    {"type", "target", "warning",
-                   "label", "severity", "hint"},
+    "non_empty":         {"type", "target", "label", "category", "severity", "hint"},
+    "exists":            {"type", "target", "inside", "ref_label",
+                          "label", "category", "severity", "hint"},
+    "is_unique":         {"type", "target", "label", "category", "severity", "hint"},
+    "not_shared":        {"type", "target", "label", "category", "severity", "hint"},
+    "has_item_count":    {"type", "target", "count", "compare_mode",
+                          "label", "category", "severity", "hint"},
+    "contains_patterns": {"type", "target", "patterns", "negate", "extra_keys", "max_count",
+                          "label", "category", "severity", "hint"},
+    "covers_all":        {"type", "target", "should_cover_all", "covered_label", "source_label",
+                          "severity", "category", "hint"},
+    "not_orphan":        {"type", "target", "warning",
+                          "label", "severity", "hint"},
 }
 
 

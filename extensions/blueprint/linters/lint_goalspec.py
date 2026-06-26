@@ -95,7 +95,7 @@ SEMANTIC_RULES = [
     
     # FRs must not contain implementation details
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "functionalRequirements.description",
         "patterns": [
             "use ", "using ", "call ", "via ", "with ", "implement", "library", "framework",
@@ -107,7 +107,7 @@ SEMANTIC_RULES = [
 
     # User stories must not contain feature-like language
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "userStories.capability",
         "patterns": [
             "use ", "using ", "implement", "button", "dropdown",
@@ -120,7 +120,7 @@ SEMANTIC_RULES = [
 
     # Success criteria must not contain subjective language
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "successCriteria.description",
         "patterns": [
             "feel", "feels", "fast", "slow", "good", "happy",
@@ -133,7 +133,7 @@ SEMANTIC_RULES = [
 
     # Non-goals must not be vague
     {
-        "type": "patterns",
+        "type": "contains_patterns",
         "target": "nonGoals.capability",
         "patterns": [
             "everything", "advanced", "features", "stuff",

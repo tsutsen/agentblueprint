@@ -309,7 +309,7 @@ def _check_lifecycle(spec: dict, result: LayerResult, extra_specs: dict = None) 
 SEMANTIC_RULES = [
     # Test IDs must be unique
     {
-        "type": "unique",
+        "type": "is_unique",
         "target": "tests.id",
         "label": "Test",
         "category": "duplicate_id",
@@ -327,7 +327,7 @@ SEMANTIC_RULES = [
     },
     # Every ApiSpec function must have tests
     {
-        "type": "coverage",
+        "type": "covers_all",
         "target": "tests.fnRef",
         "should_cover_all": "api:functions",
         "covered_label": "ApiSpec function",
