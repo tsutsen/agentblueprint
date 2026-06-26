@@ -305,6 +305,44 @@ def validate_exists(items: list[dict], refs: str | list[str], valid: set[str] | 
                         hint=f"Add '{ref}' to the target spec or correct the reference.")
 
 
+def validate_max_length(items: list[dict], key: str, max_len: int, id_key: str,
+                        result: "LayerResult", label: str = "", category: str = "too_many",
+                        hint: str = "") -> None:
+    """Warn if items have a list field exceeding max length.
+    
+    Args:
+        items: List of items to check.
+        key: Key in each item that holds the list to check (e.g., "responsibilities").
+        max_len: Maximum allowed length.
+        id_key: Key in each item that holds the ID (e.g., "id").
+        result: LayerResult to append warnings to.
+        label: Label for error messages (e.g., "Component").
+        category: Category for the warning (e.g., "too_many").
+        hint: Custom hint message (default: generic).
+    """
+    for item in items:
+        iid = item.get(id_key, "?")
+        refs = item.get(key, [])
+        if len(refs) > max_len:
+            result.add("warning", category,
+                f"{label} '{iid}' has {len(refs)} {key} — consider splitting.",
+                hint=hint or f"A {label.lower()} with >{max_len} {key} may be too complex. Consider splitting.")
+    # Normalize to list of refs and dict of valid sets
+    if isinstance(refs, str):
+        refs = [refs]
+        if isinstance(valid, set):
+            valid = {refs[0]: valid}
+    
+    for item in items:
+        iid = item.get("id", "?")
+        for refs_key in refs:
+            for ref in item.get(refs_key, []):
+                if ref not in valid.get(refs_key, set()):
+                    result.add("error", category,
+                        f"{label} '{iid}': {refs_key} ref '{ref}' not found.",
+                        hint=f"Add '{ref}' to the target spec or correct the reference.")
+
+
 def extract_ids(items: list, key: str) -> list[str]:
     """Extract a field from a list of dicts."""
     return [item[key] for item in items if key in item]

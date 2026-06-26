@@ -30,6 +30,7 @@ from typing import Optional
 
 from schema_validator import SchemaValidator
 from shared import (
+    validate_max_length,
     Issue,
     LayerResult,
     check_duplicates,
@@ -359,28 +360,18 @@ def check_data_ref_valid(spec: dict, data_spec: Optional[dict], result: LayerRes
 
 def check_component_responsibility_count(spec: dict, result: LayerResult):
     """Warn if a component has too many responsibilities (>5)."""
-    for comp in spec.get("components", []):
-        resps = comp.get("responsibilities", [])
-        if len(resps) > 8:
-            result.add(
-                "warning",
-                "component_responsibility_count",
-                f"Component '{comp['id']}' has {len(resps)} responsibilities — consider splitting.",
-                hint="A component with >5 responsibilities may be doing too much. Consider splitting into multiple components.",
-            )
+    validate_max_length(
+        spec.get("components", []), "responsibilities", 8, "id",
+        result, label="Component", category="component_responsibility_count"
+    )
 
 
 def check_data_flow_step_count(spec: dict, result: LayerResult):
     """Warn if a data flow has too many steps (>10)."""
-    for flow in spec.get("dataFlow", []):
-        steps = flow.get("steps", [])
-        if len(steps) > 15:
-            result.add(
-                "warning",
-                "flow_step_count",
-                f"Flow '{flow['id']}' has {len(steps)} steps — consider splitting.",
-                hint="A data flow with >10 steps may be too complex. Consider splitting into multiple flows.",
-            )
+    validate_max_length(
+        spec.get("dataFlow", []), "steps", 15, "id",
+        result, label="Flow", category="flow_step_count"
+    )
 
 
 def check_external_component_count(spec: dict, result: LayerResult):
