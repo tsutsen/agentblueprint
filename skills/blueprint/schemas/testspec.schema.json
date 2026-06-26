@@ -333,14 +333,6 @@
               "pattern": "^ENT-\\d{3}$"
             }
           },
-          "fieldRefs": {
-            "type": "array",
-            "description": "Field names from DataSpec entities referenced in test inputs/outputs. Fields use camelCase names (e.g., 'userName'), not ID prefixes.",
-            "items": {
-              "type": "string",
-              "pattern": "^[a-z][a-zA-Z0-9]*$"
-            }
-          },
           "constraintRefs": {
             "type": "array",
             "description": "CON-IDs from ArchitectureSpec constraints tested by this test case (e.g. performance, reliability).",
