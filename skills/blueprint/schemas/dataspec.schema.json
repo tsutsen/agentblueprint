@@ -20,11 +20,6 @@
       "description": "Glossary term identifier, format GL-NNN-PascalCase.",
       "pattern": "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     },
-    "entityId": {
-      "type": "string",
-      "description": "Entity identifier (ENT-NNN-entityName).",
-      "pattern": "^ENT-\\d{3}-[A-Z][A-Za-z0-9]*$"
-    },
     "enumId": {
       "type": "string",
       "description": "Enum identifier (NUM-NNN-enumName).",
@@ -33,22 +28,42 @@
     "entId": {
       "type": "string",
       "description": "Entity identifier (ENT-NNN-entityName).",
-      "pattern": "^ENT-\\d{3}-[a-z][a-z0-9-]*$"
+      "pattern": "^ENT-\\d{3}-[A-Z][A-Za-z0-9]*$"
     },
     "relId": {
       "type": "string",
       "description": "Relationship identifier (REL-NNN-relationshipName).",
-      "pattern": "^REL-\\d{3}-[a-z][a-z0-9-]*$"
+      "pattern": "^REL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     },
     "primId": {
       "type": "string",
       "description": "Primitive type identifier (PRIM-NNN-primitiveName).",
-      "pattern": "^PRIM-\\d{3}-[a-z][a-z0-9-]*$"
+      "pattern": "^PRIM-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     },
     "compId": {
       "type": "string",
       "description": "Component identifier from ArchitectureSpec, format COMP-NNN-PascalCase.",
       "pattern": "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+    },
+    "reqId": {
+      "type": "string",
+      "description": "^REQ identifier.",
+      "pattern": "^REQ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+    },
+    "nfrId": {
+      "type": "string",
+      "description": "^NFR identifier.",
+      "pattern": "^NFR-\\d{3}-[a-z][a-zA-Z0-9]*$"
+    },
+    "conId": {
+      "type": "string",
+      "description": "^CON identifier.",
+      "pattern": "^CON-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+    },
+    "fnId": {
+      "type": "string",
+      "description": "Function identifier from ApiSpec, format FN-NNN-slug.",
+      "pattern": "^FN-\\d{3}-[a-z][A-Za-z0-9]*$"
     }
   },
   "properties": {
@@ -169,7 +184,7 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/entityId",
+            "$ref": "#/definitions/entId",
             "description": "Unique identifier for this entity.",
             "x_idPattern": "ent"
           },
@@ -264,8 +279,8 @@
                   "pattern": "^[a-z][A-Za-z0-9]*$"
                 },
                 "apiRef": {
-                  "type": "string",
-                  "description": "The function ID in the API spec this method corresponds to."
+                  "description": "The function ID in the API spec this method corresponds to. Format: FN-NNN-slug.",
+                  "$ref": "#/definitions/fnId"
                 },
                 "description": {
                   "type": "string",
@@ -302,7 +317,8 @@
             "description": "REQ-IDs from GoalSpec that this entity supports. Used for entity\u2192requirement traceability.",
             "items": {
               "type": "string",
-              "pattern": "^REQ-\\d{3}$"
+              "pattern": "^REQ-\\d{3}$",
+              "$ref": "#/definitions/reqId"
             }
           },
           "nfrRefs": {
@@ -310,7 +326,8 @@
             "description": "NFR-IDs from GoalSpec that this entity helps satisfy (e.g. performance, data quality).",
             "items": {
               "type": "string",
-              "pattern": "^NFR-\\d{3}$"
+              "pattern": "^NFR-\\d{3}$",
+              "$ref": "#/definitions/nfrId"
             }
           },
           "constraintRefs": {
@@ -318,7 +335,8 @@
             "description": "CON-IDs from ArchitectureSpec constraints that affect this entity (e.g. data retention, partitioning).",
             "items": {
               "type": "string",
-              "pattern": "^CON-\\d{3}$"
+              "pattern": "^CON-\\d{3}$",
+              "$ref": "#/definitions/conId"
             }
           }
         }
@@ -399,6 +417,13 @@
             "$ref": "#/definitions/relId",
             "description": "Unique identifier for this relationship.",
             "x_idPattern": "rel"
+          },
+          "reqRefs": {
+            "type": "array",
+            "description": "REQ-NNN IDs from GoalSpec functional requirements that require this relationship.",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            }
           }
         }
       }

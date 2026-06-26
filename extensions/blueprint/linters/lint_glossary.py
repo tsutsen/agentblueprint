@@ -245,10 +245,8 @@ SEMANTIC_RULES = [
     # Related terms must reference existing glossary terms
     {
         "type": "exists",
-        "section": "terms",
-        "key": "relatedTerms",
+        "target": "terms.relatedTerms",
         "valid_section": "terms",
-        "valid_key": "id",
         "label": "Term",
         "ref_label": "Glossary term",
         "category": "related_term_missing",

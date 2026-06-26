@@ -87,18 +87,9 @@
               "ui"
             ]
           },
-          "reqRefs": {
-            "type": "array",
-            "description": "REQ-IDs from GoalSpec that reference this term. Populated during requirement writing. Use for GL\u2192REQ traceability.",
-            "items": {
-              "type": "string",
-              "pattern": "^REQ-\\d{3}$"
-            }
-          },
           "id": {
-            "type": "string",
+            "$ref": "#/definitions/glId",
             "description": "Unique glossary term identifier. Format: GL-NNN (3-digit zero-padded, sequential).",
-            "pattern": "^GL-\\d{3}$",
             "x_idPattern": "gl"
           }
         },

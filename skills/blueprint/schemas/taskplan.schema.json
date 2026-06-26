@@ -16,12 +16,12 @@
     "epicId": {
       "type": "string",
       "description": "Epic identifier, sequential and zero-padded.",
-      "pattern": "^EP-\\d{3}$"
+      "pattern": "^EP-\\d{3}-[a-z][a-zA-Z0-9]*$"
     },
     "milestoneId": {
       "type": "string",
       "description": "Milestone identifier, sequential.",
-      "pattern": "^M\\d+$"
+      "pattern": "^MIL-\\d+-[A-Z][a-zA-Z]*$"
     },
     "epicStatus": {
       "type": "string",

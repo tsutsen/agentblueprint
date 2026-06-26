@@ -19,17 +19,17 @@
     "componentId": {
       "type": "string",
       "description": "kebab-case component identifier, e.g. 'search-service', 'api-gateway'.",
-      "pattern": "^[a-z][a-z0-9-]*$"
+      "pattern": "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     },
     "reqId": {
       "type": "string",
       "description": "Functional requirement identifier, format REQ-NNN (3-digit zero-padded).",
-      "pattern": "^REQ-\\d{3}$"
+      "pattern": "^REQ-\\d{3}-[a-z][a-zA-Z0-9]*$"
     },
     "nfrId": {
       "type": "string",
       "description": "Non-functional requirement identifier, format NFR-NNN (3-digit zero-padded).",
-      "pattern": "^NFR-\\d{3}$"
+      "pattern": "^NFR-\\d{3}-[a-z][a-zA-Z0-9]*$"
     },
     "glId": {
       "type": "string",
@@ -39,17 +39,17 @@
     "compId": {
       "type": "string",
       "description": "Component identifier, format COMP-NNN-componentName.",
-      "pattern": "^COMP-\\d{3}-[a-z][a-z0-9-]*$"
+      "pattern": "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     },
     "flowId": {
       "type": "string",
       "description": "Data flow identifier, format FLOW-NNN-flowName.",
-      "pattern": "^FLOW-\\d{3}-[a-z][a-z0-9-]*$"
+      "pattern": "^FLW-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     },
     "conId": {
       "type": "string",
       "description": "Constraint identifier, format CON-NNN-name.",
-      "pattern": "^CON-\\d{3}-[a-zA-Z][a-zA-Z0-9]*$"
+      "pattern": "^CON-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     }
   },
   "properties": {
@@ -242,9 +242,17 @@
               "implemented",
               "deprecated"
             ]
+          },
+          "constraintRefs": {
+            "type": "array",
+            "description": "CON-NNN IDs from ArchitectureSpec constraints that apply to this component.",
+            "items": {
+              "$ref": "#/definitions/conId"
+            }
           }
         },
-        "x_idPattern": "comp"
+        "x_idPattern": "comp",
+        "pattern": "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$"
       }
     },
     "dataModel": {
@@ -298,9 +306,8 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "type": "string",
+            "$ref": "#/definitions/flowId",
             "description": "Stable flow identifier, format FLW-NNN-name.",
-            "pattern": "^FLW-\\d{3}-[a-zA-Z][a-zA-Z0-9]*$",
             "x_idPattern": "flw"
           },
           "name": {
@@ -357,6 +364,20 @@
                 }
               }
             }
+          },
+          "nfrRefs": {
+            "type": "array",
+            "description": "NFR-NNN IDs from GoalSpec non-functional requirements that apply to this data flow (e.g. latency, throughput).",
+            "items": {
+              "$ref": "#/definitions/nfrId"
+            }
+          },
+          "componentRefs": {
+            "type": "array",
+            "description": "COMP-NNN IDs from ArchitectureSpec components involved in this data flow.",
+            "items": {
+              "$ref": "#/definitions/compId"
+            }
           }
         }
       }
@@ -374,9 +395,8 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "type": "string",
+            "$ref": "#/definitions/conId",
             "description": "Stable constraint identifier, e.g. 'CON-001-AuthenticationRequired'.",
-            "pattern": "^CON-\\d{3}-[a-zA-Z][a-zA-Z0-9]*$",
             "x_idPattern": "con"
           },
           "name": {
@@ -405,6 +425,13 @@
             "description": "NFR-IDs this constraint helps satisfy.",
             "items": {
               "$ref": "#/definitions/nfrId"
+            }
+          },
+          "reqRefs": {
+            "type": "array",
+            "description": "REQ-NNN IDs from GoalSpec functional requirements that drive this constraint.",
+            "items": {
+              "$ref": "#/definitions/reqId"
             }
           }
         }

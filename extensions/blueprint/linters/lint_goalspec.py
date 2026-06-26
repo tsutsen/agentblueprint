@@ -42,9 +42,7 @@ SEMANTIC_RULES = [
     # FRs must have descriptions
     {
         "type": "non_empty",
-        "section": "functionalRequirements",
-        "key": "description",
-        "id_key": "id",
+        "target": "functionalRequirements.description",
         "label": "FR",
         "category": "fr_empty_description",
         "hint": "Every functional requirement must have a description.",
@@ -53,9 +51,7 @@ SEMANTIC_RULES = [
     # NFRs must have descriptions
     {
         "type": "non_empty",
-        "section": "nonFunctionalRequirements",
-        "key": "description",
-        "id_key": "id",
+        "target": "nonFunctionalRequirements.description",
         "label": "NFR",
         "category": "nfr_empty_description",
         "hint": "Every NFR must have a description.",
@@ -64,9 +60,7 @@ SEMANTIC_RULES = [
     # User stories must have capabilities
     {
         "type": "non_empty",
-        "section": "userStories",
-        "key": "capability",
-        "id_key": "id",
+        "target": "userStories.capability",
         "label": "User story",
         "category": "story_empty_capability",
         "hint": "Every user story must have a capability.",
@@ -75,9 +69,7 @@ SEMANTIC_RULES = [
     # Success criteria must have descriptions
     {
         "type": "non_empty",
-        "section": "successCriteria",
-        "key": "description",
-        "id_key": "id",
+        "target": "successCriteria.description",
         "label": "Success criterion",
         "category": "sc_empty_description",
         "hint": "Every success criterion must have a description.",
@@ -86,9 +78,7 @@ SEMANTIC_RULES = [
     # NFRs must have scale
     {
         "type": "non_empty",
-        "section": "nonFunctionalRequirements",
-        "key": "scale",
-        "id_key": "id",
+        "target": "nonFunctionalRequirements.scale",
         "label": "NFR",
         "category": "nfr_missing_scale",
         "hint": "Every NFR must have a scale defined.",
@@ -97,9 +87,7 @@ SEMANTIC_RULES = [
     # NFRs must have meter
     {
         "type": "non_empty",
-        "section": "nonFunctionalRequirements",
-        "key": "meter",
-        "id_key": "id",
+        "target": "nonFunctionalRequirements.meter",
         "label": "NFR",
         "category": "nfr_missing_meter",
         "hint": "Every NFR must have a meter defined.",
@@ -108,7 +96,7 @@ SEMANTIC_RULES = [
     # FRs must not contain implementation details
     {
         "type": "patterns",
-        "section": "functionalRequirements",
+        "target": "functionalRequirements",
         "text_key": "description",
         "patterns": [
             "use ", "using ", "call ", "via ", "with ", "implement", "library", "framework",
@@ -121,7 +109,7 @@ SEMANTIC_RULES = [
     # User stories must not contain feature-like language
     {
         "type": "patterns",
-        "section": "userStories",
+        "target": "userStories",
         "text_key": "capability",
         "patterns": [
             "use ", "using ", "implement", "button", "dropdown",
@@ -135,7 +123,7 @@ SEMANTIC_RULES = [
     # Success criteria must not contain subjective language
     {
         "type": "patterns",
-        "section": "successCriteria",
+        "target": "successCriteria",
         "text_key": "description",
         "patterns": [
             "feel", "feels", "fast", "slow", "good", "happy",
@@ -149,7 +137,7 @@ SEMANTIC_RULES = [
     # Non-goals must not be vague
     {
         "type": "patterns",
-        "section": "nonGoals",
+        "target": "nonGoals",
         "text_key": "capability",
         "patterns": [
             "everything", "advanced", "features", "stuff",

@@ -39,9 +39,7 @@ SEMANTIC_RULES = [
     # Components must have reqRefs
     {
         "type": "non_empty",
-        "section": "components",
-        "key": "reqRefs",
-        "id_key": "id",
+        "target": "components.reqRefs",
         "label": "Component",
         "category": "component_no_reqs",
         "hint": "Link each component to the requirements it helps satisfy.",
@@ -49,10 +47,8 @@ SEMANTIC_RULES = [
     # Flow steps must reference valid components
     {
         "type": "exists",
-        "section": "dataFlow",
-        "nested_key": "componentRef",
+        "target": "dataFlow.steps.componentRef",
         "valid_section": "components",
-        "valid_key": "id",
         "label": "Flow step",
         "ref_label": "component",
         "category": "flow_component_ref",
@@ -60,39 +56,35 @@ SEMANTIC_RULES = [
     # Subsystems must have componentRefs
     {
         "type": "non_empty",
-        "section": "overview.subsystems",
-        "key": "componentRefs",
-        "id_key": "name",
+        "target": "overview.subsystems.componentRefs",
+        "id_field": "name",
         "label": "Subsystem",
         "category": "subsystem_empty",
     },
     # Components not assigned to any subsystem
     {
         "type": "coverage",
-        "covered_section": "components",
-        "source_section": "overview.subsystems",
-        "covered_key": "id",
-        "refs_key": "componentRefs",
+        "covered": "components",
+        "covering": "overview.subsystems",
+        "ref_field": "componentRefs",
         "covered_label": "Component",
         "source_label": "Subsystem",
     },
     # Subsystems must not overlap
     {
         "type": "no_overlap",
-        "section": "overview.subsystems",
-        "refs_key": "componentRefs",
-        "id_key": "name",
+        "target": "overview.subsystems.componentRefs",
+        "id_field": "name",
         "label": "Subsystem",
         "category": "subsystem_overlap",
     },
     # Flow must have at least 2 steps
     {
         "type": "item_count",
-        "section": "dataFlow",
-        "key": "steps",
+        "target": "dataFlow.steps",
         "count": 2,
         "compare_mode": -1,
-        "id_key": "id",
+        "id_field": "id",
         "label": "Flow",
         "category": "flow_too_short",
         "hint": "A data flow must show at least a source and a sink step.",
@@ -100,8 +92,7 @@ SEMANTIC_RULES = [
     # Constraints must not mention implementation
     {
         "type": "patterns",
-        "section": "constraints",
-        "text_key": "description",
+        "target": "constraints.description",
         "patterns": [
             "postgres", "mysql", "redis", "sqlite", "mongodb",
             "fastapi", "flask", "django", "docker", "kubernetes",
@@ -115,48 +106,42 @@ SEMANTIC_RULES = [
     # Flow descriptions must not be empty
     {
         "type": "non_empty",
-        "section": "dataFlow",
-        "key": "description",
-        "id_key": "id",
+        "target": "dataFlow.description",
+        "id_field": "id",
         "label": "Flow",
         "category": "flow_empty_description",
     },
     # Flow steps must have dataRef
     {
         "type": "non_empty",
-        "section": "dataFlow",
-        "nested_key": "dataRef",
-        "id_key": "componentRef",
+        "target": "dataFlow.steps.dataRef",
         "label": "Flow step",
         "category": "flow_step_empty_data_ref",
     },
     # Components must not have too many responsibilities
     {
         "type": "item_count",
-        "section": "components",
-        "key": "responsibilities",
+        "target": "components.responsibilities",
         "count": 8,
         "compare_mode": 1,
-        "id_key": "id",
+        "id_field": "id",
         "label": "Component",
         "category": "component_responsibility_count",
     },
     # Flows must not have too many steps
     {
         "type": "item_count",
-        "section": "dataFlow",
-        "key": "steps",
+        "target": "dataFlow.steps",
         "count": 15,
         "compare_mode": 1,
-        "id_key": "id",
+        "id_field": "id",
         "label": "Flow",
         "category": "flow_step_count",
     },
     # Components must not have vague responsibilities
     {
         "type": "patterns",
-        "section": "components",
-        "nested_key": "responsibilities",
+        "target": "components.responsibilities",
         "patterns": [
             (r"\bconsist(?:ent|ently)\b", "consistent/consistently"),
             (r"\bacross all\b", "across all"),
@@ -174,8 +159,7 @@ SEMANTIC_RULES = [
     # Responsibilities must not contain inline refs
     {
         "type": "patterns",
-        "section": "components",
-        "nested_key": "responsibilities",
+        "target": "components.responsibilities",
         "patterns": [
             (r"\bkey\s+flow\s+\w+\b", "key flow references"),
             (r"\bflow\s+\d+[a-z]?\b", "flow number references"),
@@ -188,9 +172,8 @@ SEMANTIC_RULES = [
     # Components must not be isolated (no deps, no dependents)
     {
         "type": "orphans",
-        "section": "components",
-        "id_key": "id",
-        "deps_key": "dependencies",
+        "target": "components",
+        "deps_field": "dependencies",
         "label": "Component",
         "warning": "isolated",
         "hint": "An isolated component may indicate a design issue.",
@@ -198,33 +181,26 @@ SEMANTIC_RULES = [
     # GoalSpec FRs must be covered by components
     {
         "type": "coverage",
-        "covered_section": "functionalRequirements",
-        "source_section": "components",
-        "covered_key": "id",
-        "refs_key": "reqRefs",
+        "covered": "goal:functionalRequirements",
+        "covering": "components",
+        "ref_field": "reqRefs",
         "covered_label": "GoalSpec FR",
         "source_label": "component",
-        "valid_extra_spec": "goal",
     },
     # GoalSpec NFRs must be covered by components or constraints
     {
         "type": "coverage",
-        "covered_section": "nonFunctionalRequirements",
-        "source_section": "components",
-        "covered_key": "id",
-        "refs_key": "nfrRefs",
+        "covered": "goal:nonFunctionalRequirements",
+        "covering": "components",
+        "ref_field": "nfrRefs",
         "covered_label": "GoalSpec NFR",
         "source_label": "component",
-        "valid_extra_spec": "goal",
     },
-    # Components must reference valid GoalSpec REQ/NFR
+    # Components must reference valid GoalSpec REQ
     {
         "type": "exists",
-        "section": "components",
-        "key": "reqRefs",
-        "valid_extra_spec": "goal",
-        "valid_section": "functionalRequirements",
-        "valid_key": "id",
+        "target": "components.reqRefs",
+        "valid_section": "goal:functionalRequirements",
         "label": "Component",
         "ref_label": "GoalSpec requirement",
         "category": "req_ref_missing",
@@ -232,23 +208,17 @@ SEMANTIC_RULES = [
     # Components must reference valid GoalSpec NFR
     {
         "type": "exists",
-        "section": "components",
-        "key": "nfrRefs",
-        "valid_extra_spec": "goal",
-        "valid_section": "nonFunctionalRequirements",
-        "valid_key": "id",
+        "target": "components.nfrRefs",
+        "valid_section": "goal:nonFunctionalRequirements",
         "label": "Component",
         "ref_label": "GoalSpec NFR",
         "category": "nfr_ref_missing",
     },
-    # Flow steps must reference valid GoalSpec REQ
+    # Flow reqRefs must reference valid GoalSpec REQ
     {
         "type": "exists",
-        "section": "dataFlow",
-        "key": "reqRefs",
-        "valid_extra_spec": "goal",
-        "valid_section": "functionalRequirements",
-        "valid_key": "id",
+        "target": "dataFlow.reqRefs",
+        "valid_section": "goal:functionalRequirements",
         "label": "Flow",
         "ref_label": "GoalSpec requirement",
         "category": "req_ref_missing",
@@ -256,11 +226,8 @@ SEMANTIC_RULES = [
     # Constraints must reference valid GoalSpec NFR
     {
         "type": "exists",
-        "section": "constraints",
-        "key": "nfrRefs",
-        "valid_extra_spec": "goal",
-        "valid_section": "nonFunctionalRequirements",
-        "valid_key": "id",
+        "target": "constraints.nfrRefs",
+        "valid_section": "goal:nonFunctionalRequirements",
         "label": "Constraint",
         "ref_label": "GoalSpec NFR",
         "category": "nfr_ref_missing",

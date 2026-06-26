@@ -210,11 +210,9 @@ SEMANTIC_RULES = [
     # Entity references must exist in data spec
     {
         "type": "exists",
-        "section": "functions",
-        "key": "entity",
-        "valid_extra_spec": "data",
-        "valid_section": "entities",
-        "valid_key": "name",
+        "target": "functions.entity",
+        "valid_section": "data:entities",
+        "valid_id_field": "name",
         "label": "Function",
         "ref_label": "DataSpec entity",
         "category": "entity_ref_missing",
@@ -223,9 +221,7 @@ SEMANTIC_RULES = [
     # Function descriptions must not be empty
     {
         "type": "non_empty",
-        "section": "functions",
-        "key": "description",
-        "id_key": "id",
+        "target": "functions.description",
         "label": "Function",
         "category": "missing_function_description",
         "hint": "Add a one-sentence description of what this function does.",
@@ -233,10 +229,7 @@ SEMANTIC_RULES = [
     # Parameter descriptions must not be empty
     {
         "type": "non_empty",
-        "section": "functions",
-        "nested_key": "inputs",
-        "key": "description",
-        "id_key": "name",
+        "target": "functions.inputs.description",
         "label": "Parameter",
         "category": "missing_parameter_description",
         "hint": "Add a description explaining the purpose of this parameter.",

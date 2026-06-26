@@ -21,7 +21,7 @@
     "testId": {
       "type": "string",
       "description": "Format: TST-<functionName>-<NNN>, e.g. TST-createUser-001",
-      "pattern": "^TST-[a-zA-Z][a-zA-Z0-9]*-\\d{3}$"
+      "pattern": "^TST-\\d{3}-[a-z][A-Za-z0-9]*$"
     },
     "fnRef": {
       "type": "string",
@@ -40,17 +40,17 @@
     "reqId": {
       "type": "string",
       "description": "Functional requirement identifier, format REQ-NNN. Must match an ID in GoalSpec.",
-      "pattern": "^REQ-\\d{3}$"
+      "pattern": "^REQ-\\d{3}-[a-z][a-zA-Z0-9]*$"
     },
     "nfrId": {
       "type": "string",
       "description": "Non-functional requirement identifier, format NFR-NNN. Must match an ID in GoalSpec.",
-      "pattern": "^NFR-\\d{3}$"
+      "pattern": "^NFR-\\d{3}-[a-z][a-zA-Z0-9]*$"
     },
     "scId": {
       "type": "string",
       "description": "Success criterion identifier, format SC-NNN. Must match an ID in GoalSpec.",
-      "pattern": "^SC-\\d{3}$"
+      "pattern": "^SC-\\d{3}-[a-z][a-zA-Z0-9]*$"
     },
     "concreteValue": {
       "description": "A concrete example value \u2014 string, number, boolean, object, or array. Must NOT be a placeholder like 'a valid userId' or 'some string'."
@@ -80,7 +80,32 @@
     "fcId": {
       "type": "string",
       "description": "Function coverage entry identifier, format FC-NNN (3-digit zero-padded).",
-      "pattern": "^FC-\\d{3}$"
+      "pattern": "^FC-\\d{3}-[a-z][a-zA-Z0-9]*$"
+    },
+    "entId": {
+      "type": "string",
+      "description": "^ENT identifier.",
+      "pattern": "^ENT-\\d{3}-[A-Z][A-Za-z0-9]*$"
+    },
+    "conId": {
+      "type": "string",
+      "description": "^CON identifier.",
+      "pattern": "^CON-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+    },
+    "usId": {
+      "type": "string",
+      "description": "User story identifier from GoalSpec, format US-NNN-slug.",
+      "pattern": "^US-\\d{3}-[a-z][a-zA-Z0-9]*$"
+    },
+    "ujId": {
+      "type": "string",
+      "description": "User journey identifier from DesignSpec, format UJ-NNN-slug.",
+      "pattern": "^UJ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+    },
+    "scrId": {
+      "type": "string",
+      "description": "Screen identifier from DesignSpec, format SCR-NNN-slug.",
+      "pattern": "^SCR-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     }
   },
   "properties": {
@@ -184,7 +209,8 @@
           "id": {
             "type": "string",
             "description": "Unique identifier for this function coverage entry",
-            "x_idPattern": "fc"
+            "x_idPattern": "fc",
+            "$ref": "#/definitions/fcId"
           },
           "name": {
             "type": "string",
@@ -193,6 +219,13 @@
           "description": {
             "type": "string",
             "description": "Plain-language description of what this coverage entry captures"
+          },
+          "reqRefs": {
+            "type": "array",
+            "description": "REQ-NNN IDs from GoalSpec functional requirements covered by tests for this function.",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            }
           }
         }
       }
@@ -330,7 +363,8 @@
             "description": "ENT-IDs from DataSpec entities used in this test. Used for data type validation.",
             "items": {
               "type": "string",
-              "pattern": "^ENT-\\d{3}$"
+              "pattern": "^ENT-\\d{3}$",
+              "$ref": "#/definitions/entId"
             }
           },
           "constraintRefs": {
@@ -338,7 +372,29 @@
             "description": "CON-IDs from ArchitectureSpec constraints tested by this test case (e.g. performance, reliability).",
             "items": {
               "type": "string",
-              "pattern": "^CON-\\d{3}$"
+              "pattern": "^CON-\\d{3}$",
+              "$ref": "#/definitions/conId"
+            }
+          },
+          "usRefs": {
+            "type": "array",
+            "description": "US-NNN IDs from GoalSpec user stories that this test validates.",
+            "items": {
+              "$ref": "#/definitions/usId"
+            }
+          },
+          "ujRefs": {
+            "type": "array",
+            "description": "UJ-NNN IDs from DesignSpec user journeys that this test covers end-to-end.",
+            "items": {
+              "$ref": "#/definitions/ujId"
+            }
+          },
+          "screenRefs": {
+            "type": "array",
+            "description": "SCR-NNN IDs from DesignSpec screens that this test interacts with.",
+            "items": {
+              "$ref": "#/definitions/scrId"
             }
           }
         }

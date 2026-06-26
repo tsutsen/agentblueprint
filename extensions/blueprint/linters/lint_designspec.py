@@ -49,7 +49,7 @@ SEMANTIC_RULES = [
     # Design goals must not contain implementation details
     {
         "type": "patterns",
-        "section": "designGoals",
+        "target": "designGoals",
         "text_key": "goal",
         "patterns": [
             "database", "api", "endpoint", "framework", "library",
@@ -63,7 +63,7 @@ SEMANTIC_RULES = [
     # UXAC must not contain subjective language
     {
         "type": "patterns",
-        "section": "uxAcceptanceCriteria",
+        "target": "uxAcceptanceCriteria",
         "text_key": "description",
         "patterns": [
             "feel", "feels", "intuitive", "easy", "simple", "nice",
@@ -77,8 +77,7 @@ SEMANTIC_RULES = [
     # Screen specs must reference valid screens
     {
         "type": "exists",
-        "section": "screenSpecs",
-        "key": "screenRef",
+        "target": "screenSpecs.screenRef",
         "valid_section": "screenInventory",
         "label": "Screen spec",
         "ref_label": "screen inventory",
@@ -89,8 +88,7 @@ SEMANTIC_RULES = [
     # Screens must have states
     {
         "type": "non_empty",
-        "section": "screenSpecs",
-        "key": "states",
+        "target": "screenSpecs.states",
         "label": "Screen spec",
         "category": "screen_no_states",
         "hint": "Every screen should document at least its empty, loaded, and error states.",
@@ -99,8 +97,7 @@ SEMANTIC_RULES = [
     # UXAC must have refs
     {
         "type": "non_empty",
-        "section": "uxAcceptanceCriteria",
-        "key": "refs",
+        "target": "uxAcceptanceCriteria.refs",
         "label": "UXAC",
         "category": "uxac_no_refs",
         "hint": "Every UX acceptance criterion must link to at least one user story or requirement.",
@@ -109,10 +106,8 @@ SEMANTIC_RULES = [
     # UXAC refs must resolve to GoalSpec
     {
         "type": "exists",
-        "section": "uxAcceptanceCriteria",
-        "key": "refs.usRefs",
-        "valid_extra_spec": "goal",
-        "valid_section": "userStories",
+        "target": "uxAcceptanceCriteria.refs.usRefs",
+        "valid_section": "goal:userStories",
         "label": "UXAC",
         "ref_label": "GoalSpec userStory",
         "category": "uxac_us_ref",
@@ -120,10 +115,8 @@ SEMANTIC_RULES = [
     },
     {
         "type": "exists",
-        "section": "uxAcceptanceCriteria",
-        "key": "refs.reqRefs",
-        "valid_extra_spec": "goal",
-        "valid_section": "functionalRequirements",
+        "target": "uxAcceptanceCriteria.refs.reqRefs",
+        "valid_section": "goal:functionalRequirements",
         "label": "UXAC",
         "ref_label": "GoalSpec requirement",
         "category": "uxac_req_ref",
@@ -133,20 +126,17 @@ SEMANTIC_RULES = [
     # User stories must be covered by journeys
     {
         "type": "coverage",
-        "covered_section": "userStories",
-        "source_section": "userJourneys",
-        "covered_key": "id",
-        "refs_key": "usRefs",
+        "covered": "goal:userStories",
+        "covering": "userJourneys",
+        "ref_field": "usRefs",
         "covered_label": "GoalSpec US",
         "source_label": "user journey",
-        "valid_extra_spec": "goal",
     },
     
     # Journey personaRef must resolve to personas
     {
         "type": "exists",
-        "section": "userJourneys",
-        "key": "personaRef",
+        "target": "userJourneys.personaRef",
         "valid_section": "personas",
         "label": "User journey",
         "ref_label": "persona",
@@ -157,10 +147,8 @@ SEMANTIC_RULES = [
     # Journey usRefs must resolve to GoalSpec userStories
     {
         "type": "exists",
-        "section": "userJourneys",
-        "key": "usRefs",
-        "valid_extra_spec": "goal",
-        "valid_section": "userStories",
+        "target": "userJourneys.usRefs",
+        "valid_section": "goal:userStories",
         "label": "User journey",
         "ref_label": "GoalSpec userStory",
         "category": "journey_us_ref",
@@ -170,9 +158,7 @@ SEMANTIC_RULES = [
     # Journey step screenRefs must resolve to screen inventory
     {
         "type": "exists",
-        "section": "userJourneys",
-        "nested_key": "steps",
-        "key": "screenRef",
+        "target": "userJourneys.steps.screenRef",
         "valid_section": "screenInventory",
         "label": "Journey step",
         "ref_label": "screen inventory",
@@ -183,7 +169,7 @@ SEMANTIC_RULES = [
     # Screen specs must not contain forbidden content
     {
         "type": "patterns",
-        "section": "screenSpecs",
+        "target": "screenSpecs",
         "text_keys": ["layout", "wireframe"],
         "patterns": [
             ("create table", "database schema"),

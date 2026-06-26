@@ -28,12 +28,7 @@
     "screenId": {
       "type": "string",
       "description": "Screen identifier, format SCR-NNN-name.",
-      "pattern": "^SCR-\\d{3}-[a-zA-Z][a-zA-Z0-9]*$"
-    },
-    "patternId": {
-      "type": "string",
-      "description": "kebab-case interaction pattern identifier, e.g. 'keyboard-navigation'.",
-      "pattern": "^[a-z][a-z0-9-]*$"
+      "pattern": "^SCR-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     },
     "personaId": {
       "type": "string",
@@ -43,22 +38,17 @@
     "reqId": {
       "type": "string",
       "description": "Functional requirement identifier, format REQ-NNN (3-digit zero-padded).",
-      "pattern": "^REQ-\\d{3}$"
+      "pattern": "^REQ-\\d{3}-[a-z][a-zA-Z0-9]*$"
     },
     "usId": {
       "type": "string",
       "description": "User story identifier, format US-NNN (3-digit zero-padded).",
-      "pattern": "^US-\\d{3}$"
-    },
-    "fnId": {
-      "type": "string",
-      "description": "Function ID from ApiSpec. Format: FN-camelCase, e.g. 'FN-createUser'.",
-      "pattern": "^FN-[a-z][A-Za-z0-9]*$"
+      "pattern": "^US-\\d{3}-[a-z][a-zA-Z0-9]*$"
     },
     "uxacId": {
       "type": "string",
       "description": "UX acceptance criterion identifier, format UXAC-NNN (3-digit zero-padded).",
-      "pattern": "^UXAC-\\d{3}$"
+      "pattern": "^UXAC-\\d{3}-[a-z][a-zA-Z0-9]*$"
     },
     "vdrId": {
       "type": "string",
@@ -139,7 +129,7 @@
     "dgId": {
       "type": "string",
       "description": "Design goal identifier, format DG-NNN (3-digit zero-padded).",
-      "pattern": "^DG-\\d{3}$"
+      "pattern": "^DG-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     },
     "spcId": {
       "type": "string",
@@ -150,6 +140,26 @@
       "type": "string",
       "description": "Interaction pattern identifier, format PAT-NNN (3-digit zero-padded).",
       "pattern": "^PAT-\\d{3}$"
+    },
+    "ujId": {
+      "type": "string",
+      "description": "^UJ identifier.",
+      "pattern": "^UJ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+    },
+    "dtId": {
+      "type": "string",
+      "description": "^DT identifier.",
+      "pattern": "^DT-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+    },
+    "nfrId": {
+      "type": "string",
+      "description": "Non-functional requirement identifier, format NFR-NNN-slug.",
+      "pattern": "^NFR-\\d{3}-[a-z][a-zA-Z0-9]*$"
+    },
+    "compId": {
+      "type": "string",
+      "description": "Component identifier, format COMP-NNN-Name.",
+      "pattern": "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     }
   },
   "properties": {
@@ -197,8 +207,7 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "type": "string",
-            "pattern": "^DG-\\d{3}$",
+            "$ref": "#/definitions/dgId",
             "description": "Unique identifier for this design goal.",
             "x_idPattern": "dg"
           },
@@ -228,6 +237,13 @@
             "description": "REQ-NNN IDs from GoalSpec that this goal addresses.",
             "items": {
               "$ref": "#/definitions/reqId"
+            }
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "description": "Glossary term IDs (GL-NNN) referenced in this design goal.",
+            "items": {
+              "$ref": "#/definitions/glId"
             }
           }
         }
@@ -331,8 +347,7 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "type": "string",
-            "pattern": "^UJ-\\d{3}$",
+            "$ref": "#/definitions/ujId",
             "description": "Unique identifier for this user journey (e.g. 'UJ-001').",
             "x_idPattern": "uj"
           },
@@ -454,6 +469,20 @@
           "items": {
             "$ref": "#/definitions/glId"
           }
+        },
+        "reqRefs": {
+          "type": "array",
+          "description": "REQ-NNN IDs from GoalSpec that this information architecture addresses.",
+          "items": {
+            "$ref": "#/definitions/reqId"
+          }
+        },
+        "usRefs": {
+          "type": "array",
+          "description": "US-NNN IDs from GoalSpec user stories supported by this information architecture.",
+          "items": {
+            "$ref": "#/definitions/usId"
+          }
         }
       }
     },
@@ -525,14 +554,6 @@
             "description": "Glossary term IDs (GL-NNN) referenced in the screen's purpose description.",
             "items": {
               "$ref": "#/definitions/glId"
-            }
-          },
-          "ujRefs": {
-            "type": "array",
-            "description": "UJ-NNN IDs from DesignSpec user journeys that use this screen.",
-            "items": {
-              "type": "string",
-              "pattern": "^UJ-\\d{3}$"
             }
           },
           "notes": {
@@ -607,7 +628,7 @@
                   "type": "array",
                   "description": "Interaction pattern IDs that apply to this component.",
                   "items": {
-                    "$ref": "#/definitions/patternId"
+                    "$ref": "#/definitions/patId"
                   }
                 },
                 "glossaryRefs": {
@@ -667,7 +688,7 @@
                   "minLength": 3
                 },
                 "patternRef": {
-                  "$ref": "#/definitions/patternId",
+                  "$ref": "#/definitions/patId",
                   "description": "Interaction pattern this follows, if applicable."
                 }
               }
@@ -688,6 +709,13 @@
           "notes": {
             "type": "string",
             "description": "Optional clarifying context for this screen spec."
+          },
+          "componentRefs": {
+            "type": "array",
+            "description": "COMP-NNN IDs from ArchitectureSpec that this screen spec uses.",
+            "items": {
+              "$ref": "#/definitions/compId"
+            }
           }
         }
       }
@@ -705,7 +733,7 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/patternId",
+            "$ref": "#/definitions/patId",
             "description": "Unique kebab-case identifier for this interaction pattern (e.g. 'keyboard-navigation').",
             "x_idPattern": "pat"
           },
@@ -771,16 +799,25 @@
           {
             "properties": {
               "id": {
-                "pattern": "^VDR-\\d{3}$"
+                "$ref": "#/definitions/vdrId",
+                "x_idPattern": "vdr"
               },
               "rationale": {
                 "type": "string",
                 "description": "Why this visual design requirement matters."
+              },
+              "nfrRefs": {
+                "type": "array",
+                "description": "NFR-IDs from GoalSpec non-functional requirements that drive this visual design requirement.",
+                "items": {
+                  "$ref": "#/definitions/nfrId"
+                }
               }
             }
           }
         ],
-        "x_idPattern": "vdr"
+        "x_idPattern": "vdr",
+        "pattern": "^VDR-\\d{3}$"
       }
     },
     "designSystem": {
@@ -849,11 +886,19 @@
           {
             "properties": {
               "id": {
-                "pattern": "^AR-\\d{3}$"
+                "$ref": "#/definitions/arId",
+                "x_idPattern": "ar"
               },
               "rationale": {
                 "type": "string",
                 "description": "Why this accessibility requirement matters."
+              },
+              "nfrRefs": {
+                "type": "array",
+                "description": "NFR-IDs from GoalSpec non-functional requirements that drive this accessibility requirement.",
+                "items": {
+                  "$ref": "#/definitions/nfrId"
+                }
               }
             }
           }
@@ -927,9 +972,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
+            "$ref": "#/definitions/dtId",
             "description": "Unique identifier for this design token, format DT-NNN-tokenName.",
-            "pattern": "^DT-\\d{3}-[a-z][a-z0-9-]*$",
             "x_idPattern": "dt"
           },
           "name": {
@@ -964,7 +1008,8 @@
             "description": "GL-NNN identifiers for related glossary terms.",
             "items": {
               "type": "string",
-              "pattern": "^GL-\\d{3}$"
+              "pattern": "^GL-\\d{3}$",
+              "$ref": "#/definitions/glId"
             }
           }
         },

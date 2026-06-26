@@ -20,22 +20,17 @@
     "reqId": {
       "type": "string",
       "description": "Functional requirement identifier.",
-      "pattern": "^REQ-\\d{3}$"
+      "pattern": "^REQ-\\d{3}-[a-z][a-zA-Z0-9]*$"
     },
     "nfrId": {
       "type": "string",
       "description": "Non-functional requirement identifier.",
-      "pattern": "^NFR-\\d{3}$"
+      "pattern": "^NFR-\\d{3}-[a-z][a-zA-Z0-9]*$"
     },
     "scId": {
       "type": "string",
       "description": "Success criterion identifier.",
-      "pattern": "^SC-\\d{3}$"
-    },
-    "tbd": {
-      "type": "string",
-      "description": "Marker for fields that are intentionally incomplete pending more information.",
-      "pattern": "^TBD.*"
+      "pattern": "^SC-\\d{3}-[a-z][a-zA-Z0-9]*$"
     },
     "planguageLevel": {
       "type": "string",
@@ -50,12 +45,12 @@
     "usId": {
       "type": "string",
       "description": "User story identifier, format US-NNN (3-digit zero-padded).",
-      "pattern": "^US-\\d{3}$"
+      "pattern": "^US-\\d{3}-[a-z][a-zA-Z0-9]*$"
     },
     "ngId": {
       "type": "string",
       "description": "Non-goal identifier, format NG-NNN (3-digit zero-padded).",
-      "pattern": "^NG-\\d{3}$"
+      "pattern": "^NG-\\d{3}-[a-z][a-zA-Z0-9]*$"
     }
   },
   "properties": {
@@ -307,9 +302,8 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "type": "string",
+            "$ref": "#/definitions/usId",
             "description": "Unique identifier for this user story.",
-            "pattern": "^US-\\d{3}$",
             "x_idPattern": "us"
           },
           "name": {

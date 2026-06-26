@@ -73,7 +73,7 @@
     "fnId": {
       "type": "string",
       "description": "Function ID from ApiSpec. Format: FN-camelCase, e.g. 'FN-createUser'.",
-      "pattern": "^FN-[a-z][A-Za-z0-9]*$"
+      "pattern": "^FN-\\d{3}-[a-z][A-Za-z0-9]*$"
     },
     "glId": {
       "type": "string",
@@ -94,6 +94,21 @@
       "type": "string",
       "description": "Component identifier from ArchitectureSpec, format COMP-NNN-PascalCase.",
       "pattern": "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+    },
+    "reqId": {
+      "type": "string",
+      "description": "^REQ identifier.",
+      "pattern": "^REQ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+    },
+    "nfrId": {
+      "type": "string",
+      "description": "^NFR identifier.",
+      "pattern": "^NFR-\\d{3}-[a-z][a-zA-Z0-9]*$"
+    },
+    "conId": {
+      "type": "string",
+      "description": "Constraint identifier from ArchitectureSpec, format CON-NNN-Name.",
+      "pattern": "^CON-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     }
   },
   "properties": {
@@ -136,9 +151,8 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "type": "string",
+            "$ref": "#/definitions/fnId",
             "description": "Stable unique identifier for this function, e.g. 'FN-placeOrder'. Used by data spec apiRef and test spec fnRef.",
-            "pattern": "^FN-[a-z][A-Za-z0-9]*$",
             "x_idPattern": "fn"
           },
           "name": {
@@ -247,7 +261,8 @@
             "description": "REQ-IDs from GoalSpec that this function implements. Populated during architecture phase. Use for FN\u2192REQ traceability. At least one must be present once requirements are known.",
             "items": {
               "type": "string",
-              "pattern": "^REQ-\\d{3}$"
+              "pattern": "^REQ-\\d{3}$",
+              "$ref": "#/definitions/reqId"
             }
           },
           "nfrRefs": {
@@ -255,7 +270,8 @@
             "description": "NFR-IDs from GoalSpec that this function helps satisfy (e.g. performance, reliability).",
             "items": {
               "type": "string",
-              "pattern": "^NFR-\\d{3}$"
+              "pattern": "^NFR-\\d{3}$",
+              "$ref": "#/definitions/nfrId"
             }
           },
           "screenRefs": {
@@ -277,6 +293,13 @@
             "description": "COMP-IDs from ArchitectureSpec components that this function interacts with.",
             "items": {
               "$ref": "#/definitions/compId"
+            }
+          },
+          "constraintRefs": {
+            "type": "array",
+            "description": "CON-NNN IDs from ArchitectureSpec constraints that this function must respect.",
+            "items": {
+              "$ref": "#/definitions/conId"
             }
           }
         }

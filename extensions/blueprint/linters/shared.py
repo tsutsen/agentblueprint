@@ -10,6 +10,7 @@ Usage in a linter:
     from shared import Issue, LayerResult, print_human, print_json_output, ID_PATTERNS
 """
 
+import inspect
 import json
 import re
 from dataclasses import dataclass, field
@@ -884,8 +885,481 @@ def _resolve_valid_section(rule: dict, spec: dict, extra_specs: dict) -> set:
         items = _get_nested(spec, rule["valid_section"])
         key = rule.get("valid_key", "id")
         return {item.get(key, "") for item in items}
-    
+
+    # Fallback: use the same section as the source
+    section = rule.get("section")
+    if section:
+        items = _get_nested(spec, section)
+        key = rule.get("valid_key", "id")
+        return {item.get(key, "") for item in items}
+
     return set()
+
+
+# ── Path-based rule system (new) ─────────────────────────────────────────────
+
+@dataclass
+class Resolved:
+    """Result of resolving a target path."""
+    values: list
+    parent_ids: list
+    parent_label: str = ""
+    parent_items: list = None
+    group_sizes: list = None
+
+
+def resolve_path(path: str, spec: dict, extra_specs: dict) -> Resolved:
+    """Navigate a dot-path through spec JSON and return resolved values with parent context.
+
+    Segments:
+      - First segment: top-level key in spec or extra_spec
+      - Subsequent segments: properties on items, or nested lists (flattened)
+      - Prefix `spec:` on first segment to use an extra_spec
+
+    Examples:
+      "components.reqRefs"          → each component's reqRefs list
+      "dataFlow.steps.componentRef" → each step's componentRef string
+      "goal:functionalRequirements" → functionalRequirements from extra_specs["goal"]
+    """
+    segments = path.split(".")
+    if not segments:
+        return Resolved([], [], "")
+
+    # Check for extra_spec prefix
+    first_segment = segments[0]
+    extra_spec_name = None
+    if ":" in first_segment:
+        extra_spec_name, first_segment = first_segment.split(":", 1)
+
+    # Pick root
+    if extra_spec_name:
+        root = extra_specs.get(extra_spec_name) or {}
+    else:
+        root = spec
+
+    # Navigate first segment → root list
+    items = root.get(first_segment, [])
+    if not isinstance(items, list):
+        items = [items] if items else []
+
+    # Compute label from path
+    label = path.replace(":", "").replace(".", " ").title().replace(" ", "").replace(":", " ")
+    # Better: derive from first segment
+    label = first_segment.replace("_", " ").title().replace(" ", "")
+    # Handle camelCase-like names (dataFlow → Data Flow)
+    import re as _re
+    label = _re.sub(r"([A-Z])", r" \1", first_segment).title().replace("_", " ").strip()
+
+    current_items = items
+    parent_ids = []
+    parent_items = []
+    group_sizes = []
+
+    for seg_idx in range(1, len(segments)):
+        seg = segments[seg_idx]
+        if not current_items:
+            break
+
+        first_item = current_items[0] if current_items else {}
+
+        if isinstance(first_item, dict) and seg in first_item:
+            val = first_item[seg]
+            if isinstance(val, list):
+                # Flatten nested lists
+                new_items = []
+                new_parent_ids = []
+                new_parent_items = []
+                new_group_sizes = []
+                for i, item in enumerate(current_items):
+                    nested = item.get(seg, [])
+                    if isinstance(nested, list):
+                        # Use parent_items for ID when available (e.g. refs.usRefs)
+                        pi = parent_items[i] if i < len(parent_items) else item
+                        pid = pi.get("id", pi.get("name", item.get("id", item.get("name", "?"))))
+                        for nested_item in nested:
+                            new_items.append(nested_item)
+                            new_parent_ids.append(pid)
+                            new_parent_items.append(pi)
+                            new_group_sizes.append(len(nested))
+                current_items = new_items
+                parent_ids = new_parent_ids
+                parent_items = new_parent_items
+                group_sizes = new_group_sizes
+            else:
+                # Scalar or dict — check if we need to navigate further
+                if seg_idx + 1 < len(segments) and isinstance(val, dict):
+                    # Navigate into the dict and continue, preserving parent context
+                    new_items = [item.get(seg, {}) for item in current_items]
+                    # Preserve parent IDs from parent_items if available, else from current item
+                    new_parent_ids = []
+                    new_parent_items = []
+                    new_group_sizes = []
+                    for i, item in enumerate(current_items):
+                        # Propagate existing parent context, or derive from current item
+                        if parent_ids and i < len(parent_ids):
+                            pid = parent_ids[i]
+                            pi = parent_items[i] if i < len(parent_items) else item
+                        else:
+                            pi = item
+                            pid = pi.get("id", pi.get("name", "?")) if isinstance(pi, dict) else "?"
+                        new_parent_ids.append(pid)
+                        new_parent_items.append(pi)
+                        new_group_sizes.append(1)
+                    current_items = new_items
+                    parent_ids = new_parent_ids
+                    parent_items = new_parent_items
+                    group_sizes = new_group_sizes
+                else:
+                    # Scalar property — extract and return
+                    values = []
+                    new_parent_ids = []
+                    new_parent_items = []
+                    new_group_sizes = []
+                    for i, item in enumerate(current_items):
+                        values.append(item.get(seg) if isinstance(item, dict) else item)
+                        # Use parent context if available, otherwise fall back to item's own id
+                        if parent_ids and i < len(parent_ids):
+                            pid = parent_ids[i]
+                            pi = parent_items[i] if i < len(parent_items) else item
+                        else:
+                            pid = item.get("id", item.get("name", "?")) if isinstance(item, dict) else "?"
+                            pi = item
+                        new_parent_ids.append(pid)
+                        new_parent_items.append(pi)
+                        new_group_sizes.append(1)
+                    return Resolved(
+                        values=values,
+                        parent_ids=new_parent_ids,
+                        parent_label=label,
+                        parent_items=new_parent_items,
+                        group_sizes=new_group_sizes,
+                    )
+        elif isinstance(first_item, str):
+            # Items are already scalars
+            break
+
+    # Reached end — return current items as values
+    # For single-segment paths or dict-nesting where parent has no id, derive from items' own id/name
+    if current_items:
+        first = current_items[0]
+        if isinstance(first, dict):
+            if not parent_ids:
+                # Single-segment path: use items' own identifiers
+                for item in current_items:
+                    pid = item.get("id", item.get("name", "?"))
+                    parent_ids.append(pid)
+                    parent_items.append(item)
+                    group_sizes.append(1)
+            elif all(pid == "?" for pid in parent_ids):
+                # Dict-nesting where parent segment has no id (e.g. overview.subsystems)
+                # Fall back to items' own identifiers
+                for i, item in enumerate(current_items):
+                    pid = item.get("id", item.get("name", "?"))
+                    parent_ids[i] = pid
+                    parent_items[i] = item
+        elif isinstance(first, str):
+            if not parent_ids:
+                parent_ids = list(current_items)
+                parent_items = list(current_items)
+                group_sizes = [1] * len(current_items)
+    return Resolved(
+        values=current_items,
+        parent_ids=parent_ids,
+        parent_label=label,
+        parent_items=parent_items,
+        group_sizes=group_sizes,
+    )
+
+
+# ── Handler functions (new rule system) ───────────────────────────────────────
+
+
+def handle_non_empty(resolved: Resolved, rule: dict, result: LayerResult) -> None:
+    """Check that resolved values are not empty/missing."""
+    severity = rule.get("severity", "warning")
+    category = rule.get("category", "empty")
+    label = rule.get("label", resolved.parent_label)
+    hint = rule.get("hint", "")
+    for val, pid in zip(resolved.values, resolved.parent_ids):
+        if val is None:
+            result.add(severity, category,
+                f"{label} '{pid}': field is missing.",
+                hint=hint or "Provide a value.")
+        elif isinstance(val, list) and not val:
+            result.add(severity, category,
+                f"{label} '{pid}' has no items.",
+                hint=hint or f"Assign items to this {label.lower()} or remove it.")
+        elif isinstance(val, str) and not val.strip():
+            result.add(severity, category,
+                f"{label} '{pid}' has an empty field.",
+                hint=hint or f"Provide a value.")
+
+
+def handle_exists(resolved: Resolved, valid: set, rule: dict, result: LayerResult) -> None:
+    """Check that resolved values exist in the valid set."""
+    severity = rule.get("severity", "error")
+    category = rule.get("category", "missing")
+    label = rule.get("label", resolved.parent_label)
+    ref_label = rule.get("ref_label", "valid set")
+    hint = rule.get("hint", "")
+    for val, pid in zip(resolved.values, resolved.parent_ids):
+        if val is None:
+            continue
+        # Handle both single values and lists of refs
+        refs = _normalize_ref(val)
+        for ref in refs:
+            if ref and ref not in valid:
+                result.add(severity, category,
+                    f"{label} '{pid}': ref '{ref}' not found in {ref_label}.",
+                    hint=hint or f"Add '{ref}' to the target or correct the reference.")
+
+
+def handle_unique(resolved: Resolved, rule: dict, result: LayerResult) -> None:
+    """Check that resolved values are unique."""
+    severity = rule.get("severity", "warning")
+    category = rule.get("category", "duplicate")
+    label = rule.get("label", resolved.parent_label)
+    hint = rule.get("hint", "")
+    seen: dict[str, str] = {}
+    for val, pid in zip(resolved.values, resolved.parent_ids):
+        if not val:
+            continue
+        str_val = str(val)
+        if str_val in seen:
+            result.add(severity, category,
+                f"Duplicate {label.lower()} '{str_val}' (also '{seen[str_val]}').",
+                hint=hint or f"Each {label.lower()} must have a unique identifier.")
+        else:
+            seen[str_val] = pid or val
+
+
+def handle_no_overlap(resolved: Resolved, rule: dict, result: LayerResult) -> None:
+    """Check that list fields don't share values across parent items."""
+    severity = rule.get("severity", "warning")
+    category = rule.get("category", "overlap")
+    label = rule.get("label", resolved.parent_label)
+    hint = rule.get("hint", "")
+    seen: dict[str, str] = {}
+    for val, pid in zip(resolved.values, resolved.parent_ids):
+        if not isinstance(val, list):
+            continue
+        for item in val:
+            if item in seen and seen[item] != pid:
+                result.add(severity, category,
+                    f"Item '{item}' is assigned to multiple {label.lower()}: {seen[item]} and {pid}.",
+                    hint=hint or f"Each item should belong to exactly one {label.lower()}.")
+            seen[item] = pid
+
+
+def handle_item_count(resolved: Resolved, rule: dict, result: LayerResult) -> None:
+    """Check list length against threshold."""
+    severity = rule.get("severity", "warning")
+    category = rule.get("category", "count")
+    label = rule.get("label", resolved.parent_label)
+    hint = rule.get("hint", "")
+    count = rule["count"]
+    compare_mode = rule.get("compare_mode", 1)
+    for val, pid in zip(resolved.values, resolved.parent_ids):
+        if not isinstance(val, list):
+            continue
+        n = len(val)
+        if compare_mode == 1 and n > count:
+            result.add(severity, category,
+                f"{label} '{pid}' has {n} items — consider splitting.",
+                hint=hint or f"A {label.lower()} with >{count} items may be too complex.")
+        elif compare_mode == 0 and n == count:
+            result.add(severity, category,
+                f"{label} '{pid}' has exactly {n} items.",
+                hint=hint)
+        elif compare_mode == -1 and n < count:
+            result.add(severity, category,
+                f"{label} '{pid}' has {n} items (minimum {count}).",
+                hint=hint or f"A {label.lower()} should have at least {count} items.")
+
+
+def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None:
+    """Check text values against regex patterns.
+
+    When `negate` is True (format validation): flag values that DON'T match any pattern.
+    When `negate` is False (default, forbidden content): flag values that DO match.
+    """
+    import re
+    severity = rule.get("severity", "warning")
+    category = rule.get("category", "pattern_match")
+    label = rule.get("label", resolved.parent_label)
+    hint = rule.get("hint", "")
+    patterns = rule.get("patterns", [])
+    text_key = rule.get("text_key")
+    max_count = rule.get("max_count")
+    negate = rule.get("negate", False)
+
+    for idx, (val, pid) in enumerate(zip(resolved.values, resolved.parent_ids)):
+        # Check group size limit (skip items from parents with too many nested items)
+        if max_count is not None and resolved.group_sizes and idx < len(resolved.group_sizes):
+            if resolved.group_sizes[idx] > max_count:
+                continue
+
+        # Extract text
+        if text_key and isinstance(val, dict):
+            texts = [val.get(text_key, "")]
+        elif isinstance(val, str):
+            texts = [val]
+        else:
+            continue
+
+        for text in texts:
+            matches = []
+            any_match = False
+            for p in patterns:
+                if isinstance(p, str):
+                    pattern, pattern_label = p, p
+                else:
+                    pattern, pattern_label = p
+                if negate:
+                    # Format validation: check if text matches the expected pattern
+                    if re.fullmatch(pattern, text):
+                        any_match = True
+                else:
+                    # Forbidden content: check if pattern is found in text
+                    found = re.findall(pattern, text.lower())
+                    if found:
+                        matches.append((pattern_label, found))
+                        any_match = True
+
+            if negate and not any_match:
+                # Format validation failed — text didn't match any pattern
+                msg = f"{label} '{pid}': {text_key or 'value'} '{text}' doesn't match expected pattern: {', '.join(str(p) for p in patterns)}"
+                result.add(severity, category, msg, hint=hint or f"Review {label.lower()} for {category}.")
+            elif not negate and matches:
+                # Forbidden content found
+                msg = f"{label} '{pid}': {', '.join(f'{l}: {m}' for l, m in matches)}."
+                result.add(severity, category, msg, hint=hint or f"Review {label.lower()} for {category}.")
+
+
+def handle_coverage(resolved_covered: Resolved, resolved_covering: Resolved, rule: dict, result: LayerResult) -> None:
+    """Check that covered items are referenced by covering items."""
+    severity = rule.get("severity", "warning")
+    covered_label = rule.get("covered_label", resolved_covered.parent_label)
+    source_label = rule.get("source_label", resolved_covering.parent_label)
+    ref_field = rule.get("ref_field", "refs")
+
+    # Collect covered IDs
+    covered_ids = set()
+    covered_items = resolved_covered.values
+    for item in covered_items:
+        if isinstance(item, dict):
+            covered_ids.add(item.get("id", ""))
+        else:
+            covered_ids.add(str(item))
+
+    # Collect refs from covering items
+    covered_refs = set()
+    for item in resolved_covering.values:
+        if isinstance(item, dict):
+            for ref in _normalize_ref(item.get(ref_field)):
+                covered_refs.add(ref)
+
+    # Find uncovered items
+    for item in covered_items:
+        iid = item.get("id", str(item)) if isinstance(item, dict) else str(item)
+        desc = item.get("description", "") if isinstance(item, dict) else ""
+        desc_short = desc[:60] + "..." if desc else ""
+        if iid not in covered_refs:
+            result.add(severity, "uncovered",
+                f"{covered_label} {iid} ('{desc_short}') is not covered by any {source_label}.",
+                hint=f"Add ref '{iid}' to a {source_label} responsible for this.")
+
+
+def handle_orphans(resolved: Resolved, rule: dict, result: LayerResult) -> None:
+    """Warn if items are isolated (no dependencies and no dependents)."""
+    severity = rule.get("severity", "warning")
+    label = rule.get("label", resolved.parent_label)
+    warning = rule.get("warning", "isolated")
+    hint = rule.get("hint", "")
+    deps_field = rule.get("deps_field", "dependencies")
+    id_field = rule.get("id_field", "id")
+
+    items = resolved.values
+    if not items:
+        return
+
+    item_ids = {item.get(id_field, "") for item in items if isinstance(item, dict)}
+    depended_upon = set()
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        for dep in item.get(deps_field, []):
+            depended_upon.add(dep)
+
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        iid = item.get(id_field, "")
+        has_deps = len(item.get(deps_field, [])) > 0
+        is_depended_on = iid in depended_upon
+        if not has_deps and not is_depended_on:
+            result.add(severity, warning,
+                f"{label} '{iid}' is isolated: no dependencies and no dependents.",
+                hint=hint or f"An isolated {label.lower()} may indicate a design issue.")
+
+
+# ── Rule handler registry (new) ───────────────────────────────────────────────
+
+@dataclass
+class RuleHandler:
+    func: callable
+    needs_valid: bool = False
+    needs_coverage: bool = False
+    needs_orphans: bool = False
+
+
+_RULE_HANDLERS = {
+    "non_empty":    RuleHandler(handle_non_empty),
+    "exists":       RuleHandler(handle_exists, needs_valid=True),
+    "unique":       RuleHandler(handle_unique),
+    "no_overlap":   RuleHandler(handle_no_overlap),
+    "item_count":   RuleHandler(handle_item_count),
+    "patterns":     RuleHandler(handle_patterns),
+    "coverage":     RuleHandler(handle_coverage, needs_coverage=True),
+    "orphans":      RuleHandler(handle_orphans, needs_orphans=True),
+}
+
+
+def _run_new_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_specs: dict) -> None:
+    """Execute declarative semantic rules using the new path-based system."""
+    for rule in rules:
+        rule_type = rule.get("type")
+        handler = _RULE_HANDLERS.get(rule_type)
+        if not handler:
+            result.add("warning", "unknown_rule", f"Unknown rule type: {rule_type}")
+            continue
+
+        try:
+            if handler.needs_coverage:
+                covered = resolve_path(rule["covered"], spec, extra_specs)
+                covering = resolve_path(rule["covering"], spec, extra_specs)
+                handle_coverage(covered, covering, rule, result)
+            elif handler.needs_orphans:
+                resolved = resolve_path(rule["target"], spec, extra_specs)
+                handle_orphans(resolved, rule, result)
+            else:
+                resolved = resolve_path(rule["target"], spec, extra_specs)
+                if handler.needs_valid:
+                    valid_path = rule["valid_section"]
+                    valid_resolved = resolve_path(valid_path, spec, extra_specs)
+                    valid_id_field = rule.get("valid_id_field", "id")
+                    valid = set()
+                    for v in valid_resolved.values:
+                        if isinstance(v, dict):
+                            valid.add(v.get(valid_id_field, ""))
+                        else:
+                            valid.add(str(v))
+                    handler.func(resolved, valid, rule, result)
+                else:
+                    handler.func(resolved, rule, result)
+        except Exception as e:
+            result.add("error", "rule_bug",
+                f"Rule '{rule_type}' ({rule.get('target', rule.get('covered', '?'))}): {e}")
 
 
 def _make_rule_kwargs(rule: dict, extra_keys: list[str] = None) -> dict:
@@ -904,68 +1378,25 @@ def _make_rule_kwargs(rule: dict, extra_keys: list[str] = None) -> dict:
 
 def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_specs: dict) -> None:
     """Execute declarative semantic rules against a spec.
-    
-    Args:
-        rules: List of rule dicts. Each rule has a "type" and optional fields:
-        spec: The spec being linted.
-        result: LayerResult to append findings to.
-        extra_specs: Extra specs passed to the linter (goal, data, api, etc.).
-    
-    Common Fields (all rule types):
-        severity: "error" (default) | "warning" | "info"
-        category: Category name for the finding
-        hint: Hint message shown to the user
-        label: Label for error messages
-    
-    Rule Types:
-        non_empty: Check that a field is not empty.
-            Required: section, key
-            Optional: id_key, label, severity, category, hint
-            Example: {"type": "non_empty", "section": "components", "key": "reqRefs",
-                      "severity": "error"}
-        
-        exists: Check that refs in items exist in a valid set.
-            Required: section, key, valid_section (or valid_extra_spec + valid_section)
-            Optional: nested_key, valid_key, label, ref_label, severity, category, hint
-            Example: {"type": "exists", "section": "components", "key": "reqRefs",
-                      "valid_extra_spec": "goal", "valid_section": "functionalRequirements",
-                      "severity": "error"}
-        
-        no_overlap: Check that items don't overlap across groups.
-            Required: section, refs_key, id_key
-            Optional: label, severity, category, hint
-            Example: {"type": "no_overlap", "section": "subsystems", "refs_key": "componentRefs",
-                      "severity": "warning"}
-        
-        item_count: Check that a list field has a specific count.
-            Required: section, key, count, compare_mode, id_key
-            Optional: label, severity, category, hint
-            compare_mode: 1=warn if >count, -1=warn if <count, 0=warn if ==count
-            Example: {"type": "item_count", "section": "components", "key": "responsibilities",
-                      "count": 8, "compare_mode": 1, "severity": "warning"}
-        
-        patterns: Check that text matches regex patterns.
-            Required: section, patterns
-            Optional: text_key, nested_key, max_count, label, severity, category, hint, match_fn
-            patterns: list of strings or (pattern, label) tuples
-            Example: {"type": "patterns", "section": "constraints", "text_key": "description",
-                      "patterns": ["postgres", "mysql"], "severity": "warning"}
-        
-        coverage: Check that covered items are referenced by source items.
-            Required: covered_section, source_section, covered_key, refs_key
-            Optional: covered_label, source_label, severity, category, hint
-            Example: {"type": "coverage", "covered_section": "components",
-                      "source_section": "subsystems", "refs_key": "componentRefs",
-                      "severity": "warning"}
-        
-        orphans: Check that items have dependencies or dependents.
-            Required: section
-            Optional: id_key, deps_key, label, severity, warning, hint
-            Example: {"type": "orphans", "section": "components", "deps_key": "dependencies",
-                      "severity": "warning"}
+
+    Routes new-format rules (with 'target') to the path-based dispatcher,
+    and falls back to the legacy dispatcher for old-format rules (with 'section').
+    """
+    new_rules = [r for r in rules if "target" in r or "covered" in r]
+    old_rules = [r for r in rules if "section" in r or "key" in r]
+
+    if new_rules:
+        _run_new_semantic_rules(new_rules, spec, result, extra_specs)
+    if old_rules:
+        _run_old_semantic_rules(old_rules, spec, result, extra_specs)
+
+
+def _run_old_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_specs: dict) -> None:
+    """Legacy dispatch for old-format rules (section/key based).
+
+    Kept for backward compatibility during migration. Will be removed after all rules migrate.
     """
     for rule in rules:
-        # Some rules (like coverage) don't have a single "section" key
         section = rule.get("section")
         if section:
             items = _get_nested(spec, section)
@@ -973,112 +1404,75 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 continue
         else:
             items = []
-        
+
         rule_type = rule.get("type")
-        
+
         if rule_type == "non_empty":
             key = rule.get("key")
             if rule.get("nested_key"):
-                # Nested items (e.g., steps within flows)
                 items = _extract_nested_items(items, rule["nested_key"])
-                key = rule.get("id_key", "id")  # Use id_key for nested items
-            
+                if not key:
+                    key = rule.get("id_key", "id")
+
             validate_non_empty(
-                items,
-                key,
-                rule.get("id_key", "id"),
-                result,
+                items, key, rule.get("id_key", "id"), result,
                 **_make_rule_kwargs(rule)
             )
-        
+
         elif rule_type == "unique":
-            # Check that values in a field are unique (no duplicates)
             key = rule.get("key", "id")
-            # Extract values from items
             values = [item.get(key, "") for item in items if item.get(key)]
-            find_duplicates(
-                values,
-                result=result,
-                **_make_rule_kwargs(rule)
-            )
-        
+            find_duplicates(values, result=result, **_make_rule_kwargs(rule))
+
         elif rule_type == "exists":
             key = rule.get("key")
             if rule.get("nested_key"):
-                # Nested items (e.g., steps within flows)
                 items = _extract_nested_items(items, rule["nested_key"])
-            
             valid = _resolve_valid_section(rule, spec, extra_specs)
+            if key is None and items and isinstance(items[0], dict):
+                continue
             validate_exists(
-                items,
-                key,
-                valid,
-                result,
+                items, key, valid, result,
                 **_make_rule_kwargs(rule, extra_keys=["ref_label"])
             )
-        
+
         elif rule_type == "no_overlap":
             validate_no_overlap(
-                items,
-                rule["refs_key"],
-                rule.get("id_key", "id"),
-                result,
+                items, rule["refs_key"], rule.get("id_key", "id"), result,
                 **_make_rule_kwargs(rule)
             )
-        
+
         elif rule_type == "item_count":
             validate_item_count(
-                items,
-                rule["key"],
-                rule["count"],
-                rule.get("compare_mode", 1),
-                rule.get("id_key", "id"),
-                result,
-                **_make_rule_kwargs(rule)
+                items, rule["key"], rule["count"], rule.get("compare_mode", 1),
+                rule.get("id_key", "id"), result, **_make_rule_kwargs(rule)
             )
-        
+
         elif rule_type == "patterns":
             find_patterns(
-                items,
-                text_key=rule.get("text_key"),
-                patterns=rule.get("patterns", []),
-                result=result,
-                id_key=rule.get("id_key", "id"),
-                **_make_rule_kwargs(rule)
+                items, text_key=rule.get("text_key"), patterns=rule.get("patterns", []),
+                result=result, id_key=rule.get("id_key", "id"),
+                **_make_rule_kwargs(rule, extra_keys=["nested_key", "max_count", "text_keys"])
             )
-        
+
         elif rule_type == "coverage":
-            # Cross-section coverage: covered items must be referenced by source items
             covered = _get_nested(spec, rule.get("covered_section", rule.get("section", "")))
-            
-            # If covered_section is in an extra spec, load it
             if rule.get("valid_extra_spec") and not covered:
                 extra = extra_specs.get(rule["valid_extra_spec"])
                 if extra:
                     covered = _get_nested(extra, rule["covered_section"])
-            
             source_items = _get_nested(spec, rule["source_section"])
             validate_coverage(
-                covered,
-                source_items,
-                rule.get("covered_key", "id"),
-                rule["refs_key"],
-                result,
-                rule.get("covered_label", ""),
-                rule.get("source_label", ""),
-                **_make_rule_kwargs(rule)
+                covered, source_items, rule.get("covered_key", "id"), rule["refs_key"],
+                result, rule.get("covered_label", ""), rule.get("source_label", ""),
+                severity=rule.get("severity", "warning"),
             )
-        
+
         elif rule_type == "orphans":
             find_orphans(
-                items,
-                rule.get("id_key", "id"),
-                rule.get("deps_key", "dependencies"),
-                result,
-                rule.get("label", ""),
-                rule.get("warning", "isolated"),
-                rule.get("hint", ""),
-                **_make_rule_kwargs(rule)
+                items, rule.get("id_key", "id"), rule.get("deps_key", "dependencies"),
+                result, rule.get("label", ""), rule.get("warning", "isolated"),
+                rule.get("hint", ""), rule.get("severity", "warning"),
             )
 
 

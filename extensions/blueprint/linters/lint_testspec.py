@@ -310,8 +310,7 @@ SEMANTIC_RULES = [
     # Test IDs must be unique
     {
         "type": "unique",
-        "section": "tests",
-        "key": "id",
+        "target": "tests.id",
         "label": "Test",
         "category": "duplicate_id",
         "hint": "Each test must have a unique ID.",
@@ -319,11 +318,8 @@ SEMANTIC_RULES = [
     # fnRefs must exist in ApiSpec
     {
         "type": "exists",
-        "section": "tests",
-        "key": "fnRef",
-        "valid_extra_spec": "api",
-        "valid_section": "functions",
-        "valid_key": "id",
+        "target": "tests.fnRef",
+        "valid_section": "api:functions",
         "label": "Test",
         "ref_label": "ApiSpec function",
         "category": "fnref_missing",
@@ -332,11 +328,9 @@ SEMANTIC_RULES = [
     # Every ApiSpec function must have tests
     {
         "type": "coverage",
-        "covered_section": "functions",
-        "source_section": "tests",
-        "covered_key": "id",
-        "refs_key": "fnRef",
-        "valid_extra_spec": "api",
+        "covered": "api:functions",
+        "covering": "tests",
+        "ref_field": "fnRef",
         "covered_label": "ApiSpec function",
         "source_label": "Test",
         "category": "function_untested",
@@ -345,9 +339,7 @@ SEMANTIC_RULES = [
     # Error-path tests must have errorCode
     {
         "type": "non_empty",
-        "section": "tests",
-        "key": "errorCode",
-        "id_key": "id",
+        "target": "tests.errorCode",
         "label": "Test",
         "category": "error_path_missing_code",
         "hint": "Every error-path test must declare the errorCode it exercises.",
@@ -355,9 +347,7 @@ SEMANTIC_RULES = [
     # Happy-path/edge-case tests must have expectedOutput
     {
         "type": "non_empty",
-        "section": "tests",
-        "key": "expectedOutput",
-        "id_key": "id",
+        "target": "tests.expectedOutput",
         "label": "Test",
         "category": "missing_expected_output",
         "hint": "Every happy-path and edge-case test must assert a concrete expected output.",

@@ -230,9 +230,10 @@ SEMANTIC_RULES = [
     # Entity names must be PascalCase
     {
         "type": "patterns",
-        "section": "entities",
+        "target": "entities",
         "text_key": "name",
         "patterns": [r"^[A-Z][A-Za-z0-9]*$"],
+        "negate": True,
         "label": "Entity",
         "category": "entity_name_format",
         "hint": "Entity names must start with an uppercase letter followed by alphanumeric characters.",
@@ -240,10 +241,10 @@ SEMANTIC_RULES = [
     # Field names must be camelCase
     {
         "type": "patterns",
-        "section": "entities",
-        "nested_key": "fields",
+        "target": "entities.fields",
         "text_key": "name",
         "patterns": [r"^[a-z][A-Za-z0-9]*$"],
+        "negate": True,
         "label": "Field",
         "category": "field_name_format",
         "hint": "Field names must start with a lowercase letter.",
@@ -251,10 +252,10 @@ SEMANTIC_RULES = [
     # Method names must be camelCase
     {
         "type": "patterns",
-        "section": "entities",
-        "nested_key": "methods",
+        "target": "entities.methods",
         "text_key": "name",
         "patterns": [r"^[a-z][A-Za-z0-9]*$"],
+        "negate": True,
         "label": "Method",
         "category": "method_name_format",
         "hint": "Method names must start with a lowercase letter.",
@@ -262,9 +263,10 @@ SEMANTIC_RULES = [
     # Enum names must be PascalCase
     {
         "type": "patterns",
-        "section": "enums",
+        "target": "enums",
         "text_key": "name",
         "patterns": [r"^[A-Z][A-Za-z0-9]*$"],
+        "negate": True,
         "label": "Enum",
         "category": "enum_name_format",
         "hint": "Enum names must start with an uppercase letter followed by alphanumeric characters.",
@@ -272,10 +274,10 @@ SEMANTIC_RULES = [
     # Enum values must be SCREAMING_SNAKE_CASE
     {
         "type": "patterns",
-        "section": "enums",
-        "nested_key": "values",
+        "target": "enums.values",
         "text_key": "name",
         "patterns": [r"^[A-Z][A-Z0-9_]*$"],
+        "negate": True,
         "label": "Enum value",
         "category": "enum_value_format",
         "hint": "Enum values must be uppercase with underscores.",
@@ -283,10 +285,9 @@ SEMANTIC_RULES = [
     # Entity extends must reference existing entity
     {
         "type": "exists",
-        "section": "entities",
-        "key": "extends",
+        "target": "entities.extends",
         "valid_section": "entities",
-        "valid_key": "name",
+        "valid_id_field": "name",
         "label": "Entity",
         "ref_label": "Entity",
         "category": "extends_missing",
@@ -295,10 +296,9 @@ SEMANTIC_RULES = [
     # Relationship from must reference existing entity
     {
         "type": "exists",
-        "section": "relationships",
-        "key": "from",
+        "target": "relationships.from",
         "valid_section": "entities",
-        "valid_key": "name",
+        "valid_id_field": "name",
         "label": "Relationship",
         "ref_label": "Entity",
         "category": "rel_from_missing",
@@ -307,10 +307,9 @@ SEMANTIC_RULES = [
     # Relationship to must reference existing entity
     {
         "type": "exists",
-        "section": "relationships",
-        "key": "to",
+        "target": "relationships.to",
         "valid_section": "entities",
-        "valid_key": "name",
+        "valid_id_field": "name",
         "label": "Relationship",
         "ref_label": "Entity",
         "category": "rel_to_missing",
@@ -319,9 +318,7 @@ SEMANTIC_RULES = [
     # Relationship type must be valid
     {
         "type": "non_empty",
-        "section": "relationships",
-        "key": "type",
-        "id_key": "from",
+        "target": "relationships.type",
         "label": "Relationship",
         "category": "rel_type_invalid",
         "hint": "Valid types: association, composition, aggregation, dependency, realization.",
