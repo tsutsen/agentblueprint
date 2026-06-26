@@ -148,6 +148,38 @@ def check_sequential(ids: list[str], label: str, result: "LayerResult") -> None:
             break  # report first gap only
 
 
+def find_orphans(items: list[dict], id_key: str, deps_key: str, result: "LayerResult",
+                   label: str = "", warning: str = "isolated", hint: str = "") -> None:
+    """Warn if items are isolated (no dependencies and no dependents).
+    
+    Args:
+        items: List of item dicts.
+        id_key: Key in each item that holds the ID.
+        deps_key: Key in each item that holds the list of dependencies.
+        result: LayerResult to append warnings to.
+        label: Label for error messages (e.g. "Component").
+        warning: Category for the warning.
+        hint: Custom hint message (default: generic).
+    """
+    if not items:
+        return
+    
+    item_ids = {item.get(id_key, "") for item in items}
+    depended_upon = set()
+    for item in items:
+        for dep in item.get(deps_key, []):
+            depended_upon.add(dep)
+    
+    for item in items:
+        iid = item.get(id_key, "")
+        has_deps = len(item.get(deps_key, [])) > 0
+        is_depended_on = iid in depended_upon
+        if not has_deps and not is_depended_on:
+            result.add("warning", warning,
+                f"{label or iid} is isolated: no dependencies and no dependents.",
+                hint=hint or f"An isolated {label.lower() or 'item'} may indicate a design issue.")
+
+
 def extract_ids(items: list, key: str) -> list[str]:
     """Extract a field from a list of dicts."""
     return [item[key] for item in items if key in item]

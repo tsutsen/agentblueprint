@@ -27,7 +27,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, check_duplicates, validate_project_and_version
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, check_duplicates, find_orphans
 from schema_validator import SchemaValidator
 
 
@@ -381,27 +381,6 @@ def check_dependency_depth(spec: dict, result: LayerResult):
                 hint="Deep dependency chains can make the system hard to understand and maintain.")
 
 
-def check_isolated_components(spec: dict, result: LayerResult):
-    """Warn if a component has no dependencies AND no dependents (isolated)."""
-    components = spec.get("components", [])
-    comp_ids = {c["id"] for c in components}
-    
-    # Build set of components that are depended upon
-    depended_upon = set()
-    for c in components:
-        for dep in c.get("dependencies", []):
-            depended_upon.add(dep)
-    
-    for c in components:
-        cid = c["id"]
-        has_deps = len(c.get("dependencies", [])) > 0
-        is_depended_on = cid in depended_upon
-        if not has_deps and not is_depended_on:
-            result.add("warning", "isolated_component",
-                f"Component '{cid}' is isolated: no dependencies and no dependents.",
-                hint="An isolated component may indicate a design issue — consider whether it truly belongs in the architecture or should be merged.")
-
-
 def check_flow_descriptions(spec: dict, result: LayerResult):
     """Warn if data flow descriptions are empty."""
     for flow in spec.get("dataFlow", []):
@@ -538,7 +517,7 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     check_fr_coverage(spec, goal, result)
 
     # Quality checks (new)
-    check_isolated_components(spec, result)
+    find_orphans(spec.get("components", []), "id", "dependencies", result, "Component")
     check_flow_descriptions(spec, result)
     check_flow_data_refs(spec, result)
     check_vague_responsibilities(spec, result)
