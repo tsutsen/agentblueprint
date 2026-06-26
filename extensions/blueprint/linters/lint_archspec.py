@@ -78,7 +78,7 @@ def check_components(spec: dict, result: LayerResult) -> set[str]:
         )
 
     # Overlapping responsibilities
-    find_duplicates_with_norm(
+    find_duplicates_nested(
         components, "responsibilities", "id", result,
         label="Component", category="overlapping_responsibility",
         hint="Each responsibility must be owned by exactly one component.",

@@ -180,9 +180,32 @@ def find_orphans(items: list[dict], id_key: str, deps_key: str, result: "LayerRe
                 hint=hint or f"An isolated {label.lower() or 'item'} may indicate a design issue.")
 
 
-def find_duplicates_with_norm(items: list[dict], nested_key: str, id_key: str,
-                              result: "LayerResult", label: str = "", category: str = "duplicate",
-                              hint: str = "", normalize: callable = None) -> None:
+def find_duplicates(ids: list[str], label: str, result: "LayerResult", normalize: callable = None) -> None:
+    """Warn if IDs have duplicates (with optional normalization).
+    
+    Args:
+        ids: List of IDs to check.
+        label: Label for the IDs (e.g., "REQ", "FLW").
+        result: LayerResult to append warnings to.
+        normalize: Optional function to normalize IDs (e.g., str.lower). Default: identity.
+    """
+    seen: dict[str, str] = {}  # normalized ID → first ID
+    
+    for id_str in ids:
+        norm = normalize(id_str) if normalize else id_str
+        if norm in seen:
+            result.add(
+                "warning", "duplicate_id",
+                f"Duplicate {label} ID '{id_str}' (also '{seen[norm]}').",
+                hint=f"Each {label} must have a unique ID."
+            )
+        else:
+            seen[norm] = id_str
+
+
+def find_duplicates_nested(items: list[dict], nested_key: str, id_key: str,
+                           result: "LayerResult", label: str = "", category: str = "duplicate",
+                           hint: str = "", normalize: callable = None) -> None:
     """Warn if nested items have duplicate values (with optional normalization).
     
     Args:
