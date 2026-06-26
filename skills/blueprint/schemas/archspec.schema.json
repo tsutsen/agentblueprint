@@ -259,7 +259,8 @@
               "deprecated"
             ]
           }
-        }
+        },
+        "x_idPattern": "comp"
       }
     },
     "dataModel": {
