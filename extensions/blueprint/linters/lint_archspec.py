@@ -30,20 +30,18 @@ from typing import Optional
 
 from schema_validator import SchemaValidator
 from shared import (
-    find_patterns,
-    find_vague_patterns,
-    find_patterns_nested,
-    find_patterns,
-    validate_non_empty,
-    validate_item_count,
     Issue,
     LayerResult,
     find_duplicates,
     find_orphans,
+    find_patterns,
+    find_patterns_nested,
+    find_vague_patterns,
     print_human,
     print_json_output,
     validate_coverage,
     validate_exists,
+    validate_item_count,
     validate_no_overlap,
     validate_non_empty,
     validate_project_and_version,
@@ -83,27 +81,6 @@ def detect_cycle(graph: dict[str, list[str]]) -> Optional[list[str]]:
 # ── Checks ────────────────────────────────────────────────────────────────────
 
 
-def check_project_match(spec: dict, goal: dict, result: LayerResult):
-    if spec["project"] != goal["project"]:
-        result.add(
-            "error",
-            "project_match",
-            f"Project mismatch: archspec='{spec['project']}' goalspec='{goal['project']}'.",
-            hint="Both specs must have identical 'project' values.",
-        )
-
-
-def check_version_pins(spec: dict, goal: dict, result: LayerResult):
-    pinned = spec.get("goalSpecVersion")
-    if pinned and pinned != goal["version"]:
-        result.add(
-            "error",
-            "version_drift",
-            f"archspec.goalSpecVersion='{pinned}' does not match goalspec.version='{goal['version']}'.",
-            hint="Re-review architecture against updated GoalSpec, then update goalSpecVersion.",
-        )
-
-
 def check_components(spec: dict, result: LayerResult) -> set[str]:
     components = spec.get("components", [])
     ids = [c["id"] for c in components]
@@ -119,14 +96,11 @@ def check_components(spec: dict, result: LayerResult) -> set[str]:
         dep_graph[cid] = deps
 
         # Dependency references must exist
-        for dep in deps:
-            if dep not in component_ids:
-                result.add(
-                    "error",
-                    "dependency_ref",
-                    f"Component '{cid}': dependency '{dep}' is not a defined component.",
-                    hint=f"Add a component with id='{dep}' or correct the dependency reference.",
-                )
+        validate_exists(
+            [{"id": dep} for dep in deps], "id", component_ids,
+            result, label=f"Component '{cid}'", ref_label="component",
+            category="dependency_ref"
+        )
 
         # Warn: component with no reqRefs at non-draft status
         if not comp.get("reqRefs") and spec.get("status") in ("review", "confirmed"):
@@ -175,8 +149,12 @@ def check_subsystems(spec: dict, component_ids: set[str], result: LayerResult):
 
     # Check for empty subsystems
     validate_non_empty(
-        subsystems, "componentRefs", "name", result,
-        label="Subsystem", category="subsystem_empty"
+        subsystems,
+        "componentRefs",
+        "name",
+        result,
+        label="Subsystem",
+        category="subsystem_empty",
     )
 
     for sub in subsystems:
@@ -184,9 +162,13 @@ def check_subsystems(spec: dict, component_ids: set[str], result: LayerResult):
 
         # Check for invalid component refs
         validate_exists(
-            [{"id": ref} for ref in refs], "id", component_ids,
-            result, label=f"Subsystem '{sub['name']}'", ref_label="component",
-            category="subsystem_ref"
+            [{"id": ref} for ref in refs],
+            "id",
+            component_ids,
+            result,
+            label=f"Subsystem '{sub['name']}'",
+            ref_label="component",
+            category="subsystem_ref",
         )
 
         for ref in refs:
@@ -196,15 +178,25 @@ def check_subsystems(spec: dict, component_ids: set[str], result: LayerResult):
     # Warn: components not assigned to any subsystem
     validate_coverage(
         [{"id": cid} for cid in component_ids],
-        [{"componentRefs": refs} for refs in [sub.get("componentRefs", []) for sub in subsystems]],
-        "id", "componentRefs",
-        result, covered_label="Component", source_label="Subsystem"
+        [
+            {"componentRefs": refs}
+            for refs in [sub.get("componentRefs", []) for sub in subsystems]
+        ],
+        "id",
+        "componentRefs",
+        result,
+        covered_label="Component",
+        source_label="Subsystem",
     )
 
     # Warn: component assigned to multiple subsystems
     validate_no_overlap(
-        subsystems, "componentRefs", "name", result,
-        label="Subsystem", category="subsystem_overlap"
+        subsystems,
+        "componentRefs",
+        "name",
+        result,
+        label="Subsystem",
+        category="subsystem_overlap",
     )
 
 
@@ -216,16 +208,26 @@ def check_data_flows(spec: dict, component_ids: set[str], result: LayerResult):
     # Validate componentRef exists
     all_steps = [step for flow in flows for step in flow.get("steps", [])]
     validate_exists(
-        all_steps, "componentRef", component_ids,
-        result, label="Flow step", ref_label="component",
-        category="flow_component_ref"
+        all_steps,
+        "componentRef",
+        component_ids,
+        result,
+        label="Flow step",
+        ref_label="component",
+        category="flow_component_ref",
     )
 
     # Validate flow has at least 2 steps
     validate_item_count(
-        flows, "steps", 2, -1, "id", result,
-        label="Flow", category="flow_too_short",
-        hint="A data flow must show at least a source and a sink step."
+        flows,
+        "steps",
+        2,
+        -1,
+        "id",
+        result,
+        label="Flow",
+        category="flow_too_short",
+        hint="A data flow must show at least a source and a sink step.",
     )
 
 
@@ -236,18 +238,35 @@ def check_constraints(spec: dict, result: LayerResult):
 
     # Implementation smells in constraints
     impl_smells = [
-        "postgres", "mysql", "redis", "sqlite", "mongodb",
-        "fastapi", "flask", "django", "docker", "kubernetes",
-        "s3", "lambda", "python", "typescript", "rust",
-        "golang", "java",
+        "postgres",
+        "mysql",
+        "redis",
+        "sqlite",
+        "mongodb",
+        "fastapi",
+        "flask",
+        "django",
+        "docker",
+        "kubernetes",
+        "s3",
+        "lambda",
+        "python",
+        "typescript",
+        "rust",
+        "golang",
+        "java",
     ]
     find_patterns(
-        constraints, text_key="description", patterns=[(s, s) for s in impl_smells],
-        result=result, label="Constraint", category="constraint_implementation_leak",
+        constraints,
+        text_key="description",
+        patterns=[(s, s) for s in impl_smells],
+        result=result,
+        label="Constraint",
+        category="constraint_implementation_leak",
         hint="Constraints should describe what is required, not which technology satisfies it.",
         match_fn=lambda item, smells: [
             (s, [s]) for s in smells if s in item.get("description", "").lower()
-        ]
+        ],
     )
 
 
@@ -267,7 +286,7 @@ def check_req_nfr_refs(spec: dict, goal: Optional[dict], result: LayerResult):
         result,
         label="Component",
         ref_label="GoalSpec requirement",
-        category="req_ref_missing"
+        category="req_ref_missing",
     )
     validate_exists(
         spec.get("dataFlow", []),
@@ -276,7 +295,7 @@ def check_req_nfr_refs(spec: dict, goal: Optional[dict], result: LayerResult):
         result,
         label="Flow",
         ref_label="GoalSpec requirement",
-        category="req_ref_missing"
+        category="req_ref_missing",
     )
     validate_exists(
         spec.get("constraints", []),
@@ -285,7 +304,7 @@ def check_req_nfr_refs(spec: dict, goal: Optional[dict], result: LayerResult):
         result,
         label="Constraint",
         ref_label="GoalSpec NFR",
-        category="nfr_ref_missing"
+        category="nfr_ref_missing",
     )
 
 
@@ -334,16 +353,28 @@ def check_data_ref_valid(spec: dict, data_spec: Optional[dict], result: LayerRes
 def check_component_responsibility_count(spec: dict, result: LayerResult):
     """Warn if a component has too many responsibilities (>5)."""
     validate_item_count(
-        spec.get("components", []), "responsibilities", 8, 1, "id",
-        result, label="Component", category="component_responsibility_count"
+        spec.get("components", []),
+        "responsibilities",
+        8,
+        1,
+        "id",
+        result,
+        label="Component",
+        category="component_responsibility_count",
     )
 
 
 def check_data_flow_step_count(spec: dict, result: LayerResult):
     """Warn if a data flow has too many steps (>10)."""
     validate_item_count(
-        spec.get("dataFlow", []), "steps", 15, 1, "id",
-        result, label="Flow", category="flow_step_count"
+        spec.get("dataFlow", []),
+        "steps",
+        15,
+        1,
+        "id",
+        result,
+        label="Flow",
+        category="flow_step_count",
     )
 
 
@@ -392,17 +423,27 @@ def check_dependency_depth(spec: dict, result: LayerResult):
 def check_flow_descriptions(spec: dict, result: LayerResult):
     """Warn if data flow descriptions are empty."""
     validate_non_empty(
-        spec.get("dataFlow", []), "description", "id",
-        result, label="Flow", category="flow_empty_description"
+        spec.get("dataFlow", []),
+        "description",
+        "id",
+        result,
+        label="Flow",
+        category="flow_empty_description",
     )
 
 
 def check_flow_data_refs(spec: dict, result: LayerResult):
     """Warn if flow steps have empty dataRef fields."""
-    all_steps = [step for flow in spec.get("dataFlow", []) for step in flow.get("steps", [])]
+    all_steps = [
+        step for flow in spec.get("dataFlow", []) for step in flow.get("steps", [])
+    ]
     validate_non_empty(
-        all_steps, "dataRef", "componentRef",
-        result, label="Flow step", category="flow_step_empty_data_ref"
+        all_steps,
+        "dataRef",
+        "componentRef",
+        result,
+        label="Flow step",
+        category="flow_step_empty_data_ref",
     )
 
 
@@ -418,10 +459,14 @@ def check_vague_responsibilities(spec: dict, result: LayerResult):
         r"\bensure\s+(that |the |all )?\b",
     ]
     find_patterns(
-        spec.get("components", []), patterns=vague_patterns,
-        result=result, label="Component", category="vague_responsibility",
+        spec.get("components", []),
+        patterns=vague_patterns,
+        result=result,
+        label="Component",
+        category="vague_responsibility",
         hint="Break into specific, actionable responsibilities. Avoid generic statements like 'consistent error handling across all components'.",
-        nested_key="responsibilities", max_count=1
+        nested_key="responsibilities",
+        max_count=1,
     )
 
 
@@ -433,10 +478,13 @@ def check_inline_req_refs_in_responsibilities(spec: dict, result: LayerResult):
         (r"\bsection\s+\d+\b", "section references"),
     ]
     find_patterns(
-        spec.get("components", []), patterns=non_standard_patterns,
-        result=result, label="Component", category="inline_ref_in_responsibility",
+        spec.get("components", []),
+        patterns=non_standard_patterns,
+        result=result,
+        label="Component",
+        category="inline_ref_in_responsibility",
         hint="Move requirement references to the reqRefs/nfrRefs arrays. Use glossaryRefs for term references.",
-        nested_key="responsibilities"
+        nested_key="responsibilities",
     )
 
 
