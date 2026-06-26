@@ -1017,8 +1017,16 @@ class BaseLinter:
             _strict_mode(self.result)
     
     @classmethod
-    def main(cls, extra_args: list[str] = []):
-        """CLI entry point."""
+    def main(cls, extra_args: list[tuple] = []):
+        """CLI entry point.
+        
+        Args:
+            extra_args: List of (arg_name, kwargs) tuples for additional CLI args.
+                       Each kwarg dict can include:
+                       - help: Help text
+                       - spec_name: Name of the extra spec (e.g., "goal", "data")
+                       - required: Whether the arg is required
+        """
         parser = argparse.ArgumentParser(description=f"Lint a {cls.SPEC_NAME} JSON.")
         parser.add_argument("input", help=f"Path to {cls.SPEC_NAME} JSON")
         parser.add_argument("--schema", help=f"Path to {cls.SPEC_NAME}.schema.json")
@@ -1027,15 +1035,28 @@ class BaseLinter:
         
         # Add extra CLI args
         for arg in extra_args:
-            parser.add_argument(arg[0], **arg[1])
+            arg_name = arg[0]
+            kwargs = arg[1] if len(arg) > 1 else {}
+            parser.add_argument(arg_name, **kwargs)
         
         args = parser.parse_args()
         
         spec = json.loads(Path(args.input).read_text())
         schema_path = Path(args.schema) if args.schema else None
         
+        # Load extra specs
+        extra_specs = {}
+        for arg in extra_args:
+            arg_name = arg[0]
+            kwargs = arg[1] if len(arg) > 1 else {}
+            spec_name = kwargs.get("spec_name", arg_name.lstrip("-").replace("-", ""))
+            
+            arg_value = getattr(args, arg_name.lstrip("-").replace("-", "_"), None)
+            if arg_value:
+                extra_specs[spec_name] = json.loads(Path(arg_value).read_text())
+        
         linter = cls(spec, schema_path, args.strict)
-        result = linter.run()
+        result = linter.run(**extra_specs)
         
         if args.json:
             print_json_output(result)

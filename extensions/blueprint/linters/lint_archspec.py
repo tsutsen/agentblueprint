@@ -370,31 +370,9 @@ def run_lint(spec, schema_path, goal, strict, glossary=None, data_spec=None, api
     return linter.run(goal=goal, data=data_spec, api=api_spec, glossary=glossary)
 
 
-# ── Output ────────────────────────────────────────────────────────────────────
-
-def main():
-    parser = argparse.ArgumentParser(description="Lint an ArchSpec JSON.")
-    parser.add_argument("input", help="Path to archspec JSON")
-    parser.add_argument("--schema", help="Path to archspec.schema.json")
-    parser.add_argument("--goal", help="Path to goalspec JSON for cross-spec checks")
-    parser.add_argument("--strict", action="store_true", help="Treat warnings as errors")
-    parser.add_argument("--json", action="store_true", help="Output as JSON")
-    args = parser.parse_args()
-    
-    spec = json.loads(Path(args.input).read_text())
-    schema_path = Path(args.schema) if args.schema else None
-    goal = json.loads(Path(args.goal).read_text()) if args.goal else None
-    
-    linter = ArchSpecLinter(spec, schema_path, args.strict)
-    result = linter.run(goal=goal)
-    
-    if args.json:
-        print_json_output(result)
-    else:
-        print_human(result, args.input)
-    
-    sys.exit(0 if result.clean else 1)
-
+# ── CLI ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    main()
+    ArchSpecLinter.main([
+        ("--goal", {"help": "Path to goalspec JSON for cross-spec checks", "spec_name": "goal"}),
+    ])
