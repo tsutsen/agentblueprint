@@ -146,12 +146,23 @@ def check_function_consistency(md_fns: Set[str], json_fns: Set[str],
 
 # ── Runner ────────────────────────────────────────────────────────────────────
 
+# Mapping from spec_type to actual filename prefix
+SPEC_FILE_PREFIX = {
+    "goal": "GoalSpec",
+    "design": "DesignSpec",
+    "arch": "ArchitectureSpec",
+    "data": "DataSpec",
+    "api": "ApiSpec",
+    "test": "TestSpec",
+}
+
 def run_lint(spec_dir: Path, specs: list[str]) -> LayerResult:
     result = LayerResult()
 
     for spec_type in specs:
-        md_path = spec_dir / f"{spec_type.title()}.md"
-        json_path = spec_dir / f"{spec_type.title()}.json"
+        prefix = SPEC_FILE_PREFIX.get(spec_type, spec_type.title())
+        md_path = spec_dir / f"{prefix}.md"
+        json_path = spec_dir / f"{prefix}.json"
 
         if not md_path.exists() or not json_path.exists():
             result.add("warning", "file_missing",
