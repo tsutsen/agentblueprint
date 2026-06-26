@@ -14,6 +14,114 @@ import inspect
 import json
 import re
 from dataclasses import dataclass, field
+from typing import Any, Literal, TypedDict, Union
+
+
+# ── TypedDict schemas for semantic rules ─────────────────────────────────────
+
+
+class _RuleBase(TypedDict, total=False):
+    """Optional fields shared by all rule types."""
+    label: str
+    category: str
+    severity: str
+    hint: str
+
+
+class _TargetRuleBase(_RuleBase, total=False):
+    """Base for rules that operate on a single target path."""
+    target: str
+
+
+class NonEmptyRule(_TargetRuleBase):
+    """Check that a field is not empty/missing."""
+    type: Literal["non_empty"]
+    target: str
+
+
+class ExistsRule(_TargetRuleBase):
+    """Check that field values resolve to valid targets."""
+    type: Literal["exists"]
+    target: str
+    valid_section: str
+    valid_id_field: str
+    ref_label: str
+
+
+class UniqueRule(_TargetRuleBase):
+    """Check that values in a field are unique."""
+    type: Literal["unique"]
+    target: str
+
+
+class NoOverlapRule(_TargetRuleBase):
+    """Check that list fields don't share values across items."""
+    type: Literal["no_overlap"]
+    target: str
+
+
+class ItemCountRule(_TargetRuleBase):
+    """Check list length against threshold."""
+    type: Literal["item_count"]
+    target: str
+    count: int
+    compare_mode: int
+
+
+class PatternsRule(_TargetRuleBase):
+    """Check text against regex patterns."""
+    type: Literal["patterns"]
+    target: str
+    patterns: list
+    negate: bool
+    text_key: str
+    text_keys: list[str]
+    max_count: int
+
+
+class CoverageRule(_RuleBase):
+    """Check that covered items are referenced by covering items."""
+    type: Literal["coverage"]
+    covered: str
+    covering: str
+    ref_field: str
+    covered_label: str
+    source_label: str
+
+
+class OrphansRule(_TargetRuleBase):
+    """Check for isolated items (no deps, no dependents)."""
+    type: Literal["orphans"]
+    target: str
+    deps_field: str
+    id_field: str
+    warning: str
+
+
+# Union of all rule types
+SemanticRule = Union[
+    NonEmptyRule,
+    ExistsRule,
+    UniqueRule,
+    NoOverlapRule,
+    ItemCountRule,
+    PatternsRule,
+    CoverageRule,
+    OrphansRule,
+]
+
+
+# Mapping from rule type to its TypedDict class
+_RULE_TYPE_MAP: dict[str, type] = {
+    "non_empty": NonEmptyRule,
+    "exists": ExistsRule,
+    "unique": UniqueRule,
+    "no_overlap": NoOverlapRule,
+    "item_count": ItemCountRule,
+    "patterns": PatternsRule,
+    "coverage": CoverageRule,
+    "orphans": OrphansRule,
+}
 
 
 # ── Canonical ID patterns (single source of truth) ────────────────────────────
@@ -1190,6 +1298,7 @@ def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None
     hint = rule.get("hint", "")
     patterns = rule.get("patterns", [])
     text_key = rule.get("text_key")
+    text_keys = rule.get("text_keys") or [text_key] if text_key else []
     max_count = rule.get("max_count")
     negate = rule.get("negate", False)
 
@@ -1199,9 +1308,9 @@ def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None
             if resolved.group_sizes[idx] > max_count:
                 continue
 
-        # Extract text
-        if text_key and isinstance(val, dict):
-            texts = [val.get(text_key, "")]
+        # Extract text — support text_key (single), text_keys (list), or raw string
+        if text_keys and isinstance(val, dict):
+            texts = [val.get(k, "") for k in text_keys]
         elif isinstance(val, str):
             texts = [val]
         else:
@@ -1325,6 +1434,72 @@ _RULE_HANDLERS = {
 }
 
 
+# Required fields per rule type (beyond 'type' itself)
+_REQUIRED_FIELDS: dict[str, list[str]] = {
+    "non_empty":  ["target"],
+    "exists":     ["target", "valid_section"],
+    "unique":     ["target"],
+    "no_overlap": ["target"],
+    "item_count": ["target", "count"],
+    "patterns":   ["target", "patterns"],
+    "coverage":   ["covered", "covering", "ref_field"],
+    "orphans":    ["target", "deps_field"],
+}
+
+# Known fields per rule type (for detecting typos — includes 'type' itself)
+_KNOWN_FIELDS: dict[str, set[str]] = {
+    "non_empty":  {"type", "target", "label", "category", "severity", "hint"},
+    "exists":     {"type", "target", "valid_section", "valid_id_field", "ref_label",
+                   "label", "category", "severity", "hint"},
+    "unique":     {"type", "target", "label", "category", "severity", "hint"},
+    "no_overlap": {"type", "target", "label", "category", "severity", "hint"},
+    "item_count": {"type", "target", "count", "compare_mode",
+                   "label", "category", "severity", "hint"},
+    "patterns":   {"type", "target", "patterns", "negate", "text_key", "text_keys", "max_count",
+                   "label", "category", "severity", "hint"},
+    "coverage":   {"type", "covered", "covering", "ref_field", "covered_label", "source_label",
+                   "label", "category", "severity", "hint"},
+    "orphans":    {"type", "target", "deps_field", "id_field", "warning",
+                   "label", "category", "severity", "hint"},
+}
+
+
+def _validate_rule(rule: dict) -> list[str]:
+    """Validate a rule dict against its TypedDict schema.
+
+    Returns a list of issue descriptions (empty if valid).
+    """
+    errors: list[str] = []
+    rule_type = rule.get("type")
+    if not rule_type:
+        errors.append("missing 'type'")
+        return errors
+
+    required = _REQUIRED_FIELDS.get(rule_type, [])
+    known = _KNOWN_FIELDS.get(rule_type)
+
+    # Check required fields
+    for field_name in required:
+        if field_name not in rule:
+            errors.append(f"missing required field '{field_name}'")
+
+    # Check for unknown fields (typos)
+    if known:
+        for key in rule:
+            if key not in known:
+                errors.append(f"unknown field '{key}'")
+
+    # Type checks for known typed fields
+    if "count" in rule and not isinstance(rule["count"], int):
+        errors.append("'count' must be an integer")
+    if "compare_mode" in rule and rule["compare_mode"] not in (-1, 0, 1):
+        errors.append("'compare_mode' must be -1, 0, or 1")
+    if "patterns" in rule and not isinstance(rule["patterns"], list):
+        errors.append("'patterns' must be a list")
+
+    return errors
+
+
 def _run_new_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_specs: dict) -> None:
     """Execute declarative semantic rules using the new path-based system."""
     for rule in rules:
@@ -1332,6 +1507,13 @@ def _run_new_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_
         handler = _RULE_HANDLERS.get(rule_type)
         if not handler:
             result.add("warning", "unknown_rule", f"Unknown rule type: {rule_type}")
+            continue
+
+        # Validate rule schema
+        schema_errors = _validate_rule(rule)
+        if schema_errors:
+            result.add("error", "rule_schema",
+                f"Rule '{rule_type}' schema errors: {'; '.join(schema_errors)}")
             continue
 
         try:
