@@ -247,35 +247,6 @@ def check_req_nfr_refs(spec: dict, goal: Optional[dict], result: LayerResult):
             check_nfr(ref, f"Constraint '{con['id']}'")
 
 
-def check_fr_coverage(spec: dict, goal: Optional[dict], result: LayerResult):
-    """Every FR in GoalSpec should be covered by at least one component."""
-    if not goal:
-        return
-    validate_coverage(
-        goal.get("functionalRequirements", []),
-        spec.get("components", []),
-        "id", "reqRefs",
-        result,
-        covered_label="GoalSpec FR",
-        source_label="component"
-    )
-
-
-def check_nfr_coverage(spec: dict, goal: Optional[dict], result: LayerResult):
-    """Every NFR in GoalSpec should be covered by at least one component or constraint."""
-    if not goal:
-        return
-    all_source = spec.get("components", []) + spec.get("constraints", [])
-    validate_coverage(
-        goal.get("nonFunctionalRequirements", []),
-        all_source,
-        "id", "nfrRefs",
-        result,
-        covered_label="GoalSpec NFR",
-        source_label="component or constraint"
-    )
-
-
 def check_subsystem_empty(spec: dict, component_ids: set[str], result: LayerResult):
     """Warn if a subsystem has no components assigned."""
     subsystems = spec.get("overview", {}).get("subsystems", [])
@@ -506,7 +477,23 @@ def run_lint(spec: dict, schema_path: Optional[Path],
 
     # Cross-spec ref resolution
     check_req_nfr_refs(spec, goal, result)
-    check_fr_coverage(spec, goal, result)
+    validate_coverage(
+        goal.get("functionalRequirements", []),
+        spec.get("components", []),
+        "id", "reqRefs",
+        result,
+        covered_label="GoalSpec FR",
+        source_label="component"
+    )
+    all_nfr_source = spec.get("components", []) + spec.get("constraints", [])
+    validate_coverage(
+        goal.get("nonFunctionalRequirements", []),
+        all_nfr_source,
+        "id", "nfrRefs",
+        result,
+        covered_label="GoalSpec NFR",
+        source_label="component or constraint"
+    )
 
     # Quality checks (new)
     find_orphans(spec.get("components", []), "id", "dependencies", result, "Component")
