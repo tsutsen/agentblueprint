@@ -790,7 +790,8 @@
               }
             }
           }
-        ]
+        ],
+        "x_idPattern": "vdr"
       }
     },
     "designSystem": {

@@ -116,7 +116,8 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^IS-\\d{3}$"
+        "pattern": "^IS-\\d{3}$",
+        "x_idPattern": "is"
       },
       "description": "List of IS-NNN identifiers that block this issue. Empty array if none.",
       "uniqueItems": true
