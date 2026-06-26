@@ -89,15 +89,15 @@ def check_project_and_version(spec: dict, goal: Optional[dict], result: LayerRes
 def check_design_goals(spec: dict, result: LayerResult):
     goals = spec.get("designGoals", [])
     ids = [g["id"] for g in goals]
-    check_duplicates(ids, "DCON", result)
+    check_duplicates(ids, "DG", result)
 
-    # Validate DCON-NNN-name format
+    # Validate DG-NNN format
     for g in goals:
         gid = g.get("id", "")
-        if not re.match(r"^DCON-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", gid):
-            result.add("error", "dcon_id_format",
-                f"Design goal ID '{gid}' does not follow DCON-NNN-name pattern.",
-                hint="Design goal IDs must follow the pattern 'DCON-NNN-name', e.g. 'DCON-001-MinimizeCognitiveLoad'.")
+        if not re.match(r"^DG-\d{3}$", gid):
+            result.add("error", "dg_id_format",
+                f"Design goal ID '{gid}' does not follow DG-NNN pattern.",
+                hint="Design goal IDs must follow the pattern 'DG-NNN', e.g. 'DG-001'.")
 
     forbidden = ["database", "api", "endpoint", "framework", "library",
                  "class", "function", "sql", "http", "rest", "json"]
