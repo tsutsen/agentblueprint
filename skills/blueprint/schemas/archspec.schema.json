@@ -165,7 +165,8 @@
         "properties": {
           "id": {
             "$ref": "#/definitions/componentId",
-            "description": "Unique kebab-case identifier for this component (e.g. 'search-service')."
+            "description": "Unique kebab-case identifier for this component (e.g. 'search-service').",
+            "x_idPattern": "comp_id"
           },
           "name": {
             "type": "string",
@@ -314,7 +315,8 @@
           "id": {
             "type": "string",
             "description": "Stable flow identifier, format FLW-NNN-name.",
-            "pattern": "^FLW-\\d{3}-[a-zA-Z][a-zA-Z0-9]*$"
+            "pattern": "^FLW-\\d{3}-[a-zA-Z][a-zA-Z0-9]*$",
+            "x_idPattern": "flw"
           },
           "name": {
             "type": "string",
@@ -389,7 +391,8 @@
           "id": {
             "type": "string",
             "description": "Stable constraint identifier, e.g. 'CON-001-AuthenticationRequired'.",
-            "pattern": "^CON-\\d{3}-[a-zA-Z][a-zA-Z0-9]*$"
+            "pattern": "^CON-\\d{3}-[a-zA-Z][a-zA-Z0-9]*$",
+            "x_idPattern": "con"
           },
           "name": {
             "type": "string",

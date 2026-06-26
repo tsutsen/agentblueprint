@@ -122,7 +122,8 @@
           "id": {
             "type": "string",
             "description": "Stable unique identifier for this function, e.g. 'FN-placeOrder'. Used by data spec apiRef and test spec fnRef.",
-            "pattern": "^FN-[a-z][A-Za-z0-9]*$"
+            "pattern": "^FN-[a-z][A-Za-z0-9]*$",
+            "x_idPattern": "fn"
           },
           "name": {
             "type": "string",

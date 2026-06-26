@@ -80,7 +80,8 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/milestoneId"
+            "$ref": "#/definitions/milestoneId",
+            "x_idPattern": "milestone"
           },
           "name": {
             "type": "string",
@@ -119,7 +120,8 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/epicId"
+            "$ref": "#/definitions/epicId",
+            "x_idPattern": "ep"
           },
           "title": {
             "type": "string",

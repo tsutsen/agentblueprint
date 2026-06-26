@@ -73,7 +73,8 @@
         "properties": {
           "id": {
             "$ref": "#/definitions/primId",
-            "description": "Unique identifier for this primitive type."
+            "description": "Unique identifier for this primitive type.",
+            "x_idPattern": "prim"
           },
           "name": {
             "type": "string",
@@ -111,7 +112,8 @@
         "properties": {
           "id": {
             "$ref": "#/definitions/enumId",
-            "description": "Unique identifier for this enum."
+            "description": "Unique identifier for this enum.",
+            "x_idPattern": "num"
           },
           "name": {
             "type": "string",
@@ -162,7 +164,8 @@
         "properties": {
           "id": {
             "$ref": "#/definitions/entityId",
-            "description": "Unique identifier for this entity."
+            "description": "Unique identifier for this entity.",
+            "x_idPattern": "ent"
           },
           "name": {
             "type": "string",
@@ -214,7 +217,14 @@
                 },
                 "example": {
                   "description": "A concrete example value. Used in test spec and documentation.",
-                  "type": ["string", "number", "boolean", "object", "array", "null"]
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "object",
+                    "array",
+                    "null"
+                  ]
                 },
                 "primaryKey": {
                   "type": "boolean",
@@ -350,7 +360,8 @@
           },
           "id": {
             "$ref": "#/definitions/relId",
-            "description": "Unique identifier for this relationship."
+            "description": "Unique identifier for this relationship.",
+            "x_idPattern": "rel"
           }
         }
       }

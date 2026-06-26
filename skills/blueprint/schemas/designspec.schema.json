@@ -199,7 +199,8 @@
           "id": {
             "type": "string",
             "pattern": "^DG-\\d{3}$",
-            "description": "Unique identifier for this design goal."
+            "description": "Unique identifier for this design goal.",
+            "x_idPattern": "dg"
           },
           "goal": {
             "type": "string",
@@ -329,7 +330,8 @@
           "id": {
             "type": "string",
             "pattern": "^UJ-\\d{3}$",
-            "description": "Unique identifier for this user journey (e.g. 'UJ-001')."
+            "description": "Unique identifier for this user journey (e.g. 'UJ-001').",
+            "x_idPattern": "uj"
           },
           "name": {
             "type": "string",
@@ -475,7 +477,8 @@
         "properties": {
           "id": {
             "$ref": "#/definitions/screenId",
-            "description": "Unique kebab-case identifier for this screen (e.g. 'library-screen')."
+            "description": "Unique kebab-case identifier for this screen (e.g. 'library-screen').",
+            "x_idPattern": "scr"
           },
           "name": {
             "type": "string",
@@ -690,7 +693,8 @@
           },
           "id": {
             "$ref": "#/definitions/spcId",
-            "description": "Unique identifier for this screen spec."
+            "description": "Unique identifier for this screen spec.",
+            "x_idPattern": "spc"
           },
           "notes": {
             "type": "string",
@@ -713,7 +717,8 @@
         "properties": {
           "id": {
             "$ref": "#/definitions/patternId",
-            "description": "Unique kebab-case identifier for this interaction pattern (e.g. 'keyboard-navigation')."
+            "description": "Unique kebab-case identifier for this interaction pattern (e.g. 'keyboard-navigation').",
+            "x_idPattern": "pat"
           },
           "name": {
             "type": "string",
@@ -880,7 +885,8 @@
         "properties": {
           "id": {
             "$ref": "#/definitions/uxacId",
-            "description": "Unique identifier for this UX acceptance criterion (e.g. 'UXAC-001')."
+            "description": "Unique identifier for this UX acceptance criterion (e.g. 'UXAC-001').",
+            "x_idPattern": "uxac"
           },
           "name": {
             "type": "string",
@@ -933,7 +939,8 @@
           "id": {
             "type": "string",
             "description": "Unique identifier for this design token, format DT-NNN-tokenName.",
-            "pattern": "^DT-\\d{3}-[a-z][a-z0-9-]*$"
+            "pattern": "^DT-\\d{3}-[a-z][a-z0-9-]*$",
+            "x_idPattern": "dt"
           },
           "name": {
             "type": "string",

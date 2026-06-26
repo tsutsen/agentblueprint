@@ -38,7 +38,6 @@
         ],
         "additionalProperties": false,
         "properties": {
-
           "definition": {
             "type": "string",
             "description": "Definition of this glossary term. Required.",
@@ -107,7 +106,8 @@
           "id": {
             "type": "string",
             "description": "Unique glossary term identifier. Format: GL-NNN (3-digit zero-padded, sequential).",
-            "pattern": "^GL-\\d{3}$"
+            "pattern": "^GL-\\d{3}$",
+            "x_idPattern": "gl"
           }
         }
       },

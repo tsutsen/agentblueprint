@@ -183,7 +183,8 @@
           },
           "id": {
             "type": "string",
-            "description": "Unique identifier for this function coverage entry"
+            "description": "Unique identifier for this function coverage entry",
+            "x_idPattern": "fc"
           },
           "name": {
             "type": "string",
@@ -214,7 +215,8 @@
         "properties": {
           "id": {
             "$ref": "#/definitions/testId",
-            "description": "Unique identifier for this test case."
+            "description": "Unique identifier for this test case.",
+            "x_idPattern": "tst"
           },
           "name": {
             "type": "string",
@@ -315,7 +317,13 @@
           "status": {
             "type": "string",
             "description": "Lifecycle status of this test case.",
-            "enum": ["draft", "review", "confirmed", "implemented", "deprecated"]
+            "enum": [
+              "draft",
+              "review",
+              "confirmed",
+              "implemented",
+              "deprecated"
+            ]
           }
         }
       }
