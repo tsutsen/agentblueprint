@@ -195,13 +195,13 @@ def check_screen_inventory(spec: dict, ia_screen_refs: set[str],
     ids = [s["id"] for s in screens]
     check_duplicates(ids, "SCR", result)
 
-    # Validate kebab-case format
+    # Validate SCR-NNN-name format
     for s in screens:
         sid = s.get("id", "")
-        if not re.match(r"^[a-z][a-z0-9-]*$", sid):
+        if not re.match(r"^SCR-\d{3}-[a-zA-Z][a-zA-Z0-9]*$", sid):
             result.add("error", "scr_id_format",
-                f"Screen ID '{sid}' does not follow kebab-case pattern.",
-                hint="Screen IDs must be kebab-case lowercase, e.g. 'library-screen'.")
+                f"Screen ID '{sid}' does not follow SCR-NNN-name pattern.",
+                hint="Screen IDs must follow the pattern 'SCR-NNN-screenName', e.g. 'SCR-001-landingPage'.")
 
     screen_ids = set(ids)
 

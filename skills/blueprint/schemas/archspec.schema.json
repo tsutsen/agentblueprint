@@ -48,8 +48,8 @@
     },
     "conId": {
       "type": "string",
-      "description": "Constraint identifier, format CON-NNN (3-digit zero-padded).",
-      "pattern": "^CON-\\d{3}$"
+      "description": "Constraint identifier, format CON-NNN-name.",
+      "pattern": "^CON-\\d{3}-[a-zA-Z][a-zA-Z0-9]*$"
     }
   },
   "properties": {
@@ -250,7 +250,13 @@
           "status": {
             "type": "string",
             "description": "Lifecycle status of this component.",
-            "enum": ["draft", "review", "confirmed", "implemented", "deprecated"]
+            "enum": [
+              "draft",
+              "review",
+              "confirmed",
+              "implemented",
+              "deprecated"
+            ]
           }
         }
       }
@@ -307,8 +313,8 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Stable kebab-case flow identifier, e.g. 'query-routing-flow'.",
-            "pattern": "^[a-z][a-z0-9-]*$"
+            "description": "Stable flow identifier, format FLW-NNN-name.",
+            "pattern": "^FLW-\\d{3}-[a-zA-Z][a-zA-Z0-9]*$"
           },
           "name": {
             "type": "string",
@@ -382,8 +388,8 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Stable constraint identifier, e.g. 'CON-001'.",
-            "pattern": "^CON-\\d{3}$"
+            "description": "Stable constraint identifier, e.g. 'CON-001-AuthenticationRequired'.",
+            "pattern": "^CON-\\d{3}-[a-zA-Z][a-zA-Z0-9]*$"
           },
           "name": {
             "type": "string",

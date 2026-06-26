@@ -27,8 +27,8 @@
   "definitions": {
     "screenId": {
       "type": "string",
-      "description": "kebab-case screen identifier, e.g. 'library-screen', 'search-panel'.",
-      "pattern": "^[a-z][a-z0-9-]*$"
+      "description": "Screen identifier, format SCR-NNN-name.",
+      "pattern": "^SCR-\\d{3}-[a-zA-Z][a-zA-Z0-9]*$"
     },
     "patternId": {
       "type": "string",
@@ -692,7 +692,6 @@
             "$ref": "#/definitions/spcId",
             "description": "Unique identifier for this screen spec."
           },
-
           "notes": {
             "type": "string",
             "description": "Optional clarifying context for this screen spec."
@@ -759,7 +758,6 @@
             "type": "string",
             "description": "Optional clarifying context for this pattern."
           },
-
           "usageNotes": {
             "type": "string",
             "description": "How and when to use this pattern."
