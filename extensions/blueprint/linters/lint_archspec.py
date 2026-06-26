@@ -27,7 +27,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, check_duplicates, find_orphans
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, check_duplicates, find_orphans, validate_coverage
 from schema_validator import SchemaValidator
 
 
@@ -251,37 +251,29 @@ def check_fr_coverage(spec: dict, goal: Optional[dict], result: LayerResult):
     """Every FR in GoalSpec should be covered by at least one component."""
     if not goal:
         return
-
-    covered_reqs = set()
-    for comp in spec.get("components", []):
-        for ref in comp.get("reqRefs", []):
-            covered_reqs.add(ref)
-
-    for fr in goal.get("functionalRequirements", []):
-        if fr["id"] not in covered_reqs:
-            result.add("warning", "fr_uncovered",
-                f"GoalSpec {fr['id']} ('{fr['description'][:60]}...') is not covered by any component.",
-                hint=f"Add reqRef '{fr['id']}' to the component responsible for this requirement.")
+    validate_coverage(
+        goal.get("functionalRequirements", []),
+        spec.get("components", []),
+        "id", "reqRefs",
+        result,
+        covered_label="GoalSpec FR",
+        source_label="component"
+    )
 
 
 def check_nfr_coverage(spec: dict, goal: Optional[dict], result: LayerResult):
     """Every NFR in GoalSpec should be covered by at least one component or constraint."""
     if not goal:
         return
-
-    covered_nfrs = set()
-    for comp in spec.get("components", []):
-        for ref in comp.get("nfrRefs", []):
-            covered_nfrs.add(ref)
-    for con in spec.get("constraints", []):
-        for ref in con.get("nfrRefs", []):
-            covered_nfrs.add(ref)
-
-    for nfr in goal.get("nonFunctionalRequirements", []):
-        if nfr["id"] not in covered_nfrs:
-            result.add("warning", "nfr_uncovered",
-                f"GoalSpec {nfr['id']} ('{nfr['description'][:60]}...') is not covered by any component or constraint.",
-                hint=f"Add nfrRef '{nfr['id']}' to a component or constraint responsible for this NFR.")
+    all_source = spec.get("components", []) + spec.get("constraints", [])
+    validate_coverage(
+        goal.get("nonFunctionalRequirements", []),
+        all_source,
+        "id", "nfrRefs",
+        result,
+        covered_label="GoalSpec NFR",
+        source_label="component or constraint"
+    )
 
 
 def check_subsystem_empty(spec: dict, component_ids: set[str], result: LayerResult):
