@@ -380,11 +380,10 @@ def run_lint(spec: dict, schema_path: Optional[Path],
         for issue in schema_issues:
             result.add(issue.severity, issue.category, issue.message, issue.hint)
 
-    # ID format validation
+    # Shared validations
     validate_spec_ids({"dg": spec.get("designGoals", []), "prs": spec.get("personas", []), "uj": spec.get("userJourneys", []), "scr": spec.get("screenInventory", []), "spc": spec.get("screenSpecs", []), "pat": spec.get("interactionPatterns", []), "uxac": spec.get("uxAcceptanceCriteria", []), "dt": spec.get("designTokens", []), "vdr": spec.get("visualDesignRequirements", [])}, result)
 
-    # 
-    # Cross-spec version checks
+    # Cross-spec checks
     validate_project_and_version(spec, "designspec", goal, result)
 
     # Section checks — order matters: build ID sets first, reference them later

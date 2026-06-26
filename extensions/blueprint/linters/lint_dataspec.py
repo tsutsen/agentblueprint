@@ -844,7 +844,7 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
     # Project match and version pinning
     validate_project_and_version(spec, "dataspec", goal, result)
 
-    # ID format validation
+    # Shared validations
     validate_spec_ids({"prim": spec.get("primitives", []), "num": spec.get("enums", []), "ent": spec.get("entities", []), "rel": spec.get("relationships", [])}, result)
 
     # Semantic checks
