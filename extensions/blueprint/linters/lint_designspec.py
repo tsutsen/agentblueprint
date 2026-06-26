@@ -32,7 +32,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, check_project_and_version, check_duplicates
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, check_duplicates
 from schema_validator import SchemaValidator
 
 
@@ -63,7 +63,7 @@ def collect_ia_leaf_issues(nodes: list, result: LayerResult):
 
 # ── Checks ────────────────────────────────────────────────────────────────────
 
-def check_project_and_version(spec: dict, goal: Optional[dict], result: LayerResult):
+def validate_project_and_version(spec: dict, goal: Optional[dict], result: LayerResult):
     if not goal:
         return
     if spec["project"] != goal["project"]:
@@ -385,7 +385,7 @@ def run_lint(spec: dict, schema_path: Optional[Path],
 
     # 
     # Cross-spec version checks
-    check_project_and_version(spec, "designspec", goal, result)
+    validate_project_and_version(spec, "designspec", goal, result)
 
     # Section checks — order matters: build ID sets first, reference them later
     check_design_goals(spec, result)

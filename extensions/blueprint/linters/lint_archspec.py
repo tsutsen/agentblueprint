@@ -27,7 +27,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, check_project_and_version, check_duplicates, check_project_and_version
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, check_duplicates, validate_project_and_version
 from schema_validator import SchemaValidator
 
 
@@ -524,8 +524,8 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     # 
     # GoalSpec cross-checks
     if goal:
-        check_project_and_version(spec, "archspec", goal, result)
-        # version check handled by check_project_and_version
+        validate_project_and_version(spec, "archspec", goal, result)
+        # version check handled by validate_project_and_version
 
     # Structural checks
     component_ids = check_components(spec, result)

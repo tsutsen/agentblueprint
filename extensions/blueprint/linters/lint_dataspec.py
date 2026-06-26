@@ -842,7 +842,7 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
             result.add(issue.severity, issue.category, issue.message, issue.hint)
 
     # Project match and version pinning
-    check_project_and_version(spec, "dataspec", goal, result)
+    validate_project_and_version(spec, "dataspec", goal, result)
 
     # ID format validation
     validate_spec_ids({"prim": spec.get("primitives", []), "num": spec.get("enums", []), "ent": spec.get("entities", []), "rel": spec.get("relationships", [])}, result)

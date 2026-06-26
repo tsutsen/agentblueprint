@@ -20,7 +20,7 @@ import json
 import argparse
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, check_project_and_version
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version
 
 
 # ── Checks ────────────────────────────────────────────────────────────────────

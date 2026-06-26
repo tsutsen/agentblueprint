@@ -153,7 +153,7 @@ def extract_ids(items: list, key: str) -> list[str]:
     return [item[key] for item in items if key in item]
 
 
-def check_project_and_version(spec: dict, spec_name: str, goal: dict,
+def validate_project_and_version(spec: dict, spec_name: str, goal: dict,
                               result: "LayerResult") -> None:
     """Check project match and version pinning against GoalSpec.
     
