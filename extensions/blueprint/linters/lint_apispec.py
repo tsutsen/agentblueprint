@@ -58,23 +58,9 @@ def _check_duplicate_names(spec: dict, result: LayerResult, extra_specs: dict = 
 
 
 def _check_missing_descriptions(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
-    """Warn about functions, parameters, and outputs without descriptions."""
+    """Warn about outputs without descriptions (functions/params use non_empty rule)."""
     for fn in spec.get("functions", []):
         fid = fn["id"]
-
-        # Function description
-        if not fn.get("description"):
-            result.add("info", "missing_function_description",
-                f"Function '{fid}' has no description.",
-                hint="Add a one-sentence description of what this function does.")
-
-        # Parameter descriptions
-        for param in fn.get("inputs", []):
-            pname = param.get("name", "")
-            if not param.get("description") and pname:
-                result.add("info", "missing_parameter_description",
-                    f"Function '{fid}': parameter '{pname}' has no description.",
-                    hint="Add a description explaining the purpose of this parameter.")
 
         # Output description
         output = fn.get("output", {})
@@ -233,6 +219,27 @@ SEMANTIC_RULES = [
         "ref_label": "DataSpec entity",
         "category": "entity_ref_missing",
         "hint": "Add this entity to the data spec or correct the reference.",
+    },
+    # Function descriptions must not be empty
+    {
+        "type": "non_empty",
+        "section": "functions",
+        "key": "description",
+        "id_key": "id",
+        "label": "Function",
+        "category": "missing_function_description",
+        "hint": "Add a one-sentence description of what this function does.",
+    },
+    # Parameter descriptions must not be empty
+    {
+        "type": "non_empty",
+        "section": "functions",
+        "nested_key": "inputs",
+        "key": "description",
+        "id_key": "name",
+        "label": "Parameter",
+        "category": "missing_parameter_description",
+        "hint": "Add a description explaining the purpose of this parameter.",
     },
 ]
 
