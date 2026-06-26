@@ -352,72 +352,46 @@ def validate_non_empty(items: list[dict], key: str, id_key: str, result: "LayerR
                 hint=hint or f"Provide a value for {key}.")
 
 
-def find_patterns(items: list[dict], key: str, patterns: list[tuple[str, str]],
-                      id_key: str, result: "LayerResult", label: str = "",
-                      category: str = "pattern_match", hint: str = "",
-                      match_fn: callable = None) -> None:
-    """Warn if items match patterns in a text field.
+def find_patterns(items: list[dict], text_key: str = None, patterns: list[tuple[str, str]] = None,
+                  id_key: str = "id", result: "LayerResult" = None, label: str = "",
+                  category: str = "pattern_match", hint: str = "",
+                  match_fn: callable = None, nested_key: str = None, max_count: int = None) -> None:
+    """Warn if items match patterns in a text field (single or nested).
     
     Args:
         items: List of items to check.
-        key: Key in each item that holds the text to check (e.g., "description").
+        text_key: Key in each item that holds the text to check (e.g., "description").
         patterns: List of (regex_pattern, label) tuples.
-        id_key: Key in each item that holds the ID (e.g., "id").
+        id_key: Key in each item that holds the ID (default: "id").
         result: LayerResult to append warnings to.
         label: Label for error messages (e.g., "Constraint").
-        category: Category for the warning (e.g., "implementation_leak").
-        hint: Custom hint message (default: generic).
-        match_fn: Optional custom match function(item, patterns) -> list[match_info].
+        category: Category for the warning.
+        hint: Custom hint message.
+        match_fn: Optional custom match function.
+        nested_key: If set, check nested list items (e.g., "responsibilities").
+        max_count: If set, only check items with <= this many nested items.
     """
     import re
     
     for item in items:
         iid = item.get(id_key, "?")
-        text = item.get(key, "")
         
-        if match_fn:
-            matches = match_fn(item, patterns)
+        # Determine texts to check
+        if nested_key:
+            # Check nested items
+            nested_items = item.get(nested_key, [])
+            if max_count is not None and len(nested_items) > max_count:
+                continue
+            texts = [n if isinstance(n, str) else n.get("text", "") for n in nested_items]
+        elif text_key:
+            # Check single text field
+            texts = [item.get(text_key, "")]
         else:
-            matches = []
-            for pattern, pattern_label in patterns:
-                found = re.findall(pattern, text.lower())
-                if found:
-                    matches.append((pattern_label, found))
+            continue
         
-        if matches:
-            result.add("warning", category,
-                f"{label or iid} '{iid}': {', '.join(f'{label}: {m}' for label, m in matches)}.",
-                hint=hint or f"Review {label.lower() or 'item'} for {category}.")
-
-
-def find_patterns_nested(items: list[dict], nested_key: str, patterns: list[tuple[str, str]],
-                         id_key: str, result: "LayerResult", label: str = "",
-                         category: str = "pattern_match", hint: str = "",
-                         match_fn: callable = None) -> None:
-    """Warn if nested list items match patterns in a text field.
-    
-    Args:
-        items: List of parent items to check.
-        nested_key: Key in each item that holds the list of nested items (e.g., "responsibilities").
-        patterns: List of (regex_pattern, label) tuples.
-        id_key: Key in each item that holds the ID (e.g., "id").
-        result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Component").
-        category: Category for the warning (e.g., "inline_ref").
-        hint: Custom hint message (default: generic).
-        match_fn: Optional custom match function(text, patterns) -> list[match_info].
-    """
-    import re
-    
-    for item in items:
-        iid = item.get(id_key, "?")
-        nested_items = item.get(nested_key, [])
-        
-        for nested_item in nested_items:
-            text = nested_item if isinstance(nested_item, str) else nested_item.get("text", "")
-            
+        for text in texts:
             if match_fn:
-                matches = match_fn(text, patterns)
+                matches = match_fn(text, patterns) if nested_key else match_fn(item, patterns)
             else:
                 matches = []
                 for pattern, pattern_label in patterns:
@@ -426,44 +400,19 @@ def find_patterns_nested(items: list[dict], nested_key: str, patterns: list[tupl
                         matches.append((pattern_label, found))
             
             if matches:
-                result.add("warning", category,
-                    f"{label or iid} '{iid}': {', '.join(f'{label}: {m}' for label, m in matches)}.",
-                    hint=hint or f"Review {label.lower() or 'item'} for {category}.")
-
-
-def find_vague_patterns(items: list[dict], nested_key: str, patterns: list[str],
-                        id_key: str, result: "LayerResult", label: str = "",
-                        category: str = "vague", hint: str = "", max_count: int = 1) -> None:
-    """Warn if items with <= max_count nested items match vague patterns.
+                # Format message based on context
+                if nested_key and max_count is not None:
+                    # Vague pattern context
+                    text_short = text[:80] + "..." if len(text) > 80 else text
+                    msg = f"{label or iid} '{iid}' has a single vague responsibility: '{text_short}'."
+                elif nested_key:
+                    msg = f"{label or iid} '{iid}': {', '.join(f'{l}: {m}' for l, m in matches)}."
+                else:
+                    msg = f"{label or iid} '{iid}': {', '.join(f'{l}: {m}' for l, m in matches)}."
+                
+                result.add("warning", category, msg, hint=hint or f"Review {label.lower() or 'item'} for {category}.")
     
-    Args:
-        items: List of parent items to check.
-        nested_key: Key in each item that holds the list of nested items.
-        patterns: List of regex patterns to check.
-        id_key: Key in each item that holds the ID.
-        result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Component").
-        category: Category for the warning.
-        hint: Custom hint message.
-        max_count: Maximum nested item count to trigger check (default: 1).
-    """
-    import re
-    
-    for item in items:
-        iid = item.get(id_key, "?")
-        nested_items = item.get(nested_key, [])
-        
-        if len(nested_items) <= max_count:
-            for nested_item in nested_items:
-                text = nested_item if isinstance(nested_item, str) else nested_item.get("text", "")
-                for pattern in patterns:
-                    if re.search(pattern, text.lower()):
-                        text_short = text[:80] + "..." if len(text) > 80 else text
-                        result.add("warning", category,
-                            f"{label or iid} '{iid}' has a single vague responsibility: '{text_short}'.",
-                            hint=hint or "Break into specific, actionable items.")
-                        break
-            # Normalize to list of refs and dict of valid sets
+    # Normalize to list of refs and dict of valid sets
     if isinstance(refs, str):
         refs = [refs]
         if isinstance(valid, set):

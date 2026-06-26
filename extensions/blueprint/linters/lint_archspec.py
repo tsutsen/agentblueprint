@@ -30,6 +30,7 @@ from typing import Optional
 
 from schema_validator import SchemaValidator
 from shared import (
+    find_patterns,
     find_vague_patterns,
     find_patterns_nested,
     find_patterns,
@@ -258,8 +259,8 @@ def check_constraints(spec: dict, result: LayerResult):
         "golang", "java",
     ]
     find_patterns(
-        constraints, "description", [(s, s) for s in impl_smells],
-        "id", result, label="Constraint", category="constraint_implementation_leak",
+        constraints, text_key="description", patterns=[(s, s) for s in impl_smells],
+        result=result, label="Constraint", category="constraint_implementation_leak",
         hint="Constraints should describe what is required, not which technology satisfies it.",
         match_fn=lambda item, smells: [
             (s, [s]) for s in smells if s in item.get("description", "").lower()
@@ -433,10 +434,11 @@ def check_vague_responsibilities(spec: dict, result: LayerResult):
         r"\bmanage\s+(the |all |any )?\b",
         r"\bensure\s+(that |the |all )?\b",
     ]
-    find_vague_patterns(
-        spec.get("components", []), "responsibilities", vague_patterns,
-        "id", result, label="Component", category="vague_responsibility",
-        hint="Break into specific, actionable responsibilities. Avoid generic statements like 'consistent error handling across all components'."
+    find_patterns(
+        spec.get("components", []), patterns=vague_patterns,
+        result=result, label="Component", category="vague_responsibility",
+        hint="Break into specific, actionable responsibilities. Avoid generic statements like 'consistent error handling across all components'.",
+        nested_key="responsibilities", max_count=1
     )
 
 
@@ -447,10 +449,11 @@ def check_inline_req_refs_in_responsibilities(spec: dict, result: LayerResult):
         (r"\bflow\s+\d+[a-z]?\b", "flow number references"),
         (r"\bsection\s+\d+\b", "section references"),
     ]
-    find_patterns_nested(
-        spec.get("components", []), "responsibilities", non_standard_patterns,
-        "id", result, label="Component", category="inline_ref_in_responsibility",
-        hint="Move requirement references to the reqRefs/nfrRefs arrays. Use glossaryRefs for term references."
+    find_patterns(
+        spec.get("components", []), patterns=non_standard_patterns,
+        result=result, label="Component", category="inline_ref_in_responsibility",
+        hint="Move requirement references to the reqRefs/nfrRefs arrays. Use glossaryRefs for term references.",
+        nested_key="responsibilities"
     )
 
 
