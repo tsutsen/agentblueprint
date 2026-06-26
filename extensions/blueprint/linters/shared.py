@@ -409,10 +409,8 @@ def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] |
                     hint=f"Add '{item}' to {ref_label or 'the target'} or correct the reference.")
     elif isinstance(first, dict):
         # List of dicts with ref keys
-        if isinstance(refs, str):
-            refs = [refs]
-            if isinstance(valid, set):
-                valid = {refs[0]: valid}
+        refs = [refs] if isinstance(refs, str) else refs
+        valid = {refs[0]: valid} if isinstance(valid, set) else valid
         
         for item in items:
             iid = item.get("id", "?")
@@ -900,9 +898,7 @@ def _make_rule_kwargs(rule: dict, extra_keys: list[str] = None) -> dict:
     Returns:
         Dict with severity, category, hint, label, and any extra keys.
     """
-    common_keys = ["severity", "category", "hint", "label"]
-    if extra_keys:
-        common_keys = common_keys + extra_keys
+    common_keys = {"severity", "category", "hint", "label"} | set(extra_keys or [])
     return {k: v for k, v in rule.items() if k in common_keys}
 
 
@@ -1103,14 +1099,14 @@ def _validate_all_ids(spec: dict, result: LayerResult) -> None:
         # Check sequential numbering for all ID types
         for id_type, items in items_by_type.items():
             ids = [item.get("id", "") for item in items]
-            validate_sequential(ids, id_type.upper(), result)
+            validate_sequential(ids, id_type, result)
 
 
 def _strict_mode(result: LayerResult) -> None:
     """Convert all warnings to errors."""
     for w in result.warnings:
         w.severity = "error"
-        result.errors.append(w)
+    result.errors.extend(result.warnings)
     result.warnings.clear()
 
 
