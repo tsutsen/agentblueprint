@@ -21,7 +21,6 @@ Usage:
                             [--goal goalspec.json] [--strict] [--json]
 """
 
-import argparse
 import json
 import re
 import sys
@@ -32,13 +31,7 @@ from shared import (
     BaseLinter,
     LayerResult,
     find_cycles,
-    find_orphans,
-    find_patterns,
-    print_human,
-    print_json_output,
-    validate_coverage,
 )
-
 
 # ── Semantic Rules ────────────────────────────────────────────────────────────
 
@@ -53,7 +46,6 @@ SEMANTIC_RULES = [
         "category": "component_no_reqs",
         "hint": "Link each component to the requirements it helps satisfy.",
     },
-    
     # Flow steps must reference valid components
     {
         "type": "exists",
@@ -65,7 +57,6 @@ SEMANTIC_RULES = [
         "ref_label": "component",
         "category": "flow_component_ref",
     },
-    
     # Subsystems must have componentRefs
     {
         "type": "non_empty",
@@ -75,7 +66,6 @@ SEMANTIC_RULES = [
         "label": "Subsystem",
         "category": "subsystem_empty",
     },
-    
     # Components not assigned to any subsystem
     {
         "type": "coverage",
@@ -86,7 +76,6 @@ SEMANTIC_RULES = [
         "covered_label": "Component",
         "source_label": "Subsystem",
     },
-    
     # Subsystems must not overlap
     {
         "type": "no_overlap",
@@ -96,7 +85,6 @@ SEMANTIC_RULES = [
         "label": "Subsystem",
         "category": "subsystem_overlap",
     },
-    
     # Flow must have at least 2 steps
     {
         "type": "item_count",
@@ -109,28 +97,21 @@ SEMANTIC_RULES = [
         "category": "flow_too_short",
         "hint": "A data flow must show at least a source and a sink step.",
     },
-    
     # Constraints must not mention implementation
     {
         "type": "patterns",
         "section": "constraints",
         "text_key": "description",
         "patterns": [
-            ("postgres", "postgres"), ("mysql", "mysql"), ("redis", "redis"),
-            ("sqlite", "sqlite"), ("mongodb", "mongodb"), ("fastapi", "fastapi"),
-            ("flask", "flask"), ("django", "django"), ("docker", "docker"),
-            ("kubernetes", "kubernetes"), ("s3", "s3"), ("lambda", "lambda"),
-            ("python", "python"), ("typescript", "typescript"), ("rust", "rust"),
-            ("golang", "golang"), ("java", "java"),
+            "postgres", "mysql", "redis", "sqlite", "mongodb",
+            "fastapi", "flask", "django", "docker", "kubernetes",
+            "s3", "lambda", "python", "typescript", "rust",
+            "golang", "java",
         ],
         "label": "Constraint",
         "category": "constraint_implementation_leak",
         "hint": "Constraints should describe what is required, not which technology satisfies it.",
-        "match_fn": lambda item, patterns: [
-            (s[0], [s[0]]) for s in patterns if s[0] in item.get("description", "").lower()
-        ],
     },
-    
     # Flow descriptions must not be empty
     {
         "type": "non_empty",
@@ -140,7 +121,6 @@ SEMANTIC_RULES = [
         "label": "Flow",
         "category": "flow_empty_description",
     },
-    
     # Flow steps must have dataRef
     {
         "type": "non_empty",
@@ -150,7 +130,6 @@ SEMANTIC_RULES = [
         "label": "Flow step",
         "category": "flow_step_empty_data_ref",
     },
-    
     # Components must not have too many responsibilities
     {
         "type": "item_count",
@@ -162,7 +141,6 @@ SEMANTIC_RULES = [
         "label": "Component",
         "category": "component_responsibility_count",
     },
-    
     # Flows must not have too many steps
     {
         "type": "item_count",
@@ -174,7 +152,6 @@ SEMANTIC_RULES = [
         "label": "Flow",
         "category": "flow_step_count",
     },
-    
     # Components must not have vague responsibilities
     {
         "type": "patterns",
@@ -194,7 +171,6 @@ SEMANTIC_RULES = [
         "hint": "Break into specific, actionable responsibilities. Avoid generic statements.",
         "max_count": 1,
     },
-    
     # Responsibilities must not contain inline refs
     {
         "type": "patterns",
@@ -209,7 +185,6 @@ SEMANTIC_RULES = [
         "category": "inline_ref_in_responsibility",
         "hint": "Move requirement references to the reqRefs/nfrRefs arrays.",
     },
-    
     # Components must not be isolated (no deps, no dependents)
     {
         "type": "orphans",
@@ -220,7 +195,6 @@ SEMANTIC_RULES = [
         "warning": "isolated",
         "hint": "An isolated component may indicate a design issue.",
     },
-    
     # GoalSpec FRs must be covered by components
     {
         "type": "coverage",
@@ -232,7 +206,6 @@ SEMANTIC_RULES = [
         "source_label": "component",
         "valid_extra_spec": "goal",
     },
-    
     # GoalSpec NFRs must be covered by components or constraints
     {
         "type": "coverage",
@@ -244,7 +217,6 @@ SEMANTIC_RULES = [
         "source_label": "component",
         "valid_extra_spec": "goal",
     },
-    
     # Components must reference valid GoalSpec REQ/NFR
     {
         "type": "exists",
@@ -257,7 +229,6 @@ SEMANTIC_RULES = [
         "ref_label": "GoalSpec requirement",
         "category": "req_ref_missing",
     },
-    
     # Components must reference valid GoalSpec NFR
     {
         "type": "exists",
@@ -270,7 +241,6 @@ SEMANTIC_RULES = [
         "ref_label": "GoalSpec NFR",
         "category": "nfr_ref_missing",
     },
-    
     # Flow steps must reference valid GoalSpec REQ
     {
         "type": "exists",
@@ -283,7 +253,6 @@ SEMANTIC_RULES = [
         "ref_label": "GoalSpec requirement",
         "category": "req_ref_missing",
     },
-    
     # Constraints must reference valid GoalSpec NFR
     {
         "type": "exists",
@@ -310,11 +279,14 @@ GLOSSARY_CHECKS = [
 
 # ── Custom Checks ─────────────────────────────────────────────────────────────
 
-def _check_circular_dependencies(spec: dict, result: LayerResult, extra_specs: dict) -> None:
+
+def _check_circular_dependencies(
+    spec: dict, result: LayerResult, extra_specs: dict
+) -> None:
     """Check for circular component dependencies."""
     components = spec.get("components", [])
     component_ids = {c["id"] for c in components}
-    
+
     find_cycles(
         components,
         "id",
@@ -327,18 +299,20 @@ def _check_circular_dependencies(spec: dict, result: LayerResult, extra_specs: d
     )
 
 
-def _check_components_in_data_flows(spec: dict, result: LayerResult, extra_specs: dict) -> None:
+def _check_components_in_data_flows(
+    spec: dict, result: LayerResult, extra_specs: dict
+) -> None:
     """Warn if a component is not referenced in any data flow step."""
     components = spec.get("components", [])
     comp_ids = {c["id"] for c in components}
-    
+
     flow_components = set()
     for flow in spec.get("dataFlow", []):
         for step in flow.get("steps", []):
             ref = step.get("componentRef")
             if ref:
                 flow_components.add(ref)
-    
+
     for cid in comp_ids:
         if cid not in flow_components:
             result.add(
@@ -350,6 +324,7 @@ def _check_components_in_data_flows(spec: dict, result: LayerResult, extra_specs
 
 
 # ── Linter Class ──────────────────────────────────────────────────────────────
+
 
 class ArchSpecLinter(BaseLinter):
     SPEC_NAME = "archspec"
@@ -364,7 +339,10 @@ class ArchSpecLinter(BaseLinter):
 
 # ── Backward Compatibility ────────────────────────────────────────────────────
 
-def run_lint(spec, schema_path, goal, strict, glossary=None, data_spec=None, api_spec=None):
+
+def run_lint(
+    spec, schema_path, goal, strict, glossary=None, data_spec=None, api_spec=None
+):
     """Backward-compatible entry point for lint_all.py."""
     linter = ArchSpecLinter(spec, schema_path, strict)
     return linter.run(goal=goal, data=data_spec, api=api_spec, glossary=glossary)
@@ -373,6 +351,14 @@ def run_lint(spec, schema_path, goal, strict, glossary=None, data_spec=None, api
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    ArchSpecLinter.main([
-        ("--goal", {"help": "Path to goalspec JSON for cross-spec checks", "spec_name": "goal"}),
-    ])
+    ArchSpecLinter.main(
+        [
+            (
+                "--goal",
+                {
+                    "help": "Path to goalspec JSON for cross-spec checks",
+                    "spec_name": "goal",
+                },
+            ),
+        ]
+    )

@@ -516,7 +516,12 @@ def find_patterns(items: list[dict], text_key: str = None, patterns: list[tuple[
                 matches = match_fn(text, patterns) if nested_key else match_fn(item, patterns)
             else:
                 matches = []
-                for pattern, pattern_label in patterns:
+                for p in patterns:
+                    # Support both strings and (pattern, label) tuples
+                    if isinstance(p, str):
+                        pattern, pattern_label = p, p
+                    else:
+                        pattern, pattern_label = p
                     found = re.findall(pattern, text.lower())
                     if found:
                         matches.append((pattern_label, found))
