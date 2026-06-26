@@ -51,33 +51,6 @@ from shared import (
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 
-def find_cycles(graph: dict[str, list[str]]) -> Optional[list[str]]:
-    """Return a cycle path if one exists in the dependency graph, else None."""
-    visited = set()
-    path = []
-
-    def dfs(node):
-        if node in path:
-            return path[path.index(node) :]
-        if node in visited:
-            return None
-        visited.add(node)
-        path.append(node)
-        for dep in graph.get(node, []):
-            cycle = dfs(dep)
-            if cycle:
-                return cycle
-        path.pop()
-        return None
-
-    for node in graph:
-        if node not in visited:
-            cycle = dfs(node)
-            if cycle:
-                return cycle
-    return None
-
-
 # ── Checks ────────────────────────────────────────────────────────────────────
 
 
