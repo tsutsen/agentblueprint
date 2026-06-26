@@ -30,6 +30,7 @@ from typing import Optional
 
 from schema_validator import SchemaValidator
 from shared import (
+    find_patterns,
     validate_non_empty,
     validate_item_count,
     Issue,
@@ -249,34 +250,19 @@ def check_constraints(spec: dict, result: LayerResult):
 
     # Implementation smells in constraints
     impl_smells = [
-        "postgres",
-        "mysql",
-        "redis",
-        "sqlite",
-        "mongodb",
-        "fastapi",
-        "flask",
-        "django",
-        "docker",
-        "kubernetes",
-        "s3",
-        "lambda",
-        "python",
-        "typescript",
-        "rust",
-        "golang",
-        "java",
+        "postgres", "mysql", "redis", "sqlite", "mongodb",
+        "fastapi", "flask", "django", "docker", "kubernetes",
+        "s3", "lambda", "python", "typescript", "rust",
+        "golang", "java",
     ]
-    for con in constraints:
-        desc_lower = con.get("description", "").lower()
-        found = [s for s in impl_smells if s in desc_lower]
-        if found:
-            result.add(
-                "warning",
-                "constraint_implementation_leak",
-                f"{con['id']}: constraint mentions specific technology: {found}.",
-                hint="Constraints should describe what is required, not which technology satisfies it.",
-            )
+    find_patterns(
+        constraints, "description", [(s, s) for s in impl_smells],
+        "id", result, label="Constraint", category="constraint_implementation_leak",
+        hint="Constraints should describe what is required, not which technology satisfies it.",
+        match_fn=lambda item, smells: [
+            (s, [s]) for s in smells if s in item.get("description", "").lower()
+        ]
+    )
 
 
 def check_req_nfr_refs(spec: dict, goal: Optional[dict], result: LayerResult):

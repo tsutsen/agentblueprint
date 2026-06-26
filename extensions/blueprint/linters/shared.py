@@ -350,6 +350,44 @@ def validate_non_empty(items: list[dict], key: str, id_key: str, result: "LayerR
             result.add("warning", category,
                 f"{label or iid} '{iid}' has an empty {key}.",
                 hint=hint or f"Provide a value for {key}.")
+
+
+def find_patterns(items: list[dict], key: str, patterns: list[tuple[str, str]],
+                      id_key: str, result: "LayerResult", label: str = "",
+                      category: str = "pattern_match", hint: str = "",
+                      match_fn: callable = None) -> None:
+    """Warn if items match patterns in a text field.
+    
+    Args:
+        items: List of items to check.
+        key: Key in each item that holds the text to check (e.g., "description").
+        patterns: List of (regex_pattern, label) tuples.
+        id_key: Key in each item that holds the ID (e.g., "id").
+        result: LayerResult to append warnings to.
+        label: Label for error messages (e.g., "Constraint").
+        category: Category for the warning (e.g., "implementation_leak").
+        hint: Custom hint message (default: generic).
+        match_fn: Optional custom match function(item, patterns) -> list[match_info].
+    """
+    import re
+    
+    for item in items:
+        iid = item.get(id_key, "?")
+        text = item.get(key, "")
+        
+        if match_fn:
+            matches = match_fn(item, patterns)
+        else:
+            matches = []
+            for pattern, pattern_label in patterns:
+                found = re.findall(pattern, text.lower())
+                if found:
+                    matches.append((pattern_label, found))
+        
+        if matches:
+            result.add("warning", category,
+                f"{label or iid} '{iid}': {', '.join(f'{label}: {m}' for label, m in matches)}.",
+                hint=hint or f"Review {label.lower() or 'item'} for {category}.")
     # Normalize to list of refs and dict of valid sets
     if isinstance(refs, str):
         refs = [refs]
