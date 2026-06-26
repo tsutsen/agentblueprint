@@ -168,22 +168,6 @@ def _check_output_type_format(spec: dict, result: LayerResult, extra_specs: dict
                     hint="Output type must be a valid type name starting with a letter, or 'void'.")
 
 
-def _check_entity_refs(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
-    """Validate that entity references match data spec entities."""
-    data_spec = extra_specs.get("data") if extra_specs else None
-    if not data_spec:
-        return
-
-    entity_names = {e["name"] for e in data_spec.get("entities", [])}
-
-    for fn in spec.get("functions", []):
-        entity = fn.get("entity")
-        if entity and entity not in entity_names:
-            result.add("error", "entity_ref_missing",
-                f"Function '{fn['id']}': entity '{entity}' is not defined in the data spec.",
-                hint=f"Available entities: {', '.join(sorted(entity_names))}")
-
-
 def _check_type_refs(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
     """Validate that parameter and output types are defined in the data spec."""
     data_spec = extra_specs.get("data") if extra_specs else None
@@ -265,7 +249,6 @@ MISC_CHECKS = [
     ("required_param_desc", _check_required_param_description),
     ("internal_function", _check_internal_function_visibility),
     ("fn_no_errors", _check_fn_no_errors),
-    ("entity_refs", _check_entity_refs),
     ("type_refs", _check_type_refs),
 ]
 
