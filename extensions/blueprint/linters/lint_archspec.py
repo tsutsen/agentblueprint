@@ -419,15 +419,10 @@ def check_dependency_depth(spec: dict, result: LayerResult):
 
 def check_flow_descriptions(spec: dict, result: LayerResult):
     """Warn if data flow descriptions are empty."""
-    for flow in spec.get("dataFlow", []):
-        desc = flow.get("description", "")
-        if not desc or not desc.strip():
-            result.add(
-                "warning",
-                "flow_empty_description",
-                f"Flow '{flow['id']}' has an empty description.",
-                hint="Every data flow should have a one-sentence description explaining its purpose.",
-            )
+    validate_non_empty(
+        spec.get("dataFlow", []), "description", "id",
+        result, label="Flow", category="flow_empty_description"
+    )
 
 
 def check_flow_data_refs(spec: dict, result: LayerResult):
