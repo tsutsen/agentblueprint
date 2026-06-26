@@ -145,7 +145,8 @@ def validate_sequential(ids: list[str], label: str, result: "LayerResult") -> No
 
 
 def find_orphans(items: list[dict], id_key: str, deps_key: str, result: "LayerResult",
-                   label: str = "", warning: str = "isolated", hint: str = "") -> None:
+                   label: str = "", warning: str = "isolated", hint: str = "",
+                   severity: str = "warning") -> None:
     """Warn if items are isolated (no dependencies and no dependents).
     
     Args:
@@ -156,6 +157,7 @@ def find_orphans(items: list[dict], id_key: str, deps_key: str, result: "LayerRe
         label: Label for error messages (e.g. "Component").
         warning: Category for the warning.
         hint: Custom hint message (default: generic).
+        severity: Severity level: "error", "warning", or "info" (default: "warning").
     """
     if not items:
         return
@@ -171,7 +173,7 @@ def find_orphans(items: list[dict], id_key: str, deps_key: str, result: "LayerRe
         has_deps = len(item.get(deps_key, [])) > 0
         is_depended_on = iid in depended_upon
         if not has_deps and not is_depended_on:
-            result.add("warning", warning,
+            result.add(severity, warning,
                 f"{label or iid} is isolated: no dependencies and no dependents.",
                 hint=hint or f"An isolated {label.lower() or 'item'} may indicate a design issue.")
 
@@ -299,7 +301,7 @@ def find_cycles(items: list[dict], id_key: str, deps_key: str, valid: set[str],
 def validate_coverage(covered_items: list[dict], source_items: list[dict],
                       covered_key: str, refs_key: str,
                       result: "LayerResult", covered_label: str,
-                      source_label: str = "") -> None:
+                      source_label: str = "", severity: str = "warning") -> None:
     """Validate that every item in covered_items is referenced by at least one item in source.
     
     Args:
@@ -310,6 +312,7 @@ def validate_coverage(covered_items: list[dict], source_items: list[dict],
         result: LayerResult to append warnings to.
         covered_label: Label for error messages (e.g., "GoalSpec FR").
         source_label: Label for the source items (e.g., "component").
+        severity: Severity level: "error", "warning", or "info" (default: "warning").
     """
     if not covered_items or not source_items:
         return
@@ -336,13 +339,14 @@ def validate_coverage(covered_items: list[dict], source_items: list[dict],
         desc_short = desc[:60] + "..." if desc else ""
         
         if iid not in covered_refs:
-            result.add("warning", "uncovered",
+            result.add(severity, "uncovered",
                 f"{covered_label} {iid} ('{desc_short}') is not covered by any {source_label}.",
                 hint=f"Add ref '{iid}' to a {source_label or 'source item'} responsible for this.")
 
 
 def validate_no_overlap(items: list[dict], refs_key: str, id_key: str, result: "LayerResult",
-                        label: str = "", category: str = "overlap", hint: str = "") -> None:
+                        label: str = "", category: str = "overlap", hint: str = "",
+                        severity: str = "warning") -> None:
     """Warn if an item is assigned to multiple groups.
     
     Args:
@@ -353,6 +357,7 @@ def validate_no_overlap(items: list[dict], refs_key: str, id_key: str, result: "
         label: Label for error messages (e.g., "Subsystem").
         category: Category for the warning (e.g., "overlap").
         hint: Custom hint message (default: generic).
+        severity: Severity level: "error", "warning", or "info" (default: "warning").
     """
     item_to_groups: dict[str, list[str]] = {}
     for item in items:
@@ -362,14 +367,14 @@ def validate_no_overlap(items: list[dict], refs_key: str, id_key: str, result: "
     
     for item, groups in item_to_groups.items():
         if len(groups) > 1:
-            result.add("warning", category,
+            result.add(severity, category,
                 f"Item '{item}' is assigned to multiple {label.lower() or 'groups'}: {', '.join(groups)}.",
                 hint=hint or f"Each {label.lower() or 'item'} should belong to exactly one {label.lower() or 'group'}.")
 
 
 def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] | dict[str, set[str]] = None,
                   result: "LayerResult" = None, label: str = "", ref_label: str = "",
-                  category: str = "missing", hint: str = "") -> None:
+                  category: str = "missing", hint: str = "", severity: str = "error") -> None:
     """Validate that items reference values in the valid set(s).
     
     Args:
@@ -383,6 +388,7 @@ def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] |
         ref_label: Label for the reference type (e.g., "DataSpec entity").
         category: Category for the warning (e.g., "missing").
         hint: Custom hint message (default: generic).
+        severity: Severity level: "error", "warning", or "info" (default: "error").
     
     Examples:
         # Flat list of strings
@@ -404,7 +410,7 @@ def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] |
         valid_set = valid if valid else set()
         for item in items:
             if item not in valid_set:
-                result.add("error", category,
+                result.add(severity, category,
                     f"{label}: '{item}' not found in {ref_label or 'valid set'}.",
                     hint=f"Add '{item}' to {ref_label or 'the target'} or correct the reference.")
     elif isinstance(first, dict):
@@ -425,14 +431,15 @@ def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] |
                     ref_value = []
                 for ref in ref_value:
                     if ref not in valid.get(refs_key, set()):
-                        result.add("error", category,
+                        result.add(severity, category,
                             f"{label} '{iid}': {refs_key} ref '{ref}' not found.",
                             hint=f"Add '{ref}' to the target spec or correct the reference.")
 
 
 def validate_item_count(items: list[dict], key: str, count: int, compare_mode: int,
                         id_key: str, result: "LayerResult", label: str = "",
-                        category: str = "count", hint: str = "") -> None:
+                        category: str = "count", hint: str = "",
+                        severity: str = "warning") -> None:
     """Validate list field counts with flexible comparison.
     
     Args:
@@ -448,6 +455,7 @@ def validate_item_count(items: list[dict], key: str, count: int, compare_mode: i
         label: Label for error messages (e.g., "Component").
         category: Category for the warning (e.g., "too_many").
         hint: Custom hint message (default: generic).
+        severity: Severity level: "error", "warning", or "info" (default: "warning").
     """
     for item in items:
         iid = item.get(id_key, "?")
@@ -455,21 +463,22 @@ def validate_item_count(items: list[dict], key: str, count: int, compare_mode: i
         n = len(refs)
         
         if compare_mode == 1 and n > count:
-            result.add("warning", category,
+            result.add(severity, category,
                 f"{label} '{iid}' has {n} {key} — consider splitting.",
                 hint=hint or f"A {label.lower()} with >{count} {key} may be too complex. Consider splitting.")
         elif compare_mode == 0 and n == count:
-            result.add("warning", category,
+            result.add(severity, category,
                 f"{label} '{iid}' has exactly {n} {key}.",
                 hint=hint or f"A {label.lower()} should not have exactly {count} {key}.")
         elif compare_mode == -1 and n < count:
-            result.add("warning", category,
+            result.add(severity, category,
                 f"{label} '{iid}' has {n} {key} (minimum {count}).",
                 hint=hint or f"A {label.lower()} should have at least {count} {key}.")
 
 
 def validate_non_empty(items: list[dict], key: str, id_key: str, result: "LayerResult",
-                       label: str = "", category: str = "empty", hint: str = "") -> None:
+                       label: str = "", category: str = "empty", hint: str = "",
+                       severity: str = "warning") -> None:
     """Warn if items have an empty list or string field.
     
     Args:
@@ -480,21 +489,22 @@ def validate_non_empty(items: list[dict], key: str, id_key: str, result: "LayerR
         label: Label for error messages (e.g., "Subsystem" or "Flow step").
         category: Category for the warning (e.g., "empty" or "empty_field").
         hint: Custom hint message (default: generic).
+        severity: Severity level: "error", "warning", or "info" (default: "warning").
     """
     for item in items:
         iid = item.get(id_key, "?")
         field = item.get(key)
         
         if field is None:
-            result.add("warning", category,
+            result.add(severity, category,
                 f"{label or iid} '{iid}': {key} is missing.",
                 hint=hint or f"Provide a value for {key}.")
         elif isinstance(field, list) and not field:
-            result.add("warning", category,
+            result.add(severity, category,
                 f"{label or iid} '{iid}' has no {key}.",
                 hint=hint or f"Assign items to this {label.lower() or 'item'} or remove it.")
         elif isinstance(field, str) and not field.strip():
-            result.add("warning", category,
+            result.add(severity, category,
                 f"{label or iid} '{iid}' has an empty {key}.",
                 hint=hint or f"Provide a value for {key}.")
 
@@ -503,7 +513,7 @@ def find_patterns(items: list[dict], text_key: str = None, patterns: list[tuple[
                   id_key: str = "id", result: "LayerResult" = None, label: str = "",
                   category: str = "pattern_match", hint: str = "",
                   match_fn: callable = None, nested_key: str = None, max_count: int = None,
-                  text_keys: list[str] = None) -> None:
+                  text_keys: list[str] = None, severity: str = "warning") -> None:
     """Warn if items match patterns in a text field (single or nested).
     
     Args:
@@ -521,6 +531,7 @@ def find_patterns(items: list[dict], text_key: str = None, patterns: list[tuple[
         max_count: If set, only check items with <= this many nested items.
         text_keys: List of text field keys to check (e.g., ["layout", "wireframe"]).
                    If provided, checks all fields; falls back to text_key if not provided.
+        severity: Severity level: "error", "warning", or "info" (default: "warning").
     """
     import re
     
@@ -569,7 +580,7 @@ def find_patterns(items: list[dict], text_key: str = None, patterns: list[tuple[
                 else:
                     msg = f"{label or iid} '{iid}': {', '.join(f'{l}: {m}' for l, m in matches)}."
                 
-                result.add("warning", category, msg, hint=hint or f"Review {label.lower() or 'item'} for {category}.")
+                result.add(severity, category, msg, hint=hint or f"Review {label.lower() or 'item'} for {category}.")
 
 
 def extract_ids(items: list, key: str) -> list[str]:
@@ -836,47 +847,57 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
         result: LayerResult to append findings to.
         extra_specs: Extra specs passed to the linter (goal, data, api, etc.).
     
+    Common Fields (all rule types):
+        severity: "error" (default) | "warning" | "info"
+        category: Category name for the finding
+        hint: Hint message shown to the user
+    
     Rule Types:
         non_empty: Check that a field is not empty.
             Required: section, key
-            Optional: id_key, label, category, hint
-            Example: {"type": "non_empty", "section": "components", "key": "reqRefs"}
+            Optional: id_key, label, severity, category, hint
+            Example: {"type": "non_empty", "section": "components", "key": "reqRefs",
+                      "severity": "error"}
         
         exists: Check that refs in items exist in a valid set.
             Required: section, key, valid_section (or valid_extra_spec + valid_section)
-            Optional: nested_key, valid_key, label, ref_label, category, hint
+            Optional: nested_key, valid_key, label, ref_label, severity, category, hint
             Example: {"type": "exists", "section": "components", "key": "reqRefs",
-                      "valid_extra_spec": "goal", "valid_section": "functionalRequirements"}
+                      "valid_extra_spec": "goal", "valid_section": "functionalRequirements",
+                      "severity": "error"}
         
         no_overlap: Check that items don't overlap across groups.
             Required: section, refs_key, id_key
-            Optional: label, category, hint
-            Example: {"type": "no_overlap", "section": "subsystems", "refs_key": "componentRefs"}
+            Optional: label, severity, category, hint
+            Example: {"type": "no_overlap", "section": "subsystems", "refs_key": "componentRefs",
+                      "severity": "warning"}
         
         item_count: Check that a list field has a specific count.
             Required: section, key, count, compare_mode, id_key
-            Optional: label, category, hint
+            Optional: label, severity, category, hint
             compare_mode: 1=warn if >count, -1=warn if <count, 0=warn if ==count
             Example: {"type": "item_count", "section": "components", "key": "responsibilities",
-                      "count": 8, "compare_mode": 1}
+                      "count": 8, "compare_mode": 1, "severity": "warning"}
         
         patterns: Check that text matches regex patterns.
             Required: section, patterns
-            Optional: text_key, nested_key, max_count, label, category, hint, match_fn
+            Optional: text_key, nested_key, max_count, label, severity, category, hint, match_fn
             patterns: list of strings or (pattern, label) tuples
             Example: {"type": "patterns", "section": "constraints", "text_key": "description",
-                      "patterns": ["postgres", "mysql"]}
+                      "patterns": ["postgres", "mysql"], "severity": "warning"}
         
         coverage: Check that covered items are referenced by source items.
             Required: covered_section, source_section, covered_key, refs_key
-            Optional: covered_label, source_label
+            Optional: covered_label, source_label, severity, category, hint
             Example: {"type": "coverage", "covered_section": "components",
-                      "source_section": "subsystems", "refs_key": "componentRefs"}
+                      "source_section": "subsystems", "refs_key": "componentRefs",
+                      "severity": "warning"}
         
         orphans: Check that items have dependencies or dependents.
             Required: section
-            Optional: id_key, deps_key, label, warning, hint
-            Example: {"type": "orphans", "section": "components", "deps_key": "dependencies"}
+            Optional: id_key, deps_key, label, severity, warning, hint
+            Example: {"type": "orphans", "section": "components", "deps_key": "dependencies",
+                      "severity": "warning"}
     """
     for rule in rules:
         # Some rules (like coverage) don't have a single "section" key
@@ -909,7 +930,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 key,
                 rule.get("id_key", "id"),
                 result,
-                **{k: v for k, v in rule.items() if k in ("label", "category", "hint")}
+                **{k: v for k, v in rule.items() if k in ("label", "category", "hint", "severity")}
             )
         
         elif rule_type == "unique":
@@ -920,7 +941,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
             find_duplicates(
                 values,
                 result=result,
-                **{k: v for k, v in rule.items() if k in ("label", "category", "hint")}
+                **{k: v for k, v in rule.items() if k in ("label", "category", "hint", "severity")}
             )
         
         elif rule_type == "exists":
@@ -942,7 +963,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 key,
                 valid,
                 result,
-                **{k: v for k, v in rule.items() if k in ("label", "ref_label", "category", "hint")}
+                **{k: v for k, v in rule.items() if k in ("label", "ref_label", "category", "hint", "severity")}
             )
         
         elif rule_type == "no_overlap":
@@ -951,7 +972,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 rule["refs_key"],
                 rule.get("id_key", "id"),
                 result,
-                **{k: v for k, v in rule.items() if k in ("label", "category", "hint")}
+                **{k: v for k, v in rule.items() if k in ("label", "category", "hint", "severity")}
             )
         
         elif rule_type == "item_count":
@@ -962,7 +983,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 rule.get("compare_mode", 1),
                 rule.get("id_key", "id"),
                 result,
-                **{k: v for k, v in rule.items() if k in ("label", "category", "hint")}
+                **{k: v for k, v in rule.items() if k in ("label", "category", "hint", "severity")}
             )
         
         elif rule_type == "patterns":
@@ -979,6 +1000,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 nested_key=rule.get("nested_key"),
                 max_count=rule.get("max_count"),
                 text_keys=rule.get("text_keys"),
+                severity=rule.get("severity", "warning"),
             )
         
         elif rule_type == "coverage":
@@ -1000,6 +1022,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 result,
                 rule.get("covered_label", ""),
                 rule.get("source_label", ""),
+                severity=rule.get("severity", "warning"),
             )
         
         elif rule_type == "orphans":
@@ -1011,6 +1034,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
                 rule.get("label", ""),
                 rule.get("warning", "isolated"),
                 rule.get("hint", ""),
+                severity=rule.get("severity", "warning"),
             )
 
 
