@@ -166,7 +166,7 @@
           "id": {
             "$ref": "#/definitions/componentId",
             "description": "Unique kebab-case identifier for this component (e.g. 'search-service').",
-            "x_idPattern": "comp_id"
+            "x_idPattern": "comp"
           },
           "name": {
             "type": "string",

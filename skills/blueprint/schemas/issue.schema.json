@@ -82,7 +82,8 @@
     "id": {
       "type": "string",
       "description": "Issue identifier. Format: IS-NNN (3-digit zero-padded, project-global, sequential).",
-      "pattern": "^IS-\\d{3}$"
+      "pattern": "^IS-\\d{3}$",
+      "x_idPattern": "is"
     },
     "title": {
       "type": "string",

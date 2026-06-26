@@ -251,7 +251,8 @@
         "properties": {
           "id": {
             "$ref": "#/definitions/personaId",
-            "description": "Unique kebab-case identifier for this persona (e.g. 'power-developer')."
+            "description": "Unique kebab-case identifier for this persona (e.g. 'power-developer').",
+            "x_idPattern": "prs"
           },
           "name": {
             "type": "string",
