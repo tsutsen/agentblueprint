@@ -194,14 +194,12 @@ def check_subsystems(spec: dict, component_ids: set[str], result: LayerResult):
             comp_to_subs.setdefault(ref, []).append(sub["name"])
 
     # Warn: components not assigned to any subsystem
-    for cid in component_ids:
-        if cid not in all_comp_refs:
-            result.add(
-                "warning",
-                "component_no_subsystem",
-                f"Component '{cid}' is not assigned to any subsystem.",
-                hint="Assign every component to a subsystem in overview.subsystems.",
-            )
+    validate_coverage(
+        [{"id": cid} for cid in component_ids],
+        [{"componentRefs": refs} for refs in [sub.get("componentRefs", []) for sub in subsystems]],
+        "id", "componentRefs",
+        result, covered_label="Component", source_label="Subsystem"
+    )
 
     # Warn: component assigned to multiple subsystems
     validate_no_overlap(
