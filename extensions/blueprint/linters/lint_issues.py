@@ -18,7 +18,7 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
 
-from shared import Issue, LayerResult, print_human, print_json_output
+from shared import BaseLinter, Issue, LayerResult, print_human, print_json_output
 from schema_validator import SchemaValidator
 
 
@@ -37,7 +37,7 @@ class IssueFile:
 
 EPIC_ID_RE = re.compile(r"^EP-\d{3}$")
 ISSUE_ID_RE = re.compile(r"^IS-\d{3}$")
-MILESTONE_RE = re.compile(r"^M\d+$")
+MILESTONE_RE = re.compile(r"^MIL-\d+-[A-Z][a-zA-Z]*$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 GL_ID_RE = re.compile(r"^GL-\d{3}$")
 
@@ -563,22 +563,52 @@ class IssueLinter:
         return self.issues
 
 
-# ── Integration with lint_all.py ──────────────────────────────────────────────
+# ── BaseLinter wrapper ────────────────────────────────────────────────────────
+
+class IssuesLinter(BaseLinter):
+    """BaseLinter wrapper for issue file validation.
+    
+    This linter validates issue files within an epic folder for structural
+    correctness, dependency consistency, and coverage completeness.
+    """
+    
+    SPEC_NAME = "issues"
+    SEMANTIC_RULES = []
+    MISC_CHECKS = []
+    CROSS_SPEC_DEPS = ["taskplan", "goal", "glossary"]
+    
+    def __init__(self, epics_dir: str, epic_id: str, schema_path: Optional[Path] = None,
+                 strict: bool = False):
+        self.epics_dir = Path(epics_dir)
+        self.epic_id = epic_id
+        self.schema_path = schema_path
+        self.strict = strict
+        self.result = LayerResult(name=self.SPEC_NAME)
+        self.extra_specs: dict = {}
+    
+    def run(self, taskplan: Optional[dict] = None, goal: Optional[dict] = None,
+            glossary: Optional[dict] = None, **kwargs) -> LayerResult:
+        """Run all issue linters and return results."""
+        self.extra_specs = {"taskplan": taskplan, "goal": goal, "glossary": glossary}
+        
+        # Run the core IssueLinter
+        issue_linter = IssueLinter(self.epics_dir, self.epic_id, self.strict, glossary=glossary)
+        if goal:
+            issue_linter.goal = goal
+        issues = issue_linter.run(taskplan)
+        
+        # Aggregate results
+        for issue in issues:
+            self.result.add(issue.severity, issue.category, issue.message, issue.hint)
+        
+        return self.result
+
 
 def run_lint(epic_id: str, epics_dir: str, taskplan: Optional[dict] = None,
              goal: Optional[dict] = None, glossary: Optional[dict] = None, strict: bool = False):
     """Run the issue linter for a single epic. Returns a LayerResult."""
-    from lint_all import LayerResult
-    linter = IssueLinter(epics_dir, epic_id, strict, glossary=glossary)
-    if goal:
-        linter.goal = goal
-    issues = linter.run(taskplan)
-
-    layer = LayerResult(name="issues")
-    for issue in issues:
-        layer.add(issue.severity, issue.category, issue.message, issue.hint)
-
-    return layer
+    linter = IssuesLinter(epics_dir, epic_id, strict=strict)
+    return linter.run(taskplan=taskplan, goal=goal, glossary=glossary)
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
