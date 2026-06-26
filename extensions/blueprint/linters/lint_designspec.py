@@ -380,11 +380,6 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
         for t in glossary.get("terms", []):
             gl_ids.add(t["id"])
             gl_by_term[t["term"].lower()] = t["id"]
-
-    def validate_refs(refs, label, name):
-        """Validate that each ref exists in the glossary (if glossary provided)."""
-        if not refs:
-            return
         for ref in refs:
             if gl_ids and ref not in gl_ids:
                 result.add("error", "glossary_ref_missing",
@@ -399,7 +394,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
             result.add("warning", "persona_no_glossary_refs",
                 f"Persona '{pid}': no glossaryRefs — role '{persona['role']}' not linked to glossary.",
                 hint="Add glossaryRefs (GL-NNN) for the actor role this persona represents.")
-        validate_refs(refs, f"Persona {pid}", pid)
+        validate_glossary_refs(refs, f"Persona {pid}", pid, gl_ids, result)
 
     # ── ScreenInventory[].purpose → glossaryRefs ──────────────────────
     for screen in spec.get("screenInventory", []):
@@ -409,7 +404,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
             result.add("warning", "screen_no_glossary_refs",
                 f"Screen '{sid}': no glossaryRefs — purpose not linked to glossary.",
                 hint="Add glossaryRefs (GL-NNN) for domain concepts in the screen's purpose.")
-        validate_refs(refs, f"Screen {sid}", sid)
+        validate_glossary_refs(refs, f"Screen {sid}", sid, gl_ids, result)
 
     # ── ScreenSpecs[].components[].purpose → glossaryRefs ─────────────
     for ss in spec.get("screenSpecs", []):
@@ -421,7 +416,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
                 result.add("warning", "component_no_glossary_refs",
                     f"Screen '{screen_ref}' component '{cname}': no glossaryRefs — purpose not linked to glossary.",
                     hint="Add glossaryRefs (GL-NNN) for domain concepts in the component's purpose.")
-            validate_refs(refs, f"Component '{cname}' in {screen_ref}", cname)
+            validate_glossary_refs(refs, f"Component '{cname}' in {screen_ref}", cname, gl_ids, result)
 
     # ── UserJourneys[].steps[].action → glossaryRefs ──────────────────
     for journey in spec.get("userJourneys", []):
@@ -433,7 +428,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
                 result.add("warning", "journey_step_no_glossary_refs",
                     f"{jid} step {i+1} ({step['actor']}): '{action}...' has no glossaryRefs.",
                     hint="Add glossaryRefs (GL-NNN) for domain concepts in this step's action.")
-            validate_refs(refs, f"Journey step {jid}:{i+1}", f"{jid}:{i+1}")
+            validate_glossary_refs(refs, f"Journey step {jid}:{i+1}", f"{jid}:{i+1}", gl_ids, result)
 
 
 # ── Runner ────────────────────────────────────────────────────────────────────

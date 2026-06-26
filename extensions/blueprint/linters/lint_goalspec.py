@@ -267,11 +267,6 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
         for t in glossary.get("terms", []):
             gl_ids.add(t["id"])
             gl_by_term[t["name"].lower()] = t["id"]
-
-    def validate_refs(refs, label, name):
-        """Validate that each ref exists in the glossary (if glossary provided)."""
-        if not refs:
-            return
         for ref in refs:
             if gl_ids and ref not in gl_ids:
                 result.add("error", "glossary_ref_missing",
@@ -305,7 +300,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
             result.add("warning", "fr_no_glossary_refs",
                 f"{fr['id']}: no glossaryRefs — domain concepts in description not linked to glossary.",
                 hint="Add glossaryRefs (GL-NNN) for key domain terms in the description.")
-        validate_refs(refs, f"FR {fr['id']}", fr["id"])
+        validate_glossary_refs(refs, f"FR {fr['id']}", fr["id"], gl_ids, result)
 
     # ── US Capability & Outcome ─────────────────────────────────────────
     for us in spec.get("userStories", []):
@@ -314,7 +309,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
             result.add("warning", "us_no_glossary_refs",
                 f"{us['id']}: no glossaryRefs — capability/outcome not linked to glossary.",
                 hint="Add glossaryRefs (GL-NNN) for key domain terms in capability or outcome.")
-        validate_refs(refs, f"US {us['id']}", us["id"])
+        validate_glossary_refs(refs, f"US {us['id']}", us["id"], gl_ids, result)
 
     # ── Non-Goals ───────────────────────────────────────────────────────
     for ng in spec.get("nonGoals", []):
@@ -323,7 +318,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
             result.add("warning", "nongoal_no_glossary_refs",
                 f"Non-goal '{ng['capability']}': no glossaryRefs — excluded capability not linked to glossary.",
                 hint="Add glossaryRefs (GL-NNN) for the excluded capability, or consider adding it as a new glossary term.")
-        validate_refs(refs, "Non-goal", ng["capability"])
+        validate_glossary_refs(refs, "Non-goal", ng["capability"], gl_ids, result)
 
     # ── NFRs (INFO level — NFRs are measurement-focused, fewer refs expected) ──
     for nfr in spec.get("nonFunctionalRequirements", []):
@@ -332,7 +327,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
             result.add("warning", "nfr_no_glossary_refs",
                 f"{nfr['id']}: no glossaryRefs.",
                 hint="NFRs are measurement-focused; glossaryRefs are optional but helpful for domain concepts in scale/meter.")
-        validate_refs(refs, f"NFR {nfr['id']}", nfr["id"])
+        validate_glossary_refs(refs, f"NFR {nfr['id']}", nfr["id"], gl_ids, result)
 
 
 # ── Runner ────────────────────────────────────────────────────────────────────

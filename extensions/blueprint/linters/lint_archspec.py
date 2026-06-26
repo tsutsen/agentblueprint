@@ -509,17 +509,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
     gl_ids = set()
     if glossary:
         gl_ids = {t["id"] for t in glossary.get("terms", [])}
-    
-    def validate_refs(refs, label, name):
-        if not refs:
-            return False  # No refs at all
-        for ref in refs:
-            if gl_ids and ref not in gl_ids:
-                result.add("error", "glossary_ref_missing",
-                    f"{label} '{name}': glossaryRef '{ref}' not found in Glossary.",
-                    hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
-        return True
-    
+        
     # Warn: components with no glossaryRefs at all
     for comp in spec.get("components", []):
         refs = comp.get("glossaryRefs", [])
@@ -527,7 +517,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
             result.add("warning", "glossary_ref_missing_component",
                 f"Component '{comp['id']}' has no glossaryRefs.",
                 hint="Link this component's key concepts to glossary entries (GL-NNN) for cross-spec traceability.")
-        validate_refs(refs, "Component", comp["id"])
+        validate_glossary_refs(refs, "Component", comp["id"], gl_ids, result)
     
     # Warn: flows with no glossaryRefs at all
     for flow in spec.get("dataFlow", []):
@@ -536,7 +526,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
             result.add("warning", "glossary_ref_missing_flow",
                 f"Flow '{flow['id']}' has no glossaryRefs.",
                 hint="Link this flow's data entities to glossary entries (GL-NNN) for cross-spec traceability.")
-        validate_refs(refs, "Flow", flow["id"])
+        validate_glossary_refs(refs, "Flow", flow["id"], gl_ids, result)
     
     # Warn: constraints with no glossaryRefs at all
     for con in spec.get("constraints", []):
@@ -545,7 +535,7 @@ def check_glossary_refs(spec: dict, glossary: Optional[dict], result: LayerResul
             result.add("warning", "glossary_ref_missing_constraint",
                 f"Constraint '{con['id']}' has no glossaryRefs.",
                 hint="Link this constraint's key concepts to glossary entries (GL-NNN) for cross-spec traceability.")
-        validate_refs(refs, "Constraint", con["id"])
+        validate_glossary_refs(refs, "Constraint", con["id"], gl_ids, result)
 
 # ── Runner ────────────────────────────────────────────────────────────────────
 

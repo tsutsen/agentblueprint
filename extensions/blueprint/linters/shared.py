@@ -174,6 +174,30 @@ def check_project_and_version(spec: dict, spec_name: str, goal: dict,
             hint=f"Update goalSpecVersion after reviewing {spec_name} against the updated GoalSpec.")
 
 
+def validate_glossary_refs(refs: list, label: str, name: str, gl_ids: set,
+                           result: "LayerResult") -> bool:
+    """Validate that glossary refs exist in the glossary.
+    
+    Args:
+        refs: List of glossary ID refs.
+        label: Label for error messages (e.g. "Component", "Flow").
+        name: Name/ID of the item for error messages.
+        gl_ids: Set of valid glossary IDs.
+        result: LayerResult to append errors to.
+    
+    Returns:
+        True if refs were provided and valid, False if no refs.
+    """
+    if not refs:
+        return False
+    for ref in refs:
+        if gl_ids and ref not in gl_ids:
+            result.add("error", "glossary_ref_missing",
+                f"{label} '{name}': glossaryRef '{ref}' not found in Glossary.",
+                hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
+    return True
+
+
 # Backwards compatibility alias
 ID_FORMATS = ID_PATTERNS
 
