@@ -108,9 +108,18 @@ def validate_spec_ids(items_by_type: dict[str, list],
 
 
 def _extract_num(id_str: str) -> int:
-    """Extract the numeric part from REQ-001, NFR-002, etc."""
-    m = re.search(r"(\d+)$", id_str)
-    return int(m.group(1)) if m else -1
+    """Extract the numeric part from REQ-001, NFR-002, etc.
+    
+    Splits by '-' and uses the second piece (always numeric).
+    Returns -1 if the ID doesn't follow the expected format.
+    """
+    parts = id_str.split("-")
+    if len(parts) < 2:
+        return -1
+    try:
+        return int(parts[1])
+    except ValueError:
+        return -1
 
 
 def validate_sequential(ids: list[str], label: str, result: "LayerResult") -> None:
