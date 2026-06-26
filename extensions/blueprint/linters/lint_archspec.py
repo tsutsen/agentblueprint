@@ -30,6 +30,7 @@ from typing import Optional
 
 from schema_validator import SchemaValidator
 from shared import (
+    validate_non_empty_field,
     validate_item_count,
     Issue,
     LayerResult,
@@ -431,16 +432,11 @@ def check_flow_descriptions(spec: dict, result: LayerResult):
 
 def check_flow_data_refs(spec: dict, result: LayerResult):
     """Warn if flow steps have empty dataRef fields."""
-    for flow in spec.get("dataFlow", []):
-        for i, step in enumerate(flow.get("steps", [])):
-            data_ref = step.get("dataRef", "")
-            if data_ref is not None and not data_ref.strip():
-                result.add(
-                    "warning",
-                    "flow_step_empty_data_ref",
-                    f"Flow '{flow['id']}' step {i + 1} ({step.get('componentRef', '?')}) has an empty dataRef.",
-                    hint="Name the data entity or payload moving through this step.",
-                )
+    all_steps = [step for flow in spec.get("dataFlow", []) for step in flow.get("steps", [])]
+    validate_non_empty_field(
+        all_steps, "dataRef", "componentRef",
+        result, label="Flow step", category="flow_step_empty_data_ref"
+    )
 
 
 def check_vague_responsibilities(spec: dict, result: LayerResult):

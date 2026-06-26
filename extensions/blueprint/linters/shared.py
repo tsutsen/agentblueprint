@@ -341,6 +341,29 @@ def validate_item_count(items: list[dict], key: str, count: int, compare_mode: i
             result.add("warning", category,
                 f"{label} '{iid}' has {n} {key} (minimum {count}).",
                 hint=hint or f"A {label.lower()} should have at least {count} {key}.")
+
+
+def validate_non_empty_field(items: list[dict], key: str, id_key: str, result: "LayerResult",
+                             label: str = "", category: str = "empty_field",
+                             hint: str = "") -> None:
+    """Warn if items have an empty string field.
+    
+    Args:
+        items: List of items to check.
+        key: Key in each item that holds the string field (e.g., "dataRef").
+        id_key: Key in each item that holds the ID (e.g., "id").
+        result: LayerResult to append warnings to.
+        label: Label for error messages (e.g., "Flow step").
+        category: Category for the warning (e.g., "empty_field").
+        hint: Custom hint message (default: generic).
+    """
+    for item in items:
+        iid = item.get(id_key, "?")
+        field = item.get(key, "")
+        if field is not None and not field.strip():
+            result.add("warning", category,
+                f"{label} '{iid}' has an empty {key}.",
+                hint=hint or f"Provide a value for {key}.")
     # Normalize to list of refs and dict of valid sets
     if isinstance(refs, str):
         refs = [refs]
