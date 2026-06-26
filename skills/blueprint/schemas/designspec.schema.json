@@ -133,8 +133,8 @@
     },
     "glId": {
       "type": "string",
-      "description": "Glossary term identifier (GL-NNN).",
-      "pattern": "^GL-\\d{3}$"
+      "description": "Glossary term identifier, format GL-NNN-PascalCase.",
+      "pattern": "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     },
     "dgId": {
       "type": "string",

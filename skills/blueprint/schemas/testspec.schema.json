@@ -15,8 +15,8 @@
   "definitions": {
     "glId": {
       "type": "string",
-      "description": "Glossary term identifier. Format: GL-NNN (3-digit zero-padded).",
-      "pattern": "^GL-\\d{3}$"
+      "description": "Glossary term identifier, format GL-NNN-PascalCase.",
+      "pattern": "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
     },
     "testId": {
       "type": "string",
