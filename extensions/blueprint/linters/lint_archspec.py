@@ -91,6 +91,15 @@ def check_components(spec: dict, result: LayerResult) -> set[str]:
     components = spec.get("components", [])
     ids = [c["id"] for c in components]
     check_duplicates(ids, "component", result)
+    
+    # Validate COMP-NNN-PascalCase format
+    for comp in components:
+        cid = comp.get("id", "")
+        valid, msg = validate_id_format(cid, "comp")
+        if not valid:
+            result.add("error", "comp_id_format", msg,
+                hint="Use format COMP-NNN-PascalCase (e.g. 'COMP-001-AuthService').")
+    
     component_ids = set(ids)
 
     # Build dependency graph for cycle detection

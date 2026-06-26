@@ -114,6 +114,14 @@ def check_personas(spec: dict, goal: Optional[dict], result: LayerResult) -> set
     ids = [p["id"] for p in personas]
     check_duplicates(ids, "persona", result)
 
+    # Validate PRS-NNN-PascalCase format
+    for p in personas:
+        pid = p.get("id", "")
+        valid, msg = validate_id_format(pid, "prs")
+        if not valid:
+            result.add("error", "prs_id_format", msg,
+                hint="Use format PRS-NNN-PascalCase (e.g. 'PRS-001-PowerDeveloper').")
+
     if goal:
         goal_actors = {fr["actor"] for fr in goal.get("functionalRequirements", [])}
         goal_actors |= {us["actor"] for us in goal.get("userStories", [])}
@@ -321,6 +329,20 @@ def check_uxac(spec: dict, goal: Optional[dict], result: LayerResult):
                 hint="UX acceptance criteria must be binary and independently verifiable.")
 
 
+def check_visual_design_requirements(spec: dict, result: LayerResult):
+    vdrs = spec.get("visualDesignRequirements", [])
+    ids = [v["id"] for v in vdrs]
+    check_duplicates(ids, "VDR", result)
+
+    # Validate VDR-NNN format
+    for v in vdrs:
+        vid = v.get("id", "")
+        valid, msg = validate_id_format(vid, "vdr")
+        if not valid:
+            result.add("error", "vdr_id_format", msg,
+                hint="Use format VDR-NNN (e.g. 'VDR-001').")
+
+
 def check_us_journey_coverage(goal: Optional[dict], covered_us_ids: set[str], result: LayerResult):
     """Every GoalSpec user story should be covered by at least one journey."""
     if not goal:
@@ -477,6 +499,7 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     covered_us_ids = check_journeys(spec, persona_ids, screen_ids, goal, result)
     check_screen_specs(spec, screen_ids, pattern_ids, result)
     check_uxac(spec, goal, result)
+    check_visual_design_requirements(spec, result)
     check_us_journey_coverage(goal, covered_us_ids, result)
     check_screens_reachable(spec, screen_ids, result)
     check_forbidden_content(spec, result)
