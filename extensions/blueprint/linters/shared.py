@@ -307,7 +307,13 @@ def validate_coverage(covered_items: list[dict], source_items: list[dict],
     # Collect all refs from source items
     covered_refs = set()
     for item in source_items:
-        for ref in item.get(refs_key, []):
+        ref_value = item.get(refs_key)
+        # Handle both string and list refs
+        if isinstance(ref_value, str):
+            ref_value = [ref_value]
+        elif ref_value is None:
+            ref_value = []
+        for ref in ref_value:
             covered_refs.add(ref)
     
     # Find uncovered items

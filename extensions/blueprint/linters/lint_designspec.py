@@ -37,6 +37,7 @@ from shared import (
     LayerResult,
     print_human,
     print_json_output,
+    validate_coverage,
     validate_exists,
     validate_glossary_refs,
 )
@@ -332,11 +333,16 @@ def _check_screen_specs(spec: dict, result: LayerResult, extra_specs: dict) -> N
                     hint=f"Add a pattern with id='{pref}' or correct the reference.")
     
     # Screens in inventory with no spec
-    for sid in screens:
-        if sid not in spec_screen_ids:
-            result.add("warning", "screen_no_spec",
-                f"Screen '{sid}' has no screen spec.",
-                hint="Add a screen spec entry for every screen in the inventory.")
+    screens_list = [{"id": sid} for sid in screens]
+    validate_coverage(
+        screens_list,
+        screen_specs,
+        "id",
+        "screenRef",
+        result,
+        "Screen inventory",
+        "screen spec",
+    )
 
 
 def _check_screens_reachable(spec: dict, result: LayerResult, extra_specs: dict) -> None:
