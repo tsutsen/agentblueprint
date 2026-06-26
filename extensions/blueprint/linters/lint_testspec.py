@@ -319,7 +319,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "tests.fnRef",
-        "valid_section": "api:functions",
+        "valid_section": "api:functions.id",
         "label": "Test",
         "ref_label": "ApiSpec function",
         "category": "fnref_missing",

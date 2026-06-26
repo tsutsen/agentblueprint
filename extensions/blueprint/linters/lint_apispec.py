@@ -211,8 +211,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "functions.entity",
-        "valid_section": "data:entities",
-        "valid_id_field": "name",
+        "valid_section": "data:entities.name",
         "label": "Function",
         "ref_label": "DataSpec entity",
         "category": "entity_ref_missing",

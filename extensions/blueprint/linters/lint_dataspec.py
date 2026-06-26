@@ -281,8 +281,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "entities.extends",
-        "valid_section": "entities",
-        "valid_id_field": "name",
+        "valid_section": "entities.name",
         "label": "Entity",
         "ref_label": "Entity",
         "category": "extends_missing",
@@ -292,8 +291,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "relationships.from",
-        "valid_section": "entities",
-        "valid_id_field": "name",
+        "valid_section": "entities.name",
         "label": "Relationship",
         "ref_label": "Entity",
         "category": "rel_from_missing",
@@ -303,8 +301,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "relationships.to",
-        "valid_section": "entities",
-        "valid_id_field": "name",
+        "valid_section": "entities.name",
         "label": "Relationship",
         "ref_label": "Entity",
         "category": "rel_to_missing",

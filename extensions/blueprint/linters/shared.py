@@ -40,11 +40,13 @@ class NonEmptyRule(_TargetRuleBase):
 
 
 class ExistsRule(_TargetRuleBase):
-    """Check that field values resolve to valid targets."""
+    """Check that field values resolve to valid targets.
+
+    valid_section path includes the ID field: "components.id"
+    """
     type: Literal["exists"]
     target: str
     valid_section: str
-    valid_id_field: str
     ref_label: str
 
 
@@ -1462,7 +1464,7 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
 # Known fields per rule type (for detecting typos — includes 'type' itself)
 _KNOWN_FIELDS: dict[str, set[str]] = {
     "non_empty":  {"type", "target", "label", "category", "severity", "hint"},
-    "exists":     {"type", "target", "valid_section", "valid_id_field", "ref_label",
+    "exists":     {"type", "target", "valid_section", "ref_label",
                    "label", "category", "severity", "hint"},
     "unique":     {"type", "target", "label", "category", "severity", "hint"},
     "no_overlap": {"type", "target", "label", "category", "severity", "hint"},
@@ -1542,13 +1544,9 @@ def _run_new_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_
                 if handler.needs_valid:
                     valid_path = rule["valid_section"]
                     valid_resolved = resolve_path(valid_path, spec, extra_specs)
-                    valid_id_field = rule.get("valid_id_field", "id")
                     valid = set()
                     for v in valid_resolved.values:
-                        if isinstance(v, dict):
-                            valid.add(v.get(valid_id_field, ""))
-                        else:
-                            valid.add(str(v))
+                        valid.add(str(v))
                     handler.func(resolved, valid, rule, result)
                 else:
                     handler.func(resolved, rule, result)

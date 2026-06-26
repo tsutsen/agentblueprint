@@ -191,7 +191,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "components.reqRefs",
-        "valid_section": "goal:functionalRequirements",
+        "valid_section": "goal:functionalRequirements.id",
         "label": "Component",
         "ref_label": "GoalSpec requirement",
         "category": "req_ref_missing",
@@ -200,7 +200,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "components.nfrRefs",
-        "valid_section": "goal:nonFunctionalRequirements",
+        "valid_section": "goal:nonFunctionalRequirements.id",
         "label": "Component",
         "ref_label": "GoalSpec NFR",
         "category": "nfr_ref_missing",
@@ -209,7 +209,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "dataFlow.reqRefs",
-        "valid_section": "goal:functionalRequirements",
+        "valid_section": "goal:functionalRequirements.id",
         "label": "Flow",
         "ref_label": "GoalSpec requirement",
         "category": "req_ref_missing",
@@ -218,7 +218,7 @@ SEMANTIC_RULES = [
     {
         "type": "exists",
         "target": "constraints.nfrRefs",
-        "valid_section": "goal:nonFunctionalRequirements",
+        "valid_section": "goal:nonFunctionalRequirements.id",
         "label": "Constraint",
         "ref_label": "GoalSpec NFR",
         "category": "nfr_ref_missing",
