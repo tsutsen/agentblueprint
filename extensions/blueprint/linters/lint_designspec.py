@@ -142,6 +142,44 @@ SEMANTIC_RULES = [
         "valid_extra_spec": "goal",
     },
     
+    # Journey personaRef must resolve to personas
+    {
+        "type": "exists",
+        "section": "userJourneys",
+        "key": "personaRef",
+        "valid_section": "personas",
+        "label": "User journey",
+        "ref_label": "persona",
+        "category": "journey_persona_ref",
+        "hint": "Add the persona to the personas section or correct the reference.",
+    },
+    
+    # Journey usRefs must resolve to GoalSpec userStories
+    {
+        "type": "exists",
+        "section": "userJourneys",
+        "key": "usRefs",
+        "valid_extra_spec": "goal",
+        "valid_section": "userStories",
+        "label": "User journey",
+        "ref_label": "GoalSpec userStory",
+        "category": "journey_us_ref",
+        "hint": "Add to GoalSpec userStories or correct the reference.",
+    },
+    
+    # Journey step screenRefs must resolve to screen inventory
+    {
+        "type": "exists",
+        "section": "userJourneys",
+        "nested_key": "steps",
+        "key": "screenRef",
+        "valid_section": "screenInventory",
+        "label": "Journey step",
+        "ref_label": "screen inventory",
+        "category": "journey_screen_ref",
+        "hint": "Add a screen to screenInventory or correct the reference.",
+    },
+    
     # Screen specs must not contain forbidden content
     {
         "type": "patterns",
@@ -239,43 +277,10 @@ def _check_personas(spec: dict, result: LayerResult, extra_specs: dict) -> set:
     return set(p["id"] for p in personas)
 
 
-def _check_journeys(spec: dict, result: LayerResult, extra_specs: dict) -> tuple:
-    """Check journey refs and coverage."""
-    journeys = spec.get("userJourneys", [])
-    goal = extra_specs.get("goal")
-    
-    # Build lookup sets
-    personas = {p["id"]: p for p in spec.get("personas", [])}
-    screens = {s["id"]: s for s in spec.get("screenInventory", [])}
-    goal_us_ids = {us["id"] for us in goal.get("userStories", [])} if goal else set()
-    
-    covered_us_ids = set()
-    
-    for journey in journeys:
+def _check_journeys(spec: dict, result: LayerResult, extra_specs: dict) -> None:
+    """Check journey system step requirement."""
+    for journey in spec.get("userJourneys", []):
         jid = journey["id"]
-        
-        # personaRef resolves
-        persona_ref = journey.get("personaRef")
-        if persona_ref and persona_ref not in personas:
-            result.add("error", "journey_persona_ref",
-                f"{jid}: personaRef '{persona_ref}' not found in personas.",
-                hint="Add the persona to the personas section or correct the reference.")
-        
-        # usRefs resolve
-        for ref in journey.get("usRefs", []):
-            if goal and ref not in goal_us_ids:
-                result.add("error", "journey_us_ref",
-                    f"{jid}: usRef '{ref}' not found in GoalSpec userStories.",
-                    hint=f"Add '{ref}' to GoalSpec or correct the reference.")
-            covered_us_ids.add(ref)
-        
-        # step screenRefs resolve
-        for i, step in enumerate(journey.get("steps", [])):
-            sref = step.get("screenRef")
-            if sref and sref not in screens:
-                result.add("error", "journey_screen_ref",
-                    f"{jid} step {i+1}: screenRef '{sref}' not found in screen inventory.",
-                    hint=f"Add a screen with id='{sref}' to screenInventory or correct the reference.")
         
         # At least one step should be a system response
         actors = [s["actor"] for s in journey.get("steps", [])]
@@ -283,8 +288,6 @@ def _check_journeys(spec: dict, result: LayerResult, extra_specs: dict) -> tuple
             result.add("warning", "journey_no_system_step",
                 f"{jid}: no system steps defined — journeys must include system responses.",
                 hint="Add at least one step with actor='system' to show what the system does.")
-    
-    return covered_us_ids
 
 
 def _check_ia(spec: dict, result: LayerResult, extra_specs: dict) -> tuple:
