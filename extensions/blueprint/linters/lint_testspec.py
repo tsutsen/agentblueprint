@@ -418,7 +418,7 @@ def main():
     if args.json:
         print_json_output(result)
     else:
-        print_human(result, args.input, args.api)
+        print_human(result, args.input)
 
     sys.exit(0 if result.clean else 1)
 
