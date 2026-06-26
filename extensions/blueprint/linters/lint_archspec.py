@@ -27,7 +27,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, check_duplicates, find_orphans, validate_coverage
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids, validate_project_and_version, check_duplicates, find_orphans, validate_coverage, validate_non_empty
 from schema_validator import SchemaValidator
 
 
@@ -249,13 +249,12 @@ def check_req_nfr_refs(spec: dict, goal: Optional[dict], result: LayerResult):
 
 def check_subsystem_empty(spec: dict, component_ids: set[str], result: LayerResult):
     """Warn if a subsystem has no components assigned."""
-    subsystems = spec.get("overview", {}).get("subsystems", [])
-    for sub in subsystems:
-        refs = sub.get("componentRefs", [])
-        if not refs:
-            result.add("warning", "subsystem_empty",
-                f"Subsystem '{sub['name']}' has no components assigned.",
-                hint="Assign components to this subsystem or remove it.")
+    validate_non_empty(
+        spec.get("overview", {}).get("subsystems", []),
+        "componentRefs", "name",
+        result,
+        label="Subsystem"
+    )
 
 
 def check_subsystem_overlap(spec: dict, result: LayerResult):

@@ -219,6 +219,28 @@ def validate_coverage(covered_items: list[dict], source_items: list[dict],
                 hint=f"Add ref '{iid}' to a {source_label or 'source item'} responsible for this.")
 
 
+def validate_non_empty(items: list[dict], key: str, id_key: str, result: "LayerResult",
+                       label: str = "", category: str = "empty", hint: str = "") -> None:
+    """Warn if items have an empty list field.
+    
+    Args:
+        items: List of items to check.
+        key: Key in each item that holds the list to check (e.g., "componentRefs").
+        id_key: Key in each item that holds the ID/name (e.g., "id" or "name").
+        result: LayerResult to append warnings to.
+        label: Label for error messages (e.g., "Subsystem").
+        category: Category for the warning (e.g., "empty").
+        hint: Custom hint message (default: generic).
+    """
+    for item in items:
+        iid = item.get(id_key, "?")
+        refs = item.get(key, [])
+        if not refs:
+            result.add("warning", category,
+                f"{label or iid} '{iid}' has no {key}.",
+                hint=hint or f"Assign items to this {label.lower() or 'item'} or remove it.")
+
+
 def extract_ids(items: list, key: str) -> list[str]:
     """Extract a field from a list of dicts."""
     return [item[key] for item in items if key in item]
