@@ -45,8 +45,7 @@ AgentBlueprint/
 │           ├── lint_testspec.py
 │           ├── lint_issues.py
 │           ├── lint_taskplan.py
-│           ├── lint_cross.py
-│           └── lint_consistency.py
+│           └── lint_schemas.py
 └── skills/
     ├── blueprint/
     │   ├── SKILL.md          ← orchestrator skill
@@ -116,8 +115,7 @@ Each spec has two files:
 | `lint_testspec.py` | TestSpec — fnRef resolution, error coverage, placeholder detection, ID consistency |
 | `lint_taskplan.py` | TaskPlan — requirement coverage, dependency ordering, milestone outcomes |
 | `lint_issues.py` | Issue — ID sequencing, dependency consistency, epic coverage |
-| `lint_cross.py` | Cross-spec — all inter-spec reference validation (REQ/NFR/US/FN/entity/api refs) |
-| `lint_consistency.py` | Markdown/JSON drift — entity/enum/relationship/function name mismatches |
+| `lint_schemas.py` | Schema validation utility — JSON schema validation for all specs |
 
 <details>
 <summary>Linter details</summary>
@@ -323,28 +321,6 @@ Unified orchestrator. Runs all individual linters in dependency order, then cros
 **Completeness gates:** None defined — issue lint is optional and epic-specific.
 </details>
 
-<details>
-<summary>lint_cross.py</summary>
-
-
-**Checks:**
-- `run_lint` — REQ/NFR refs across all specs resolve correctly, US/FN refs consistent between specs, entity/api refs match data spec definitions, API function coverage (every function tested), Data-API alignment (API parameter/output types match data spec types)
-
-**Completeness gates:** None — cross-spec layer is purely structural.
-</details>
-
-<details>
-<summary>lint_consistency.py</summary>
-
-
-**Checks:**
-- `check_entity_consistency` — Entity name drift (present in Markdown but not JSON, or vice versa)
-- `check_enum_consistency` — Enum name drift (present in Markdown but not JSON, or vice versa)
-- `check_relationship_consistency` — Relationship drift (present in Markdown but not JSON, or vice versa)
-- `check_function_consistency` — Function ID drift (present in Markdown but not JSON, or vice versa)
-
-**Completeness gates:** None — consistency check is advisory.
-</details>
 </details>
 
 ## Artifact Dependency Graph
