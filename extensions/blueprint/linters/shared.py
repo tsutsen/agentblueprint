@@ -298,8 +298,8 @@ def find_duplicates(items: list, id_key: str = None, result: "LayerResult" = Non
             if norm in seen:
                 result.add(
                     "warning", category,
-                    f"Duplicate {target_label} ID '{id_str}' (also '{seen[norm]}').",
-                    hint=hint or f"Each {target_label} must have a unique ID."
+                    f"Duplicate {label} ID '{id_str}' (also '{seen[norm]}').",
+                    hint=hint or f"Each {label} must have a unique ID."
                 )
             else:
                 seen[norm] = id_str
@@ -316,9 +316,9 @@ def find_duplicates(items: list, id_key: str = None, result: "LayerResult" = Non
                 if norm in seen:
                     result.add(
                         "warning", category,
-                        f"{target_label} '{iid}' has a duplicate {id_key}: '{text}' "
+                        f"{label} '{iid}' has a duplicate {id_key}: '{text}' "
                         f"is identical to one claimed by '{seen[norm]}'.",
-                        hint=hint or f"Each {id_key} must be owned by exactly one {target_label.lower()}.",
+                        hint=hint or f"Each {id_key} must be owned by exactly one {label.lower()}",
                     )
                 else:
                     seen[norm] = iid
@@ -354,7 +354,7 @@ def find_cycles(items: list[dict], id_key: str, deps_key: str, valid: set[str],
             if dep not in valid:
                 result.add(
                     "error", "dependency_ref",
-                    f"{target_label} '{iid}': dependency '{dep}' is not defined.",
+                    f"{label} '{iid}': dependency '{dep}' is not defined.",
                     hint=f"Add an item with id='{dep}' or correct the dependency reference."
                 )
     
@@ -383,7 +383,7 @@ def find_cycles(items: list[dict], id_key: str, deps_key: str, valid: set[str],
                 cycle_str = " → ".join(cycle + [cycle[0]])
                 result.add(
                     "error", category,
-                    f"Circular {target_label.lower()} dependency detected: {cycle_str}.",
+                    f"Circular {label.lower()} dependency detected: {cycle_str}.",
                     hint=hint or "Refactor to break the cycle — introduce an abstraction or invert a dependency."
                 )
                 return True
@@ -469,7 +469,7 @@ def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] |
         for item in items:
             if item not in valid_set:
                 result.add(severity, category,
-                    f"{target_label}: '{item}' not found in {ref_label or 'valid set'}.",
+                    f"{label}: '{item}' not found in {ref_label or 'valid set'}.",
                     hint=f"Add '{item}' to {ref_label or 'the target'} or correct the reference.")
     elif isinstance(first, dict):
         # List of dicts with ref keys
@@ -482,7 +482,7 @@ def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] |
                 for ref in _normalize_ref(item.get(refs_key)):
                     if ref not in valid.get(refs_key, set()):
                         result.add(severity, category,
-                            f"{target_label} '{iid}': {refs_key} ref '{ref}' not found.",
+                            f"{label} '{iid}': {refs_key} ref '{ref}' not found.",
                             hint=f"Add '{ref}' to the target spec or correct the reference.")
 
 
@@ -515,7 +515,7 @@ def _validate_glossary_ref(refs: list, label: str, name: str, gl_ids: set,
     for ref in refs:
         if gl_ids and ref not in gl_ids:
             result.add("error", "glossary_ref_missing",
-                f"{target_label} '{name}': glossaryRef '{ref}' not found in Glossary.",
+                f"{label} '{name}': glossaryRef '{ref}' not found in Glossary.",
                 hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
     return True
 
@@ -523,7 +523,7 @@ def _validate_glossary_ref(refs: list, label: str, name: str, gl_ids: set,
 def validate_glossary_refs(glossary: dict, result: "LayerResult",
                            checks: list[tuple[str, str, list]]) -> None:
     """Validate glossary refs for multiple fields.
-    
+
     Args:
         glossary: The Glossary dict (or None).
         result: LayerResult to append errors/warnings to.
@@ -531,7 +531,7 @@ def validate_glossary_refs(glossary: dict, result: "LayerResult",
             label: Label for error messages.
             refs_key: Key in each item that holds the refs list.
             items: List of items to check.
-    
+
     Example:
         validate_glossary_refs(glossary, result, [
             ("Component", "glossaryRefs", spec.get("components", [])),
@@ -541,30 +541,17 @@ def validate_glossary_refs(glossary: dict, result: "LayerResult",
     gl_ids = set()
     if glossary:
         gl_ids = {t["id"] for t in glossary.get("terms", [])}
-    
+
     for label, refs_key, items in checks:
         for item in items:
             item_id = item.get("id", item.get("screenRef", "?"))
             refs = item.get(refs_key, [])
             if not refs:
                 result.add("warning", "glossary_ref_missing",
-                    f"{target_label} '{item_id}': no glossaryRefs.",
+                    f"{label} '{item_id}': no glossaryRefs.",
                     hint=f"Add glossaryRefs (GL-NNN) for domain concepts.")
             else:
                 _validate_glossary_ref(refs, label, item_id, gl_ids, result)
-
-
-def _validate_glossary_ref(refs: list, label: str, name: str, gl_ids: set,
-                           result: "LayerResult") -> bool:
-    """Validate a single item's glossary refs (private helper)."""
-    if not refs:
-        return False
-    for ref in refs:
-        if gl_ids and ref not in gl_ids:
-            result.add("error", "glossary_ref_missing",
-                f"{target_label} '{name}': glossaryRef '{ref}' not found in Glossary.",
-                hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
-    return True
 
 
 # ── Canonical types ───────────────────────────────────────────────────────────
