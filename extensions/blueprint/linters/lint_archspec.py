@@ -57,7 +57,6 @@ SEMANTIC_RULES = [
     {
         "type": "non_empty",
         "target": "overview.subsystems.componentRefs",
-        "id_field": "name",
         "label": "Subsystem",
         "category": "subsystem_empty",
     },
@@ -74,7 +73,6 @@ SEMANTIC_RULES = [
     {
         "type": "no_overlap",
         "target": "overview.subsystems.componentRefs",
-        "id_field": "name",
         "label": "Subsystem",
         "category": "subsystem_overlap",
     },
@@ -84,7 +82,6 @@ SEMANTIC_RULES = [
         "target": "dataFlow.steps",
         "count": 2,
         "compare_mode": -1,
-        "id_field": "id",
         "label": "Flow",
         "category": "flow_too_short",
         "hint": "A data flow must show at least a source and a sink step.",
@@ -107,7 +104,6 @@ SEMANTIC_RULES = [
     {
         "type": "non_empty",
         "target": "dataFlow.description",
-        "id_field": "id",
         "label": "Flow",
         "category": "flow_empty_description",
     },
@@ -124,7 +120,6 @@ SEMANTIC_RULES = [
         "target": "components.responsibilities",
         "count": 8,
         "compare_mode": 1,
-        "id_field": "id",
         "label": "Component",
         "category": "component_responsibility_count",
     },
@@ -134,7 +129,6 @@ SEMANTIC_RULES = [
         "target": "dataFlow.steps",
         "count": 15,
         "compare_mode": 1,
-        "id_field": "id",
         "label": "Flow",
         "category": "flow_step_count",
     },
