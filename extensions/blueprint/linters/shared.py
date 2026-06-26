@@ -270,40 +270,6 @@ def validate_sequential(ids: list[str], label: str, result: "LayerResult") -> No
             break  # report first gap only
 
 
-def find_orphans(items: list[dict], id_key: str, deps_key: str, result: "LayerResult",
-                   label: str = "", warning: str = "isolated", hint: str = "",
-                   severity: str = "warning") -> None:
-    """Warn if items are isolated (no dependencies and no dependents).
-    
-    Args:
-        items: List of item dicts.
-        id_key: Key in each item that holds the ID.
-        deps_key: Key in each item that holds the list of dependencies.
-        result: LayerResult to append warnings to.
-        label: Label for error messages (e.g. "Component").
-        warning: Category for the warning.
-        hint: Custom hint message (default: generic).
-        severity: Severity level: "error", "warning", or "info" (default: "warning").
-    """
-    if not items:
-        return
-    
-    item_ids = {item.get(id_key, "") for item in items}
-    depended_upon = set()
-    for item in items:
-        for dep in item.get(deps_key, []):
-            depended_upon.add(dep)
-    
-    for item in items:
-        iid = item.get(id_key, "")
-        has_deps = len(item.get(deps_key, [])) > 0
-        is_depended_on = iid in depended_upon
-        if not has_deps and not is_depended_on:
-            result.add(severity, warning,
-                f"{label or iid} is isolated: no dependencies and no dependents.",
-                hint=hint or f"An isolated {label.lower() or 'item'} may indicate a design issue.")
-
-
 def find_duplicates(items: list, id_key: str = None, result: "LayerResult" = None,
                     label: str = "", category: str = "duplicate", hint: str = "",
                     normalize: callable = None) -> None:
@@ -464,34 +430,6 @@ def validate_coverage(covered_items: list[dict], source_items: list[dict],
                 hint=f"Add ref '{iid}' to a {source_label or 'source item'} responsible for this.")
 
 
-def validate_no_overlap(items: list[dict], refs_key: str, id_key: str, result: "LayerResult",
-                        label: str = "", category: str = "overlap", hint: str = "",
-                        severity: str = "warning") -> None:
-    """Warn if an item is assigned to multiple groups.
-    
-    Args:
-        items: List of group items (e.g., subsystems).
-        refs_key: Key in each item that holds the list of refs (e.g., "componentRefs").
-        id_key: Key in each item that holds the group ID/name (e.g., "name").
-        result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Subsystem").
-        category: Category for the warning (e.g., "overlap").
-        hint: Custom hint message (default: generic).
-        severity: Severity level: "error", "warning", or "info" (default: "warning").
-    """
-    item_to_groups: dict[str, list[str]] = {}
-    for item in items:
-        iid = item.get(id_key, "?")
-        for ref in item.get(refs_key, []):
-            item_to_groups.setdefault(ref, []).append(iid)
-    
-    for item, groups in item_to_groups.items():
-        if len(groups) > 1:
-            result.add(severity, category,
-                f"Item '{item}' is assigned to multiple {label.lower() or 'groups'}: {', '.join(groups)}.",
-                hint=hint or f"Each {label.lower() or 'item'} should belong to exactly one {label.lower() or 'group'}.")
-
-
 def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] | dict[str, set[str]] = None,
                   result: "LayerResult" = None, label: str = "", ref_label: str = "",
                   category: str = "missing", hint: str = "", severity: str = "error") -> None:
@@ -546,158 +484,6 @@ def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] |
                         result.add(severity, category,
                             f"{target_label} '{iid}': {refs_key} ref '{ref}' not found.",
                             hint=f"Add '{ref}' to the target spec or correct the reference.")
-
-
-def validate_item_count(items: list[dict], key: str, count: int, compare_mode: int,
-                        id_key: str, result: "LayerResult", label: str = "",
-                        category: str = "count", hint: str = "",
-                        severity: str = "warning") -> None:
-    """Validate list field counts with flexible comparison.
-    
-    Args:
-        items: List of items to check.
-        key: Key in each item that holds the list to check (e.g., "responsibilities").
-        count: Count threshold.
-        compare_mode: Comparison mode.
-            1: warn if count > threshold (n > 8)
-            0: warn if count == threshold (n == 8)
-            -1: warn if count < threshold (n < 8)
-        id_key: Key in each item that holds the ID (e.g., "id").
-        result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Component").
-        category: Category for the warning (e.g., "too_many").
-        hint: Custom hint message (default: generic).
-        severity: Severity level: "error", "warning", or "info" (default: "warning").
-    """
-    for item in items:
-        iid = item.get(id_key, "?")
-        refs = item.get(key, [])
-        n = len(refs)
-        
-        if compare_mode == 1 and n > count:
-            result.add(severity, category,
-                f"{target_label} '{iid}' has {n} {key} — consider splitting.",
-                hint=hint or f"A {target_label.lower()} with >{count} {key} may be too complex. Consider splitting.")
-        elif compare_mode == 0 and n == count:
-            result.add(severity, category,
-                f"{target_label} '{iid}' has exactly {n} {key}.",
-                hint=hint or f"A {target_label.lower()} should not have exactly {count} {key}.")
-        elif compare_mode == -1 and n < count:
-            result.add(severity, category,
-                f"{target_label} '{iid}' has {n} {key} (minimum {count}).",
-                hint=hint or f"A {target_label.lower()} should have at least {count} {key}.")
-
-
-def validate_non_empty(items: list[dict], key: str, id_key: str, result: "LayerResult",
-                       label: str = "", category: str = "empty", hint: str = "",
-                       severity: str = "warning") -> None:
-    """Warn if items have an empty list or string field.
-    
-    Args:
-        items: List of items to check.
-        key: Key in each item that holds the field to check (e.g., "componentRefs" or "dataRef").
-        id_key: Key in each item that holds the ID/name (e.g., "id" or "name").
-        result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Subsystem" or "Flow step").
-        category: Category for the warning (e.g., "empty" or "empty_field").
-        hint: Custom hint message (default: generic).
-        severity: Severity level: "error", "warning", or "info" (default: "warning").
-    """
-    for item in items:
-        iid = item.get(id_key, "?")
-        field = item.get(key)
-        
-        if field is None:
-            result.add(severity, category,
-                f"{label or iid} '{iid}': {key} is missing.",
-                hint=hint or f"Provide a value for {key}.")
-        elif isinstance(field, list) and not field:
-            result.add(severity, category,
-                f"{label or iid} '{iid}' has no {key}.",
-                hint=hint or f"Assign items to this {label.lower() or 'item'} or remove it.")
-        elif isinstance(field, str) and not field.strip():
-            result.add(severity, category,
-                f"{label or iid} '{iid}' has an empty {key}.",
-                hint=hint or f"Provide a value for {key}.")
-
-
-def find_patterns(items: list[dict], text_key: str = None, patterns: list[tuple[str, str]] = None,
-                  id_key: str = "id", result: "LayerResult" = None, label: str = "",
-                  category: str = "pattern_match", hint: str = "",
-                  match_fn: callable = None, nested_key: str = None, max_count: int = None,
-                  text_keys: list[str] = None, severity: str = "warning") -> None:
-    """Warn if items match patterns in a text field (single or nested).
-    
-    Args:
-        items: List of items to check.
-        text_key: Key in each item that holds the text to check (e.g., "description").
-                  Deprecated: use text_keys instead for multiple fields.
-        patterns: List of (regex_pattern, label) tuples.
-        id_key: Key in each item that holds the ID (default: "id").
-        result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Constraint").
-        category: Category for the warning.
-        hint: Custom hint message.
-        match_fn: Optional custom match function.
-        nested_key: If set, check nested list items (e.g., "responsibilities").
-        max_count: If set, only check items with <= this many nested items.
-        text_keys: List of text field keys to check (e.g., ["layout", "wireframe"]).
-                   If provided, checks all fields; falls back to text_key if not provided.
-        severity: Severity level: "error", "warning", or "info" (default: "warning").
-    """
-    import re
-    
-    for item in items:
-        iid = item.get(id_key, "?")
-        
-        # Determine texts to check
-        if nested_key:
-            # Check nested items
-            nested_items = item.get(nested_key, [])
-            if max_count is not None and len(nested_items) > max_count:
-                continue
-            texts = _extract_nested_texts(nested_items)
-        elif text_keys:
-            # Check multiple text fields
-            texts = [item.get(k, "") for k in text_keys]
-        elif text_key:
-            # Check single text field
-            texts = [item.get(text_key, "")]
-        else:
-            continue
-        
-        for text in texts:
-            if match_fn:
-                matches = match_fn(text, patterns) if nested_key else match_fn(item, patterns)
-            else:
-                matches = []
-                for p in patterns:
-                    # Support both strings and (pattern, label) tuples
-                    if isinstance(p, str):
-                        pattern, pattern_label = p, p
-                    else:
-                        pattern, pattern_label = p
-                    found = re.findall(pattern, text.lower())
-                    if found:
-                        matches.append((pattern_label, found))
-            
-            if matches:
-                # Format message based on context
-                if nested_key and max_count is not None:
-                    # Vague pattern context
-                    text_short = text[:80] + "..." if len(text) > 80 else text
-                    msg = f"{label or iid} '{iid}' has a single vague responsibility: '{text_short}'."
-                elif nested_key:
-                    msg = f"{label or iid} '{iid}': {', '.join(f'{l}: {m}' for l, m in matches)}."
-                else:
-                    msg = f"{label or iid} '{iid}': {', '.join(f'{l}: {m}' for l, m in matches)}."
-                
-                result.add(severity, category, msg, hint=hint or f"Review {label.lower() or 'item'} for {category}.")
-
-
-def extract_ids(items: list, key: str) -> list[str]:
-    """Extract a field from a list of dicts."""
-    return [item[key] for item in items if key in item]
 
 
 def validate_project_and_version(spec: dict, spec_name: str, goal: dict,
@@ -958,70 +744,7 @@ def _extract_nested_texts(items: list) -> list[str]:
     return [item if isinstance(item, str) else item.get("text", "") for item in items]
 
 
-def _extract_nested_items(items: list, nested_key: str) -> list:
-    """Extract nested items from a list of dicts, normalizing to dicts.
-    
-    Args:
-        items: List of dicts with nested lists.
-        nested_key: Key in each item that holds the nested list.
-    
-    Returns:
-        Flattened list of nested items (strings converted to {"id": ...}).
-    
-    Examples:
-        >>> _extract_nested_items([{"steps": ["a", {"id": "b"}]}], "steps")
-        [{"id": "a"}, {"id": "b"}]
-    """
-    nested_items = []
-    for item in items:
-        for nested in item.get(nested_key, []):
-            if isinstance(nested, dict):
-                nested_items.append(nested)
-            else:
-                nested_items.append({"id": nested})
-    return nested_items
-
-
-def _resolve_valid_section(rule: dict, spec: dict, extra_specs: dict) -> set:
-    """Resolve a 'valid' value for exists/no_overlap rules.
-    
-    Args:
-        rule: The semantic rule dict.
-        spec: The spec being linted.
-        extra_specs: Extra specs passed to the linter (goal, data, api, etc.).
-    
-    Returns:
-        Set of valid values.
-    """
-    # Direct valid set (e.g., a set of IDs)
-    if "valid" in rule:
-        return set(rule["valid"])
-    
-    # Valid from an extra spec (e.g., goal, data, api) - check first for cross-spec rules
-    if "valid_extra_spec" in rule:
-        extra = extra_specs.get(rule["valid_extra_spec"])
-        if extra:
-            items = _get_nested(extra, rule.get("valid_section", ""))
-            key = rule.get("valid_key", "id")
-            return {item.get(key, "") for item in items}
-    
-    # Valid from another section in the same spec
-    if "valid_section" in rule:
-        items = _get_nested(spec, rule["valid_section"])
-        key = rule.get("valid_key", "id")
-        return {item.get(key, "") for item in items}
-
-    # Fallback: use the same section as the source
-    section = rule.get("section")
-    if section:
-        items = _get_nested(spec, section)
-        key = rule.get("valid_key", "id")
-        return {item.get(key, "") for item in items}
-
-    return set()
-
-
-# ── Path-based rule system (new) ─────────────────────────────────────────────
+# ── Path-based rule system ────────────────────────────────────────────────────
 
 @dataclass
 class Resolved:
@@ -1567,120 +1290,6 @@ def _run_new_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_
                 f"Rule '{rule_type}' ({rule.get('target', '?')}): {e}")
 
 
-def _make_rule_kwargs(rule: dict, extra_keys: list[str] = None) -> dict:
-    """Extract common rule fields into kwargs for validation functions.
-    
-    Args:
-        rule: The rule dict.
-        extra_keys: Additional keys to include (e.g., ["ref_label", "covered_label"]).
-    
-    Returns:
-        Dict with severity, category, hint, label, and any extra keys.
-    """
-    common_keys = {"severity", "category", "hint", "target_label"} | set(extra_keys or [])
-    return {k: v for k, v in rule.items() if k in common_keys}
-
-
-def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Execute declarative semantic rules against a spec.
-
-    Routes new-format rules (with 'target') to the path-based dispatcher,
-    and falls back to the legacy dispatcher for old-format rules (with 'section').
-    """
-    new_rules = [r for r in rules if "target" in r or "should_cover_all" in r]
-    old_rules = [r for r in rules if "section" in r or "key" in r]
-
-    if new_rules:
-        _run_new_semantic_rules(new_rules, spec, result, extra_specs)
-    if old_rules:
-        _run_old_semantic_rules(old_rules, spec, result, extra_specs)
-
-
-def _run_old_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Legacy dispatch for old-format rules (section/key based).
-
-    Kept for backward compatibility during migration. Will be removed after all rules migrate.
-    """
-    for rule in rules:
-        section = rule.get("section")
-        if section:
-            items = _get_nested(spec, section)
-            if not items:
-                continue
-        else:
-            items = []
-
-        rule_type = rule.get("type")
-
-        if rule_type == "non_empty":
-            key = rule.get("key")
-            if rule.get("nested_key"):
-                items = _extract_nested_items(items, rule["nested_key"])
-                if not key:
-                    key = rule.get("id_key", "id")
-
-            validate_non_empty(
-                items, key, rule.get("id_key", "id"), result,
-                **_make_rule_kwargs(rule)
-            )
-
-        elif rule_type == "unique":
-            key = rule.get("key", "id")
-            values = [item.get(key, "") for item in items if item.get(key)]
-            find_duplicates(values, result=result, **_make_rule_kwargs(rule))
-
-        elif rule_type == "exists":
-            key = rule.get("key")
-            if rule.get("nested_key"):
-                items = _extract_nested_items(items, rule["nested_key"])
-            valid = _resolve_valid_section(rule, spec, extra_specs)
-            if key is None and items and isinstance(items[0], dict):
-                continue
-            validate_exists(
-                items, key, valid, result,
-                **_make_rule_kwargs(rule, extra_keys=["ref_label"])
-            )
-
-        elif rule_type == "no_overlap":
-            validate_no_overlap(
-                items, rule["refs_key"], rule.get("id_key", "id"), result,
-                **_make_rule_kwargs(rule)
-            )
-
-        elif rule_type == "item_count":
-            validate_item_count(
-                items, rule["key"], rule["count"], rule.get("compare_mode", 1),
-                rule.get("id_key", "id"), result, **_make_rule_kwargs(rule)
-            )
-
-        elif rule_type == "patterns":
-            find_patterns(
-                items, text_key=rule.get("text_key"), patterns=rule.get("patterns", []),
-                result=result, id_key=rule.get("id_key", "id"),
-                **_make_rule_kwargs(rule, extra_keys=["nested_key", "max_count", "text_keys"])
-            )
-
-        elif rule_type == "coverage":
-            covered = _get_nested(spec, rule.get("covered_section", rule.get("section", "")))
-            if rule.get("valid_extra_spec") and not covered:
-                extra = extra_specs.get(rule["valid_extra_spec"])
-                if extra:
-                    covered = _get_nested(extra, rule["covered_section"])
-            source_items = _get_nested(spec, rule["source_section"])
-            validate_coverage(
-                covered, source_items, rule.get("covered_key", "id"), rule["refs_key"],
-                result, rule.get("covered_label", ""), rule.get("source_label", ""),
-                severity=rule.get("severity", "warning"),
-            )
-
-        elif rule_type == "orphans":
-            find_orphans(
-                items, rule.get("id_key", "id"), rule.get("deps_key", "dependencies"),
-                result, rule.get("target_label", ""), rule.get("warning", "isolated"),
-                rule.get("hint", ""), rule.get("severity", "warning"),
-            )
-
-
 def _validate_all_ids(spec: dict, result: LayerResult) -> None:
     """Validate all IDs in a spec against canonical patterns.
     
@@ -1773,7 +1382,7 @@ class BaseLinter:
     
     def _run_semantic_rules(self) -> None:
         """Execute declarative semantic rules."""
-        _run_semantic_rules(self.SEMANTIC_RULES, self.spec, self.result, self.extra_specs)
+        _run_new_semantic_rules(self.SEMANTIC_RULES, self.spec, self.result, self.extra_specs)
     
     def _run_misc_checks(self) -> None:
         """Run custom/spec-specific checks."""

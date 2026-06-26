@@ -28,7 +28,6 @@ from shared import (
     BaseLinter,
     LayerResult,
     find_duplicates,
-    find_patterns,
     print_human,
     print_json_output,
     validate_sequential,
