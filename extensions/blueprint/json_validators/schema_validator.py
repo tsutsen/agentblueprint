@@ -23,7 +23,7 @@ import re
 from pathlib import Path
 from typing import Any, Optional
 
-from shared import Issue, LayerResult
+from linters.shared import Issue, LayerResult
 
 
 # ── Constraint metadata ──────────────────────────────────────────────────────

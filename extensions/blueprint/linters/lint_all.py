@@ -666,7 +666,10 @@ def run_issues(linter_dir, paths, loaded, args, strict) -> LayerResult:
 
 def run_consistency(linter_dir, paths, strict, args=None) -> LayerResult:
     """Run Markdown/JSON consistency checks."""
+    # Check linter_dir first, then json_validators subdir
     linter_path = linter_dir / "lint_consistency.py"
+    if not linter_path.exists():
+        linter_path = linter_dir.parent / "json_validators" / "lint_consistency.py"
     if not linter_path.exists():
         return LayerResult(name="consistency", skipped=True,
                            skip_reason="Consistency linter not found.")
