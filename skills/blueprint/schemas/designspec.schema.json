@@ -308,8 +308,8 @@
             }
           }
         },
-        "x_idPattern": "persona",
-        "pattern": "^[A-Z][a-zA-Z0-9]*$"
+        "x_idPattern": "prs",
+        "pattern": "^PRS-\\d{3}-[A-Z][a-zA-Z0-9]*$"
       }
     },
     "userJourneys": {
