@@ -682,3 +682,357 @@ def print_json_output(result: LayerResult):
         "warnings": [{"category": w.category, "message": w.message, "hint": w.hint} for w in result.warnings]
     }
     print(json.dumps(out, indent=2))
+
+
+# ── Section-to-pattern mapping (single source of truth for ID validation) ─────
+SECTION_ID_PATTERNS = {
+    # GoalSpec
+    "functionalRequirements": "req",
+    "nonFunctionalRequirements": "nfr",
+    "userStories": "us",
+    "successCriteria": "sc",
+    "nonGoals": "ng",
+    # DesignSpec
+    "designGoals": "dg",
+    "personas": "prs",
+    "userJourneys": "uj",
+    "screenInventory": "scr",
+    "screenSpecs": "spc",
+    "interactionPatterns": "pat",
+    "uxAcceptanceCriteria": "uxac",
+    "visualDesignRequirements": "vdr",
+    # ArchSpec
+    "components": "comp",
+    "dataFlow": "flw",
+    "constraints": "con",
+    # DataSpec
+    "primitives": "prim",
+    "enums": "num",
+    "entities": "ent",
+    "relationships": "rel",
+    # ApiSpec
+    "functions": "fn",
+    # TestSpec
+    "tests": "tst",
+    "functionCoverage": "fc",
+    # TaskPlan
+    "epics": "ep",
+    "milestones": "milestone",
+    # Glossary
+    "terms": "gl",
+}
+
+
+def _get_nested(spec: dict, path: str) -> list:
+    """Get a nested list from a spec using dot-separated path.
+    
+    Args:
+        spec: The spec dict.
+        path: Dot-separated path (e.g., "overview.subsystems").
+    
+    Returns:
+        List of items at the path, or empty list if not found.
+    """
+    keys = path.split(".")
+    current = spec
+    for key in keys:
+        if isinstance(current, dict):
+            current = current.get(key, {})
+        else:
+            return []
+    if isinstance(current, list):
+        return current
+    return []
+
+
+def _resolve_valid_section(rule: dict, spec: dict, extra_specs: dict) -> set:
+    """Resolve a 'valid' value for exists/no_overlap rules.
+    
+    Args:
+        rule: The semantic rule dict.
+        spec: The spec being linted.
+        extra_specs: Extra specs passed to the linter (goal, data, api, etc.).
+    
+    Returns:
+        Set of valid values.
+    """
+    # Direct valid set (e.g., a set of IDs)
+    if "valid" in rule:
+        return set(rule["valid"])
+    
+    # Valid from another section in the same spec
+    if "valid_section" in rule:
+        items = _get_nested(spec, rule["valid_section"])
+        key = rule.get("valid_key", "id")
+        return {item.get(key, "") for item in items}
+    
+    # Valid from an extra spec (e.g., goal, data, api)
+    if "valid_extra_spec" in rule:
+        extra = extra_specs.get(rule["valid_extra_spec"])
+        if extra:
+            items = _get_nested(extra, rule.get("valid_section", ""))
+            key = rule.get("valid_key", "id")
+            return {item.get(key, "") for item in items}
+    
+    return set()
+
+
+def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_specs: dict) -> None:
+    """Execute declarative semantic rules against a spec.
+    
+    Args:
+        rules: List of rule dicts.
+        spec: The spec being linted.
+        result: LayerResult to append findings to.
+        extra_specs: Extra specs passed to the linter (goal, data, api, etc.).
+    """
+    for rule in rules:
+        # Some rules (like coverage) don't have a single "section" key
+        section = rule.get("section")
+        if section:
+            items = _get_nested(spec, section)
+            if not items:
+                continue
+        else:
+            items = []
+        
+        rule_type = rule.get("type")
+        
+        if rule_type == "non_empty":
+            key = rule.get("key")
+            if rule.get("nested_key"):
+                # Nested items (e.g., steps within flows)
+                nested_items = []
+                for item in items:
+                    for nested in item.get(rule["nested_key"], []):
+                        if isinstance(nested, dict):
+                            nested_items.append(nested)
+                        else:
+                            nested_items.append({"id": nested})
+                items = nested_items
+                key = rule.get("id_key", "id")  # Use id_key for nested items
+            
+            validate_non_empty(
+                items,
+                key,
+                rule.get("id_key", "id"),
+                result,
+                **{k: v for k, v in rule.items() if k in ("label", "category", "hint")}
+            )
+        
+        elif rule_type == "exists":
+            key = rule.get("key")
+            if rule.get("nested_key"):
+                # Nested items (e.g., steps within flows)
+                nested_items = []
+                for item in items:
+                    for nested in item.get(rule["nested_key"], []):
+                        if isinstance(nested, dict):
+                            nested_items.append(nested)
+                        else:
+                            nested_items.append({"id": nested})
+                items = nested_items
+            
+            valid = _resolve_valid_section(rule, spec, extra_specs)
+            validate_exists(
+                items,
+                key,
+                valid,
+                result,
+                **{k: v for k, v in rule.items() if k in ("label", "ref_label", "category", "hint")}
+            )
+        
+        elif rule_type == "no_overlap":
+            validate_no_overlap(
+                items,
+                rule["refs_key"],
+                rule.get("id_key", "id"),
+                result,
+                **{k: v for k, v in rule.items() if k in ("label", "category", "hint")}
+            )
+        
+        elif rule_type == "item_count":
+            validate_item_count(
+                items,
+                rule["key"],
+                rule["count"],
+                rule.get("compare_mode", 1),
+                rule.get("id_key", "id"),
+                result,
+                **{k: v for k, v in rule.items() if k in ("label", "category", "hint")}
+            )
+        
+        elif rule_type == "patterns":
+            find_patterns(
+                items,
+                text_key=rule.get("text_key"),
+                patterns=rule.get("patterns", []),
+                result=result,
+                id_key=rule.get("id_key", "id"),
+                label=rule.get("label", ""),
+                category=rule.get("category", "pattern_match"),
+                hint=rule.get("hint", ""),
+                match_fn=rule.get("match_fn"),
+                nested_key=rule.get("nested_key"),
+                max_count=rule.get("max_count"),
+            )
+        
+        elif rule_type == "coverage":
+            # Cross-section coverage: covered items must be referenced by source items
+            covered = _get_nested(spec, rule.get("covered_section", rule.get("section", "")))
+            source_items = _get_nested(spec, rule["source_section"])
+            validate_coverage(
+                covered,
+                source_items,
+                rule.get("covered_key", "id"),
+                rule["refs_key"],
+                result,
+                rule.get("covered_label", ""),
+                rule.get("source_label", ""),
+            )
+        
+        elif rule_type == "orphans":
+            find_orphans(
+                items,
+                rule.get("id_key", "id"),
+                rule.get("deps_key", "dependencies"),
+                result,
+                rule.get("label", ""),
+                rule.get("warning", "isolated"),
+                rule.get("hint", ""),
+            )
+
+
+def _validate_all_ids(spec: dict, result: LayerResult) -> None:
+    """Validate all IDs in a spec against canonical patterns.
+    
+    Automatically extracts IDs from all sections defined in SECTION_ID_PATTERNS.
+    """
+    items_by_type = {}
+    for section_path, pattern_type in SECTION_ID_PATTERNS.items():
+        items = _get_nested(spec, section_path)
+        if items:
+            items_by_type[pattern_type] = items
+    
+    if items_by_type:
+        validate_spec_ids(items_by_type, result)
+
+
+def _strict_mode(result: LayerResult) -> None:
+    """Convert all warnings to errors."""
+    for w in result.warnings:
+        w.severity = "error"
+        result.errors.append(w)
+    result.warnings.clear()
+
+
+# ── Base Linter ───────────────────────────────────────────────────────────────
+
+class BaseLinter:
+    """Base class for all spec linters.
+    
+    Subclasses define:
+    - SPEC_NAME: Name for error messages (e.g., "archspec")
+    - SEMANTIC_RULES: Declarative rules for semantic validation
+    - MISC_CHECKS: List of (name, func) tuples for custom checks
+    
+    The run() method orchestrates the full lint pipeline.
+    """
+    
+    SPEC_NAME: str = ""
+    SEMANTIC_RULES: list = []
+    MISC_CHECKS: list = []  # List of (name, func) tuples
+    CROSS_SPEC_DEPS: list = []  # e.g., ["goal", "data", "api"]
+    
+    def __init__(self, spec: dict, schema_path: Optional[Path], strict: bool):
+        self.spec = spec
+        self.schema_path = schema_path
+        self.strict = strict
+        self.result = LayerResult(name=self.SPEC_NAME)
+        self.extra_specs: dict = {}
+    
+    def run(self, **kwargs) -> LayerResult:
+        """Main entry point — runs all checks in order."""
+        self._store_extra_specs(kwargs)
+        self._validate_schema()
+        self._validate_ids()
+        self._validate_cross_spec_consistency()
+        self._run_semantic_rules()
+        self._run_misc_checks()
+        self._validate_glossary_refs()
+        self._strict_mode()
+        return self.result
+    
+    def _store_extra_specs(self, kwargs: dict) -> None:
+        """Store extra specs passed to run()."""
+        for dep in self.CROSS_SPEC_DEPS:
+            if dep in kwargs:
+                self.extra_specs[dep] = kwargs[dep]
+    
+    def _validate_schema(self) -> None:
+        """Validate spec against its JSON schema."""
+        if not self.schema_path:
+            return
+        schema = json.loads(self.schema_path.read_text())
+        from schema_validator import SchemaValidator
+        for issue in SchemaValidator(schema).validate(self.spec):
+            self.result.add(issue.severity, issue.category, issue.message, issue.hint)
+    
+    def _validate_ids(self) -> None:
+        """Validate all IDs in the spec."""
+        _validate_all_ids(self.spec, self.result)
+    
+    def _validate_cross_spec_consistency(self) -> None:
+        """Check project match and version pinning."""
+        goal = self.extra_specs.get("goal")
+        if goal:
+            validate_project_and_version(self.spec, self.SPEC_NAME, goal, self.result)
+    
+    def _run_semantic_rules(self) -> None:
+        """Execute declarative semantic rules."""
+        _run_semantic_rules(self.SEMANTIC_RULES, self.spec, self.result, self.extra_specs)
+    
+    def _run_misc_checks(self) -> None:
+        """Run custom/spec-specific checks."""
+        for name, func in self.MISC_CHECKS:
+            func(self.spec, self.result, self.extra_specs)
+    
+    def _validate_glossary_refs(self) -> None:
+        """Validate glossary refs for sections defined in GLOSSARY_CHECKS."""
+        glossary = self.extra_specs.get("glossary")
+        if not glossary or not hasattr(self, "GLOSSARY_CHECKS"):
+            return
+        validate_glossary_refs(glossary, self.result, self.GLOSSARY_CHECKS)
+    
+    def _strict_mode(self) -> None:
+        """Convert warnings to errors if strict mode."""
+        if self.strict:
+            _strict_mode(self.result)
+    
+    @classmethod
+    def main(cls, extra_args: list[str] = []):
+        """CLI entry point."""
+        parser = argparse.ArgumentParser(description=f"Lint a {cls.SPEC_NAME} JSON.")
+        parser.add_argument("input", help=f"Path to {cls.SPEC_NAME} JSON")
+        parser.add_argument("--schema", help=f"Path to {cls.SPEC_NAME}.schema.json")
+        parser.add_argument("--strict", action="store_true", help="Treat warnings as errors")
+        parser.add_argument("--json", action="store_true", help="Output as JSON")
+        
+        # Add extra CLI args
+        for arg in extra_args:
+            parser.add_argument(arg[0], **arg[1])
+        
+        args = parser.parse_args()
+        
+        spec = json.loads(Path(args.input).read_text())
+        schema_path = Path(args.schema) if args.schema else None
+        
+        linter = cls(spec, schema_path, args.strict)
+        result = linter.run()
+        
+        if args.json:
+            print_json_output(result)
+        else:
+            print_human(result, str(args.input))
+        
+        sys.exit(0 if result.clean else 1)
