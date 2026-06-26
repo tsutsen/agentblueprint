@@ -174,20 +174,9 @@ def check_project_and_version(spec: dict, spec_name: str, goal: dict,
             hint=f"Update goalSpecVersion after reviewing {spec_name} against the updated GoalSpec.")
 
 
-def validate_glossary_refs(refs: list, label: str, name: str, gl_ids: set,
+def _validate_glossary_ref(refs: list, label: str, name: str, gl_ids: set,
                            result: "LayerResult") -> bool:
-    """Validate that glossary refs exist in the glossary.
-    
-    Args:
-        refs: List of glossary ID refs.
-        label: Label for error messages (e.g. "Component", "Flow").
-        name: Name/ID of the item for error messages.
-        gl_ids: Set of valid glossary IDs.
-        result: LayerResult to append errors to.
-    
-    Returns:
-        True if refs were provided and valid, False if no refs.
-    """
+    """Validate a single item's glossary refs (private helper)."""
     if not refs:
         return False
     for ref in refs:
@@ -198,9 +187,9 @@ def validate_glossary_refs(refs: list, label: str, name: str, gl_ids: set,
     return True
 
 
-def check_glossary_refs_batch(spec: dict, glossary: dict, result: "LayerResult",
-                              checks: list[tuple[str, str, str]]) -> None:
-    """Check glossary refs for multiple fields in a spec.
+def validate_glossary_refs(spec: dict, glossary: dict, result: "LayerResult",
+                           checks: list[tuple[str, str, str]]) -> None:
+    """Validate glossary refs for multiple fields in a spec.
     
     Args:
         spec: The spec dict.
@@ -212,7 +201,7 @@ def check_glossary_refs_batch(spec: dict, glossary: dict, result: "LayerResult",
             item_key: Key in each item that holds the refs list.
     
     Example:
-        check_glossary_refs_batch(spec, glossary, result, [
+        validate_glossary_refs(spec, glossary, result, [
             ("components", "Component", "glossaryRefs"),
             ("dataFlow", "Flow", "glossaryRefs"),
         ])
@@ -231,7 +220,7 @@ def check_glossary_refs_batch(spec: dict, glossary: dict, result: "LayerResult",
                     f"{label} '{item_id}': no glossaryRefs.",
                     hint=f"Add glossaryRefs (GL-NNN) for domain concepts.")
             else:
-                validate_glossary_refs(refs, label, item_id, gl_ids, result)
+                _validate_glossary_ref(refs, label, item_id, gl_ids, result)
 
 
 # Backwards compatibility alias

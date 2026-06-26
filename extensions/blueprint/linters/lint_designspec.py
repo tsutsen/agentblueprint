@@ -405,7 +405,7 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     check_us_journey_coverage(goal, covered_us_ids, result)
     check_screens_reachable(spec, screen_ids, result)
     check_forbidden_content(spec, result)
-    check_glossary_refs_batch(spec, glossary, result, [
+    validate_glossary_refs(spec, glossary, result, [
             ("personas", "Persona", "glossaryRefs"),
             ("screenInventory", "Screen", "glossaryRefs"),
         ])

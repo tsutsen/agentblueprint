@@ -545,7 +545,7 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     check_inline_req_refs_in_responsibilities(spec, result)
     check_components_in_data_flows(spec, result)
     check_cross_spec_versions(spec, data_spec, api_spec, result)
-    check_glossary_refs_batch(spec, glossary, result, [
+    validate_glossary_refs(spec, glossary, result, [
             ("components", "Component", "glossaryRefs"),
             ("dataFlow", "Flow", "glossaryRefs"),
             ("constraints", "Constraint", "glossaryRefs"),
