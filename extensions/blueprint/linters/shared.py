@@ -218,7 +218,7 @@ def find_duplicates(items: list, id_key: str = None, result: "LayerResult" = Non
             nested_items = item.get(id_key, []) if id_key else []
             
             for nested_item in nested_items:
-                text = nested_item if isinstance(nested_item, str) else nested_item.get("text", "")
+                text = _extract_nested_texts([nested_item])[0]
                 norm = normalize(text) if normalize else text
                 
                 if norm in seen:
@@ -323,13 +323,7 @@ def validate_coverage(covered_items: list[dict], source_items: list[dict],
     # Collect all refs from source items
     covered_refs = set()
     for item in source_items:
-        ref_value = item.get(refs_key)
-        # Handle both string and list refs
-        if isinstance(ref_value, str):
-            ref_value = [ref_value]
-        elif ref_value is None:
-            ref_value = []
-        for ref in ref_value:
+        for ref in _normalize_ref(item.get(refs_key)):
             covered_refs.add(ref)
     
     # Find uncovered items
@@ -423,13 +417,7 @@ def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] |
         for item in items:
             iid = item.get("id", "?")
             for refs_key in refs:
-                ref_value = item.get(refs_key)
-                # Handle both string and list refs
-                if isinstance(ref_value, str):
-                    ref_value = [ref_value]
-                elif ref_value is None:
-                    ref_value = []
-                for ref in ref_value:
+                for ref in _normalize_ref(item.get(refs_key)):
                     if ref not in valid.get(refs_key, set()):
                         result.add(severity, category,
                             f"{label} '{iid}': {refs_key} ref '{ref}' not found.",
@@ -544,7 +532,7 @@ def find_patterns(items: list[dict], text_key: str = None, patterns: list[tuple[
             nested_items = item.get(nested_key, [])
             if max_count is not None and len(nested_items) > max_count:
                 continue
-            texts = [n if isinstance(n, str) else n.get("text", "") for n in nested_items]
+            texts = _extract_nested_texts(nested_items)
         elif text_keys:
             # Check multiple text fields
             texts = [item.get(k, "") for k in text_keys]
@@ -806,6 +794,70 @@ def _get_nested(spec: dict, path: str) -> list:
     return []
 
 
+def _normalize_ref(ref_value: str | list[str] | None) -> list[str]:
+    """Normalize a ref value to a list of strings.
+    
+    Handles string refs, list refs, and None.
+    
+    Args:
+        ref_value: A ref string, list of refs, or None.
+    
+    Returns:
+        List of ref strings (empty list if None).
+    
+    Examples:
+        >>> _normalize_ref("REQ-001")
+        ["REQ-001"]
+        >>> _normalize_ref(["REQ-001", "REQ-002"])
+        ["REQ-001", "REQ-002"]
+        >>> _normalize_ref(None)
+        []
+    """
+    if isinstance(ref_value, str):
+        return [ref_value]
+    return ref_value or []
+
+
+def _extract_nested_texts(items: list) -> list[str]:
+    """Extract text values from a list of strings or dicts.
+    
+    Args:
+        items: List of strings or dicts with 'text' key.
+    
+    Returns:
+        List of text strings.
+    
+    Examples:
+        >>> _extract_nested_texts(["a", {"text": "b"}])
+        ["a", "b"]
+    """
+    return [item if isinstance(item, str) else item.get("text", "") for item in items]
+
+
+def _extract_nested_items(items: list, nested_key: str) -> list:
+    """Extract nested items from a list of dicts, normalizing to dicts.
+    
+    Args:
+        items: List of dicts with nested lists.
+        nested_key: Key in each item that holds the nested list.
+    
+    Returns:
+        Flattened list of nested items (strings converted to {"id": ...}).
+    
+    Examples:
+        >>> _extract_nested_items([{"steps": ["a", {"id": "b"}]}], "steps")
+        [{"id": "a"}, {"id": "b"}]
+    """
+    nested_items = []
+    for item in items:
+        for nested in item.get(nested_key, []):
+            if isinstance(nested, dict):
+                nested_items.append(nested)
+            else:
+                nested_items.append({"id": nested})
+    return nested_items
+
+
 def _resolve_valid_section(rule: dict, spec: dict, extra_specs: dict) -> set:
     """Resolve a 'valid' value for exists/no_overlap rules.
     
@@ -932,14 +984,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
             key = rule.get("key")
             if rule.get("nested_key"):
                 # Nested items (e.g., steps within flows)
-                nested_items = []
-                for item in items:
-                    for nested in item.get(rule["nested_key"], []):
-                        if isinstance(nested, dict):
-                            nested_items.append(nested)
-                        else:
-                            nested_items.append({"id": nested})
-                items = nested_items
+                items = _extract_nested_items(items, rule["nested_key"])
                 key = rule.get("id_key", "id")  # Use id_key for nested items
             
             validate_non_empty(
@@ -965,14 +1010,7 @@ def _run_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_spec
             key = rule.get("key")
             if rule.get("nested_key"):
                 # Nested items (e.g., steps within flows)
-                nested_items = []
-                for item in items:
-                    for nested in item.get(rule["nested_key"], []):
-                        if isinstance(nested, dict):
-                            nested_items.append(nested)
-                        else:
-                            nested_items.append({"id": nested})
-                items = nested_items
+                items = _extract_nested_items(items, rule["nested_key"])
             
             valid = _resolve_valid_section(rule, spec, extra_specs)
             validate_exists(
