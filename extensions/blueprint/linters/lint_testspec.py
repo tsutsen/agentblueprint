@@ -29,7 +29,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_id_format
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids
 from schema_validator import SchemaValidator
 
 
@@ -94,7 +94,7 @@ def check_test_id_format(spec: dict, result: LayerResult):
     tests = spec.get("tests", [])
     
     # Validate TST-NNN-lowerCamelCase format
-    validate_ids(tests, "id", "tst", "test_id_format", result)
+    validate_spec_ids(spec, {"tests": "tst"}, result)
     
     for t in tests:
         tid = t.get("id", "")

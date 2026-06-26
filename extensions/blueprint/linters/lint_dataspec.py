@@ -26,7 +26,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional, Set
-from shared import Issue, LayerResult, print_human, print_json_output, validate_id_format
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids
 from schema_validator import SchemaValidator
 
 
@@ -53,8 +53,7 @@ def check_entities(spec: dict, enums: list, result: LayerResult) -> Set[str]:
     entity_names: Set[str] = set()
     entity_map: dict = {}
 
-    # Validate ENT-NNN-PascalCase format
-    validate_ids(entities, "id", "ent", "entity_id_format", result)
+
 
     for entity in entities:
         eid = entity.get("id", "")
@@ -134,8 +133,7 @@ def check_enums(spec: dict, result: LayerResult) -> Set[str]:
     enums = spec.get("enums", [])
     enum_names: Set[str] = set()
 
-    # Validate NUM-NNN-PascalCase format
-    validate_ids(enums, "id", "num", "enum_id_format", result)
+
 
     for enum in enums:
         eid = enum.get("id", "")
@@ -855,6 +853,14 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
         schema_issues = SchemaValidator(schema).validate(spec)
         for issue in schema_issues:
             result.add(issue.severity, issue.category, issue.message, issue.hint)
+
+    # ID format validation
+    validate_spec_ids(spec, {
+        "primitives": "prim",
+        "enums": "num",
+        "entities": "ent",
+        "relationships": "rel",
+    }, result)
 
     # Semantic checks
     check_primitives(spec, result)

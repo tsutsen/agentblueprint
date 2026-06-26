@@ -32,7 +32,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_id_format
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids
 from schema_validator import SchemaValidator
 
 
@@ -91,8 +91,7 @@ def check_design_goals(spec: dict, result: LayerResult):
     ids = [g["id"] for g in goals]
     check_duplicates(ids, "DG", result)
 
-    # Validate DG-NNN-PascalCase format
-    validate_ids(goals, "id", "dg", "dg_id_format", result)
+
 
     forbidden = ["database", "api", "endpoint", "framework", "library",
                  "class", "function", "sql", "http", "rest", "json"]
@@ -110,8 +109,7 @@ def check_personas(spec: dict, goal: Optional[dict], result: LayerResult) -> set
     ids = [p["id"] for p in personas]
     check_duplicates(ids, "persona", result)
 
-    # Validate PRS-NNN-PascalCase format
-    validate_ids(personas, "id", "prs", "prs_id_format", result)
+
 
     if goal:
         goal_actors = {fr["actor"] for fr in goal.get("functionalRequirements", [])}
@@ -193,8 +191,7 @@ def check_screen_inventory(spec: dict, ia_screen_refs: set[str],
     ids = [s["id"] for s in screens]
     check_duplicates(ids, "SCR", result)
 
-    # Validate SCR-NNN-PascalCase format
-    validate_ids(screens, "id", "scr", "scr_id_format", result)
+
 
     screen_ids = set(ids)
 
@@ -321,8 +318,7 @@ def check_visual_design_requirements(spec: dict, result: LayerResult):
     ids = [v["id"] for v in vdrs]
     check_duplicates(ids, "VDR", result)
 
-    # Validate VDR-NNN format
-    validate_ids(vdrs, "id", "vdr", "vdr_id_format", result)
+
 
 
 def check_us_journey_coverage(goal: Optional[dict], covered_us_ids: set[str], result: LayerResult):
@@ -462,6 +458,19 @@ def run_lint(spec: dict, schema_path: Optional[Path],
         schema_issues = SchemaValidator(schema).validate(spec)
         for issue in schema_issues:
             result.add(issue.severity, issue.category, issue.message, issue.hint)
+
+    # ID format validation
+    validate_spec_ids(spec, {
+        "designGoals": "dg",
+        "personas": "prs",
+        "userJourneys": "uj",
+        "screenInventory": "scr",
+        "screenSpecs": "spc",
+        "interactionPatterns": "pat",
+        "uxAcceptanceCriteria": "uxac",
+        "designTokens": "dt",
+        "visualDesignRequirements": "vdr",
+    }, result)
 
     # 
     # Cross-spec version checks

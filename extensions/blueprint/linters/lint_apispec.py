@@ -24,7 +24,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional, Set, Dict, Any
-from shared import Issue, LayerResult, print_human, print_json_output, validate_id_format
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids
 from schema_validator import SchemaValidator
 
 
@@ -53,7 +53,7 @@ def check_functions(spec: dict, result: LayerResult) -> Set[str]:
     fn_ids: Set[str] = set()
 
     # Validate FN-NNN-lowerCamelCase format
-    validate_ids(functions, "id", "fn", "fn_id_format", result)
+    validate_spec_ids(spec, {"functions": "fn"}, result)
 
     for fn in functions:
         fid = fn["id"]

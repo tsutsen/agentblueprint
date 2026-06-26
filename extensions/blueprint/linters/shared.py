@@ -91,6 +91,28 @@ def validate_ids(items: list[dict], id_key: str, id_type: str,
                 hint=f"Use format {ID_PATTERNS[id_type]['hint'].replace('Format: ', '').lower()} (e.g. '{ID_PATTERNS[id_type]['example']}").")
 
 
+def validate_spec_ids(spec: dict, id_map: dict[str, str],
+                      result: "LayerResult") -> None:
+    """Validate all IDs in a spec at once.
+    
+    Args:
+        spec: The spec dict to validate.
+        id_map: Mapping of field_name → id_type (e.g. {"components": "comp", "flows": "flw"}).
+        result: LayerResult to append errors to.
+    
+    Example:
+        validate_spec_ids(spec, {
+            "components": "comp",
+            "dataFlow": "flw",
+            "constraints": "con",
+        }, result)
+    """
+    for field_name, id_type in id_map.items():
+        items = spec.get(field_name, [])
+        if items:
+            validate_ids(items, "id", id_type, f"{field_name}_id_format", result)
+
+
 # Backwards compatibility alias
 ID_FORMATS = ID_PATTERNS
 

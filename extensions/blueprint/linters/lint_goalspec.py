@@ -24,7 +24,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_ids
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids
 from schema_validator import SchemaValidator
 
 
@@ -267,7 +267,6 @@ def check_non_goals(spec: dict, result: LayerResult):
 
     check_duplicates(ids, "NG", result)
     check_sequential(ids, "NG", result)
-    validate_ids(non_goals, "id", "ng", "ng_id_format", result)
 
     vague_smells = ["everything", "advanced", "features", "stuff",
                     "things", "all", "etc", "misc"]
@@ -378,6 +377,15 @@ def run_lint(spec: dict, schema_path: Optional[Path], strict: bool,
         schema_issues = SchemaValidator(schema).validate(spec)
         for issue in schema_issues:
             result.add(issue.severity, issue.category, issue.message, issue.hint)
+
+    # ID format validation
+    validate_spec_ids(spec, {
+        "functionalRequirements": "req",
+        "nonFunctionalRequirements": "nfr",
+        "userStories": "us",
+        "successCriteria": "sc",
+        "nonGoals": "ng",
+    }, result)
 
     # Semantic checks
     check_objective(spec, result)

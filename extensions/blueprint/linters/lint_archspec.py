@@ -27,7 +27,7 @@ import argparse
 import re
 from pathlib import Path
 from typing import Optional
-from shared import Issue, LayerResult, print_human, print_json_output, validate_id_format
+from shared import Issue, LayerResult, print_human, print_json_output, validate_spec_ids
 from schema_validator import SchemaValidator
 
 
@@ -92,8 +92,7 @@ def check_components(spec: dict, result: LayerResult) -> set[str]:
     ids = [c["id"] for c in components]
     check_duplicates(ids, "component", result)
     
-    # Validate COMP-NNN-PascalCase format
-    validate_ids(components, "id", "comp", "comp_id_format", result)
+
     
     component_ids = set(ids)
 
@@ -182,8 +181,7 @@ def check_data_flows(spec: dict, component_ids: set[str], result: LayerResult):
     ids = [f["id"] for f in flows]
     check_duplicates(ids, "FLW", result)
 
-    # Validate FLW-NNN-PascalCase format
-    validate_ids(flows, "id", "flw", "flw_id_format", result)
+
 
     for flow in flows:
         fid = flow["id"]
@@ -208,8 +206,7 @@ def check_constraints(spec: dict, result: LayerResult):
     ids = [c["id"] for c in constraints]
     check_duplicates(ids, "CON", result)
 
-    # Validate CON-NNN-PascalCase format
-    validate_ids(constraints, "id", "con", "con_id_format", result)
+
 
     # Implementation smells in constraints
     impl_smells = ["postgres", "mysql", "redis", "sqlite", "mongodb", "fastapi",
@@ -574,6 +571,13 @@ def run_lint(spec: dict, schema_path: Optional[Path],
         schema_issues = SchemaValidator(schema).validate(spec)
         for issue in schema_issues:
             result.add(issue.severity, issue.category, issue.message, issue.hint)
+
+    # ID format validation
+    validate_spec_ids(spec, {
+        "components": "comp",
+        "dataFlow": "flw",
+        "constraints": "con",
+    }, result)
 
     # 
     # GoalSpec cross-checks
