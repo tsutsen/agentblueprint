@@ -102,14 +102,12 @@ def check_components(spec: dict, result: LayerResult) -> set[str]:
             category="dependency_ref"
         )
 
-        # Warn: component with no reqRefs at non-draft status
-        if not comp.get("reqRefs") and spec.get("status") in ("review", "confirmed"):
-            result.add(
-                "warning",
-                "component_no_reqs",
-                f"Component '{cid}' has no reqRefs.",
-                hint="Link each component to the requirements it helps satisfy.",
-            )
+        # Warn: component with no reqRefs
+        validate_non_empty(
+            [comp], "reqRefs", "id", result,
+            label="Component", category="component_no_reqs",
+            hint="Link each component to the requirements it helps satisfy."
+        )
 
     # Circular dependency check
     cycle = detect_cycle(dep_graph)
