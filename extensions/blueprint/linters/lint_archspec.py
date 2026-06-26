@@ -37,7 +37,7 @@ from shared import (
     print_human,
     print_json_output,
     validate_coverage,
-    validate_exists,
+    validate_refs,
     validate_no_overlap,
     validate_non_empty,
     validate_project_and_version,

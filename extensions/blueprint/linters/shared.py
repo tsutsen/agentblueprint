@@ -267,46 +267,37 @@ def validate_no_overlap(items: list[dict], refs_key: str, id_key: str, result: "
                 hint=hint or f"Each {label.lower() or 'item'} should belong to exactly one {label.lower() or 'group'}.")
 
 
-def validate_exists(items: list[dict], key: str, valid: set[str], result: "LayerResult",
-                    label: str = "", ref_label: str = "", category: str = "missing", hint: str = "") -> None:
-    """Warn if items reference values not in the valid set.
+def validate_refs(items: list[dict], refs: str | list[str], valid: set[str] | dict[str, set[str]],
+                  result: "LayerResult", label: str = "", ref_label: str = "",
+                  category: str = "missing", hint: str = "") -> None:
+    """Validate that items reference values in the valid set(s).
     
     Args:
         items: List of items to check.
-        key: Key in each item that holds the reference value (e.g., "dataRef").
-        valid: Set of valid reference values.
+        refs: Single ref key (e.g., "dataRef") or list of ref keys (e.g., ["reqRefs", "nfrRefs"]).
+        valid: Single valid set (for single ref key) or dict mapping ref keys to valid sets.
         result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Flow step").
+        label: Label for error messages (e.g., "Component").
         ref_label: Label for the reference type (e.g., "DataSpec entity").
         category: Category for the warning (e.g., "missing").
         hint: Custom hint message (default: generic).
-    """
-    for item in items:
-        ref = item.get(key, "")
-        if ref and ref not in valid:
-            result.add("warning", category,
-                f"{label} references '{ref}' which is not a defined {ref_label}.",
-                hint=hint or f"Add '{ref}' to {ref_label} or correct the reference.")
-
-
-def validate_refs(items: list[dict], refs_keys: list[str], valid: dict[str, set[str]],
-                  result: "LayerResult", label: str = "", ref_label: str = "",
-                  category: str = "missing", hint: str = "") -> None:
-    """Validate multiple ref keys in items against valid sets.
     
-    Args:
-        items: List of items to check.
-        refs_keys: List of keys in each item that hold refs (e.g., ["reqRefs", "nfrRefs"]).
-        valid: Dict mapping ref keys to valid sets (e.g., {"reqRefs": req_ids, "nfrRefs": nfr_ids}).
-        result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Component").
-        ref_label: Label for the reference type (e.g., "GoalSpec FR").
-        category: Category for the warning (e.g., "req_ref_missing").
-        hint: Custom hint message (default: generic).
+    Examples:
+        # Single ref key
+        validate_refs(steps, "dataRef", entity_names, result, "Flow step", "DataSpec entity")
+        
+        # Multiple ref keys
+        validate_refs(components, ["reqRefs", "nfrRefs"], {"reqRefs": req_ids, "nfrRefs": nfr_ids}, result, "Component")
     """
+    # Normalize to list of refs and dict of valid sets
+    if isinstance(refs, str):
+        refs = [refs]
+        if isinstance(valid, set):
+            valid = {refs[0]: valid}
+    
     for item in items:
         iid = item.get("id", "?")
-        for refs_key in refs_keys:
+        for refs_key in refs:
             for ref in item.get(refs_key, []):
                 if ref not in valid.get(refs_key, set()):
                     result.add("error", category,
