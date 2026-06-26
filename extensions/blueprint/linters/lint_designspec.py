@@ -199,7 +199,7 @@ def check_screen_inventory(spec: dict, ia_screen_refs: set[str],
         sid = s.get("id", "")
         valid, msg = validate_id_format(sid, "scr")
         if not valid:
-            result.add("error", "scr_id_format", msg, hint="Use format SCR-NNN-lowerCamelCase (e.g. 'SCR-001-landingPage').")
+            result.add("error", "scr_id_format", msg, hint="Use format SCR-NNN-PascalCase (e.g. 'SCR-001-LandingPage').")
 
     screen_ids = set(ids)
 
