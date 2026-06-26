@@ -125,35 +125,26 @@ def _check_placeholder_values(spec: dict, result: LayerResult, extra_specs: dict
 
 
 def _check_api_refs(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
-    """Resolve fnRefs and errorCodes against ApiSpec."""
+    """Validate errorCode against ApiSpec function errors."""
     api = extra_specs.get("api")
     if not api:
         return
 
     fn_map = {fn["id"]: fn for fn in api.get("functions", [])}
-    fn_ids = set(fn_map.keys())
 
     for t in spec.get("tests", []):
         tid = t.get("id", "?")
         fn_ref = t.get("fnRef")
-
-        if not fn_ref:
-            continue
-
-        if fn_ref not in fn_ids:
-            result.add("error", "fnref_missing",
-                f"Test '{tid}': fnRef '{fn_ref}' not found in ApiSpec.",
-                hint=f"Add function '{fn_ref}' to ApiSpec or correct the reference.")
-            continue
-
-        # Validate errorCode against function's documented errors
         error_code = t.get("errorCode")
-        if error_code:
-            fn_error_codes = {e["code"] for e in fn_map[fn_ref].get("errors", [])}
-            if error_code not in fn_error_codes:
-                result.add("error", "error_code_undocumented",
-                    f"Test '{tid}': errorCode '{error_code}' is not documented on '{fn_ref}' in ApiSpec.",
-                    hint=f"Add error code '{error_code}' to '{fn_ref}' in ApiSpec or correct the test.")
+
+        if not fn_ref or not error_code:
+            continue
+
+        fn_error_codes = {e["code"] for e in fn_map.get(fn_ref, {}).get("errors", [])}
+        if error_code not in fn_error_codes:
+            result.add("error", "error_code_undocumented",
+                f"Test '{tid}': errorCode '{error_code}' is not documented on '{fn_ref}' in ApiSpec.",
+                hint=f"Add error code '{error_code}' to '{fn_ref}' in ApiSpec or correct the test.")
 
 
 def _check_api_coverage(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
@@ -332,6 +323,19 @@ SEMANTIC_RULES = [
         "label": "Test",
         "category": "duplicate_id",
         "hint": "Each test must have a unique ID.",
+    },
+    # fnRefs must exist in ApiSpec
+    {
+        "type": "exists",
+        "section": "tests",
+        "key": "fnRef",
+        "valid_extra_spec": "api",
+        "valid_section": "functions",
+        "valid_key": "id",
+        "label": "Test",
+        "ref_label": "ApiSpec function",
+        "category": "fnref_missing",
+        "hint": "Add the function to ApiSpec or correct the reference.",
     },
 ]
 
