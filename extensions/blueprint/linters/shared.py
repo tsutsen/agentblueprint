@@ -59,8 +59,8 @@ ID_PATTERNS = {
 }
 
 
-def validate_id_format(id_value: str, id_type: str) -> tuple[bool, str]:
-    """Validate an ID against its canonical pattern.
+def _validate_id(id_value: str, id_type: str) -> tuple[bool, str]:
+    """Validate a single ID against its canonical pattern.
     
     Returns (is_valid, error_message).
     """
@@ -72,20 +72,12 @@ def validate_id_format(id_value: str, id_type: str) -> tuple[bool, str]:
     return False, f"ID '{id_value}' does not follow {ID_PATTERNS[id_type]['hint'].lower()}"
 
 
-def validate_ids(items: list[dict], id_key: str, id_type: str,
-                 category: str, result: "LayerResult") -> None:
-    """Validate IDs for a list of items.
-    
-    Args:
-        items: List of dicts, each with an 'id' field.
-        id_key: Key in each item that holds the ID (default: 'id').
-        id_type: Key in ID_PATTERNS to validate against.
-        category: Category prefix for lint errors (e.g. 'comp_id_format').
-        result: LayerResult to append errors to.
-    """
+def _validate_ids(items: list[dict], id_key: str, id_type: str,
+                  category: str, result: "LayerResult") -> None:
+    """Validate IDs for a list of items (private - use validate_spec_ids)."""
     for item in items:
         iid = item.get(id_key, "")
-        valid, msg = validate_id_format(iid, id_type)
+        valid, msg = _validate_id(iid, id_type)
         if not valid:
             pattern = ID_PATTERNS[id_type]
             hint_text = pattern["hint"].replace("Format: ", "").lower()
