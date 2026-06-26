@@ -296,6 +296,30 @@
             "items": {
               "$ref": "#/definitions/compId"
             }
+          },
+          "reqRefs": {
+            "type": "array",
+            "description": "REQ-IDs from GoalSpec that this entity supports. Used for entity\u2192requirement traceability.",
+            "items": {
+              "type": "string",
+              "pattern": "^REQ-\\d{3}$"
+            }
+          },
+          "nfrRefs": {
+            "type": "array",
+            "description": "NFR-IDs from GoalSpec that this entity helps satisfy (e.g. performance, data quality).",
+            "items": {
+              "type": "string",
+              "pattern": "^NFR-\\d{3}$"
+            }
+          },
+          "constraintRefs": {
+            "type": "array",
+            "description": "CON-IDs from ArchitectureSpec constraints that affect this entity (e.g. data retention, partitioning).",
+            "items": {
+              "type": "string",
+              "pattern": "^CON-\\d{3}$"
+            }
           }
         }
       }

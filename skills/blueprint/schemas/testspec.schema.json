@@ -324,6 +324,30 @@
               "implemented",
               "deprecated"
             ]
+          },
+          "entityRefs": {
+            "type": "array",
+            "description": "ENT-IDs from DataSpec entities used in this test. Used for data type validation.",
+            "items": {
+              "type": "string",
+              "pattern": "^ENT-\\d{3}$"
+            }
+          },
+          "fieldRefs": {
+            "type": "array",
+            "description": "Field IDs from DataSpec entities referenced in test inputs/outputs.",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*$"
+            }
+          },
+          "constraintRefs": {
+            "type": "array",
+            "description": "CON-IDs from ArchitectureSpec constraints tested by this test case (e.g. performance, reliability).",
+            "items": {
+              "type": "string",
+              "pattern": "^CON-\\d{3}$"
+            }
           }
         }
       }

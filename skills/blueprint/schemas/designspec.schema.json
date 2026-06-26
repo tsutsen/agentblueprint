@@ -974,6 +974,13 @@
           "value"
         ]
       }
+    },
+    "archRefs": {
+      "type": "array",
+      "description": "COMP-IDs and CON-IDs from ArchitectureSpec that constrain or inform this design.",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "outputFiles": [

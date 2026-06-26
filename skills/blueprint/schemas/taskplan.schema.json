@@ -239,6 +239,20 @@
             "type": "string",
             "description": "Path to the epic markdown file relative to project root. Must match tasks/epics/EP-<NNN>/EP-<NNN>-<slug>.md.",
             "pattern": "^tasks/epics/EP-\\d{3}/.*\\.md$"
+          },
+          "designRefs": {
+            "type": "array",
+            "description": "DG-IDs and SCR-IDs from DesignSpec design goals and screens this epic implements.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "archRefs": {
+            "type": "array",
+            "description": "COMP-IDs and CON-IDs from ArchitectureSpec components and constraints this epic implements.",
+            "items": {
+              "type": "string"
+            }
           }
         }
       }
