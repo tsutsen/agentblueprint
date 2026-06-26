@@ -78,22 +78,12 @@ def check_components(spec: dict, result: LayerResult) -> set[str]:
         )
 
     # Overlapping responsibilities
-    all_responsibilities: dict[
-        str, str
-    ] = {}  # responsibility → first component that claimed it
-    for comp in components:
-        for resp in comp.get("responsibilities", []):
-            resp_norm = resp.strip().lower().rstrip(".")
-            if resp_norm in all_responsibilities:
-                result.add(
-                    "warning",
-                    "overlapping_responsibility",
-                    f"Component '{comp['id']}' responsibility '{resp}' "
-                    f"is identical or near-identical to one claimed by '{all_responsibilities[resp_norm]}'.",
-                    hint="Each responsibility must be owned by exactly one component.",
-                )
-            else:
-                all_responsibilities[resp_norm] = comp["id"]
+    find_duplicates_with_norm(
+        components, "responsibilities", "id", result,
+        label="Component", category="overlapping_responsibility",
+        hint="Each responsibility must be owned by exactly one component.",
+        normalize=lambda r: r.strip().lower().rstrip(".")
+    )
 
     return component_ids
 

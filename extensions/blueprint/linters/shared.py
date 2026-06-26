@@ -180,6 +180,42 @@ def find_orphans(items: list[dict], id_key: str, deps_key: str, result: "LayerRe
                 hint=hint or f"An isolated {label.lower() or 'item'} may indicate a design issue.")
 
 
+def find_duplicates_with_norm(items: list[dict], nested_key: str, id_key: str,
+                              result: "LayerResult", label: str = "", category: str = "duplicate",
+                              hint: str = "", normalize: callable = None) -> None:
+    """Warn if nested items have duplicate values (with optional normalization).
+    
+    Args:
+        items: List of parent items to check.
+        nested_key: Key in each item that holds the list of nested items.
+        id_key: Key in each item that holds the ID.
+        result: LayerResult to append warnings to.
+        label: Label for error messages (e.g., "Component").
+        category: Category for the warning.
+        hint: Custom hint message.
+        normalize: Optional function to normalize values (e.g., str.lower). Default: identity.
+    """
+    seen: dict[str, str] = {}  # normalized value → first item ID
+    
+    for item in items:
+        iid = item.get(id_key, "?")
+        nested_items = item.get(nested_key, [])
+        
+        for nested_item in nested_items:
+            text = nested_item if isinstance(nested_item, str) else nested_item.get("text", "")
+            norm = normalize(text) if normalize else text
+            
+            if norm in seen:
+                result.add(
+                    "warning", category,
+                    f"{label} '{iid}' has a duplicate {nested_key}: '{text}' "
+                    f"is identical to one claimed by '{seen[norm]}'.",
+                    hint=hint or f"Each {nested_key} must be owned by exactly one {label.lower()}.",
+                )
+            else:
+                seen[norm] = iid
+
+
 def find_cycles(items: list[dict], id_key: str, deps_key: str, valid: set[str],
                 result: "LayerResult", label: str = "", category: str = "circular_dependency",
                 hint: str = "") -> bool:
