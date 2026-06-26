@@ -302,9 +302,9 @@ SEMANTIC_RULES = [
 # ── Glossary Checks ───────────────────────────────────────────────────────────
 
 GLOSSARY_CHECKS = [
-    ("Component", "glossaryRefs", lambda s: s.get("components", [])),
-    ("Flow", "glossaryRefs", lambda s: s.get("dataFlow", [])),
-    ("Constraint", "glossaryRefs", lambda s: s.get("constraints", [])),
+    ("Component", "glossaryRefs", "components"),
+    ("Flow", "glossaryRefs", "dataFlow"),
+    ("Constraint", "glossaryRefs", "constraints"),
 ]
 
 

@@ -608,6 +608,19 @@ def validate_glossary_refs(glossary: dict, result: "LayerResult",
                 _validate_glossary_ref(refs, label, item_id, gl_ids, result)
 
 
+def _validate_glossary_ref(refs: list, label: str, name: str, gl_ids: set,
+                           result: "LayerResult") -> bool:
+    """Validate a single item's glossary refs (private helper)."""
+    if not refs:
+        return False
+    for ref in refs:
+        if gl_ids and ref not in gl_ids:
+            result.add("error", "glossary_ref_missing",
+                f"{label} '{name}': glossaryRef '{ref}' not found in Glossary.",
+                hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
+    return True
+
+
 # ── Canonical types ───────────────────────────────────────────────────────────
 
 @dataclass
@@ -1005,11 +1018,22 @@ class BaseLinter:
             func(self.spec, self.result, self.extra_specs)
     
     def _validate_glossary_refs(self) -> None:
-        """Validate glossary refs for sections defined in GLOSSARY_CHECKS."""
+        """Validate glossary refs for sections defined in GLOSSARY_CHECKS.
+        
+        GLOSSARY_CHECKS should be a list of (label, refs_key, section_path) tuples.
+        Example: [("Component", "glossaryRefs", "components"), ...]
+        """
         glossary = self.extra_specs.get("glossary")
         if not glossary or not hasattr(self, "GLOSSARY_CHECKS"):
             return
-        validate_glossary_refs(glossary, self.result, self.GLOSSARY_CHECKS)
+        
+        # Convert section paths to actual items
+        checks = []
+        for label, refs_key, section_path in self.GLOSSARY_CHECKS:
+            items = _get_nested(self.spec, section_path)
+            checks.append((label, refs_key, items))
+        
+        validate_glossary_refs(glossary, self.result, checks)
     
     def _strict_mode(self) -> None:
         """Convert warnings to errors if strict mode."""
