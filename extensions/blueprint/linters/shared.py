@@ -87,8 +87,12 @@ def validate_ids(items: list[dict], id_key: str, id_type: str,
         iid = item.get(id_key, "")
         valid, msg = validate_id_format(iid, id_type)
         if not valid:
+            pattern = ID_PATTERNS[id_type]
+            hint_text = pattern["hint"].replace("Format: ", "").lower()
+            example = pattern["example"]
             result.add("error", category, msg,
-                hint=f"Use format {ID_PATTERNS[id_type]['hint'].replace('Format: ', '').lower()} (e.g. '{ID_PATTERNS[id_type]['example']}").")
+                hint=f"Use format {hint_text} (e.g. '{example}').")
+
 
 
 def validate_spec_ids(spec: dict, id_map: dict[str, str],

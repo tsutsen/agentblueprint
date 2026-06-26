@@ -69,7 +69,7 @@ def main():
     goal = json.loads(Path(args.goal).read_text()) if args.goal else None
 
     result = run_lint(spec, schema_path, goal, args.strict)
-    print_human(result, args.input, args.goal)
+    print_human(result, args.input)
     sys.exit(0 if result.clean else 1)
 
 
