@@ -22,7 +22,7 @@ from typing import Any, Literal, TypedDict, Union
 
 class _RuleBase(TypedDict, total=False):
     """Optional fields shared by all rule types."""
-    label: str
+    target_label: str
     category: str
     severity: str
     hint: str
@@ -96,7 +96,7 @@ class CoversAllRule(TypedDict, total=False):
     category: str
     hint: str
     covered_label: str
-    source_label: str
+    target_label: str
 
 
 class NotOrphanRule(TypedDict, total=False):
@@ -108,7 +108,7 @@ class NotOrphanRule(TypedDict, total=False):
     target: str
     severity: str
     category: str
-    label: str
+    target_label: str
     hint: str
 
 
@@ -250,7 +250,7 @@ def _extract_num(id_str: str) -> int:
 
 def validate_sequential(ids: list[str], label: str, result: "LayerResult") -> None:
     """Warn when IDs skip numbers, e.g. REQ-001, REQ-003 (missing REQ-002).
-    
+
     Args:
         ids: List of ID strings.
         label: Label for the warning message (e.g. "REQ", "US").
@@ -332,8 +332,8 @@ def find_duplicates(items: list, id_key: str = None, result: "LayerResult" = Non
             if norm in seen:
                 result.add(
                     "warning", category,
-                    f"Duplicate {label} ID '{id_str}' (also '{seen[norm]}').",
-                    hint=hint or f"Each {label} must have a unique ID."
+                    f"Duplicate {target_label} ID '{id_str}' (also '{seen[norm]}').",
+                    hint=hint or f"Each {target_label} must have a unique ID."
                 )
             else:
                 seen[norm] = id_str
@@ -350,9 +350,9 @@ def find_duplicates(items: list, id_key: str = None, result: "LayerResult" = Non
                 if norm in seen:
                     result.add(
                         "warning", category,
-                        f"{label} '{iid}' has a duplicate {id_key}: '{text}' "
+                        f"{target_label} '{iid}' has a duplicate {id_key}: '{text}' "
                         f"is identical to one claimed by '{seen[norm]}'.",
-                        hint=hint or f"Each {id_key} must be owned by exactly one {label.lower()}.",
+                        hint=hint or f"Each {id_key} must be owned by exactly one {target_label.lower()}.",
                     )
                 else:
                     seen[norm] = iid
@@ -388,7 +388,7 @@ def find_cycles(items: list[dict], id_key: str, deps_key: str, valid: set[str],
             if dep not in valid:
                 result.add(
                     "error", "dependency_ref",
-                    f"{label} '{iid}': dependency '{dep}' is not defined.",
+                    f"{target_label} '{iid}': dependency '{dep}' is not defined.",
                     hint=f"Add an item with id='{dep}' or correct the dependency reference."
                 )
     
@@ -417,7 +417,7 @@ def find_cycles(items: list[dict], id_key: str, deps_key: str, valid: set[str],
                 cycle_str = " → ".join(cycle + [cycle[0]])
                 result.add(
                     "error", category,
-                    f"Circular {label.lower()} dependency detected: {cycle_str}.",
+                    f"Circular {target_label.lower()} dependency detected: {cycle_str}.",
                     hint=hint or "Refactor to break the cycle — introduce an abstraction or invert a dependency."
                 )
                 return True
@@ -531,7 +531,7 @@ def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] |
         for item in items:
             if item not in valid_set:
                 result.add(severity, category,
-                    f"{label}: '{item}' not found in {ref_label or 'valid set'}.",
+                    f"{target_label}: '{item}' not found in {ref_label or 'valid set'}.",
                     hint=f"Add '{item}' to {ref_label or 'the target'} or correct the reference.")
     elif isinstance(first, dict):
         # List of dicts with ref keys
@@ -544,7 +544,7 @@ def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] |
                 for ref in _normalize_ref(item.get(refs_key)):
                     if ref not in valid.get(refs_key, set()):
                         result.add(severity, category,
-                            f"{label} '{iid}': {refs_key} ref '{ref}' not found.",
+                            f"{target_label} '{iid}': {refs_key} ref '{ref}' not found.",
                             hint=f"Add '{ref}' to the target spec or correct the reference.")
 
 
@@ -576,16 +576,16 @@ def validate_item_count(items: list[dict], key: str, count: int, compare_mode: i
         
         if compare_mode == 1 and n > count:
             result.add(severity, category,
-                f"{label} '{iid}' has {n} {key} — consider splitting.",
-                hint=hint or f"A {label.lower()} with >{count} {key} may be too complex. Consider splitting.")
+                f"{target_label} '{iid}' has {n} {key} — consider splitting.",
+                hint=hint or f"A {target_label.lower()} with >{count} {key} may be too complex. Consider splitting.")
         elif compare_mode == 0 and n == count:
             result.add(severity, category,
-                f"{label} '{iid}' has exactly {n} {key}.",
-                hint=hint or f"A {label.lower()} should not have exactly {count} {key}.")
+                f"{target_label} '{iid}' has exactly {n} {key}.",
+                hint=hint or f"A {target_label.lower()} should not have exactly {count} {key}.")
         elif compare_mode == -1 and n < count:
             result.add(severity, category,
-                f"{label} '{iid}' has {n} {key} (minimum {count}).",
-                hint=hint or f"A {label.lower()} should have at least {count} {key}.")
+                f"{target_label} '{iid}' has {n} {key} (minimum {count}).",
+                hint=hint or f"A {target_label.lower()} should have at least {count} {key}.")
 
 
 def validate_non_empty(items: list[dict], key: str, id_key: str, result: "LayerResult",
@@ -729,7 +729,7 @@ def _validate_glossary_ref(refs: list, label: str, name: str, gl_ids: set,
     for ref in refs:
         if gl_ids and ref not in gl_ids:
             result.add("error", "glossary_ref_missing",
-                f"{label} '{name}': glossaryRef '{ref}' not found in Glossary.",
+                f"{target_label} '{name}': glossaryRef '{ref}' not found in Glossary.",
                 hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
     return True
 
@@ -762,7 +762,7 @@ def validate_glossary_refs(glossary: dict, result: "LayerResult",
             refs = item.get(refs_key, [])
             if not refs:
                 result.add("warning", "glossary_ref_missing",
-                    f"{label} '{item_id}': no glossaryRefs.",
+                    f"{target_label} '{item_id}': no glossaryRefs.",
                     hint=f"Add glossaryRefs (GL-NNN) for domain concepts.")
             else:
                 _validate_glossary_ref(refs, label, item_id, gl_ids, result)
@@ -776,7 +776,7 @@ def _validate_glossary_ref(refs: list, label: str, name: str, gl_ids: set,
     for ref in refs:
         if gl_ids and ref not in gl_ids:
             result.add("error", "glossary_ref_missing",
-                f"{label} '{name}': glossaryRef '{ref}' not found in Glossary.",
+                f"{target_label} '{name}': glossaryRef '{ref}' not found in Glossary.",
                 hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
     return True
 
@@ -1203,20 +1203,20 @@ def handle_non_empty(resolved: Resolved, rule: dict, result: LayerResult) -> Non
     """Check that resolved values are not empty/missing."""
     severity = rule.get("severity", "warning")
     category = rule.get("category", "empty")
-    label = rule.get("label", resolved.parent_label)
+    target_label = rule.get("target_label", resolved.parent_label)
     hint = rule.get("hint", "")
     for val, pid in zip(resolved.values, resolved.parent_ids):
         if val is None:
             result.add(severity, category,
-                f"{label} '{pid}': field is missing.",
+                f"{target_label} '{pid}': field is missing.",
                 hint=hint or "Provide a value.")
         elif isinstance(val, list) and not val:
             result.add(severity, category,
-                f"{label} '{pid}' has no items.",
-                hint=hint or f"Assign items to this {label.lower()} or remove it.")
+                f"{target_label} '{pid}' has no items.",
+                hint=hint or f"Assign items to this {target_label.lower()} or remove it.")
         elif isinstance(val, str) and not val.strip():
             result.add(severity, category,
-                f"{label} '{pid}' has an empty field.",
+                f"{target_label} '{pid}' has an empty field.",
                 hint=hint or f"Provide a value.")
 
 
@@ -1224,7 +1224,7 @@ def handle_exists(resolved: Resolved, valid: set, rule: dict, result: LayerResul
     """Check that resolved values exist in the valid set."""
     severity = rule.get("severity", "error")
     category = rule.get("category", "missing")
-    label = rule.get("label", resolved.parent_label)
+    target_label = rule.get("target_label", resolved.parent_label)
     ref_label = rule.get("ref_label", "valid set")
     hint = rule.get("hint", "")
     for val, pid in zip(resolved.values, resolved.parent_ids):
@@ -1235,7 +1235,7 @@ def handle_exists(resolved: Resolved, valid: set, rule: dict, result: LayerResul
         for ref in refs:
             if ref and ref not in valid:
                 result.add(severity, category,
-                    f"{label} '{pid}': ref '{ref}' not found in {ref_label}.",
+                    f"{target_label} '{pid}': ref '{ref}' not found in {ref_label}.",
                     hint=hint or f"Add '{ref}' to the target or correct the reference.")
 
 
@@ -1243,7 +1243,7 @@ def handle_unique(resolved: Resolved, rule: dict, result: LayerResult) -> None:
     """Check that resolved values are unique."""
     severity = rule.get("severity", "warning")
     category = rule.get("category", "duplicate")
-    label = rule.get("label", resolved.parent_label)
+    target_label = rule.get("target_label", resolved.parent_label)
     hint = rule.get("hint", "")
     seen: dict[str, str] = {}
     for val, pid in zip(resolved.values, resolved.parent_ids):
@@ -1252,8 +1252,8 @@ def handle_unique(resolved: Resolved, rule: dict, result: LayerResult) -> None:
         str_val = str(val)
         if str_val in seen:
             result.add(severity, category,
-                f"Duplicate {label.lower()} '{str_val}' (also '{seen[str_val]}').",
-                hint=hint or f"Each {label.lower()} must have a unique identifier.")
+                f"Duplicate {target_label.lower()} '{str_val}' (also '{seen[str_val]}').",
+                hint=hint or f"Each {target_label.lower()} must have a unique identifier.")
         else:
             seen[str_val] = pid or val
 
@@ -1262,7 +1262,7 @@ def handle_no_overlap(resolved: Resolved, rule: dict, result: LayerResult) -> No
     """Check that list fields don't share values across parent items."""
     severity = rule.get("severity", "warning")
     category = rule.get("category", "overlap")
-    label = rule.get("label", resolved.parent_label)
+    target_label = rule.get("target_label", resolved.parent_label)
     hint = rule.get("hint", "")
     seen: dict[str, str] = {}
     for val, pid in zip(resolved.values, resolved.parent_ids):
@@ -1271,8 +1271,8 @@ def handle_no_overlap(resolved: Resolved, rule: dict, result: LayerResult) -> No
         for item in val:
             if item in seen and seen[item] != pid:
                 result.add(severity, category,
-                    f"Item '{item}' is assigned to multiple {label.lower()}: {seen[item]} and {pid}.",
-                    hint=hint or f"Each item should belong to exactly one {label.lower()}.")
+                    f"Item '{item}' is assigned to multiple {target_label.lower()}: {seen[item]} and {pid}.",
+                    hint=hint or f"Each item should belong to exactly one {target_label.lower()}.")
             seen[item] = pid
 
 
@@ -1280,7 +1280,7 @@ def handle_item_count(resolved: Resolved, rule: dict, result: LayerResult) -> No
     """Check list length against threshold."""
     severity = rule.get("severity", "warning")
     category = rule.get("category", "count")
-    label = rule.get("label", resolved.parent_label)
+    target_label = rule.get("target_label", resolved.parent_label)
     hint = rule.get("hint", "")
     count = rule["count"]
     compare_mode = rule.get("compare_mode", 1)
@@ -1290,16 +1290,16 @@ def handle_item_count(resolved: Resolved, rule: dict, result: LayerResult) -> No
         n = len(val)
         if compare_mode == 1 and n > count:
             result.add(severity, category,
-                f"{label} '{pid}' has {n} items — consider splitting.",
-                hint=hint or f"A {label.lower()} with >{count} items may be too complex.")
+                f"{target_label} '{pid}' has {n} items — consider splitting.",
+                hint=hint or f"A {target_label.lower()} with >{count} items may be too complex.")
         elif compare_mode == 0 and n == count:
             result.add(severity, category,
-                f"{label} '{pid}' has exactly {n} items.",
+                f"{target_label} '{pid}' has exactly {n} items.",
                 hint=hint)
         elif compare_mode == -1 and n < count:
             result.add(severity, category,
-                f"{label} '{pid}' has {n} items (minimum {count}).",
-                hint=hint or f"A {label.lower()} should have at least {count} items.")
+                f"{target_label} '{pid}' has {n} items (minimum {count}).",
+                hint=hint or f"A {target_label.lower()} should have at least {count} items.")
 
 
 def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None:
@@ -1314,7 +1314,7 @@ def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None
     import re
     severity = rule.get("severity", "warning")
     category = rule.get("category", "pattern_match")
-    label = rule.get("label", resolved.parent_label)
+    target_label = rule.get("target_label", resolved.parent_label)
     hint = rule.get("hint", "")
     patterns = rule.get("patterns", [])
     extra_keys = rule.get("extra_keys", [])
@@ -1356,12 +1356,12 @@ def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None
 
             if negate and not any_match:
                 # Format validation failed — text didn't match any pattern
-                msg = f"{label} '{pid}': value '{text}' doesn't match expected pattern: {', '.join(str(p) for p in patterns)}"
-                result.add(severity, category, msg, hint=hint or f"Review {label.lower()} for {category}.")
+                msg = f"{target_label} '{pid}': value '{text}' doesn't match expected pattern: {', '.join(str(p) for p in patterns)}"
+                result.add(severity, category, msg, hint=hint or f"Review {target_label.lower()} for {category}.")
             elif not negate and matches:
                 # Forbidden content found
-                msg = f"{label} '{pid}': {', '.join(f'{l}: {m}' for l, m in matches)}."
-                result.add(severity, category, msg, hint=hint or f"Review {label.lower()} for {category}.")
+                msg = f"{target_label} '{pid}': {', '.join(f'{l}: {m}' for l, m in matches)}."
+                result.add(severity, category, msg, hint=hint or f"Review {target_label.lower()} for {category}.")
 
 
 def handle_coverage(resolved_should_cover_all: Resolved, resolved_target: Resolved, rule: dict, result: LayerResult) -> None:
@@ -1373,7 +1373,7 @@ def handle_coverage(resolved_should_cover_all: Resolved, resolved_target: Resolv
     category = rule.get("category", "uncovered")
     hint_template = rule.get("hint")
     covered_label = rule.get("covered_label", resolved_should_cover_all.parent_label)
-    source_label = rule.get("source_label", "source")
+    target_label = rule.get("target_label", "source")
 
     # Collect refs from target path (already flat list of ref values)
     covered_refs = set()
@@ -1389,9 +1389,9 @@ def handle_coverage(resolved_should_cover_all: Resolved, resolved_target: Resolv
         desc_short = desc[:60] + "..." if desc else ""
         if iid not in covered_refs:
             hint_text = (hint_template or
-                f"Add ref '{iid}' to a {source_label} responsible for this.")
+                f"Add ref '{iid}' to a {target_label} responsible for this.")
             result.add(severity, category,
-                f"{covered_label} {iid} ('{desc_short}') is not covered by any {source_label}.",
+                f"{covered_label} {iid} ('{desc_short}') is not covered by any {target_label}.",
                 hint=hint_text)
 
 
@@ -1402,7 +1402,7 @@ def handle_orphans(resolved: Resolved, rule: dict, result: LayerResult) -> None:
     """
     severity = rule.get("severity", "warning")
     category = rule.get("category", "isolated")
-    label = rule.get("label", resolved.parent_label)
+    target_label = rule.get("target_label", resolved.parent_label)
     hint = rule.get("hint", "")
 
     items = resolved.values
@@ -1435,8 +1435,8 @@ def handle_orphans(resolved: Resolved, rule: dict, result: LayerResult) -> None:
         is_referenced = iid in referenced_ids
         if not has_outgoing and not is_referenced:
             result.add(severity, category,
-                f"{label} '{iid}' is isolated: no dependencies and no dependents.",
-                hint=hint or f"An isolated {label.lower()} may indicate a design issue.")
+                f"{target_label} '{iid}' is isolated: no dependencies and no dependents.",
+                hint=hint or f"An isolated {target_label.lower()} may indicate a design issue.")
 
 
 # ── Rule handler registry (new) ───────────────────────────────────────────────
@@ -1475,19 +1475,19 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
 
 # Known fields per rule type (for detecting typos — includes 'type' itself)
 _KNOWN_FIELDS: dict[str, set[str]] = {
-    "non_empty":         {"type", "target", "label", "category", "severity", "hint"},
+    "non_empty":         {"type", "target", "target_label", "category", "severity", "hint"},
     "exists":            {"type", "target", "inside", "ref_label",
-                          "label", "category", "severity", "hint"},
-    "is_unique":         {"type", "target", "label", "category", "severity", "hint"},
-    "not_shared":        {"type", "target", "label", "category", "severity", "hint"},
+                          "target_label", "category", "severity", "hint"},
+    "is_unique":         {"type", "target", "target_label", "category", "severity", "hint"},
+    "not_shared":        {"type", "target", "target_label", "category", "severity", "hint"},
     "has_item_count":    {"type", "target", "count", "compare_mode",
-                          "label", "category", "severity", "hint"},
+                          "target_label", "category", "severity", "hint"},
     "contains_patterns": {"type", "target", "patterns", "negate", "extra_keys", "max_count",
-                          "label", "category", "severity", "hint"},
-    "covers_all":        {"type", "target", "should_cover_all", "covered_label", "source_label",
+                          "target_label", "category", "severity", "hint"},
+    "covers_all":        {"type", "target", "should_cover_all", "covered_label", "target_label",
                           "severity", "category", "hint"},
     "not_orphan":        {"type", "target", "category",
-                          "label", "severity", "hint"},
+                          "target_label", "severity", "hint"},
 }
 
 
@@ -1577,7 +1577,7 @@ def _make_rule_kwargs(rule: dict, extra_keys: list[str] = None) -> dict:
     Returns:
         Dict with severity, category, hint, label, and any extra keys.
     """
-    common_keys = {"severity", "category", "hint", "label"} | set(extra_keys or [])
+    common_keys = {"severity", "category", "hint", "target_label"} | set(extra_keys or [])
     return {k: v for k, v in rule.items() if k in common_keys}
 
 
@@ -1676,7 +1676,7 @@ def _run_old_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_
         elif rule_type == "orphans":
             find_orphans(
                 items, rule.get("id_key", "id"), rule.get("deps_key", "dependencies"),
-                result, rule.get("label", ""), rule.get("warning", "isolated"),
+                result, rule.get("target_label", ""), rule.get("warning", "isolated"),
                 rule.get("hint", ""), rule.get("severity", "warning"),
             )
 

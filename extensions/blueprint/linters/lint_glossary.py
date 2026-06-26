@@ -247,7 +247,7 @@ SEMANTIC_RULES = [
         "type": "exists",
         "target": "terms.relatedTerms",
         "inside": "terms.id",
-        "label": "Term",
+        "target_label": "Term",
         "ref_label": "Glossary term",
         "category": "related_term_missing",
         "hint": "Add the referenced term to the glossary or correct the ID.",

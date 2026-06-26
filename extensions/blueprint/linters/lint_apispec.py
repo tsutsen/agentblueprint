@@ -212,7 +212,7 @@ SEMANTIC_RULES = [
         "type": "exists",
         "target": "functions.entity",
         "inside": "data:entities.name",
-        "label": "Function",
+        "target_label": "Function",
         "ref_label": "DataSpec entity",
         "category": "entity_ref_missing",
         "hint": "Add this entity to the data spec or correct the reference.",
@@ -221,7 +221,7 @@ SEMANTIC_RULES = [
     {
         "type": "non_empty",
         "target": "functions.description",
-        "label": "Function",
+        "target_label": "Function",
         "category": "missing_function_description",
         "hint": "Add a one-sentence description of what this function does.",
     },
@@ -229,7 +229,7 @@ SEMANTIC_RULES = [
     {
         "type": "non_empty",
         "target": "functions.inputs.description",
-        "label": "Parameter",
+        "target_label": "Parameter",
         "category": "missing_parameter_description",
         "hint": "Add a description explaining the purpose of this parameter.",
     },
