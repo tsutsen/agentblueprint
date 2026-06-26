@@ -413,26 +413,43 @@ project/
 
 ## ID Naming Conventions
 
-| Spec | Pattern | Abbreviation | Examples |
+All IDs follow the format `PREFIX-NNN-suffix` where NNN is a 3-digit zero-padded number. The suffix format depends on the ID type.
+
+| Spec | Pattern | Abbreviation | Example |
 |------|---------|--------------|----------|
-| GoalSpec | `REQ-NNN` | **REQ** — Requirement | `REQ-001` |
-| | `NFR-NNN` | **NFR** — Non-Functional Requirement | `NFR-001` |
-| | `SC-NNN` | **SC** — Scenario | `SC-001` |
-| | `US-NNN` | **US** — User Story | `US-001` |
-| DesignSpec | `DG-NNN` | **DG** — Design Guideline | `DG-001` |
-| | `UXAC-NNN` | **UXAC** — UX Acceptance Criterion | `UXAC-001` |
+| GoalSpec | `REQ-NNN-lowerCamelCase` | **REQ** — Requirement | `REQ-001-createAccount` |
+| | `NFR-NNN-lowerCamelCase` | **NFR** — Non-Functional Requirement | `NFR-001-responseTime` |
+| | `US-NNN-lowerCamelCase` | **US** — User Story | `US-001-login` |
+| | `SC-NNN-lowerCamelCase` | **SC** — Scenario | `SC-001-dataIntegrity` |
+| | `NG-NNN-lowerCamelCase` | **NG** — Non-Goal | `NG-001-webSearch` |
+| Glossary | `GL-NNN-PascalCase` | **GL** — Glossary Term | `GL-001-Authentication` |
+| DesignSpec | `DG-NNN-PascalCase` | **DG** — Design Guideline | `DG-001-MinimizeCognitiveLoad` |
+| | `SCR-NNN-PascalCase` | **SCR** — Screen | `SCR-001-LandingPage` |
+| | `DT-NNN-PascalCase` | **DT** — Design Token | `DT-001-PrimaryColor` |
+| | `PAT-NNN` | **PAT** — Pattern | `PAT-001` |
+| | `PRS-NNN-PascalCase` | **PRS** — Persona | `PRS-001-PowerDeveloper` |
+| | `SPC-NNN` | **SPC** — Screen Pattern | `SPC-001` |
+| | `UJ-NNN-lowerCamelCase` | **UJ** — User Journey | `UJ-001-findProduct` |
+| | `UXAC-NNN-lowerCamelCase` | **UXAC** — UX Acceptance Criterion | `UXAC-001-touchTarget` |
 | | `VDR-NNN` | **VDR** — Visual Design Requirement | `VDR-001` |
-| | `AR-NNN` | **AR** — Accessibility Requirement | `AR-001` |
-| | `UJ-NNN` | **UJ** — User Journey | `UJ-001` |
-| ArchitectureSpec | `CON-NNN` | **CON** — Component / Concern | `CON-001` |
-| TaskPlan | `EP-NNN` | **EP** — Epic | `EP-001` |
-| | `M\d+` | **M** — Milestone | `M1` |
-| Issues | `IS-NNN` | **IS** — Implementation Story | `IS-001` |
-| ApiSpec | `FN-<camelCase>` | **FN** — Function / API Endpoint | `FN-createUser` |
-| TestSpec | `TST-<name>-NNN` | **TST** — Test Case | `TST-createUser-001` |
-| DataSpec | PascalCase entities, camelCase fields | — | `User`, `orderItem` |
-| DataSpec enums | SCREAMING_SNAKE_CASE | — | `PENDING`, `SHIPPED` |
-| Screens/flows/components | kebab-case | — | `library-screen`, `query-flow` |
+| ArchitectureSpec | `COMP-NNN-PascalCase` | **COMP** — Component | `COMP-001-AuthService` |
+| | `CON-NNN-PascalCase` | **CON** — Constraint | `CON-001-AuthenticationRequired` |
+| | `FLW-NNN-PascalCase` | **FLW** — Data Flow | `FLW-001-SessionCreation` |
+| DataSpec | `ENT-NNN-PascalCase` | **ENT** — Entity | `ENT-001-User` |
+| | `NUM-NNN-PascalCase` | **NUM** — Enum | `NUM-001-Status` |
+| | `PRIM-NNN-PascalCase` | **PRIM** — Primitive | `PRIM-001-UserId` |
+| | `REL-NNN-PascalCase` | **REL** — Relationship | `REL-001-UserOrders` |
+| ApiSpec | `FN-NNN-lowerCamelCase` | **FN** — Function | `FN-001-authenticate` |
+| TestSpec | `TST-NNN-lowerCamelCase` | **TST** — Test Case | `TST-001-exportReportAsPDF` |
+| | `FC-NNN-lowerCamelCase` | **FC** — Failure Case | `FC-001-authenticate` |
+| TaskPlan | `EP-NNN-lowerCamelCase` | **EP** — Epic | `EP-001-userOnboarding` |
+| | `MIL-NNN-NamePascalCase` | **MIL** — Milestone | `MIL-001-Setup` |
+| Issues | `IS-NNN-lowerCamelCase` | **IS** — Implementation Story | `IS-001-implementLogin` |
+
+**Suffix rules:**
+- `lowerCamelCase`: starts lowercase, e.g. `createAccount`, `touchTarget`
+- `PascalCase`: starts uppercase, e.g. `Authentication`, `MinimizeCognitiveLoad`
+- No suffix: just `PREFIX-NNN` (3-digit zero-padded), e.g. `PAT-001`, `VDR-001`
 
 ## Design Principles
 
