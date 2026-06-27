@@ -136,19 +136,14 @@ def handle_non_empty(resolved: Resolved, rule: dict, result: LayerResult, spec: 
     category = rule.get("category", "empty")
     target_label = rule.get("target_label", resolved.parent_label)
     hint = rule.get("hint", "")
-    for val, pid in zip(resolved.values, resolved.parent_ids):
-        if val is None:
-            result.add(severity, category,
-                f"{target_label} '{pid}': field is missing.",
-                hint=hint or "Provide a value.")
-        elif isinstance(val, list) and not val:
-            result.add(severity, category,
-                f"{target_label} '{pid}' has no items.",
-                hint=hint or f"Assign items to this {target_label.lower()} or remove it.")
-        elif isinstance(val, str) and not val.strip():
-            result.add(severity, category,
-                f"{target_label} '{pid}' has an empty field.",
-                hint=hint or f"Provide a value.")
+
+    # Use shared check function
+    from shared import check_non_empty
+    for pid, detail in check_non_empty(resolved.values, resolved.parent_ids):
+        hint_text = hint or f"Provide a value for {target_label.lower()} '{pid}'."
+        result.add(severity, category,
+            f"{target_label} '{pid}': {detail}.",
+            hint=hint_text)
 
 
 def handle_exists(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
@@ -315,24 +310,31 @@ def handle_coverage(resolved: Resolved, rule: dict, result: LayerResult, spec: d
     covered_label = rule.get("covered_label", should_cover_all_resolved.parent_label)
     target_label = rule.get("target_label", "source")
 
-    # Collect refs from target path (already flat list of ref values)
+    # Collect refs from target path
     covered_refs = set()
     for item in resolved.values:
         for ref in _normalize_ref(item):
             covered_refs.add(ref)
 
-    # Find uncovered items
-    covered_items = should_cover_all_resolved.values
-    for item in covered_items:
-        iid = item.get("id", str(item)) if isinstance(item, dict) else str(item)
-        desc = item.get("description", "") if isinstance(item, dict) else ""
+    # Use shared check function to find uncovered IDs
+    should_cover_ids = [
+        item.get("id", str(item)) if isinstance(item, dict) else str(item)
+        for item in should_cover_all_resolved.values
+    ]
+    from shared import check_coverage
+    for iid in check_coverage(covered_refs, should_cover_ids):
+        # Look up description from items
+        desc = ""
+        for item in should_cover_all_resolved.values:
+            if isinstance(item, dict) and item.get("id") == iid:
+                desc = item.get("description", "")
+                break
         desc_short = desc[:60] + "..." if desc else ""
-        if iid not in covered_refs:
-            hint_text = (hint_template or
-                f"Add ref '{iid}' to a {target_label} responsible for this.")
-            result.add(severity, category,
-                f"{covered_label} {iid} ('{desc_short}') is not covered by any {target_label}.",
-                hint=hint_text)
+        hint_text = (hint_template or
+            f"Add ref '{iid}' to a {target_label} responsible for this.")
+        result.add(severity, category,
+            f"{covered_label} {iid} ('{desc_short}') is not covered by any {target_label}.",
+            hint=hint_text)
 
 
 def handle_orphans(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
