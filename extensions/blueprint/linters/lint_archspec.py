@@ -225,15 +225,33 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "ref_label": "GoalSpec NFR",
         "category": "nfr_ref_missing",
     },
-]
-
-
-# ── Glossary Checks ───────────────────────────────────────────────────────────
-
-GLOSSARY_CHECKS = [
-    ("Component", "glossaryRefs", "components"),
-    ("Flow", "glossaryRefs", "dataFlow"),
-    ("Constraint", "glossaryRefs", "constraints"),
+    # Glossary refs: Components must reference valid glossary terms
+    {
+        "type": "exists",
+        "target": "components.glossaryRefs",
+        "inside": "glossary.terms.id",
+        "target_label": "Component",
+        "ref_label": "Glossary",
+        "category": "glossary_ref_missing",
+    },
+    # Glossary refs: DataFlow must reference valid glossary terms
+    {
+        "type": "exists",
+        "target": "dataFlow.glossaryRefs",
+        "inside": "glossary.terms.id",
+        "target_label": "Flow",
+        "ref_label": "Glossary",
+        "category": "glossary_ref_missing",
+    },
+    # Glossary refs: Constraints must reference valid glossary terms
+    {
+        "type": "exists",
+        "target": "constraints.glossaryRefs",
+        "inside": "glossary.terms.id",
+        "target_label": "Constraint",
+        "ref_label": "Glossary",
+        "category": "glossary_ref_missing",
+    },
 ]
 
 
@@ -289,8 +307,7 @@ def _check_components_in_data_flows(
 class ArchSpecLinter(BaseLinter):
     SPEC_NAME = "archspec"
     SEMANTIC_RULES = SEMANTIC_RULES
-    GLOSSARY_CHECKS = GLOSSARY_CHECKS
-    CROSS_SPEC_DEPS = ["goal", "data", "api"]
+    CROSS_SPEC_DEPS = ["goal", "data", "api", "glossary"]
     MISC_CHECKS = [
         ("circular_deps", _check_circular_dependencies),
         ("components_in_flows", _check_components_in_data_flows),

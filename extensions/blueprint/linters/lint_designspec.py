@@ -37,7 +37,6 @@ from shared import (
     SemanticRule,
     print_human,
     print_json_output,
-    validate_glossary_refs,
 )
 
 
@@ -216,14 +215,24 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "category": "forbidden_content",
         "hint": "DesignSpec must not contain {category}. Move this to the appropriate spec.",
     },
-]
-
-
-# ── Glossary Checks ───────────────────────────────────────────────────────────
-
-GLOSSARY_CHECKS = [
-    ("Persona", "glossaryRefs", "personas"),
-    ("Screen", "glossaryRefs", "screenInventory"),
+    # Glossary refs: Personas must reference valid glossary terms
+    {
+        "type": "exists",
+        "target": "personas.glossaryRefs",
+        "inside": "glossary.terms.id",
+        "target_label": "Persona",
+        "ref_label": "Glossary",
+        "category": "glossary_ref_missing",
+    },
+    # Glossary refs: Screens must reference valid glossary terms
+    {
+        "type": "exists",
+        "target": "screenInventory.glossaryRefs",
+        "inside": "glossary.terms.id",
+        "target_label": "Screen",
+        "ref_label": "Glossary",
+        "category": "glossary_ref_missing",
+    },
 ]
 
 
@@ -357,8 +366,7 @@ def _check_screens_reachable(spec: dict, result: LayerResult, extra_specs: dict)
 class DesignSpecLinter(BaseLinter):
     SPEC_NAME = "designspec"
     SEMANTIC_RULES = SEMANTIC_RULES
-    GLOSSARY_CHECKS = GLOSSARY_CHECKS
-    CROSS_SPEC_DEPS = ["goal"]
+    CROSS_SPEC_DEPS = ["goal", "glossary"]
     MISC_CHECKS = [
         ("personas", _check_personas),
         ("journeys", _check_journeys),

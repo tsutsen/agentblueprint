@@ -297,51 +297,6 @@ def validate_project_and_version(spec: dict, spec_name: str, goal: dict,
             f"{spec_name}.goalSpecVersion='{pinned}' does not match goalspec.version='{goal.get("version")}'.",
             hint=f"Update goalSpecVersion after reviewing {spec_name} against the updated GoalSpec.")
 
-
-def _validate_glossary_ref(refs: list, label: str, name: str, gl_ids: set,
-                           result: "LayerResult") -> None:
-    """Validate a single item's glossary refs (private helper)."""
-    for ref in refs:
-        if gl_ids and ref not in gl_ids:
-            result.add("error", "glossary_ref_missing",
-                f"{label} '{name}': glossaryRef '{ref}' not found in Glossary.",
-                hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
-
-
-def validate_glossary_refs(glossary: dict, result: "LayerResult",
-                           checks: list[tuple[str, str, list]]) -> None:
-    """Validate glossary refs for multiple fields.
-
-    Args:
-        glossary: The Glossary dict (or None).
-        result: LayerResult to append errors/warnings to.
-        checks: List of (label, refs_key, items) tuples.
-            label: Label for error messages.
-            refs_key: Key in each item that holds the refs list.
-            items: List of items to check.
-
-    Example:
-        validate_glossary_refs(glossary, result, [
-            ("Component", "glossaryRefs", spec.get("components", [])),
-            ("Flow", "glossaryRefs", spec.get("dataFlow", [])),
-        ])
-    """
-    gl_ids = set()
-    if glossary:
-        gl_ids = {t["id"] for t in glossary.get("terms", [])}
-
-    for label, refs_key, items in checks:
-        for item in items:
-            item_id = item.get("id", item.get("screenRef", "?"))
-            refs = item.get(refs_key, [])
-            if not refs:
-                result.add("warning", "glossary_ref_missing",
-                    f"{label} '{item_id}': no glossaryRefs.",
-                    hint=f"Add glossaryRefs (GL-NNN) for domain concepts.")
-            else:
-                _validate_glossary_ref(refs, label, item_id, gl_ids, result)
-
-
 # ── Canonical types ───────────────────────────────────────────────────────────
 
 @dataclass
@@ -1135,7 +1090,6 @@ class BaseLinter:
         self._validate_cross_spec_consistency()
         self._run_semantic_rules()
         self._run_misc_checks()
-        self._validate_glossary_refs()
         self._strict_mode()
         return self.result
     
@@ -1172,25 +1126,7 @@ class BaseLinter:
         """Run custom/spec-specific checks."""
         for name, func in self.MISC_CHECKS:
             func(self.spec, self.result, self.extra_specs)
-    
-    def _validate_glossary_refs(self) -> None:
-        """Validate glossary refs for sections defined in GLOSSARY_CHECKS.
-        
-        GLOSSARY_CHECKS should be a list of (label, refs_key, section_path) tuples.
-        Example: [("Component", "glossaryRefs", "components"), ...]
-        """
-        glossary = self.extra_specs.get("glossary")
-        if not glossary or not hasattr(self, "GLOSSARY_CHECKS"):
-            return
-        
-        # Convert section paths to actual items
-        checks = []
-        for label, refs_key, section_path in self.GLOSSARY_CHECKS:
-            items = _get_nested(self.spec, section_path)
-            checks.append((label, refs_key, items))
-        
-        validate_glossary_refs(glossary, self.result, checks)
-    
+
     def _strict_mode(self) -> None:
         """Convert warnings to errors if strict mode."""
         if self.strict:

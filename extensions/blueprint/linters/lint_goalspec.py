@@ -31,7 +31,6 @@ from shared import (
     print_human,
     print_json_output,
     validate_sequential,
-    validate_glossary_refs,
 )
 
 
@@ -183,16 +182,42 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "category": "nongoal_vague",
         "hint": "Name the specific capability being excluded.",
     },
-]
-
-
-# ── Glossary Checks ───────────────────────────────────────────────────────────
-
-GLOSSARY_CHECKS = [
-    ("FR", "glossaryRefs", "functionalRequirements"),
-    ("US", "glossaryRefs", "userStories"),
-    ("Non-goal", "glossaryRefs", "nonGoals"),
-    ("NFR", "glossaryRefs", "nonFunctionalRequirements"),
+    # Glossary refs: FRs must reference valid glossary terms
+    {
+        "type": "exists",
+        "target": "functionalRequirements.glossaryRefs",
+        "inside": "glossary.terms.id",
+        "target_label": "FR",
+        "ref_label": "Glossary",
+        "category": "glossary_ref_missing",
+    },
+    # Glossary refs: USs must reference valid glossary terms
+    {
+        "type": "exists",
+        "target": "userStories.glossaryRefs",
+        "inside": "glossary.terms.id",
+        "target_label": "US",
+        "ref_label": "Glossary",
+        "category": "glossary_ref_missing",
+    },
+    # Glossary refs: Non-goals must reference valid glossary terms
+    {
+        "type": "exists",
+        "target": "nonGoals.glossaryRefs",
+        "inside": "glossary.terms.id",
+        "target_label": "Non-goal",
+        "ref_label": "Glossary",
+        "category": "glossary_ref_missing",
+    },
+    # Glossary refs: NFRs must reference valid glossary terms
+    {
+        "type": "exists",
+        "target": "nonFunctionalRequirements.glossaryRefs",
+        "inside": "glossary.terms.id",
+        "target_label": "NFR",
+        "ref_label": "Glossary",
+        "category": "glossary_ref_missing",
+    },
 ]
 
 
@@ -376,8 +401,7 @@ def _check_non_goals(spec: dict, result: LayerResult, extra_specs: dict) -> None
 class GoalSpecLinter(BaseLinter):
     SPEC_NAME = "goalspec"
     SEMANTIC_RULES = SEMANTIC_RULES
-    GLOSSARY_CHECKS = GLOSSARY_CHECKS
-    CROSS_SPEC_DEPS = []
+    CROSS_SPEC_DEPS = ["glossary"]
     MISC_CHECKS = [
         ("objective", _check_objective),
         ("functional_requirements", _check_functional_requirements),
