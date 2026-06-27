@@ -22,7 +22,8 @@ import json
 import re
 from pathlib import Path
 from typing import Optional, Dict, Any
-from shared import BaseLinter, LayerResult, SemanticRule, validate_project_and_version
+from shared import BaseLinter, LayerResult, validate_project_and_version
+from rules import SemanticRule
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

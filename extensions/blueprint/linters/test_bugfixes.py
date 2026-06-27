@@ -17,10 +17,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from shared import LayerResult
+import rules
 
 
 def test_no_legacy_helpers():
-    """Verify legacy helpers are removed."""
+    """Verify legacy helpers are removed from shared.py."""
     legacy_funcs = [
         "find_cycles",
         "find_duplicates",
@@ -33,11 +34,11 @@ def test_no_legacy_helpers():
         assert not hasattr(sys.modules["shared"], func_name), (
             f"Legacy function '{func_name}' still exists in shared.py"
         )
-        print(f"  ✓ {func_name} — removed")
+        print(f"  ✓ {func_name} — removed from shared")
 
 
 def test_new_rule_handlers():
-    """Verify new rule handlers exist."""
+    """Verify new rule handlers exist in rules.py."""
     handlers = [
         "handle_non_empty",
         "handle_exists",
@@ -50,10 +51,10 @@ def test_new_rule_handlers():
         "handle_has_no_cycles",
     ]
     for handler_name in handlers:
-        assert hasattr(sys.modules["shared"], handler_name), (
-            f"Handler '{handler_name}' missing from shared.py"
+        assert hasattr(rules, handler_name), (
+            f"Handler '{handler_name}' missing from rules.py"
         )
-        print(f"  ✓ {handler_name} — present")
+        print(f"  ✓ {handler_name} — present in rules")
 
 
 def main():

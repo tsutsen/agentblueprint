@@ -34,10 +34,10 @@ from typing import Optional
 from shared import (
     BaseLinter,
     LayerResult,
-    SemanticRule,
     print_human,
     print_json_output,
 )
+from rules import SemanticRule
 
 
 # ── Semantic Rules ────────────────────────────────────────────────────────────

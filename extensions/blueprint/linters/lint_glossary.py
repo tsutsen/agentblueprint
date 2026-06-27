@@ -26,7 +26,8 @@ import sys
 import argparse
 from pathlib import Path
 from typing import Optional, Dict
-from shared import BaseLinter, LayerResult, SemanticRule, validate_spec_ids
+from shared import BaseLinter, LayerResult, validate_spec_ids
+from rules import SemanticRule
 
 
 # ── Term extraction from other specs ─────────────────────────────────────────

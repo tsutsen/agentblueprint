@@ -29,8 +29,8 @@ from typing import Optional
 from shared import (
     BaseLinter,
     LayerResult,
-    SemanticRule,
 )
+from rules import SemanticRule
 
 # ── Semantic Rules ────────────────────────────────────────────────────────────
 

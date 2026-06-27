@@ -27,11 +27,11 @@ from typing import Optional
 from shared import (
     BaseLinter,
     LayerResult,
-    SemanticRule,
     print_human,
     print_json_output,
     validate_sequential,
 )
+from rules import SemanticRule
 
 
 # ── Semantic Rules ────────────────────────────────────────────────────────────
