@@ -89,10 +89,12 @@ def _traverse_segments(
 ) -> Resolved:
     """Walk remaining path segments, flattening lists and navigating dicts.
 
-    Returns early via _extract_scalars on terminal segments.
-    Falls through to _resolve_final when loop completes.
+    Uses a result builder pattern to avoid early returns:
+    accumulates state through the loop and produces a single result.
     """
     current_items = items
+    terminal_seg = None  # Set when we hit a scalar extraction point
+
     for seg_idx, seg in enumerate(segments):
         if not current_items:
             break
@@ -113,14 +115,16 @@ def _traverse_segments(
                         _navigate_dict_segment(current_items, seg, parent_ids, parent_items)
                     )
                 else:
-                    return _extract_scalars(
-                        current_items, seg, parent_ids, parent_items, label
-                    )
+                    # Terminal: scalar value at this segment
+                    terminal_seg = seg
             else:
-                # Segment key missing on items → extract None (terminal)
-                return _extract_scalars(
-                    current_items, seg, parent_ids, parent_items, label
-                )
+                # Terminal: segment key missing on items
+                terminal_seg = seg
+
+    if terminal_seg is not None:
+        return _extract_scalars(
+            current_items, terminal_seg, parent_ids, parent_items, label
+        )
 
     return _resolve_final(current_items, parent_ids, parent_items, group_sizes, label)
 

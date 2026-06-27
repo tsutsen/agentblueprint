@@ -301,7 +301,12 @@ def _check_glossary_refs(spec: dict, result: LayerResult, extra_specs: dict = No
 
 
 def _check_coverage(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
-    """Check that every epic acceptance criterion maps to at least one issue."""
+    """Check that every epic acceptance criterion maps to at least one issue.
+
+    Uses a robust approach: extracts acceptance criteria from markdown by
+    finding the section heading and collecting all list items under it,
+    rather than relying on a fragile regex.
+    """
     issue_files = spec.get("_issue_files", [])
     epic_data = spec.get("_epic_data", {})
 
@@ -313,11 +318,12 @@ def _check_coverage(spec: dict, result: LayerResult, extra_specs: dict = None) -
 
     for issue_file in issue_files:
         md_content = issue_file.md_content
-        ac_match = re.search(r"##\s+Acceptance ?criteria\s*\n((?:- \[ ?\] .+\n?)*)", md_content, re.IGNORECASE)
-        if not ac_match:
+        # Extract acceptance criteria text from markdown
+        issue_acs_text = _extract_acceptance_criteria_text(md_content)
+        if not issue_acs_text:
             continue
-        issue_acs_text = ac_match.group(1).lower()
-        issue_acs_words = set(issue_acs_text.split())
+
+        issue_acs_words = set(issue_acs_text.lower().split())
 
         for epic_ac in acceptance_criteria:
             epic_ac_text = epic_ac.strip().lstrip("- ")
@@ -331,6 +337,37 @@ def _check_coverage(spec: dict, result: LayerResult, extra_specs: dict = None) -
                     covered.add(epic_ac)
                 elif len(overlap) >= 1 and len(epic_words) <= 4:
                     covered.add(epic_ac)
+
+
+def _extract_acceptance_criteria_text(md_content: str) -> str:
+    """Extract acceptance criteria text from markdown content.
+
+    Finds the 'Acceptance criteria' heading and collects all subsequent
+    list items (including multi-line items) until the next heading.
+    """
+    # Find the acceptance criteria heading
+    heading_match = re.search(
+        r'^##\s+Acceptance\s+(?:criteria|Criteria)\s*$',
+        md_content,
+        re.MULTILINE | re.IGNORECASE
+    )
+    if not heading_match:
+        return ''
+
+    # Get text after the heading
+    after_heading = md_content[heading_match.end():]
+
+    # Collect all list items until next heading (## or ###)
+    items_match = re.match(
+        r'(?:\s*- \[[ xX]\] .+(?:\n(?!\s*##)[^\n]*)*)*',
+        after_heading
+    )
+    if not items_match:
+        return ''
+
+    return items_match.group(0)
+
+
 
 
 def _check_schema(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:

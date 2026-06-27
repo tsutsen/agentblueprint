@@ -39,14 +39,29 @@ PLACEHOLDER_PATTERNS = [
 ]
 
 
-def has_placeholder(value) -> bool:
+def has_placeholder(value, _depth: int = 0) -> bool:
+    """Check if a value contains placeholder text.
+
+    Args:
+        value: The value to check (str, dict, or list).
+        _depth: Internal recursion depth counter (default: 0).
+
+    Returns:
+        True if placeholder text is found, False otherwise.
+
+    Note:
+        Maximum recursion depth is 20 to prevent stack overflow
+        on deeply nested structures.
+    """
+    if _depth > 20:
+        return False
     if isinstance(value, str):
         vl = value.lower()
         return any(p in vl for p in PLACEHOLDER_PATTERNS)
     if isinstance(value, dict):
-        return any(has_placeholder(v) for v in value.values())
+        return any(has_placeholder(v, _depth + 1) for v in value.values())
     if isinstance(value, list):
-        return any(has_placeholder(v) for v in value)
+        return any(has_placeholder(v, _depth + 1) for v in value)
     return False
 
 
