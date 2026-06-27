@@ -10,9 +10,11 @@ Usage in a linter:
     from shared import Issue, LayerResult, print_human, print_json_output, ID_PATTERNS
 """
 
+import argparse
 import inspect
 import json
 import re
+import sys
 from dataclasses import dataclass, field
 from typing import Any, Literal, TypedDict, Union
 
@@ -1400,15 +1402,10 @@ class BaseLinter:
             _strict_mode(self.result)
     
     @classmethod
-    def main(cls, extra_args: list[tuple] = []):
+    def main(cls):
         """CLI entry point.
         
-        Args:
-            extra_args: List of (arg_name, kwargs) tuples for additional CLI args.
-                       Each kwarg dict can include:
-                       - help: Help text
-                       - spec_name: Name of the extra spec (e.g., "goal", "data")
-                       - required: Whether the arg is required
+        Auto-generates --<dep> args from cls.CROSS_SPEC_DEPS.
         """
         parser = argparse.ArgumentParser(description=f"Lint a {cls.SPEC_NAME} JSON.")
         parser.add_argument("input", help=f"Path to {cls.SPEC_NAME} JSON")
@@ -1416,27 +1413,22 @@ class BaseLinter:
         parser.add_argument("--strict", action="store_true", help="Treat warnings as errors")
         parser.add_argument("--json", action="store_true", help="Output as JSON")
         
-        # Add extra CLI args
-        for arg in extra_args:
-            arg_name = arg[0]
-            kwargs = arg[1] if len(arg) > 1 else {}
-            parser.add_argument(arg_name, **kwargs)
+        # Auto-generate --<dep> args from CROSS_SPEC_DEPS
+        for dep in cls.CROSS_SPEC_DEPS:
+            parser.add_argument(f"--{dep}",
+                                help=f"Path to {dep}spec JSON for cross-spec checks")
         
         args = parser.parse_args()
         
         spec = json.loads(Path(args.input).read_text())
         schema_path = Path(args.schema) if args.schema else None
         
-        # Load extra specs
+        # Load extra specs from auto-generated args
         extra_specs = {}
-        for arg in extra_args:
-            arg_name = arg[0]
-            kwargs = arg[1] if len(arg) > 1 else {}
-            spec_name = kwargs.get("spec_name", arg_name.lstrip("-").replace("-", ""))
-            
-            arg_value = getattr(args, arg_name.lstrip("-").replace("-", "_"), None)
+        for dep in cls.CROSS_SPEC_DEPS:
+            arg_value = getattr(args, dep, None)
             if arg_value:
-                extra_specs[spec_name] = json.loads(Path(arg_value).read_text())
+                extra_specs[dep] = json.loads(Path(arg_value).read_text())
         
         linter = cls(spec, schema_path, args.strict)
         result = linter.run(**extra_specs)

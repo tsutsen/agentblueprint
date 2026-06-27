@@ -294,9 +294,4 @@ def run_lint(glossary, schema_path, other_specs, strict):
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    GlossaryLinter.main([
-        ("--goal", {"help": "Path to goalspec JSON", "spec_name": "goal"}),
-        ("--arch", {"help": "Path to archspec JSON", "spec_name": "arch"}),
-        ("--data", {"help": "Path to dataspec JSON", "spec_name": "data"}),
-        ("--api", {"help": "Path to apispec JSON", "spec_name": "api"}),
-    ])
+    GlossaryLinter.main()

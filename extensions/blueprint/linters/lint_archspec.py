@@ -311,14 +311,4 @@ def run_lint(
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    ArchSpecLinter.main(
-        [
-            (
-                "--goal",
-                {
-                    "help": "Path to goalspec JSON for cross-spec checks",
-                    "spec_name": "goal",
-                },
-            ),
-        ]
-    )
+    ArchSpecLinter.main()

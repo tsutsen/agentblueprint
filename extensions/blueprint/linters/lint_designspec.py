@@ -376,6 +376,4 @@ def run_lint(spec, schema_path, goal, strict, glossary=None):
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    DesignSpecLinter.main([
-        ("--goal", {"help": "Path to goalspec JSON for cross-spec checks", "spec_name": "goal"}),
-    ])
+    DesignSpecLinter.main()

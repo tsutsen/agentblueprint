@@ -424,4 +424,4 @@ def run_lint(spec, schema_path, strict, api_spec=None, glossary=None):
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    DataSpecLinter.main([])
+    DataSpecLinter.main()

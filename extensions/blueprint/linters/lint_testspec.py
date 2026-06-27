@@ -394,7 +394,4 @@ def run_lint(spec, schema_path, api, glossary, strict):
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    TestSpecLinter.main([
-        ("--api", {"help": "Path to apispec JSON for cross-spec checks", "spec_name": "api"}),
-        ("--glossary", {"help": "Path to glossary JSON", "spec_name": "glossary"}),
-    ])
+    TestSpecLinter.main()

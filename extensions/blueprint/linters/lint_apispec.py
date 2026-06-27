@@ -303,6 +303,4 @@ def run_lint(spec, schema_path, data_spec, strict):
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    ApiSpecLinter.main([
-        ("--data", {"help": "Path to dataspec JSON for cross-spec checks", "spec_name": "data"}),
-    ])
+    ApiSpecLinter.main()
