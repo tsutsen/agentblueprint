@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-test_bugfixes.py — Verify all 6 bug fixes in shared.py.
+test_bugfixes.py — Verify bug fixes in shared.py.
 
 Bugs fixed:
-  1. find_duplicates: target_label → label in f-strings
-  2. find_cycles: target_label → label in f-strings
-  3. validate_exists: target_label → label in f-strings
-  4. _validate_glossary_ref: target_label → label in f-string
-  5. validate_glossary_refs: target_label → label in f-strings
-  6. _validate_glossary_ref: duplicate function removed
+  1. find_cycles: target_label → label in f-strings
+  2. validate_exists: target_label → label in f-strings
+  3. _validate_glossary_ref: target_label → label in f-string
+  4. validate_glossary_refs: target_label → label in f-strings
+  5. _validate_glossary_ref: duplicate function removed
+
+Note: find_duplicates was removed entirely and replaced with is_unique rules.
 
 Run: python3 test_bugfixes.py
 """
@@ -20,37 +21,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from shared import (
-    find_duplicates,
     find_cycles,
     validate_exists,
     _validate_glossary_ref,
     validate_glossary_refs,
     LayerResult,
 )
-
-
-def test_find_duplicates_flat():
-    """Bug 1: find_duplicates with flat list (target_label → label)."""
-    result = LayerResult()
-    find_duplicates(["REQ-001", "REQ-002", "REQ-001"], result=result, label="Requirement", category="dup")
-    assert len(result.warnings) == 1, f"Expected 1 warning, got {len(result.warnings)}"
-    assert "Requirement" in result.warnings[0].message, f"Message should contain 'Requirement': {result.warnings[0].message}"
-    assert "REQ-001" in result.warnings[0].message
-    print("  ✓ find_duplicates (flat) — 'Requirement' appears in message")
-
-
-def test_find_duplicates_nested():
-    """Bug 1: find_duplicates with nested dicts."""
-    items = [
-        {"id": "COMP-001", "reqRefs": ["REQ-001"]},
-        {"id": "COMP-002", "reqRefs": ["REQ-001"]},
-    ]
-    result = LayerResult()
-    find_duplicates(items, id_key="reqRefs", result=result, label="Component", category="dup")
-    assert len(result.warnings) == 1
-    assert "Component" in result.warnings[0].message
-    print("  ✓ find_duplicates (nested) — 'Component' appears in message")
-
 
 def test_find_cycles_no_cycle():
     """Bug 2: find_cycles with no cycle."""
@@ -198,7 +174,7 @@ def test_no_target_label_in_legacy():
     source = inspect.getsource(sys.modules["shared"])
 
     # Extract legacy function bodies
-    legacy_funcs = ["find_duplicates", "find_cycles", "validate_exists",
+    legacy_funcs = ["find_cycles", "validate_exists",
                     "_validate_glossary_ref", "validate_glossary_refs"]
     for func_name in legacy_funcs:
         func = getattr(sys.modules["shared"], func_name)
@@ -215,12 +191,7 @@ def main():
     print("Testing bug fixes in shared.py...")
     print()
 
-    print("Bug 1: find_duplicates (target_label → label)")
-    test_find_duplicates_flat()
-    test_find_duplicates_nested()
-    print()
-
-    print("Bug 2: find_cycles (target_label → label)")
+    print("Bug 1: find_cycles (target_label → label)")
     test_find_cycles_no_cycle()
     test_find_cycles_with_cycle()
     test_find_cycles_bad_ref()

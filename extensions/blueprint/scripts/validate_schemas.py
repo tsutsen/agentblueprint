@@ -25,7 +25,11 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 LINTERS_DIR = SCRIPT_DIR.parent / "linters"
 SCHEMAS_DIR = LINTERS_DIR.parent.parent.parent / "skills" / "blueprint" / "schemas"
-SHARED_PATH = LINTERS_DIR / "shared.py"
+
+# Add linters dir to path so we can import id_patterns
+import sys as _sys
+_sys.path.insert(0, str(LINTERS_DIR))
+from id_patterns import ID_PATTERNS
 
 # ── Canonical name mapping ───────────────────────────────────────────────────
 
@@ -64,19 +68,9 @@ SKIP_REF_FIELDS = {
 }
 
 
-# ── Load shared patterns ─────────────────────────────────────────────────────
+# ── Pattern key resolution ───────────────────────────────────────────────────
 
-def load_id_patterns() -> dict:
-    """Parse shared.py to extract ID_PATTERNS as {key: pattern}."""
-    if not SHARED_PATH.exists():
-        print(f"ERROR: shared.py not found at {SHARED_PATH}")
-        sys.exit(1)
-
-    content = SHARED_PATH.read_text()
-    patterns = {}
-    for m in re.finditer(r'"(\w+)":\s*\{\s*"pattern":\s*r"((?:[^"\\]|\\.)*)"', content):
-        patterns[m.group(1)] = m.group(2)
-    return patterns
+# ID_PATTERNS imported at top of file
 
 
 def get_pattern_key(def_name: str) -> str | None:
@@ -88,14 +82,14 @@ def get_pattern_key(def_name: str) -> str | None:
             return pk
     if def_name.endswith("Id"):
         key = def_name[:-2]
-        if key in load_id_patterns():
+        if key in ID_PATTERNS:
             return key
     return None
 
 
 # ── Validation ────────────────────────────────────────────────────────────────
 
-def validate_schema(schema_path: Path, id_patterns: dict) -> list:
+def validate_schema(schema_path: Path) -> list:
     """Validate one schema file. Returns list of error strings."""
     errors = []
     schema = json.loads(schema_path.read_text())
@@ -114,17 +108,17 @@ def validate_schema(schema_path: Path, id_patterns: dict) -> list:
         x_id = obj.get("x_idPattern")
         pattern = obj.get("pattern")
         if x_id and pattern:
-            if x_id not in id_patterns:
+            if x_id not in ID_PATTERNS:
                 errors.append(
                     f"{sname}: {path} — x_idPattern='{x_id}' "
-                    f"not in shared.ID_PATTERNS"
+                    f"not in ID_PATTERNS"
                 )
-            elif pattern != id_patterns[x_id]:
+            elif pattern != ID_PATTERNS[x_id]["pattern"]:
                 errors.append(
                     f"{sname}: {path} — x_idPattern='{x_id}' "
                     f"pattern mismatch\n"
                     f"    schema: {pattern}\n"
-                    f"    shared: {id_patterns[x_id]}"
+                    f"    shared: {ID_PATTERNS[x_id]['pattern']}"
                 )
 
         # 2. Check definitions.*Id patterns
@@ -132,8 +126,8 @@ def validate_schema(schema_path: Path, id_patterns: dict) -> list:
             if not isinstance(def_val, dict) or "pattern" not in def_val:
                 continue
             pk = get_pattern_key(def_name)
-            if pk and pk in id_patterns:
-                if def_val["pattern"] != id_patterns[pk]:
+            if pk and pk in ID_PATTERNS:
+                if def_val["pattern"] != ID_PATTERNS[pk]["pattern"]:
                     errors.append(
                         f"{sname}: definitions.{def_name} — pattern mismatch\n"
                         f"    schema: {def_val['pattern']}\n"
@@ -169,11 +163,10 @@ def validate_schema(schema_path: Path, id_patterns: dict) -> list:
 
 
 def main():
-    id_patterns = load_id_patterns()
     all_errors = []
 
     for schema_path in sorted(SCHEMAS_DIR.glob("*.schema.json")):
-        all_errors.extend(validate_schema(schema_path, id_patterns))
+        all_errors.extend(validate_schema(schema_path))
 
     if all_errors:
         print(f"✗ {len(all_errors)} error(s) found:")
@@ -183,7 +176,7 @@ def main():
     else:
         print(
             f"✓ All schema patterns are valid "
-            f"({len(id_patterns)} shared patterns)"
+            f"({len(ID_PATTERNS)} patterns)"
         )
 
 

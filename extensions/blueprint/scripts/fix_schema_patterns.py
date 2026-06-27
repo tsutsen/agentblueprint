@@ -23,19 +23,11 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 LINTERS_DIR = SCRIPT_DIR.parent / "linters"
 SCHEMAS_DIR = LINTERS_DIR.parent.parent.parent / "skills" / "blueprint" / "schemas"
-SHARED_PATH = LINTERS_DIR / "shared.py"
 
-# ── Load shared.ID_PATTERNS ──────────────────────────────────────────────────
-
-def load_id_patterns() -> dict:
-    """Parse shared.py to extract ID_PATTERNS with pattern → key mapping."""
-    content = SHARED_PATH.read_text()
-    patterns = {}
-    for m in re.finditer(r'"(\w+)":\s*\{\s*"pattern":\s*r"((?:[^"\\]|\\.)*)"', content):
-        key = m.group(1)
-        pattern = m.group(2)
-        patterns[key] = pattern
-    return patterns
+# Add linters dir to path so we can import id_patterns
+import sys as _sys
+_sys.path.insert(0, str(LINTERS_DIR))
+from id_patterns import ID_PATTERNS
 
 # ── Mapping: x_idPattern key → definition name in each schema ────────────────
 # Most schemas use the convention: pattern key "req" → definition "reqId"
@@ -126,10 +118,9 @@ SKIP_REF_FIELDS = {
 # ── Schema fixer ──────────────────────────────────────────────────────────────
 
 class SchemaFixer:
-    def __init__(self, schema_path: Path, id_patterns: dict, apply: bool = False):
+    def __init__(self, schema_path: Path, apply: bool = False):
         self.schema_path = schema_path
         self.schema_name = schema_path.stem
-        self.id_patterns = id_patterns
         self.apply = apply
         self.changes = []
         self.schema = json.loads(schema_path.read_text())
@@ -167,10 +158,10 @@ class SchemaFixer:
                 # Try to infer from name (e.g., "reqId" → "req")
                 pattern_key = self._infer_pattern_key(def_name)
 
-            if not pattern_key or pattern_key not in self.id_patterns:
+            if not pattern_key or pattern_key not in ID_PATTERNS:
                 continue
 
-            expected_pattern = self.id_patterns[pattern_key]
+            expected_pattern = ID_PATTERNS[pattern_key]
             current_pattern = def_val.get("pattern", "")
 
             if current_pattern != expected_pattern:
@@ -225,7 +216,7 @@ class SchemaFixer:
         # Try stripping "Id" suffix
         if def_name.endswith("Id"):
             key = def_name[:-2]
-            if key in self.id_patterns:
+            if key in ID_PATTERNS:
                 return key
 
         return None
@@ -270,7 +261,7 @@ class SchemaFixer:
         if not x_id or "$ref" in val or "pattern" not in val:
             return
 
-        expected_pattern = self.id_patterns.get(x_id)
+        expected_pattern = ID_PATTERNS.get(x_id)
         current_pattern = val.get("pattern", "")
 
         if expected_pattern and current_pattern != expected_pattern:
@@ -353,12 +344,12 @@ class SchemaFixer:
 
     def _create_definition(self, def_name: str, pattern_key: str):
         """Create a definition entry for a pattern key."""
-        if pattern_key not in self.id_patterns:
+        if pattern_key not in ID_PATTERNS:
             return
         defs = self.schema.setdefault("definitions", {})
         if def_name in defs:
             return
-        pattern = self.id_patterns[pattern_key]
+        pattern = ID_PATTERNS[pattern_key]
         prefix = pattern.split("-")[0]  # e.g., "REQ"
         defs[def_name] = {
             "type": "string",
@@ -406,8 +397,8 @@ class SchemaFixer:
             if def_name not in defs:
                 # Infer pattern key from def name
                 pattern_key = self._infer_pattern_key(def_name)
-                if pattern_key and pattern_key in self.id_patterns:
-                    pattern = self.id_patterns[pattern_key]
+                if pattern_key and pattern_key in ID_PATTERNS:
+                    pattern = ID_PATTERNS[pattern_key]
                     prefix = pattern.split("-")[0]  # e.g., "REQ"
                     defs[def_name] = {
                         "type": "string",
@@ -427,11 +418,9 @@ def main():
         print("🔍 Dry-run: showing schema pattern fixes needed...")
     print()
 
-    id_patterns = load_id_patterns()
-
     all_changes = []
     for schema_path in sorted(SCHEMAS_DIR.glob("*.schema.json")):
-        fixer = SchemaFixer(schema_path, id_patterns, apply=apply)
+        fixer = SchemaFixer(schema_path, apply=apply)
         changes = fixer.run()
         all_changes.extend(changes)
 

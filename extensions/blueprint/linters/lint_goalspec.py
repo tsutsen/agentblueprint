@@ -28,7 +28,6 @@ from shared import (
     BaseLinter,
     LayerResult,
     SemanticRule,
-    find_duplicates,
     print_human,
     print_json_output,
     validate_sequential,
@@ -39,6 +38,47 @@ from shared import (
 # ── Semantic Rules ────────────────────────────────────────────────────────────
 
 SEMANTIC_RULES: list[SemanticRule] = [
+    # FR IDs must be unique
+    {
+        "type": "is_unique",
+        "target": "functionalRequirements.id",
+        "target_label": "FR",
+        "category": "duplicate_id",
+        "hint": "Each FR must have a unique ID.",
+    },
+    # NFR IDs must be unique
+    {
+        "type": "is_unique",
+        "target": "nonFunctionalRequirements.id",
+        "target_label": "NFR",
+        "category": "duplicate_id",
+        "hint": "Each NFR must have a unique ID.",
+    },
+    # US IDs must be unique
+    {
+        "type": "is_unique",
+        "target": "userStories.id",
+        "target_label": "US",
+        "category": "duplicate_id",
+        "hint": "Each US must have a unique ID.",
+    },
+    # SC IDs must be unique
+    {
+        "type": "is_unique",
+        "target": "successCriteria.id",
+        "target_label": "SC",
+        "category": "duplicate_id",
+        "hint": "Each SC must have a unique ID.",
+    },
+    # NG IDs must be unique
+    {
+        "type": "is_unique",
+        "target": "nonGoals.id",
+        "target_label": "NG",
+        "category": "duplicate_id",
+        "hint": "Each NG must have a unique ID.",
+    },
+
     # FRs must have descriptions
     {
         "type": "non_empty",
@@ -47,7 +87,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "category": "fr_empty_description",
         "hint": "Every functional requirement must have a description.",
     },
-    
+
     # NFRs must have descriptions
     {
         "type": "non_empty",
@@ -56,7 +96,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "category": "nfr_empty_description",
         "hint": "Every NFR must have a description.",
     },
-    
+
     # User stories must have capabilities
     {
         "type": "non_empty",
@@ -65,7 +105,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "category": "story_empty_capability",
         "hint": "Every user story must have a capability.",
     },
-    
+
     # Success criteria must have descriptions
     {
         "type": "non_empty",
@@ -74,7 +114,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "category": "sc_empty_description",
         "hint": "Every success criterion must have a description.",
     },
-    
+
     # NFRs must have scale
     {
         "type": "non_empty",
@@ -83,7 +123,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "category": "nfr_missing_scale",
         "hint": "Every NFR must have a scale defined.",
     },
-    
+
     # NFRs must have meter
     {
         "type": "non_empty",
@@ -182,11 +222,9 @@ def _check_objective(spec: dict, result: LayerResult, extra_specs: dict) -> None
 
 
 def _check_functional_requirements(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Check FR duplicates, sequential IDs, and thresholds."""
+    """Check FR sequential IDs and thresholds."""
     frs = spec.get("functionalRequirements", [])
     ids = [fr["id"] for fr in frs]
-    
-    find_duplicates(ids, "REQ", result)
     validate_sequential(ids, "REQ", result)
 
     # Smell: description contains measurable thresholds
@@ -199,11 +237,9 @@ def _check_functional_requirements(spec: dict, result: LayerResult, extra_specs:
 
 
 def _check_nfrs(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Check NFR duplicates, sequential IDs, and TBD checks."""
+    """Check NFR sequential IDs and TBD checks."""
     nfrs = spec.get("nonFunctionalRequirements", [])
     ids = [nfr["id"] for nfr in nfrs]
-    
-    find_duplicates(ids, "NFR", result)
     validate_sequential(ids, "NFR", result)
 
     status = spec.get("status", "draft")
@@ -242,12 +278,10 @@ def _check_nfrs(spec: dict, result: LayerResult, extra_specs: dict) -> None:
 
 
 def _check_user_stories(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Check US duplicates, sequential IDs, and actor consistency."""
+    """Check US sequential IDs and actor consistency."""
     stories = spec.get("userStories", [])
     ids = [s["id"] for s in stories]
     fr_actors = {fr["actor"] for fr in spec.get("functionalRequirements", [])}
-    
-    find_duplicates(ids, "US", result)
     validate_sequential(ids, "US", result)
 
     for story in stories:
@@ -262,13 +296,11 @@ def _check_user_stories(spec: dict, result: LayerResult, extra_specs: dict) -> N
 
 
 def _check_success_criteria(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Check SC duplicates, sequential IDs, and refs."""
+    """Check SC sequential IDs and refs."""
     criteria = spec.get("successCriteria", [])
     ids = [sc["id"] for sc in criteria]
     req_ids = {fr["id"] for fr in spec.get("functionalRequirements", [])}
     nfr_ids = {nfr["id"] for nfr in spec.get("nonFunctionalRequirements", [])}
-    
-    find_duplicates(ids, "SC", result)
     validate_sequential(ids, "SC", result)
 
     for sc in criteria:
@@ -327,11 +359,9 @@ def _check_coverage(spec: dict, result: LayerResult, extra_specs: dict) -> None:
 
 
 def _check_non_goals(spec: dict, result: LayerResult, extra_specs: dict) -> None:
-    """Check non-goal duplicates, sequential IDs, and weak reasons."""
+    """Check non-goal sequential IDs and weak reasons."""
     non_goals = spec.get("nonGoals", [])
     ids = [ng["id"] for ng in non_goals]
-    
-    find_duplicates(ids, "NG", result)
     validate_sequential(ids, "NG", result)
 
     for ng in non_goals:
