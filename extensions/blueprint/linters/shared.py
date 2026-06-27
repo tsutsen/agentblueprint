@@ -11,15 +11,14 @@ Usage in a linter:
 """
 
 import argparse
-import inspect
 import json
 import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
-from id_patterns import ID_PATTERNS
+from id_patterns import ID_PATTERNS, SECTION_ID_PATTERNS
 
 
 def _validate_id(id_value: str, id_type: str) -> tuple[bool, str]:
@@ -70,21 +69,6 @@ def validate_spec_ids(items_by_type: dict[str, list],
             _validate_ids(items, "id", id_type, f"{id_type}_id_format", result)
 
 
-def _extract_num(id_str: str) -> int:
-    """Extract the numeric part from REQ-001, NFR-002, etc.
-    
-    Splits by '-' and uses the second piece (always numeric).
-    Returns -1 if the ID doesn't follow the expected format.
-    """
-    parts = id_str.split("-")
-    if len(parts) < 2:
-        return -1
-    try:
-        return int(parts[1])
-    except ValueError:
-        return -1
-
-
 def validate_sequential(ids: list[str], label: str, result: "LayerResult") -> None:
     """Warn when IDs skip numbers, e.g. REQ-001, REQ-003 (missing REQ-002).
 
@@ -93,8 +77,16 @@ def validate_sequential(ids: list[str], label: str, result: "LayerResult") -> No
         label: Label for the warning message (e.g. "REQ", "US").
         result: LayerResult to append warnings to.
     """
+    def _extract_num(id_str: str) -> int:
+        parts = id_str.split("-")
+        if len(parts) < 2:
+            return -1
+        try:
+            return int(parts[1])
+        except ValueError:
+            return -1
+
     nums = sorted([_extract_num(i) for i in ids])
-    # Skip IDs that don't have numbers (e.g., "solo-developer")
     nums = [n for n in nums if n >= 0]
     if not nums:
         return
@@ -201,67 +193,6 @@ def print_json_output(result: LayerResult):
     print(json.dumps(out, indent=2))
 
 
-# ── Section-to-pattern mapping (single source of truth for ID validation) ─────
-SECTION_ID_PATTERNS = {
-    # GoalSpec
-    "functionalRequirements": "req",
-    "nonFunctionalRequirements": "nfr",
-    "userStories": "us",
-    "successCriteria": "sc",
-    "nonGoals": "ng",
-    # DesignSpec
-    "designGoals": "dg",
-    "personas": "prs",
-    "userJourneys": "uj",
-    "screenInventory": "scr",
-    "screenSpecs": "spc",
-    "interactionPatterns": "pat",
-    "uxAcceptanceCriteria": "uxac",
-    "visualDesignRequirements": "vdr",
-    # ArchSpec
-    "components": "comp",
-    "dataFlow": "flw",
-    "constraints": "con",
-    # DataSpec
-    "primitives": "prim",
-    "enums": "num",
-    "entities": "ent",
-    "relationships": "rel",
-    # ApiSpec
-    "functions": "fn",
-    # TestSpec
-    "tests": "tst",
-    "functionCoverage": "fc",
-    # TaskPlan
-    "epics": "ep",
-    "milestones": "milestone",
-    # Glossary
-    "terms": "gl",
-}
-
-
-def _get_nested(spec: dict, path: str) -> list:
-    """Get a nested list from a spec using dot-separated path.
-    
-    Args:
-        spec: The spec dict.
-        path: Dot-separated path (e.g., "overview.subsystems").
-    
-    Returns:
-        List of items at the path, or empty list if not found.
-    """
-    keys = path.split(".")
-    current = spec
-    for key in keys:
-        if isinstance(current, dict):
-            current = current.get(key, {})
-        else:
-            return []
-    if isinstance(current, list):
-        return current
-    return []
-
-
 def _normalize_ref(ref_value: str | list[str] | None) -> list[str]:
     """Normalize a ref value to a list of strings.
     
@@ -287,16 +218,6 @@ def _normalize_ref(ref_value: str | list[str] | None) -> list[str]:
 
 
 # ── Path-based rule system ────────────────────────────────────────────────────
-
-
-def _derive_label(segment: str) -> str:
-    """Derive a human-readable label from a path segment.
-
-    Handles camelCase and snake_case:  "dataFlow" → "Data Flow",
-    "functionalRequirements" → "Functional Requirements".
-    """
-    label = re.sub(r"([A-Z])", r" \1", segment).title().replace("_", " ").strip()
-    return label
 
 
 @dataclass
@@ -344,11 +265,7 @@ def resolve_path(path: str, spec: dict, extra_specs: dict) -> Resolved:
         items = [items] if items else []
 
     # Compute label from path
-    label = path.replace(":", "").replace(".", " ").title().replace(" ", "").replace(":", " ")
-    # Better: derive from first segment
-    label = first_segment.replace("_", " ").title().replace(" ", "")
-    # Handle camelCase-like names (dataFlow → Data Flow)
-    label = _derive_label(first_segment)
+    label = re.sub(r"([A-Z])", r" \1", first_segment).title().replace("_", " ").strip()
 
     current_items = items
     parent_ids = []
@@ -477,9 +394,18 @@ def _validate_all_ids(spec: dict, result: LayerResult) -> None:
     Automatically extracts IDs from all sections defined in SECTION_ID_PATTERNS.
     Also checks that IDs are sequential (warns if gaps exist).
     """
+    def _get(path: str) -> list:
+        current = spec
+        for key in path.split("."):
+            if isinstance(current, dict):
+                current = current.get(key, {})
+            else:
+                return []
+        return current if isinstance(current, list) else []
+
     items_by_type = {}
     for section_path, pattern_type in SECTION_ID_PATTERNS.items():
-        items = _get_nested(spec, section_path)
+        items = _get(section_path)
         if items:
             items_by_type[pattern_type] = items
     

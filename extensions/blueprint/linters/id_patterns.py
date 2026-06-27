@@ -51,3 +51,41 @@ ID_PATTERNS = {
     "is": {"pattern": r"^IS-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "IS-001-implementLogin", "hint": "Format: IS-NNN-lowerCamelCase"},
     "milestone": {"pattern": r"^MIL-\d+-[A-Z][a-zA-Z]*$", "example": "MIL-001-Setup", "hint": "Format: MIL-NNN-NamePascalCase (e.g. MIL-001-Setup)"},
 }
+
+# Section path → ID pattern type mapping (single source of truth for ID validation)
+SECTION_ID_PATTERNS = {
+    # GoalSpec
+    "functionalRequirements": "req",
+    "nonFunctionalRequirements": "nfr",
+    "userStories": "us",
+    "successCriteria": "sc",
+    "nonGoals": "ng",
+    # DesignSpec
+    "designGoals": "dg",
+    "personas": "prs",
+    "userJourneys": "uj",
+    "screenInventory": "scr",
+    "screenSpecs": "spc",
+    "interactionPatterns": "pat",
+    "uxAcceptanceCriteria": "uxac",
+    "visualDesignRequirements": "vdr",
+    # ArchSpec
+    "components": "comp",
+    "dataFlow": "flw",
+    "constraints": "con",
+    # DataSpec
+    "primitives": "prim",
+    "enums": "num",
+    "entities": "ent",
+    "relationships": "rel",
+    # ApiSpec
+    "functions": "fn",
+    # TestSpec
+    "tests": "tst",
+    "functionCoverage": "fc",
+    # TaskPlan
+    "epics": "ep",
+    "milestones": "milestone",
+    # Glossary
+    "terms": "gl",
+}
