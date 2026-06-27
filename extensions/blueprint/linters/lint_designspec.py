@@ -26,11 +26,6 @@ Usage:
                                [--goal goalspec.json] [--strict] [--json]
 """
 
-import json
-import sys
-from pathlib import Path
-from typing import Optional
-
 from shared import (
     BaseLinter,
     LayerResult,

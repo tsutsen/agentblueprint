@@ -20,9 +20,7 @@ Usage:
     python lint_dataspec.py <dataspec.json> [--schema dataspec.schema.json] [--strict] [--json]
 """
 
-import json
-from pathlib import Path
-from typing import Optional, Set
+from typing import Set
 from shared import BaseLinter, LayerResult, validate_spec_ids, validate_project_and_version
 from rules import SemanticRule
 

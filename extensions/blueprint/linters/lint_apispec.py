@@ -18,10 +18,7 @@ Usage:
     python lint_apispec.py <apispec.json> [--schema apispec.schema.json] [--data dataspec.json] [--strict] [--json]
 """
 
-import json
 import re
-from pathlib import Path
-from typing import Optional, Dict, Any
 from shared import BaseLinter, LayerResult, validate_project_and_version
 from rules import SemanticRule
 

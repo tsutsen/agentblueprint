@@ -10,7 +10,7 @@ shared.py calls into this module when needed.
 """
 
 import re
-from typing import Literal, TypedDict
+from typing import TypedDict
 
 
 # ── Abstract check base ──────────────────────────────────────────────────────

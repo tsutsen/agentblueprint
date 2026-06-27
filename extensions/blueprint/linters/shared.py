@@ -1036,51 +1036,18 @@ def assess_glossary_full(spec: dict) -> CompletenessScore:
 
 # ── Assessor registry ─────────────────────────────────────────────────────────
 
-def _assess_goalspec(spec: dict, _loaded: dict) -> CompletenessScore:
-    return assess_goalspec(spec)
-
-
-def _assess_glossary_full(spec: dict, _loaded: dict) -> CompletenessScore:
-    return assess_glossary_full(spec)
-
-
-def _assess_designspec(spec: dict, _loaded: dict) -> CompletenessScore:
-    return assess_designspec(spec)
-
-
-def _assess_archspec(spec: dict, _loaded: dict) -> CompletenessScore:
-    return assess_archspec(spec)
-
-
-def _assess_dataspec(spec: dict, _loaded: dict) -> CompletenessScore:
-    return assess_dataspec(spec)
-
-
-def _assess_apispec(spec: dict, loaded: dict) -> CompletenessScore:
-    return assess_apispec(spec, loaded.get("data"))
-
-
-def _assess_testspec(spec: dict, loaded: dict) -> CompletenessScore:
-    return assess_testspec(spec, loaded.get("api"))
-
-
-def _assess_taskplan(spec: dict, loaded: dict) -> CompletenessScore:
-    return assess_taskplan(spec, loaded.get("goal"), loaded.get("design"),
-                           loaded.get("arch"))
-
-
-# Registry: spec_name → assess_fn
-# Functions that need cross-spec context take (spec, loaded) where loaded is
-# a dict of all previously-loaded specs by key name.
+# Registry: spec_name → assess_fn(spec, loaded)
+# "loaded" is a dict of all previously-loaded specs by key name.
+# Most assessors ignore loaded; apispec/testspec/plan extract what they need.
 _ASSESSORS: dict[str, callable] = {
-    "goalspec":    _assess_goalspec,
-    "glossary":    _assess_glossary_full,
-    "designspec":  _assess_designspec,
-    "archspec":    _assess_archspec,
-    "dataspec":    _assess_dataspec,
-    "apispec":     _assess_apispec,
-    "testspec":    _assess_testspec,
-    "plan":        _assess_taskplan,
+    "goalspec":    lambda s, _: assess_goalspec(s),
+    "glossary":    lambda s, _: assess_glossary_full(s),
+    "designspec":  lambda s, _: assess_designspec(s),
+    "archspec":    lambda s, _: assess_archspec(s),
+    "dataspec":    lambda s, _: assess_dataspec(s),
+    "apispec":     lambda s, l: assess_apispec(s, l.get("data")),
+    "testspec":    lambda s, l: assess_testspec(s, l.get("api")),
+    "plan":        lambda s, l: assess_taskplan(s, l.get("goal"), l.get("design"), l.get("arch")),
 }
 
 

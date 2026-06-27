@@ -18,11 +18,7 @@ Usage:
     python lint_goalspec.py <goalspec.json> [--schema goalspec.schema.json] [--strict] [--json]
 """
 
-import json
 import re
-import sys
-from pathlib import Path
-from typing import Optional
 
 from shared import (
     BaseLinter,
