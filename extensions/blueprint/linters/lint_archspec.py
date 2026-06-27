@@ -33,16 +33,16 @@ from shared import (
 SEMANTIC_RULES: list[SemanticRule] = [
     # Components must have reqRefs
     {
-        "check": "non_empty",
         "target": "components.reqRefs",
+        "check": "non_empty",
         "target_label": "Component",
         "category": "component_no_reqs",
         "hint": "Link each component to the requirements it helps satisfy.",
     },
     # Flow steps must reference valid components
     {
-        "check": "exists",
         "target": "dataFlow.steps.componentRef",
+        "check": "exists",
         "inside": "components",
         "target_label": "Flow step",
         "ref_label": "component",
@@ -50,15 +50,15 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Subsystems must have componentRefs
     {
-        "check": "non_empty",
         "target": "overview.subsystems.componentRefs",
+        "check": "non_empty",
         "target_label": "Subsystem",
         "category": "subsystem_empty",
     },
     # Components not assigned to any subsystem
     {
-        "check": "covers_all",
         "target": "overview.subsystems.componentRefs",
+        "check": "covers_all",
         "should_cover_all": "components",
         "category": "component_unassigned",
         "covered_label": "Component",
@@ -66,15 +66,15 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Subsystems must not overlap
     {
-        "check": "not_shared",
         "target": "overview.subsystems.componentRefs",
+        "check": "not_shared",
         "target_label": "Subsystem",
         "category": "subsystem_overlap",
     },
     # Flow must have at least 2 steps
     {
-        "check": "has_item_count",
         "target": "dataFlow.steps",
+        "check": "has_item_count",
         "count": 2,
         "compare_mode": "less",
         "target_label": "Flow",
@@ -83,8 +83,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Constraints must not mention implementation
     {
-        "check": "contains_patterns",
         "target": "constraints.description",
+        "check": "contains_patterns",
         "patterns": [
             "postgres",
             "mysql",
@@ -110,22 +110,22 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Flow descriptions must not be empty
     {
-        "check": "non_empty",
         "target": "dataFlow.description",
+        "check": "non_empty",
         "target_label": "Flow",
         "category": "flow_empty_description",
     },
     # Flow steps must have dataRef
     {
-        "check": "non_empty",
         "target": "dataFlow.steps.dataRef",
+        "check": "non_empty",
         "target_label": "Flow step",
         "category": "flow_step_empty_data_ref",
     },
     # Components must not have too many responsibilities
     {
-        "check": "has_item_count",
         "target": "components.responsibilities",
+        "check": "has_item_count",
         "count": 8,
         "compare_mode": "more",
         "target_label": "Component",
@@ -133,8 +133,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Flows must not have too many steps
     {
-        "check": "has_item_count",
         "target": "dataFlow.steps",
+        "check": "has_item_count",
         "count": 15,
         "compare_mode": "more",
         "target_label": "Flow",
@@ -142,8 +142,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Components must not have vague responsibilities
     {
-        "check": "contains_patterns",
         "target": "components.responsibilities",
+        "check": "contains_patterns",
         "patterns": [
             (r"\bconsist(?:ent|ently)\b", "consistent/consistently"),
             (r"\bacross all\b", "across all"),
@@ -160,8 +160,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Responsibilities must not contain inline refs
     {
-        "check": "contains_patterns",
         "target": "components.responsibilities",
+        "check": "contains_patterns",
         "patterns": [
             (r"\bkey\s+flow\s+\w+\b", "key flow references"),
             (r"\bflow\s+\d+[a-z]?\b", "flow number references"),
@@ -173,16 +173,16 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Components must not be isolated (no deps, no dependents)
     {
-        "check": "not_orphan",
         "target": "components",
+        "check": "not_orphan",
         "category": "isolated",
         "target_label": "Component",
         "hint": "An isolated component may indicate a design issue.",
     },
     # GoalSpec FRs must be covered by components
     {
-        "check": "covers_all",
         "target": "components.reqRefs",
+        "check": "covers_all",
         "should_cover_all": "goal:functionalRequirements",
         "category": "fr_uncovered",
         "covered_label": "GoalSpec FR",
@@ -190,8 +190,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # GoalSpec NFRs must be covered by components or constraints
     {
-        "check": "covers_all",
         "target": "components.nfrRefs",
+        "check": "covers_all",
         "should_cover_all": "goal:nonFunctionalRequirements",
         "category": "nfr_uncovered",
         "covered_label": "GoalSpec NFR",
@@ -199,8 +199,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Components must reference valid GoalSpec REQ
     {
-        "check": "exists",
         "target": "components.reqRefs",
+        "check": "exists",
         "inside": "goal:functionalRequirements.id",
         "target_label": "Component",
         "ref_label": "GoalSpec requirement",
@@ -208,8 +208,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Components must reference valid GoalSpec NFR
     {
-        "check": "exists",
         "target": "components.nfrRefs",
+        "check": "exists",
         "inside": "goal:nonFunctionalRequirements.id",
         "target_label": "Component",
         "ref_label": "GoalSpec NFR",
@@ -217,8 +217,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Flow reqRefs must reference valid GoalSpec REQ
     {
-        "check": "exists",
         "target": "dataFlow.reqRefs",
+        "check": "exists",
         "inside": "goal:functionalRequirements.id",
         "target_label": "Flow",
         "ref_label": "GoalSpec requirement",
@@ -226,8 +226,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Constraints must reference valid GoalSpec NFR
     {
-        "check": "exists",
         "target": "constraints.nfrRefs",
+        "check": "exists",
         "inside": "goal:nonFunctionalRequirements.id",
         "target_label": "Constraint",
         "ref_label": "GoalSpec NFR",
@@ -235,8 +235,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Glossary refs: Components must reference valid glossary terms
     {
-        "check": "exists",
         "target": "components.glossaryRefs",
+        "check": "exists",
         "inside": "glossary.terms.id",
         "target_label": "Component",
         "ref_label": "Glossary",
@@ -244,8 +244,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Glossary refs: DataFlow must reference valid glossary terms
     {
-        "check": "exists",
         "target": "dataFlow.glossaryRefs",
+        "check": "exists",
         "inside": "glossary.terms.id",
         "target_label": "Flow",
         "ref_label": "Glossary",
@@ -253,8 +253,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Glossary refs: Constraints must reference valid glossary terms
     {
-        "check": "exists",
         "target": "constraints.glossaryRefs",
+        "check": "exists",
         "inside": "glossary.terms.id",
         "target_label": "Constraint",
         "ref_label": "Glossary",
@@ -262,8 +262,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Component dependencies must reference valid component IDs
     {
-        "check": "exists",
         "target": "components.dependencies",
+        "check": "exists",
         "inside": "components.id",
         "target_label": "Component",
         "ref_label": "component",
@@ -271,8 +271,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Component dependency graph must have no cycles
     {
-        "check": "has_no_cycles",
         "target": "components",
+        "check": "has_no_cycles",
         "deps": "dependencies",
         "target_label": "Component",
         "category": "circular_dependency",
@@ -312,8 +312,8 @@ def _check_components_in_data_flows(
 
 COMPLETENESS_GATES: list = [
     {
-        "check": "has_count",
         "target": "overview.subsystems",
+        "check": "has_count",
         "count": 1,
         "target_label": "subsystem",
         "category": "completeness",
@@ -321,8 +321,8 @@ COMPLETENESS_GATES: list = [
         "description": "Has at least one subsystem",
     },
     {
-        "check": "has_count",
         "target": "components",
+        "check": "has_count",
         "count": 2,
         "target_label": "component",
         "category": "completeness",
@@ -330,8 +330,8 @@ COMPLETENESS_GATES: list = [
         "description": "Has at least 2 components",
     },
     {
-        "check": "has_count",
         "target": "dataFlow",
+        "check": "has_count",
         "count": 1,
         "target_label": "data flow",
         "category": "completeness",
@@ -339,8 +339,8 @@ COMPLETENESS_GATES: list = [
         "description": "Has at least one data flow",
     },
     {
-        "check": "has_count",
         "target": "constraints",
+        "check": "has_count",
         "count": 1,
         "target_label": "constraint",
         "category": "completeness",
@@ -348,8 +348,8 @@ COMPLETENESS_GATES: list = [
         "description": "Has at least one constraint",
     },
     {
-        "check": "all_have",
         "target": "components",
+        "check": "all_have",
         "field": "reqRefs",
         "min_length": 1,
         "target_label": "component",
@@ -358,8 +358,8 @@ COMPLETENESS_GATES: list = [
         "description": "All components have REQ refs",
     },
     {
-        "check": "value_check",
         "target": "goalSpecVersion",
+        "check": "value_check",
         "expected": "truthy",
         "target_label": "goalSpecVersion",
         "category": "completeness",
@@ -367,8 +367,8 @@ COMPLETENESS_GATES: list = [
         "description": "goalSpecVersion is set",
     },
     {
-        "check": "value_check",
         "target": "dataSpecVersion",
+        "check": "value_check",
         "expected": "truthy",
         "target_label": "dataSpecVersion",
         "category": "completeness",
@@ -376,8 +376,8 @@ COMPLETENESS_GATES: list = [
         "description": "dataSpecVersion is set",
     },
     {
-        "check": "value_check",
         "target": "apiSpecVersion",
+        "check": "value_check",
         "expected": "truthy",
         "target_label": "apiSpecVersion",
         "category": "completeness",

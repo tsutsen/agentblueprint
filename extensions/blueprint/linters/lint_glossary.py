@@ -242,8 +242,8 @@ def _check_cross_spec_coverage(spec: dict, result: LayerResult, extra_specs: dic
 SEMANTIC_RULES: list[SemanticRule] = [
     # Related terms must reference existing glossary terms
     {
-        "check": "exists",
         "target": "terms.relatedTerms",
+        "check": "exists",
         "inside": "terms.id",
         "target_label": "Term",
         "ref_label": "Glossary term",
@@ -273,16 +273,34 @@ CROSS_SPEC_DEPS = ["goal", "arch", "data", "api"]
 # ── Completeness Gates ────────────────────────────────────────────────────────
 
 COMPLETENESS_GATES: list = [
-    {"check": "has_count", "target": "terms", "count": 3,
-     "target_label": "term", "category": "completeness", "required_at": "draft",
-     "description": "Has at least 3 terms"},
-    {"check": "all_have", "target": "terms", "field": "definition",
-     "min_length": 10, "target_label": "term", "category": "completeness",
-     "required_at": "draft",
-     "description": "All terms have definitions >= 10 chars"},
-    {"check": "has_count", "target": "terms", "count": 5,
-     "target_label": "term", "category": "completeness", "required_at": "review",
-     "description": "Has at least 5 terms"},
+    {
+        "target": "terms",
+        "check": "has_count",
+        "count": 3,
+        "target_label": "term",
+        "category": "completeness",
+        "required_at": "draft",
+        "description": "Has at least 3 terms",
+    },
+    {
+        "target": "terms",
+        "check": "all_have",
+        "field": "definition",
+        "min_length": 10,
+        "target_label": "term",
+        "category": "completeness",
+        "required_at": "draft",
+        "description": "All terms have definitions >= 10 chars",
+    },
+    {
+        "target": "terms",
+        "check": "has_count",
+        "count": 5,
+        "target_label": "term",
+        "category": "completeness",
+        "required_at": "review",
+        "description": "Has at least 5 terms",
+    },
 ]
 
 

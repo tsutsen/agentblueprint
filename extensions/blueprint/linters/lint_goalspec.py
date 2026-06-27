@@ -36,40 +36,40 @@ from rules import SemanticRule
 SEMANTIC_RULES: list[SemanticRule] = [
     # FR IDs must be unique
     {
-        "check": "is_unique",
         "target": "functionalRequirements.id",
+        "check": "is_unique",
         "target_label": "FR",
         "category": "duplicate_id",
         "hint": "Each FR must have a unique ID.",
     },
     # NFR IDs must be unique
     {
-        "check": "is_unique",
         "target": "nonFunctionalRequirements.id",
+        "check": "is_unique",
         "target_label": "NFR",
         "category": "duplicate_id",
         "hint": "Each NFR must have a unique ID.",
     },
     # US IDs must be unique
     {
-        "check": "is_unique",
         "target": "userStories.id",
+        "check": "is_unique",
         "target_label": "US",
         "category": "duplicate_id",
         "hint": "Each US must have a unique ID.",
     },
     # SC IDs must be unique
     {
-        "check": "is_unique",
         "target": "successCriteria.id",
+        "check": "is_unique",
         "target_label": "SC",
         "category": "duplicate_id",
         "hint": "Each SC must have a unique ID.",
     },
     # NG IDs must be unique
     {
-        "check": "is_unique",
         "target": "nonGoals.id",
+        "check": "is_unique",
         "target_label": "NG",
         "category": "duplicate_id",
         "hint": "Each NG must have a unique ID.",
@@ -77,8 +77,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
 
     # FRs must have descriptions
     {
-        "check": "non_empty",
         "target": "functionalRequirements.description",
+        "check": "non_empty",
         "target_label": "FR",
         "category": "fr_empty_description",
         "hint": "Every functional requirement must have a description.",
@@ -86,8 +86,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
 
     # NFRs must have descriptions
     {
-        "check": "non_empty",
         "target": "nonFunctionalRequirements.description",
+        "check": "non_empty",
         "target_label": "NFR",
         "category": "nfr_empty_description",
         "hint": "Every NFR must have a description.",
@@ -95,8 +95,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
 
     # User stories must have capabilities
     {
-        "check": "non_empty",
         "target": "userStories.capability",
+        "check": "non_empty",
         "target_label": "User story",
         "category": "story_empty_capability",
         "hint": "Every user story must have a capability.",
@@ -104,8 +104,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
 
     # Success criteria must have descriptions
     {
-        "check": "non_empty",
         "target": "successCriteria.description",
+        "check": "non_empty",
         "target_label": "Success criterion",
         "category": "sc_empty_description",
         "hint": "Every success criterion must have a description.",
@@ -113,8 +113,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
 
     # NFRs must have scale
     {
-        "check": "non_empty",
         "target": "nonFunctionalRequirements.scale",
+        "check": "non_empty",
         "target_label": "NFR",
         "category": "nfr_missing_scale",
         "hint": "Every NFR must have a scale defined.",
@@ -122,8 +122,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
 
     # NFRs must have meter
     {
-        "check": "non_empty",
         "target": "nonFunctionalRequirements.meter",
+        "check": "non_empty",
         "target_label": "NFR",
         "category": "nfr_missing_meter",
         "hint": "Every NFR must have a meter defined.",
@@ -131,8 +131,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     
     # FRs must not contain implementation details
     {
-        "check": "contains_patterns",
         "target": "functionalRequirements.description",
+        "check": "contains_patterns",
         "patterns": [
             "use ", "using ", "call ", "via ", "with ", "implement", "library", "framework",
         ],
@@ -143,8 +143,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
 
     # User stories must not contain feature-like language
     {
-        "check": "contains_patterns",
         "target": "userStories.capability",
+        "check": "contains_patterns",
         "patterns": [
             "use ", "using ", "implement", "button", "dropdown",
             "api", "endpoint", "library", "framework", "click",
@@ -156,8 +156,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
 
     # Success criteria must not contain subjective language
     {
-        "check": "contains_patterns",
         "target": "successCriteria.description",
+        "check": "contains_patterns",
         "patterns": [
             "feel", "feels", "fast", "slow", "good", "happy",
             "nice", "smooth", "intuitive", "easy", "simple",
@@ -169,8 +169,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
 
     # Non-goals must not be vague
     {
-        "check": "contains_patterns",
         "target": "nonGoals.capability",
+        "check": "contains_patterns",
         "patterns": [
             "everything", "advanced", "features", "stuff",
             "things", "all", "etc", "misc",
@@ -181,8 +181,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Glossary refs: FRs must reference valid glossary terms
     {
-        "check": "exists",
         "target": "functionalRequirements.glossaryRefs",
+        "check": "exists",
         "inside": "glossary.terms.id",
         "target_label": "FR",
         "ref_label": "Glossary",
@@ -190,8 +190,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Glossary refs: USs must reference valid glossary terms
     {
-        "check": "exists",
         "target": "userStories.glossaryRefs",
+        "check": "exists",
         "inside": "glossary.terms.id",
         "target_label": "US",
         "ref_label": "Glossary",
@@ -199,8 +199,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Glossary refs: Non-goals must reference valid glossary terms
     {
-        "check": "exists",
         "target": "nonGoals.glossaryRefs",
+        "check": "exists",
         "inside": "glossary.terms.id",
         "target_label": "Non-goal",
         "ref_label": "Glossary",
@@ -208,8 +208,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Glossary refs: NFRs must reference valid glossary terms
     {
-        "check": "exists",
         "target": "nonFunctionalRequirements.glossaryRefs",
+        "check": "exists",
         "inside": "glossary.terms.id",
         "target_label": "NFR",
         "ref_label": "Glossary",
@@ -397,31 +397,72 @@ def _check_non_goals(spec: dict, result: LayerResult, extra_specs: dict) -> None
 
 COMPLETENESS_GATES: list = [
     # Draft
-    {"check": "has_count", "target": "functionalRequirements", "count": 1,
-     "target_label": "FR", "category": "completeness", "required_at": "draft",
-     "description": "Has at least one functional requirement"},
-    {"check": "has_count", "target": "userStories", "count": 1,
-     "target_label": "user story", "category": "completeness", "required_at": "draft",
-     "description": "Has at least one user story"},
-    {"check": "has_count", "target": "successCriteria", "count": 1,
-     "target_label": "success criterion", "category": "completeness", "required_at": "draft",
-     "description": "Has at least one success criterion"},
-    {"check": "has_count", "target": "nonGoals", "count": 1,
-     "target_label": "non-goal", "category": "completeness", "required_at": "draft",
-     "description": "Has at least one non-goal"},
+    {
+        "target": "functionalRequirements",
+        "check": "has_count",
+        "count": 1,
+        "target_label": "FR",
+        "category": "completeness",
+        "required_at": "draft",
+        "description": "Has at least one functional requirement",
+    },
+    {
+        "target": "userStories",
+        "check": "has_count",
+        "count": 1,
+        "target_label": "user story",
+        "category": "completeness",
+        "required_at": "draft",
+        "description": "Has at least one user story",
+    },
+    {
+        "target": "successCriteria",
+        "check": "has_count",
+        "count": 1,
+        "target_label": "success criterion",
+        "category": "completeness",
+        "required_at": "draft",
+        "description": "Has at least one success criterion",
+    },
+    {
+        "target": "nonGoals",
+        "check": "has_count",
+        "count": 1,
+        "target_label": "non-goal",
+        "category": "completeness",
+        "required_at": "draft",
+        "description": "Has at least one non-goal",
+    },
     # Review
-    {"check": "none_match", "target": "nonFunctionalRequirements",
-     "field": "scale", "pattern": "^TBD",
-     "target_label": "NFR", "category": "completeness", "required_at": "review",
-     "description": "All NFRs have Scale and Meter defined (no TBD)"},
+    {
+        "target": "nonFunctionalRequirements",
+        "check": "none_match",
+        "field": "scale",
+        "pattern": "^TBD",
+        "target_label": "NFR",
+        "category": "completeness",
+        "required_at": "review",
+        "description": "All NFRs have Scale and Meter defined (no TBD)",
+    },
     # Confirmed
-    {"check": "value_check", "target": "objective.confirmedAfterCompletion",
-     "expected": "truthy", "target_label": "confirmedAfterCompletion",
-     "category": "completeness", "required_at": "confirmed",
-     "description": "Objective re-confirmed after completion"},
-    {"check": "value_check", "target": "status", "expected": "confirmed",
-     "target_label": "status", "category": "completeness", "required_at": "confirmed",
-     "description": "Status is confirmed"},
+    {
+        "target": "objective.confirmedAfterCompletion",
+        "check": "value_check",
+        "expected": "truthy",
+        "target_label": "confirmedAfterCompletion",
+        "category": "completeness",
+        "required_at": "confirmed",
+        "description": "Objective re-confirmed after completion",
+    },
+    {
+        "target": "status",
+        "check": "value_check",
+        "expected": "confirmed",
+        "target_label": "status",
+        "category": "completeness",
+        "required_at": "confirmed",
+        "description": "Status is confirmed",
+    },
 ]
 
 

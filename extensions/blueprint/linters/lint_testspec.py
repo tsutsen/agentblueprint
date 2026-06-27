@@ -307,16 +307,16 @@ def _check_lifecycle(spec: dict, result: LayerResult, extra_specs: dict = None) 
 SEMANTIC_RULES: list[SemanticRule] = [
     # Test IDs must be unique
     {
-        "check": "is_unique",
         "target": "tests.id",
+        "check": "is_unique",
         "target_label": "Test",
         "category": "duplicate_id",
         "hint": "Each test must have a unique ID.",
     },
     # fnRefs must exist in ApiSpec
     {
-        "check": "exists",
         "target": "tests.fnRef",
+        "check": "exists",
         "inside": "api:functions.id",
         "target_label": "Test",
         "ref_label": "ApiSpec function",
@@ -325,8 +325,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Every ApiSpec function must have tests
     {
-        "check": "covers_all",
         "target": "tests.fnRef",
+        "check": "covers_all",
         "should_cover_all": "api:functions",
         "covered_label": "ApiSpec function",
         "target_label": "Test",
@@ -335,16 +335,16 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Error-path tests must have errorCode
     {
-        "check": "non_empty",
         "target": "tests.errorCode",
+        "check": "non_empty",
         "target_label": "Test",
         "category": "error_path_missing_code",
         "hint": "Every error-path test must declare the errorCode it exercises.",
     },
     # Happy-path/edge-case tests must have expectedOutput
     {
-        "check": "non_empty",
         "target": "tests.expectedOutput",
+        "check": "non_empty",
         "target_label": "Test",
         "category": "missing_expected_output",
         "hint": "Every happy-path and edge-case test must assert a concrete expected output.",
@@ -373,18 +373,42 @@ CROSS_SPEC_DEPS = ["api", "glossary"]
 # ── Completeness Gates ────────────────────────────────────────────────────────
 
 COMPLETENESS_GATES: list = [
-    {"check": "has_count", "target": "tests", "count": 1,
-     "target_label": "test", "category": "completeness", "required_at": "draft",
-     "description": "Has at least one test"},
-    {"check": "has_count", "target": "functionCoverage", "count": 1,
-     "target_label": "functionCoverage entry", "category": "completeness", "required_at": "draft",
-     "description": "Has functionCoverage summary"},
-    {"check": "value_check", "target": "apiSpecVersion", "expected": "truthy",
-     "target_label": "apiSpecVersion", "category": "completeness", "required_at": "review",
-     "description": "apiSpecVersion is set"},
-    {"check": "value_check", "target": "verificationStatus", "expected": "confirmed",
-     "target_label": "verificationStatus", "category": "completeness", "required_at": "confirmed",
-     "description": "Independent verification completed"},
+    {
+        "target": "tests",
+        "check": "has_count",
+        "count": 1,
+        "target_label": "test",
+        "category": "completeness",
+        "required_at": "draft",
+        "description": "Has at least one test",
+    },
+    {
+        "target": "functionCoverage",
+        "check": "has_count",
+        "count": 1,
+        "target_label": "functionCoverage entry",
+        "category": "completeness",
+        "required_at": "draft",
+        "description": "Has functionCoverage summary",
+    },
+    {
+        "target": "apiSpecVersion",
+        "check": "value_check",
+        "expected": "truthy",
+        "target_label": "apiSpecVersion",
+        "category": "completeness",
+        "required_at": "review",
+        "description": "apiSpecVersion is set",
+    },
+    {
+        "target": "verificationStatus",
+        "check": "value_check",
+        "expected": "confirmed",
+        "target_label": "verificationStatus",
+        "category": "completeness",
+        "required_at": "confirmed",
+        "description": "Independent verification completed",
+    },
 ]
 
 

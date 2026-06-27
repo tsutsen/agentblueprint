@@ -227,8 +227,8 @@ def _check_entity_visibility(spec: dict, result: LayerResult, extra_specs: dict 
 SEMANTIC_RULES: list[SemanticRule] = [
     # Entity names must be PascalCase
     {
-        "check": "contains_patterns",
         "target": "entities.name",
+        "check": "contains_patterns",
         "patterns": [r"^[A-Z][A-Za-z0-9]*$"],
         "negate": True,
         "target_label": "Entity",
@@ -237,8 +237,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Field names must be camelCase
     {
-        "check": "contains_patterns",
         "target": "entities.fields.name",
+        "check": "contains_patterns",
         "patterns": [r"^[a-z][A-Za-z0-9]*$"],
         "negate": True,
         "target_label": "Field",
@@ -247,8 +247,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Method names must be camelCase
     {
-        "check": "contains_patterns",
         "target": "entities.methods.name",
+        "check": "contains_patterns",
         "patterns": [r"^[a-z][A-Za-z0-9]*$"],
         "negate": True,
         "target_label": "Method",
@@ -257,8 +257,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Enum names must be PascalCase
     {
-        "check": "contains_patterns",
         "target": "enums.name",
+        "check": "contains_patterns",
         "patterns": [r"^[A-Z][A-Za-z0-9]*$"],
         "negate": True,
         "target_label": "Enum",
@@ -267,8 +267,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Enum values must be SCREAMING_SNAKE_CASE
     {
-        "check": "contains_patterns",
         "target": "enums.values.name",
+        "check": "contains_patterns",
         "patterns": [r"^[A-Z][A-Z0-9_]*$"],
         "negate": True,
         "target_label": "Enum value",
@@ -277,8 +277,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Entity extends must reference existing entity
     {
-        "check": "exists",
         "target": "entities.extends",
+        "check": "exists",
         "inside": "entities.name",
         "target_label": "Entity",
         "ref_label": "Entity",
@@ -287,8 +287,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Relationship from must reference existing entity
     {
-        "check": "exists",
         "target": "relationships.from",
+        "check": "exists",
         "inside": "entities.name",
         "target_label": "Relationship",
         "ref_label": "Entity",
@@ -297,8 +297,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Relationship to must reference existing entity
     {
-        "check": "exists",
         "target": "relationships.to",
+        "check": "exists",
         "inside": "entities.name",
         "target_label": "Relationship",
         "ref_label": "Entity",
@@ -307,8 +307,8 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Relationship type must be valid
     {
-        "check": "non_empty",
         "target": "relationships.type",
+        "check": "non_empty",
         "target_label": "Relationship",
         "category": "rel_type_invalid",
         "hint": "Valid types: association, composition, aggregation, dependency, realization.",
@@ -340,21 +340,33 @@ CROSS_SPEC_DEPS = []
 
 COMPLETENESS_GATES: list = [
     {
-        "check": "has_count",
         "target": "entities",
+        "check": "has_count",
         "count": 1,
         "target_label": "entity",
         "category": "completeness",
         "required_at": "draft",
-        "description": "Has at least one entity"
+        "description": "Has at least one entity",
     },
-    {"check": "has_count", "target": "relationships", "count": 1,
-     "target_label": "relationship", "category": "completeness", "required_at": "draft",
-     "description": "Has at least one relationship"},
-    {"check": "all_have", "target": "entities", "field": "description",
-     "min_length": 1, "target_label": "entity", "category": "completeness",
-     "required_at": "review",
-     "description": "All entities have descriptions"},
+    {
+        "target": "relationships",
+        "check": "has_count",
+        "count": 1,
+        "target_label": "relationship",
+        "category": "completeness",
+        "required_at": "draft",
+        "description": "Has at least one relationship",
+    },
+    {
+        "target": "entities",
+        "check": "all_have",
+        "field": "description",
+        "min_length": 1,
+        "target_label": "entity",
+        "category": "completeness",
+        "required_at": "review",
+        "description": "All entities have descriptions",
+    },
 ]
 
 
