@@ -23,7 +23,7 @@ from id_patterns import ID_PATTERNS, SECTION_ID_PATTERNS
 
 def _validate_id(id_value: str, id_type: str) -> tuple[bool, str]:
     """Validate a single ID against its canonical pattern.
-    
+
     Returns (is_valid, error_message).
     """
     if id_type not in ID_PATTERNS:
@@ -31,11 +31,15 @@ def _validate_id(id_value: str, id_type: str) -> tuple[bool, str]:
     pattern = ID_PATTERNS[id_type]["pattern"]
     if re.match(pattern, id_value):
         return True, ""
-    return False, f"ID '{id_value}' does not follow {ID_PATTERNS[id_type]['hint'].lower()}"
+    return (
+        False,
+        f"ID '{id_value}' does not follow {ID_PATTERNS[id_type]['hint'].lower()}",
+    )
 
 
-def _validate_ids(items: list[dict], id_key: str, id_type: str,
-                  category: str, result: "LayerResult") -> None:
+def _validate_ids(
+    items: list[dict], id_key: str, id_type: str, category: str, result: "LayerResult"
+) -> None:
     """Validate IDs for a list of items (private - use validate_spec_ids)."""
     for item in items:
         iid = item.get(id_key, "")
@@ -44,19 +48,21 @@ def _validate_ids(items: list[dict], id_key: str, id_type: str,
             pattern = ID_PATTERNS[id_type]
             hint_text = pattern["hint"].replace("Format: ", "").lower()
             example = pattern["example"]
-            result.add("error", category, msg,
-                hint=f"Use format {hint_text} (e.g. '{example}').")
+            result.add(
+                "error",
+                category,
+                msg,
+                hint=f"Use format {hint_text} (e.g. '{example}').",
+            )
 
 
-
-def validate_spec_ids(items_by_type: dict[str, list],
-                      result: "LayerResult") -> None:
+def validate_spec_ids(items_by_type: dict[str, list], result: "LayerResult") -> None:
     """Validate all IDs in a spec at once.
-    
+
     Args:
         items_by_type: Mapping of id_type → items list (e.g. {"comp": components, "flw": flows}).
         result: LayerResult to append errors to.
-    
+
     Example:
         validate_spec_ids({
             "comp": spec.get("components", []),
@@ -77,6 +83,7 @@ def validate_sequential(ids: list[str], label: str, result: "LayerResult") -> No
         label: Label for the warning message (e.g. "REQ", "US").
         result: LayerResult to append warnings to.
     """
+
     def _extract_num(id_str: str) -> int:
         parts = id_str.split("-")
         if len(parts) < 2:
@@ -93,14 +100,20 @@ def validate_sequential(ids: list[str], label: str, result: "LayerResult") -> No
     for i, n in enumerate(nums):
         expected = i + 1
         if n != expected:
-            result.add("warning", "id_gap",
-                f"{label} numbering skips from {expected-1:03d} to {n:03d}.",
-                hint=f"Consider renumbering to keep {label} IDs sequential.")
+            result.add(
+                "warning",
+                "id_gap",
+                f"{label} numbering skips from {expected - 1:03d} to {n:03d}.",
+                hint=f"Consider renumbering to keep {label} IDs sequential.",
+            )
             break  # report first gap only
-def validate_project_and_version(spec: dict, spec_name: str, goal: dict,
-                              result: "LayerResult") -> None:
+
+
+def validate_project_and_version(
+    spec: dict, spec_name: str, goal: dict, result: "LayerResult"
+) -> None:
     """Check project match and version pinning against GoalSpec.
-    
+
     Args:
         spec: The spec to check.
         spec_name: Name for error messages (e.g. "archspec", "designspec").
@@ -108,29 +121,39 @@ def validate_project_and_version(spec: dict, spec_name: str, goal: dict,
         result: LayerResult to append errors to.
     """
     if spec.get("project") != goal.get("project"):
-        result.add("error", "project_match",
-            f"Project mismatch: {spec_name}='{spec.get("project")}' goalspec='{goal.get("project")}'.",
-            hint=f"Both specs must have identical 'project' values.")
+        result.add(
+            "error",
+            "project_match",
+            f"Project mismatch: {spec_name}='{spec.get('project')}' goalspec='{goal.get('project')}'.",
+            hint=f"Both specs must have identical 'project' values.",
+        )
     pinned = spec.get("goalSpecVersion")
     if pinned and pinned != goal.get("version"):
-        result.add("error", "version_drift",
-            f"{spec_name}.goalSpecVersion='{pinned}' does not match goalspec.version='{goal.get("version")}'.",
-            hint=f"Update goalSpecVersion after reviewing {spec_name} against the updated GoalSpec.")
+        result.add(
+            "error",
+            "version_drift",
+            f"{spec_name}.goalSpecVersion='{pinned}' does not match goalspec.version='{goal.get('version')}'.",
+            hint=f"Update goalSpecVersion after reviewing {spec_name} against the updated GoalSpec.",
+        )
+
 
 # ── Canonical types ───────────────────────────────────────────────────────────
+
 
 @dataclass
 class Issue:
     """A single lint finding."""
-    severity: str          # "error" | "warning" | "info"
-    category: str          # e.g. "schema", "duplicate_id", "cross-ref"
-    message: str           # Human-readable description of the issue
-    hint: str = ""         # Optional suggestion for how to fix
+
+    severity: str  # "error" | "warning" | "info"
+    category: str  # e.g. "schema", "duplicate_id", "cross-ref"
+    message: str  # Human-readable description of the issue
+    hint: str = ""  # Optional suggestion for how to fix
 
 
 @dataclass
 class LayerResult:
     """Result from a single lint layer (one spec or cross-spec check)."""
+
     name: str = ""
     errors: list[Issue] = field(default_factory=list)
     warnings: list[Issue] = field(default_factory=list)
@@ -153,14 +176,15 @@ class LayerResult:
 
 # ── Output formatting ────────────────────────────────────────────────────────
 
+
 def print_human(result: LayerResult, path: str = ""):
     """Print human-readable lint report."""
-    print(f"\n{'─'*60}")
+    print(f"\n{'─' * 60}")
     if path:
         print(f"  {result.name} Lint Report — {path}")
     else:
         print(f"  {result.name} Lint Report")
-    print(f"{'─'*60}")
+    print(f"{'─' * 60}")
 
     if not result.all_issues:
         print("  ✓ All checks passed.\n")
@@ -187,23 +211,29 @@ def print_json_output(result: LayerResult):
     """Print JSON lint report."""
     out = {
         "clean": result.clean,
-        "errors": [{"category": e.category, "message": e.message, "hint": e.hint} for e in result.errors],
-        "warnings": [{"category": w.category, "message": w.message, "hint": w.hint} for w in result.warnings]
+        "errors": [
+            {"category": e.category, "message": e.message, "hint": e.hint}
+            for e in result.errors
+        ],
+        "warnings": [
+            {"category": w.category, "message": w.message, "hint": w.hint}
+            for w in result.warnings
+        ],
     }
     print(json.dumps(out, indent=2))
 
 
 def _normalize_ref(ref_value: str | list[str] | None) -> list[str]:
     """Normalize a ref value to a list of strings.
-    
+
     Handles string refs, list refs, and None.
-    
+
     Args:
         ref_value: A ref string, list of refs, or None.
-    
+
     Returns:
         List of ref strings (empty list if None).
-    
+
     Examples:
         >>> _normalize_ref("REQ-001")
         ["REQ-001"]
@@ -223,6 +253,7 @@ def _normalize_ref(ref_value: str | list[str] | None) -> list[str]:
 @dataclass
 class Resolved:
     """Result of resolving a target path."""
+
     values: list
     parent_ids: list
     parent_label: str = ""
@@ -263,14 +294,22 @@ def resolve_path(path: str, spec: dict, extra_specs: dict) -> Resolved:
 
     # Navigate remaining segments (segments[1:])
     return _traverse_segments(
-        segments[1:], items, label,
-        parent_ids=[], parent_items=[], group_sizes=[],
+        segments[1:],
+        items,
+        label,
+        parent_ids=[],
+        parent_items=[],
+        group_sizes=[],
     )
 
 
 def _traverse_segments(
-    segments: list[str], items: list, label: str,
-    parent_ids: list[str], parent_items: list[dict], group_sizes: list[int],
+    segments: list[str],
+    items: list,
+    label: str,
+    parent_ids: list[str],
+    parent_items: list[dict],
+    group_sizes: list[int],
 ) -> Resolved:
     """Walk remaining path segments, flattening lists and navigating dicts.
 
@@ -297,7 +336,9 @@ def _traverse_segments(
                     _navigate_dict_segment(current_items, seg, parent_ids, parent_items)
                 )
             else:
-                return _extract_scalars(current_items, seg, parent_ids, parent_items, label)
+                return _extract_scalars(
+                    current_items, seg, parent_ids, parent_items, label
+                )
 
     return _resolve_final(current_items, parent_ids, parent_items, group_sizes, label)
 
@@ -309,7 +350,9 @@ def _get_item_id(item: dict, fallback: str = "?") -> str:
     return item.get("id", item.get("name", fallback))
 
 
-def _get_parent_context(i: int, item: dict, parent_ids: list[str], parent_items: list[dict]) -> tuple[str, dict]:
+def _get_parent_context(
+    i: int, item: dict, parent_ids: list[str], parent_items: list[dict]
+) -> tuple[str, dict]:
     """Resolve parent_id and parent_item for index i.
 
     Propagates existing parent context, or derives from the item itself.
@@ -373,8 +416,11 @@ def _extract_scalars(
 
 
 def _resolve_final(
-    items: list, parent_ids: list[str], parent_items: list[dict],
-    group_sizes: list[int], label: str,
+    items: list,
+    parent_ids: list[str],
+    parent_items: list[dict],
+    group_sizes: list[int],
+    label: str,
 ) -> Resolved:
     """Finalize after loop — handle empty or unresolved parent_ids."""
     if not items:
@@ -404,10 +450,11 @@ def _resolve_final(
 
 def _validate_all_ids(spec: dict, result: LayerResult) -> None:
     """Validate all IDs in a spec against canonical patterns.
-    
+
     Automatically extracts IDs from all sections defined in SECTION_ID_PATTERNS.
     Also checks that IDs are sequential (warns if gaps exist).
     """
+
     def _get(path: str) -> list:
         current = spec
         for key in path.split("."):
@@ -422,7 +469,7 @@ def _validate_all_ids(spec: dict, result: LayerResult) -> None:
         items = _get(section_path)
         if items:
             items_by_type[pattern_type] = items
-    
+
     if items_by_type:
         validate_spec_ids(items_by_type, result)
         # Check sequential numbering for all ID types
@@ -441,29 +488,30 @@ def _apply_strict_mode(result: LayerResult) -> None:
 
 # ── Base Linter ───────────────────────────────────────────────────────────────
 
+
 class BaseLinter:
     """Base class for all spec linters.
-    
+
     Subclasses define:
     - SPEC_NAME: Name for error messages (e.g., "archspec")
     - SEMANTIC_RULES: Declarative rules for semantic validation
     - MISC_CHECKS: List of (name, func) tuples for custom checks
-    
+
     The run() method orchestrates the full lint pipeline.
     """
-    
+
     SPEC_NAME: str = ""
     SEMANTIC_RULES: list = []
     MISC_CHECKS: list = []  # List of (name, func) tuples
     CROSS_SPEC_DEPS: list = []  # e.g., ["goal", "data", "api"]
-    
+
     def __init__(self, spec: dict, schema_path: Optional[Path], strict: bool):
         self.spec = spec
         self.schema_path = schema_path
         self.strict = strict
         self.result = LayerResult(name=self.SPEC_NAME)
         self.extra_specs: dict = {}
-    
+
     def run(self, **kwargs) -> LayerResult:
         """Main entry point — runs all checks in order."""
         self._store_extra_specs(kwargs)
@@ -474,37 +522,41 @@ class BaseLinter:
         self._run_misc_checks()
         self._strict_mode()
         return self.result
-    
+
     def _store_extra_specs(self, kwargs: dict) -> None:
         """Store extra specs passed to run()."""
         for dep in self.CROSS_SPEC_DEPS:
             if dep in kwargs:
                 self.extra_specs[dep] = kwargs[dep]
-    
+
     def _validate_schema(self) -> None:
         """Validate spec against its JSON schema."""
         if not self.schema_path:
             return
         schema = json.loads(self.schema_path.read_text())
         from lint_schemas import SchemaValidator
+
         for issue in SchemaValidator(schema).validate(self.spec):
             self.result.add(issue.severity, issue.category, issue.message, issue.hint)
-    
+
     def _validate_ids(self) -> None:
         """Validate all IDs in the spec."""
         _validate_all_ids(self.spec, self.result)
-    
+
     def _validate_cross_spec_consistency(self) -> None:
         """Check project match and version pinning."""
         goal = self.extra_specs.get("goal")
         if goal:
             validate_project_and_version(self.spec, self.SPEC_NAME, goal, self.result)
-    
+
     def _run_semantic_rules(self) -> None:
         """Execute declarative semantic rules."""
         from rules import _run_new_semantic_rules
-        _run_new_semantic_rules(self.SEMANTIC_RULES, self.spec, self.result, self.extra_specs)
-    
+
+        _run_new_semantic_rules(
+            self.SEMANTIC_RULES, self.spec, self.result, self.extra_specs
+        )
+
     def _run_misc_checks(self) -> None:
         """Run custom/spec-specific checks."""
         for name, func in self.MISC_CHECKS:
@@ -514,42 +566,45 @@ class BaseLinter:
         """Convert warnings to errors if strict mode."""
         if self.strict:
             _apply_strict_mode(self.result)
-    
+
     @classmethod
     def main(cls):
         """CLI entry point.
-        
+
         Auto-generates --<dep> args from cls.CROSS_SPEC_DEPS.
         """
-        parser = argparse.ArgumentParser(description=f"Lint a {cls.SPEC_NAME} JSON.")
+        parser = argparse.ArgumentParser(description=f"Lint {cls.SPEC_NAME} JSON.")
         parser.add_argument("input", help=f"Path to {cls.SPEC_NAME} JSON")
         parser.add_argument("--schema", help=f"Path to {cls.SPEC_NAME}.schema.json")
-        parser.add_argument("--strict", action="store_true", help="Treat warnings as errors")
+        parser.add_argument(
+            "--strict", action="store_true", help="Treat warnings as errors"
+        )
         parser.add_argument("--json", action="store_true", help="Output as JSON")
-        
+
         # Auto-generate --<dep> args from CROSS_SPEC_DEPS
         for dep in cls.CROSS_SPEC_DEPS:
-            parser.add_argument(f"--{dep}",
-                                help=f"Path to {dep}spec JSON for cross-spec checks")
-        
+            parser.add_argument(
+                f"--{dep}", help=f"Path to {dep}spec JSON for cross-spec checks"
+            )
+
         args = parser.parse_args()
-        
+
         spec = json.loads(Path(args.input).read_text())
         schema_path = Path(args.schema) if args.schema else None
-        
+
         # Load extra specs from auto-generated args
         extra_specs = {}
         for dep in cls.CROSS_SPEC_DEPS:
             arg_value = getattr(args, dep, None)
             if arg_value:
                 extra_specs[dep] = json.loads(Path(arg_value).read_text())
-        
+
         linter = cls(spec, schema_path, args.strict)
         result = linter.run(**extra_specs)
-        
+
         if args.json:
             print_json_output(result)
         else:
             print_human(result, str(args.input))
-        
+
         sys.exit(0 if result.clean else 1)

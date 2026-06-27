@@ -20,6 +20,7 @@ from typing import Optional
 
 from shared import BaseLinter, Issue, LayerResult, print_human, print_json_output
 from lint_schemas import SchemaValidator
+from rules import _run_new_semantic_rules
 
 
 @dataclass
@@ -431,9 +432,9 @@ class IssuesLinter(BaseLinter):
         # blocked_by references must exist in the epic's issue files
         {
             "type": "exists",
-            "section": "_issue_files",
-            "key": "blocked_by",
-            "label": "Issue",
+            "target": "_issue_files.blocked_by",
+            "inside": "_issue_files",
+            "target_label": "Issue",
             "ref_label": "Issue",
             "category": "dependency_missing",
             "hint": "The blocked_by reference must point to a real issue ID.",
@@ -441,9 +442,9 @@ class IssuesLinter(BaseLinter):
         # milestone must exist in TaskPlan milestones
         {
             "type": "exists",
-            "section": "_issue_files",
-            "key": "milestone",
-            "label": "Issue",
+            "target": "_issue_files.milestone",
+            "inside": "taskplan:milestones",
+            "target_label": "Issue",
             "ref_label": "TaskPlan milestone",
             "category": "milestone_missing",
             "hint": "The milestone must exist in TaskPlan milestones.",
@@ -462,7 +463,7 @@ class IssuesLinter(BaseLinter):
         ("body", _check_body),
     ]
     CROSS_SPEC_DEPS = ["taskplan", "goal", "glossary"]
-    
+
     def __init__(self, epics_dir: str, epic_id: str, schema_path: Optional[Path] = None,
                  strict: bool = False):
         self.epics_dir = Path(epics_dir)
@@ -473,11 +474,12 @@ class IssuesLinter(BaseLinter):
         self.extra_specs: dict = {}
         self._issue_files: list = []
         self._epic_data: dict = {}
-        
-        # Load epic and issue files
+
+        # Load epic and issue files, then build spec dict
         self._load_epic()
         self._load_issue_files()
-    
+        self.spec = {"_issue_files": self._issue_files, "_epic_data": self._epic_data}
+
     def _load_epic(self) -> None:
         """Load the epic file for context (acceptance criteria, scope)."""
         epic_folder = self.epics_dir / self.epic_id
@@ -572,27 +574,7 @@ class IssuesLinter(BaseLinter):
     
     def _run_semantic_rules(self) -> None:
         """Run semantic rules with issue files context."""
-        spec = {"_issue_files": self._issue_files, "_epic_data": self._epic_data}
-        _run_semantic_rules(self.SEMANTIC_RULES, spec, self.result, self.extra_specs)
-
-
-        if "## Acceptance criteria" not in md:
-            result.add("error", "structure",
-                f"{issue_file.issue_id}: missing 'Acceptance criteria' section")
-        
-        if "## Blocked by" not in md:
-            result.add("error", "structure",
-                f"{issue_file.issue_id}: missing 'Blocked by' section")
-        
-        ac_pattern = re.compile(r"## Acceptance criteria\s*\n((?:- \[ \] .+\n?)*)")
-        match = ac_pattern.search(md)
-        if match:
-            ac_content = match.group(1)
-            unchecked = len(re.findall(r"- \[ \] ", ac_content))
-            if unchecked == 0 and ac_content.strip():
-                result.add("warning", "structure",
-                    f"{issue_file.issue_id}: all acceptance criteria are checked — "
-                    f"this issue may already be complete")
+        _run_new_semantic_rules(self.SEMANTIC_RULES, self.spec, self.result, self.extra_specs)
 
 
 def run_lint(epic_id: str, epics_dir: str, taskplan: Optional[dict] = None,
@@ -607,6 +589,15 @@ def run_lint(epic_id: str, epics_dir: str, taskplan: Optional[dict] = None,
     """Run the issue linter for a single epic. Returns a LayerResult."""
     linter = IssuesLinter(epics_dir, epic_id, strict=strict)
     return linter.run(taskplan=taskplan, goal=goal, glossary=glossary)
+
+
+def _load_json(path: str, label: str) -> Optional[dict]:
+    """Load a JSON file, printing warning on failure."""
+    try:
+        return json.loads(Path(path).read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        print(f"Warning: Could not load {label} from {path}")
+        return None
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -628,46 +619,19 @@ def main():
                         help="Output results as JSON")
     args = parser.parse_args()
 
-    taskplan = None
-    if args.taskplan:
-        try:
-            taskplan = json.loads(Path(args.taskplan).read_text())
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"Warning: Could not load taskplan from {args.taskplan}")
-
-    goal = None
-    if args.goal:
-        try:
-            goal = json.loads(Path(args.goal).read_text())
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"Warning: Could not load goal from {args.goal}")
-
-    glossary = None
-    if args.glossary:
-        try:
-            glossary = json.loads(Path(args.glossary).read_text())
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"Warning: Could not load glossary from {args.glossary}")
-
-    linter = IssueLinter(args.epics_dir, args.epic, args.strict, glossary=glossary)
-    if goal:
-        linter.goal = goal
-    issues = linter.run(taskplan)
-
-    # Build a LayerResult for consistent output
-    layer = LayerResult(name="issues")
-    for issue in issues:
-        layer.add(issue.severity, issue.category, issue.message, issue.hint)
+    linter = IssuesLinter(args.epics_dir, args.epic, strict=args.strict)
+    result = linter.run(
+        taskplan=_load_json(args.taskplan, "taskplan") if args.taskplan else None,
+        goal=_load_json(args.goal, "goal") if args.goal else None,
+        glossary=_load_json(args.glossary, "glossary") if args.glossary else None,
+    )
 
     if args.json:
-        print_json_output(layer)
+        print_json_output(result)
     else:
-        print_human(layer, f"{args.epic} in {args.epics_dir}")
+        print_human(result, f"{args.epic} in {args.epics_dir}")
 
-    errors = [i for i in issues if i.severity == "error"]
-    if errors or (args.strict and [i for i in issues if i.severity == "warning"]):
-        sys.exit(1)
-    sys.exit(0)
+    sys.exit(0 if result.clean else 1)
 
 
 if __name__ == "__main__":

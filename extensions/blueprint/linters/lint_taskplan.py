@@ -15,12 +15,10 @@ Usage:
     python lint_taskplan.py plan.json --goal goalspec.json
 """
 
-import sys
-import json
-import argparse
 from pathlib import Path
 from typing import Optional
-from shared import BaseLinter, LayerResult, validate_spec_ids
+
+from shared import BaseLinter, LayerResult
 
 
 def _check_requirement_coverage(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
@@ -165,22 +163,5 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     return linter.run(goal=goal)
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Lint a TaskPlan JSON.")
-    parser.add_argument("input",     help="Path to taskplan JSON")
-    parser.add_argument("--schema",  help="Path to taskplan.schema.json")
-    parser.add_argument("--goal",    help="Path to goalspec JSON for cross-spec checks")
-    parser.add_argument("--strict",  action="store_true", help="Treat warnings as errors")
-    args = parser.parse_args()
-
-    spec = json.loads(Path(args.input).read_text())
-    schema_path = Path(args.schema) if args.schema else None
-    goal = json.loads(Path(args.goal).read_text()) if args.goal else None
-
-    result = run_lint(spec, schema_path, goal, args.strict)
-    print_human(result, args.input)
-    sys.exit(0 if result.clean else 1)
-
-
 if __name__ == "__main__":
-    main()
+    TaskPlanLinter.main()
