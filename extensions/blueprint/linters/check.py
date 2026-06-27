@@ -10,7 +10,11 @@ shared.py calls into this module when needed.
 """
 
 import re
+from collections import namedtuple
 from typing import TypedDict
+
+# Unified result wrapper for dispatch_check()
+CheckResult = namedtuple("CheckResult", ["fn", "results", "values", "parent_ids"])
 
 
 # ── Abstract check base ──────────────────────────────────────────────────────
@@ -138,3 +142,42 @@ def check_value(value, expected: str) -> tuple[bool, str]:
             return False, f"cannot compare {value!r}"
     else:
         return str(value) == expected, f"expected '{expected}', got '{value}'"
+
+
+# ── Unified dispatcher ───────────────────────────────────────────────────────
+# Called by both rule handlers (rules.py) and gate handlers (gates.py) to
+# invoke a pure check function and wrap results in a CheckResult namedtuple.
+# The caller (rule or gate handler) formats CheckResult.results into its
+# own output type (LayerResult issues or CompletenessGate instances).
+
+_CHECK_REGISTRY: dict[str, callable] = {
+    "non_empty":    check_non_empty,
+    "count":        check_count,
+    "coverage":     check_coverage,
+    "all_have":     check_all_have,
+    "none_match":   check_none_match,
+    "value":        check_value,
+}
+
+
+def dispatch_check(
+    check_name: str,
+    *args,
+    values: list,
+    parent_ids: list,
+) -> "CheckResult":
+    """Invoke a pure check function and wrap results uniformly.
+
+    Args:
+        check_name: key in _CHECK_REGISTRY (e.g. "non_empty", "count")
+        *args: positional args for the check function
+        values: resolved values (for CheckResult wrapper)
+        parent_ids: resolved parent IDs (for CheckResult wrapper)
+
+    Returns:
+        CheckResult(fn=check_fn, results=..., values=values, parent_ids=...)
+    """
+    fn = _CHECK_REGISTRY.get(check_name)
+    if fn is None:
+        raise ValueError(f"Unknown check: '{check_name}'")
+    return CheckResult(fn=fn, results=fn(*args), values=values, parent_ids=parent_ids)

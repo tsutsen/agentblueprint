@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass
 from typing import Literal, TypedDict, Union
 
-from check import CheckDef, check_coverage, check_non_empty
+from check import CheckDef, CheckResult, dispatch_check
 from shared import LayerResult, Resolved, _normalize_ref, resolve_path
 
 
@@ -126,20 +126,25 @@ SemanticRule = Union[
 
 
 # ── Rule handlers ─────────────────────────────────────────────────────────────
+# Handlers using pure check functions call dispatch_check() from check.py
+# to invoke the shared logic. Handlers with custom traversal logic
+# (exists, unique, no_overlap, patterns, orphans, has_no_cycles)
+# remain as standalone functions.
 
 
-def handle_non_empty(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
-    """Check that resolved values are not empty/missing."""
+def handle_non_empty(resolved, rule, result, spec, extra_specs):
+    """Check that resolved values are not empty/missing. Uses dispatch_check('non_empty')."""
+    cr = dispatch_check("non_empty", resolved.values, resolved.parent_ids,
+                        values=resolved.values, parent_ids=resolved.parent_ids)
     severity = rule.get("severity", "warning")
     category = rule.get("category", "empty")
     target_label = rule.get("target_label", resolved.parent_label)
     hint = rule.get("hint", "")
-
-    for pid, detail in check_non_empty(resolved.values, resolved.parent_ids):
+    for pid, detail in cr.results:
         hint_text = hint or f"Provide a value for {target_label.lower()} '{pid}'."
         result.add(severity, category,
-            f"{target_label} '{pid}': {detail}.",
-            hint=hint_text)
+                    f"{target_label} '{pid}': {detail}.",
+                    hint=hint_text)
 
 
 def handle_exists(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
@@ -292,13 +297,21 @@ def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult, spec: d
                 result.add(severity, category, msg, hint=hint or f"Review {target_label.lower()} for {category}.")
 
 
-def handle_coverage(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
+def handle_coverage(resolved, rule, result, spec, extra_specs):
     """Check that target items reference all items in should_cover_all.
 
+    Uses dispatch_check('coverage') for the pure check logic.
     target path includes the ref field: "overview.subsystems.componentRefs"
     """
-    # Resolve the should_cover_all path
     should_cover_all_resolved = resolve_path(rule["should_cover_all"], spec, extra_specs)
+
+    covered_refs = {_ref for item in resolved.values for _ref in _normalize_ref(item)}
+    should_cover_ids = [
+        i.get("id", str(i)) if isinstance(i, dict) else str(i)
+        for i in should_cover_all_resolved.values
+    ]
+    cr = dispatch_check("coverage", covered_refs, should_cover_ids,
+                        values=resolved.values, parent_ids=resolved.parent_ids)
 
     severity = rule.get("severity", "warning")
     category = rule.get("category", "uncovered")
@@ -306,19 +319,7 @@ def handle_coverage(resolved: Resolved, rule: dict, result: LayerResult, spec: d
     covered_label = rule.get("covered_label", should_cover_all_resolved.parent_label)
     target_label = rule.get("target_label", "source")
 
-    # Collect refs from target path
-    covered_refs = set()
-    for item in resolved.values:
-        for ref in _normalize_ref(item):
-            covered_refs.add(ref)
-
-    # Use shared check function to find uncovered IDs
-    should_cover_ids = [
-        item.get("id", str(item)) if isinstance(item, dict) else str(item)
-        for item in should_cover_all_resolved.values
-    ]
-    for iid in check_coverage(covered_refs, should_cover_ids):
-        # Look up description from items
+    for iid in cr.results:
         desc = ""
         for item in should_cover_all_resolved.values:
             if isinstance(item, dict) and item.get("id") == iid:
@@ -328,8 +329,8 @@ def handle_coverage(resolved: Resolved, rule: dict, result: LayerResult, spec: d
         hint_text = (hint_template or
             f"Add ref '{iid}' to a {target_label} responsible for this.")
         result.add(severity, category,
-            f"{covered_label} {iid} ('{desc_short}') is not covered by any {target_label}.",
-            hint=hint_text)
+                    f"{covered_label} {iid} ('{desc_short}') is not covered by any {target_label}.",
+                    hint=hint_text)
 
 
 def handle_orphans(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:

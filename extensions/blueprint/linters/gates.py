@@ -17,7 +17,9 @@ CheckDef and shared check functions live in check.py.
 from dataclasses import dataclass
 from typing import Literal, TypedDict, Union
 
-from check import CheckDef, check_all_have, check_count, check_coverage, check_non_empty, check_none_match, check_value
+from check import (
+    CheckDef, CheckResult, _GATE_CHECKS, dispatch_check,
+)
 from shared import (
     CompletenessGate,
     CompletenessScore,
@@ -85,152 +87,105 @@ GateDef = Union[
 ]
 
 
-# ── Gate handlers ────────────────────────────────────────────────────────────
-# Each handler receives the Resolved data for the target path,
-# the gate dict, and the spec/extra_specs.
-# Returns a list of CompletenessGate instances (one per gate check).
+# ── Gate handler factory ─────────────────────────────────────────────────────
+# All gate handlers follow the same pattern:
+#   1) Extract params from gate dict
+#   2) Call a pure check function via dispatch_check()
+#   3) Format CheckResult.results into list[CompletenessGate]
+#
+# _make_gate_handler() generates a handler from:
+#   - build_args: (gate, resolved, spec, extra_specs) -> (check_name, *args)
+#   - format_fn: (gate, resolved, CheckResult) -> list[CompletenessGate]
 
 
-def handle_gate_non_empty(
-    resolved: Resolved, gate: dict, spec: dict, extra_specs: dict
-) -> list[CompletenessGate]:
-    """Check that target list/field is not empty."""
-    required_at = gate["required_at"]
-    description = gate.get("description",
-        f"{gate.get('target_label', resolved.parent_label)} is not empty")
-    hint = gate.get("hint", "")
-
-    failures = check_non_empty(resolved.values, resolved.parent_ids)
-
-    if not failures:
-        return [CompletenessGate(description=description, passed=True,
-                                  required_at=required_at)]
-
-    details = [f"'{pid}': {detail}" for pid, detail in failures]
-    return [CompletenessGate(
-        description=description, passed=False, required_at=required_at,
-        detail=f"Empty: {', '.join(details)}"
-    )]
+def _make_gate_handler(build_args, format_fn):
+    """Generate a gate handler from arg builder and result formatter."""
+    def handler(resolved, gate, spec, extra_specs):
+        args = build_args(gate, resolved, spec, extra_specs)
+        cr = dispatch_check(args[0], *args[1:],
+                            values=resolved.values, parent_ids=resolved.parent_ids)
+        return format_fn(gate, resolved, cr)
+    return handler
 
 
-def handle_gate_has_count(
-    resolved: Resolved, gate: dict, spec: dict, extra_specs: dict
-) -> list[CompletenessGate]:
-    """Check that target list has at least `count` items."""
-    required_at = gate["required_at"]
-    count = gate["count"]
-    target_label = gate.get("target_label", resolved.parent_label)
-    description = gate.get("description",
-        f"{target_label} has at least {count} item(s)")
-
-    passed, detail = check_count(resolved.values, count)
-
-    return [CompletenessGate(
-        description=description, passed=passed, required_at=required_at,
-        detail=detail
-    )]
-
-
-def handle_gate_covers_all(
-    resolved: Resolved, gate: dict, spec: dict, extra_specs: dict
-) -> list[CompletenessGate]:
-    """Check that all items in should_cover_all are referenced by target."""
-    required_at = gate["required_at"]
-    covered_label = gate.get("covered_label", "")
-    target_label = gate.get("target_label", "source")
-    description = gate.get("description",
-        f"All {covered_label} covered by {target_label}")
-
-    # Resolve the should_cover_all path
-    should_cover_resolved = resolve_path(gate["should_cover_all"], spec, extra_specs)
-
-    target_refs = set()
-    for val in resolved.values:
-        for ref in _normalize_ref(val):
-            target_refs.add(ref)
-
-    should_cover_ids = [
-        item.get("id", str(item)) if isinstance(item, dict) else str(item)
-        for item in should_cover_resolved.values
-    ]
-    uncovered = check_coverage(target_refs, should_cover_ids)
-
-    if not uncovered:
-        return [CompletenessGate(description=description, passed=True,
-                                  required_at=required_at)]
-
-    return [CompletenessGate(
-        description=description, passed=False, required_at=required_at,
-        detail=f"Uncovered: {', '.join(str(u) for u in uncovered)}"
-    )]
-
-
-def handle_gate_all_have(
-    resolved: Resolved, gate: dict, spec: dict, extra_specs: dict
-) -> list[CompletenessGate]:
-    """Check that every item has a non-empty field."""
-    required_at = gate["required_at"]
-    field_name = gate["field"]
-    min_length = gate.get("min_length", 0)
-    target_label = gate.get("target_label", resolved.parent_label)
-    description = gate.get("description",
-        f"All {target_label} have {field_name}")
-
-    items = resolved.values
-    failures = check_all_have(items, field_name, min_length)
-
-    if not failures:
-        return [CompletenessGate(description=description, passed=True,
-                                  required_at=required_at)]
-
-    ids = [pid for pid, _ in failures]
-    return [CompletenessGate(
-        description=description, passed=False, required_at=required_at,
-        detail=f"Missing {field_name}: {', '.join(str(i) for i in ids)}"
-    )]
-
-
-def handle_gate_none_match(
-    resolved: Resolved, gate: dict, spec: dict, extra_specs: dict
-) -> list[CompletenessGate]:
-    """Check that no item matches a forbidden pattern."""
-    required_at = gate["required_at"]
-    field_name = gate["field"]
-    pattern = gate["pattern"]
-    target_label = gate.get("target_label", resolved.parent_label)
-    description = gate.get("description",
-        f"No {target_label} have {field_name} matching {pattern}")
-
-    items = resolved.values
-    matches = check_none_match(items, field_name, pattern)
-
-    if not matches:
-        return [CompletenessGate(description=description, passed=True,
-                                  required_at=required_at)]
-
-    ids = [pid for pid, val in matches]
-    return [CompletenessGate(
-        description=description, passed=False, required_at=required_at,
-        detail=f"Matched: {', '.join(str(i) for i in ids)}"
-    )]
-
-
-def handle_gate_value_check(
-    resolved: Resolved, gate: dict, spec: dict, extra_specs: dict
-) -> list[CompletenessGate]:
-    """Check that a spec-level scalar passes a condition."""
-    required_at = gate["required_at"]
-    expected = gate["expected"]
-    description = gate.get("description",
-        f"{gate.get('target_label', resolved.parent_label)} is {expected}")
-
-    value = resolved.values[0] if resolved.values else None
-    passed, detail = check_value(value, expected)
-
-    return [CompletenessGate(
-        description=description, passed=passed, required_at=required_at,
-        detail=detail
-    )]
+# ── Gate definitions (data-driven) ───────────────────────────────────────────
+_GATE_DEFS = {
+    "non_empty": {
+        "build_args": lambda g, r, s, e: ("non_empty", r.values, r.parent_ids),
+        "format": lambda g, r, cr: [
+            CompletenessGate(
+                description=g.get("description",
+                    f"{g.get('target_label', r.parent_label)} is not empty"),
+                passed=len(cr.results) == 0, required_at=g["required_at"],
+                detail=(f"Empty: {', '.join(f"'{pid}": {d}" for pid, d in cr.results)}"
+                        if cr.results else "")
+            )
+        ],
+    },
+    "has_count": {
+        "build_args": lambda g, r, s, e: ("count", r.values, g["count"]),
+        "format": lambda g, r, cr: [
+            CompletenessGate(
+                description=g.get("description",
+                    f"{g.get('target_label', r.parent_label)} has at least {g['count']} item(s)"),
+                passed=cr.results[0], required_at=g["required_at"],
+                detail=cr.results[1]
+            )
+        ],
+    },
+    "covers_all": {
+        "build_args": lambda g, r, s, e: (
+            "coverage",
+            {_ref for v in r.values for _ref in _normalize_ref(v)},
+            [i.get("id", str(i)) if isinstance(i, dict) else str(i)
+             for i in resolve_path(g["should_cover_all"], s, e).values],
+        ),
+        "format": lambda g, r, cr: [
+            CompletenessGate(
+                description=g.get("description",
+                    f"All {g.get('covered_label', '')} covered by {g.get('target_label', 'source')}"),
+                passed=len(cr.results) == 0, required_at=g["required_at"],
+                detail=(f"Uncovered: {', '.join(str(u) for u in cr.results)}"
+                        if cr.results else "")
+            )
+        ],
+    },
+    "all_have": {
+        "build_args": lambda g, r, s, e: ("all_have", r.values, g["field"], g.get("min_length", 0)),
+        "format": lambda g, r, cr: [
+            CompletenessGate(
+                description=g.get("description",
+                    f"All {g.get('target_label', r.parent_label)} have {g['field']}"),
+                passed=len(cr.results) == 0, required_at=g["required_at"],
+                detail=(f"Missing {g['field']}: {', '.join(pid for pid, _ in cr.results)}"
+                        if cr.results else "")
+            )
+        ],
+    },
+    "none_match": {
+        "build_args": lambda g, r, s, e: ("none_match", r.values, g["field"], g["pattern"]),
+        "format": lambda g, r, cr: [
+            CompletenessGate(
+                description=g.get("description",
+                    f"No {g.get('target_label', r.parent_label)} have {g['field']} matching {g['pattern']}"),
+                passed=len(cr.results) == 0, required_at=g["required_at"],
+                detail=(f"Matched: {', '.join(pid for pid, _ in cr.results)}"
+                        if cr.results else "")
+            )
+        ],
+    },
+    "value_check": {
+        "build_args": lambda g, r, s, e: ("value", r.values[0] if r.values else None, g["expected"]),
+        "format": lambda g, r, cr: [
+            CompletenessGate(
+                description=g.get("description",
+                    f"{g.get('target_label', r.parent_label)} is {g['expected']}"),
+                passed=cr.results[0], required_at=g["required_at"],
+                detail=cr.results[1]
+            )
+        ],
+    },
+}
 
 
 # ── Gate handler registry ────────────────────────────────────────────────────
@@ -241,13 +196,9 @@ class GateHandler:
     func: callable
 
 
-_GATE_HANDLERS = {
-    "non_empty":     GateHandler(handle_gate_non_empty),
-    "has_count":     GateHandler(handle_gate_has_count),
-    "covers_all":    GateHandler(handle_gate_covers_all),
-    "all_have":      GateHandler(handle_gate_all_have),
-    "none_match":    GateHandler(handle_gate_none_match),
-    "value_check":   GateHandler(handle_gate_value_check),
+_GATE_HANDLERS: dict[str, GateHandler] = {
+    name: GateHandler(_make_gate_handler(defn["build_args"], defn["format"]))
+    for name, defn in _GATE_DEFS.items()
 }
 
 
