@@ -21,7 +21,7 @@ Usage:
 """
 
 from typing import Set
-from shared import BaseLinter, CompletenessGate, LayerResult
+from shared import BaseLinter, CompletenessGate, LayerResult, build_valid_types
 from rules import SemanticRule
 
 
@@ -485,8 +485,7 @@ class DataSpecLinter(BaseLinter):
 def _check_field_types(spec: dict, entity_names: Set[str], enum_names: Set[str], result: LayerResult) -> None:
     """Validate that field types reference valid primitives/entities/enums."""
     raw_primitives = spec.get("primitives", ["string", "number", "boolean", "null"])
-    primitives = {p if isinstance(p, str) else p.get("id", "") for p in raw_primitives}
-    valid_types = entity_names | enum_names | primitives
+    valid_types = build_valid_types(entity_names, enum_names, raw_primitives)
 
     for entity in spec.get("entities", []):
         for field_def in entity.get("fields", []):
@@ -495,7 +494,7 @@ def _check_field_types(spec: dict, entity_names: Set[str], enum_names: Set[str],
             if base_type and base_type not in valid_types:
                 result.add("error", "type_undefined",
                     f"Entity '{entity['name']}': field '{field_def['name']}' has type '{ftype}', which is not defined.",
-                    hint=f"Define '{base_type}' as a primitive, entity, or enum. Available: {sorted(primitives | entity_names | enum_names)}")
+                    hint=f"Define '{base_type}' as a primitive, entity, or enum. Available: {sorted(valid_types)}")
 
 
 def _check_relationship_types(spec: dict, entity_names: Set[str], enum_names: Set[str], result: LayerResult) -> None:

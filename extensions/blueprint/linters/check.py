@@ -12,6 +12,7 @@ The caller (rule or gate handler) formats CheckResult.results into its
 own output type (LayerResult issues or CompletenessGate instances).
 """
 
+import functools
 import re
 from collections import namedtuple
 from typing import TypedDict
@@ -227,6 +228,15 @@ def check_item_count(
     return failures
 
 
+@functools.lru_cache(maxsize=512)
+def _compile_pattern(pattern_str: str) -> re.Pattern:
+    """Compile and cache a regex pattern with IGNORECASE.
+
+    Cached by pattern string to avoid recompiling identical patterns.
+    """
+    return re.compile(pattern_str, re.IGNORECASE)
+
+
 def check_patterns(
     values: list,
     parent_ids: list,
@@ -251,10 +261,10 @@ def check_patterns(
     compiled = []
     for p in patterns:
         if isinstance(p, str):
-            compiled.append(re.compile(p, re.IGNORECASE))
+            compiled.append(_compile_pattern(p))
             pattern_labels.append(p)
         else:
-            compiled.append(re.compile(p[0], re.IGNORECASE))
+            compiled.append(_compile_pattern(p[0]))
             pattern_labels.append(p[1] if len(p) > 1 else p[0])
 
     for idx, (val, pid) in enumerate(zip(values, parent_ids)):

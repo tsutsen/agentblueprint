@@ -26,7 +26,7 @@ Usage:
 import re
 import argparse
 from typing import Dict, Set
-from shared import BaseLinter, CompletenessGate, LayerResult, validate_spec_ids
+from shared import BaseLinter, CompletenessGate, LayerResult, validate_spec_ids, _build_glossary_map, check_glossary_refs
 from rules import SemanticRule
 
 
@@ -228,19 +228,15 @@ def _check_glossary_refs(spec: dict, result: LayerResult, extra_specs: dict = No
     if not glossary:
         return
 
-    # Build glossary term map (lowercase -> id)
-    glossary_lower = {}
-    for t in glossary.get("terms", []):
-        glossary_lower[t["name"].lower()] = t["id"]
+    glossary_map = _build_glossary_map(glossary.get("terms", []))
 
-    def has_domain_concept(text: str) -> bool:
-        text_lower = text.lower()
-        return any(len(term) > 3 and term in text_lower for term in glossary_lower)
-
-    def find_glossary_refs(text: str) -> list:
-        text_lower = text.lower()
-        return [tid for term, tid in glossary_lower.items()
-                if len(term) > 3 and term in text_lower]
+    def _warn(text: str, refs: list, ctx: str) -> None:
+        """Helper to warn about missing glossaryRefs."""
+        missing = check_glossary_refs(text, glossary_map, refs)
+        if missing:
+            result.add("warning", "glossary",
+                f"{ctx} references glossary terms ({', '.join(missing)}) but has no glossaryRefs.",
+                hint="Add glossaryRefs (GL-NNN) for domain concepts.")
 
     # Check test cases
     for t in spec.get("tests", []):
@@ -253,14 +249,8 @@ def _check_glossary_refs(spec: dict, result: LayerResult, extra_specs: dict = No
         if not has_text or refs:
             continue
 
-        text_parts = [desc, clause]
-        combined = " ".join(text_parts)
-        if has_domain_concept(combined):
-            expected = find_glossary_refs(combined)
-            result.add("warning", "glossary",
-                f"Test '{tid}': description/contractClause references glossary terms "
-                f"({', '.join(expected)}) but has no glossaryRefs.",
-                hint="Add glossaryRefs (GL-NNN) for domain concepts in this test.")
+        combined = f"{desc} {clause}".strip()
+        _warn(combined, refs, f"Test '{tid}' description/contractClause")
 
     # Check outOfScope items in functionCoverage
     for fc in spec.get("functionCoverage", []):
@@ -272,12 +262,9 @@ def _check_glossary_refs(spec: dict, result: LayerResult, extra_specs: dict = No
             else:
                 desc = str(item)
                 refs = []
-            if desc and has_domain_concept(desc) and not refs:
-                expected = find_glossary_refs(desc)
-                result.add("warning", "glossary",
-                    f"functionCoverage '{fn_ref}' outOfScope #{i+1}: '{desc[:60]}...' references glossary terms "
-                    f"({', '.join(expected)}) but has no glossaryRefs.",
-                    hint="Add glossaryRefs (GL-NNN) for domain concepts in this outOfScope item.")
+            if desc and not refs:
+                _warn(desc, [],
+                    f"functionCoverage '{fn_ref}' outOfScope #{i+1}: '{desc[:60]}...'")
 
 
 def _check_lifecycle(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:

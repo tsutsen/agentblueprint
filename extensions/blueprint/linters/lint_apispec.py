@@ -19,16 +19,14 @@ Usage:
 """
 
 import re
-from shared import BaseLinter, LayerResult, validate_project_and_version
+from shared import (
+    BaseLinter,
+    LayerResult,
+    validate_project_and_version,
+    resolve_base_type,
+    build_valid_types,
+)
 from rules import SemanticRule
-
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-
-def resolve_base_type(type_str: str) -> str:
-    """Remove array notation from type string."""
-    return type_str.replace("[]", "")
 
 
 def _check_visibility(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
@@ -160,10 +158,8 @@ def _check_type_refs(spec: dict, result: LayerResult, extra_specs: dict = None) 
 
     entity_names = {e["name"] for e in data_spec.get("entities", [])}
     enum_names = {e["name"] for e in data_spec.get("enums", [])}
-    # Handle both string list and dict list for primitives
     raw_primitives = data_spec.get("primitives", ["string", "number", "boolean", "null", "any"])
-    primitives = {p if isinstance(p, str) else p.get("id", "") for p in raw_primitives}
-    valid_types = entity_names | enum_names | primitives
+    valid_types = build_valid_types(entity_names, enum_names, raw_primitives)
     api_primitives = {"string", "number", "boolean", "null", "any", "void"}
 
     for fn in spec.get("functions", []):
