@@ -70,8 +70,8 @@ class Resolved:
 class CompletenessGate:
     """A single readiness condition for a spec."""
     description: str
-    passed: bool
-    required_at: str   # "draft" | "review" | "confirmed"
+    passed: bool = False  # derived by factory from check results
+    required_at: str = "draft"
     detail: str = ""
 
 
@@ -112,7 +112,6 @@ class CompletenessScore:
         ]
 
 
-def gate(desc: str, passed: bool, required_at: str, detail: str = "") -> CompletenessGate:
-    """Convenience constructor for CompletenessGate."""
-    return CompletenessGate(description=desc, passed=passed,
-                             required_at=required_at, detail=detail)
+def gate(desc: str, required_at: str, detail: str = "") -> CompletenessGate:
+    """Convenience constructor for CompletenessGate (passed derived by factory)."""
+    return CompletenessGate(description=desc, required_at=required_at, detail=detail)

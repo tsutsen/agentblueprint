@@ -90,7 +90,8 @@ GateDef = Union[
 # All gate handlers follow the same pattern:
 #   1) Look up the shared build_args from _CHECK_BUILDERS[check_name]
 #   2) Call a pure check function via dispatch_check()
-#   3) Format CheckResult.results into list[CompletenessGate]
+#   3) Derive `passed` from CheckResult.results (no failures = pass, or bool verdict)
+#   4) Format CheckResult.results into list[CompletenessGate]
 #
 # _make_gate_handler() generates a handler from:
 #   - check_name: key in _CHECK_BUILDERS (shared build_args for rules + gates)
@@ -104,7 +105,17 @@ def _make_gate_handler(check_name: str, format_fn):
         args = builder(gate, resolved, spec, extra_specs)
         cr = dispatch_check(args[0], *args[1:],
                             values=resolved.values, parent_ids=resolved.parent_ids)
-        return format_fn(gate, resolved, cr)
+        # Derive passed: no failures = pass; bool verdict for aggregate checks
+        if not cr.results:
+            passed = True
+        elif isinstance(cr.results[0], bool):
+            passed = cr.results[0]
+        else:
+            passed = False
+        gates = format_fn(gate, resolved, cr)
+        for g in gates:
+            g.passed = passed
+        return gates
     return handler
 
 
@@ -117,7 +128,7 @@ _GATE_DEFS = {
             CompletenessGate(
                 description=spec.get("description",
                     f"{spec.get('target_label', data.parent_label)} is not empty"),
-                passed=len(result.results) == 0, required_at=spec["required_at"],
+                required_at=spec["required_at"],
                 detail=("Empty: " + ", ".join(f"'{pid}': {d}" for pid, d in result.results)
                         if result.results else "")
             )
@@ -129,7 +140,7 @@ _GATE_DEFS = {
             CompletenessGate(
                 description=spec.get("description",
                     f"{spec.get('target_label', data.parent_label)} has at least {spec['count']} item(s)"),
-                passed=result.results[0], required_at=spec["required_at"],
+                required_at=spec["required_at"],
                 detail=result.results[1]
             )
         ],
@@ -140,7 +151,7 @@ _GATE_DEFS = {
             CompletenessGate(
                 description=spec.get("description",
                     f"All {spec.get('covered_label', '')} covered by {spec.get('target_label', 'source')}"),
-                passed=len(result.results) == 0, required_at=spec["required_at"],
+                required_at=spec["required_at"],
                 detail=("Uncovered: " + ", ".join(str(u) for u in result.results)
                         if result.results else "")
             )
@@ -152,7 +163,7 @@ _GATE_DEFS = {
             CompletenessGate(
                 description=spec.get("description",
                     f"All {spec.get('target_label', data.parent_label)} have {spec['field']}"),
-                passed=len(result.results) == 0, required_at=spec["required_at"],
+                required_at=spec["required_at"],
                 detail=(f"Missing {spec['field']}: " + ", ".join(pid for pid, _ in result.results)
                         if result.results else "")
             )
@@ -164,7 +175,7 @@ _GATE_DEFS = {
             CompletenessGate(
                 description=spec.get("description",
                     f"No {spec.get('target_label', data.parent_label)} have {spec['field']} matching {spec['pattern']}"),
-                passed=len(result.results) == 0, required_at=spec["required_at"],
+                required_at=spec["required_at"],
                 detail=("Matched: " + ", ".join(pid for pid, _ in result.results)
                         if result.results else "")
             )
@@ -176,7 +187,7 @@ _GATE_DEFS = {
             CompletenessGate(
                 description=spec.get("description",
                     f"{spec.get('target_label', data.parent_label)} is {spec['expected']}"),
-                passed=result.results[0], required_at=spec["required_at"],
+                required_at=spec["required_at"],
                 detail=result.results[1]
             )
         ],
