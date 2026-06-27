@@ -37,7 +37,6 @@ from shared import (
     SemanticRule,
     print_human,
     print_json_output,
-    validate_coverage,
     validate_exists,
     validate_glossary_refs,
 )
@@ -129,6 +128,16 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "category": "us_uncovered",
         "covered_label": "GoalSpec US",
         "target_label": "user journey",
+    },
+
+    # Screens in inventory must be covered by screen specs
+    {
+        "type": "covers_all",
+        "target": "screenSpecs.screenRef",
+        "should_cover_all": "screenInventory.id",
+        "category": "screen_unspecified",
+        "covered_label": "Screen inventory",
+        "target_label": "screen spec",
     },
     
     # Journey personaRef must resolve to personas
@@ -318,18 +327,6 @@ def _check_screen_specs(spec: dict, result: LayerResult, extra_specs: dict) -> N
                 result.add("error", "pattern_ref",
                     f"Screen spec '{ss['screenRef']}' interaction '{interaction['trigger'][:40]}': patternRef '{pref}' not found.",
                     hint=f"Add a pattern with id='{pref}' or correct the reference.")
-    
-    # Screens in inventory with no spec
-    screens_list = [{"id": sid} for sid in screens]
-    validate_coverage(
-        screens_list,
-        screen_specs,
-        "id",
-        "screenRef",
-        result,
-        "Screen inventory",
-        "screen spec",
-    )
 
 
 def _check_screens_reachable(spec: dict, result: LayerResult, extra_specs: dict) -> None:

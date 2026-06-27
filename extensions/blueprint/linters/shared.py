@@ -278,46 +278,6 @@ def find_cycles(items: list[dict], id_key: str, deps_key: str, valid: set[str],
     return False
 
 
-def validate_coverage(covered_items: list[dict], source_items: list[dict],
-                      covered_key: str, refs_key: str,
-                      result: "LayerResult", covered_label: str,
-                      source_label: str = "", severity: str = "warning") -> None:
-    """Validate that every item in covered_items is referenced by at least one item in source.
-    
-    Args:
-        covered_items: List of items to check coverage for (e.g., FRs from GoalSpec).
-        source_items: List of source items that should reference covered items (e.g., components).
-        covered_key: Key in each covered item that holds the ID (e.g., "id").
-        refs_key: Key in source items that holds the list of refs (e.g., "reqRefs").
-        result: LayerResult to append warnings to.
-        covered_label: Label for error messages (e.g., "GoalSpec FR").
-        source_label: Label for the source items (e.g., "component").
-        severity: Severity level: "error", "warning", or "info" (default: "warning").
-    """
-    if not covered_items or not source_items:
-        return
-    
-    # Collect all IDs from covered items
-    covered_ids = {item.get(covered_key, "") for item in covered_items}
-    
-    # Collect all refs from source items
-    covered_refs = set()
-    for item in source_items:
-        for ref in _normalize_ref(item.get(refs_key)):
-            covered_refs.add(ref)
-    
-    # Find uncovered items
-    for item in covered_items:
-        iid = item.get(covered_key, "")
-        desc = item.get("description", "")
-        desc_short = desc[:60] + "..." if desc else ""
-        
-        if iid not in covered_refs:
-            result.add(severity, "uncovered",
-                f"{covered_label} {iid} ('{desc_short}') is not covered by any {source_label}.",
-                hint=f"Add ref '{iid}' to a {source_label or 'source item'} responsible for this.")
-
-
 def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] | dict[str, set[str]] = None,
                   result: "LayerResult" = None, label: str = "", ref_label: str = "",
                   category: str = "missing", hint: str = "", severity: str = "error") -> None:
