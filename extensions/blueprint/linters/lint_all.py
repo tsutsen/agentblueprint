@@ -38,54 +38,18 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
 
-from shared import Issue, LayerResult as SharedLayerResult
+from shared import (
+    Issue,
+    LayerResult as SharedLayerResult,
+    CompletenessGate,
+    CompletenessScore,
+    suite_completeness_pct,
+    SPEC_ORDER,
+    assess,
+)
 
 
 # ── Shared types ──────────────────────────────────────────────────────────────
-
-@dataclass
-class CompletenessGate:
-    """A single readiness condition for a spec."""
-    description: str
-    passed: bool
-    required_at: str   # "draft" | "review" | "confirmed"
-    detail: str = ""
-
-@dataclass
-class CompletenessScore:
-    spec: str
-    status: str           # the spec's own lifecycle status
-    gates: list[CompletenessGate] = field(default_factory=list)
-
-    @property
-    def total(self) -> int:
-        return len(self.gates)
-
-    @property
-    def passed(self) -> int:
-        return sum(1 for g in self.gates if g.passed)
-
-    @property
-    def score_pct(self) -> int:
-        return int(100 * self.passed / self.total) if self.total else 0
-
-    @property
-    def ready_for_review(self) -> bool:
-        return all(g.passed for g in self.gates if g.required_at in ("draft", "review"))
-
-    @property
-    def ready_for_confirm(self) -> bool:
-        return all(g.passed for g in self.gates)
-
-    @property
-    def blocking_gates(self) -> list[CompletenessGate]:
-        """Gates that must pass for the current status but haven't."""
-        status_order = {"draft": 0, "review": 1, "confirmed": 2}
-        current = status_order.get(self.status, 0)
-        return [
-            g for g in self.gates
-            if not g.passed and status_order.get(g.required_at, 0) <= current
-        ]
 
 @dataclass
 class LayerResult(SharedLayerResult):
@@ -113,385 +77,6 @@ class SuiteResult:
     @property
     def completeness_scores(self) -> list[CompletenessScore]:
         return [l.completeness for l in self.layers if l.completeness]
-
-
-# ── Completeness gates ────────────────────────────────────────────────────────
-
-def gate(desc: str, passed: bool, required_at: str, detail: str = "") -> CompletenessGate:
-    return CompletenessGate(description=desc, passed=passed,
-                             required_at=required_at, detail=detail)
-
-def assess_goalspec(spec: dict) -> CompletenessScore:
-    status = spec.get("status", "draft")
-    frs = spec.get("functionalRequirements", [])
-    nfrs = spec.get("nonFunctionalRequirements", [])
-    stories = spec.get("userStories", [])
-    criteria = spec.get("successCriteria", [])
-    non_goals = spec.get("nonGoals", [])
-
-    fr_ids = {fr["id"] for fr in frs}
-    story_refs = {ref for us in stories for ref in us.get("reqRefs", [])}
-    sc_refs = {ref for sc in criteria for ref in sc.get("refs", {}).get("reqRefs", [])}
-
-    tbd_nfrs = [n for n in nfrs if
-                str(n.get("scale","")).upper().startswith("TBD") or
-                str(n.get("meter","")).upper().startswith("TBD")]
-
-    gates = [
-        gate("Has project objective", bool(spec.get("objective", {}).get("statement")), "draft"),
-        gate("Has at least one functional requirement", len(frs) >= 1, "draft"),
-        gate("Has at least one user story", len(stories) >= 1, "draft"),
-        gate("Has at least one success criterion", len(criteria) >= 1, "draft"),
-        gate("Has at least one non-goal", len(non_goals) >= 1, "draft"),
-        gate("All FRs covered by at least one story", fr_ids <= story_refs, "review",
-             detail=f"Uncovered: {fr_ids - story_refs}" if not fr_ids <= story_refs else ""),
-        gate("All FRs gated by at least one success criterion", fr_ids <= sc_refs, "review",
-             detail=f"Uncovered: {fr_ids - sc_refs}" if not fr_ids <= sc_refs else ""),
-        gate("All NFRs have Scale and Meter defined (no TBD)", len(tbd_nfrs) == 0, "review",
-             detail=f"TBD NFRs: {[n['id'] for n in tbd_nfrs]}" if tbd_nfrs else ""),
-        gate("Objective re-confirmed after completion",
-             spec.get("objective", {}).get("confirmedAfterCompletion", False), "confirmed"),
-        gate("Status is confirmed", status == "confirmed", "confirmed"),
-    ]
-    return CompletenessScore(spec="goalspec", status=status, gates=gates)
-
-
-def assess_glossary(spec: dict) -> CompletenessScore:
-    status = spec.get("status", "draft") if "status" in spec else "draft"
-    terms = spec.get("terms", [])
-    gates = [
-        gate("Has at least 3 terms", len(terms) >= 3, "draft"),
-        gate("All terms have definitions ≥ 10 chars",
-             all(len(t.get("definition","")) >= 10 for t in terms), "draft"),
-        gate("Has at least 5 terms", len(terms) >= 5, "review"),
-        gate("All terms have examples or related terms",
-             all(t.get("examples") or t.get("relatedTerms") for t in terms), "confirmed"),
-    ]
-    return CompletenessScore(spec="glossary", status=status, gates=gates)
-
-
-def assess_designspec(spec: dict) -> CompletenessScore:
-    status = spec.get("status", "draft")
-    screens = spec.get("screenInventory", [])
-    screen_ids = {s["id"] for s in screens}
-    spec_refs = {s["screenRef"] for s in spec.get("screenSpecs", [])}
-    journeys = spec.get("userJourneys", [])
-    uxac = spec.get("uxAcceptanceCriteria", [])
-    patterns = spec.get("interactionPatterns", [])
-
-    unspecced = screen_ids - spec_refs
-
-    gates = [
-        gate("Has design goals", len(spec.get("designGoals", [])) >= 1, "draft"),
-        gate("Has at least one persona", len(spec.get("personas", [])) >= 1, "draft"),
-        gate("Has at least one user journey", len(journeys) >= 1, "draft"),
-        gate("Has screen inventory", len(screens) >= 1, "draft"),
-        gate("All screens have specs",
-             len(unspecced) == 0, "review",
-             detail=f"Missing specs: {unspecced}" if unspecced else ""),
-        gate("Has interaction patterns", len(patterns) >= 1, "review"),
-        gate("Has UX acceptance criteria", len(uxac) >= 1, "review"),
-        gate("Has visual design requirements",
-             len(spec.get("visualDesignRequirements", [])) >= 1, "review"),
-        gate("Has accessibility requirements",
-             len(spec.get("accessibilityRequirements", [])) >= 1, "review"),
-        gate("Has design system components",
-             len(spec.get("designSystem", {}).get("components", [])) >= 1, "confirmed"),
-        gate("All journeys reference user stories",
-             all(len(j.get("usRefs", [])) >= 1 for j in journeys), "confirmed"),
-    ]
-    return CompletenessScore(spec="designspec", status=status, gates=gates)
-
-
-def assess_archspec(spec: dict) -> CompletenessScore:
-    status = spec.get("status", "draft")
-    components = spec.get("components", [])
-    flows = spec.get("dataFlow", [])
-    constraints = spec.get("constraints", [])
-
-    comps_with_reqs = [c for c in components if c.get("reqRefs")]
-    comps_with_deps_or_dependents = set()
-    for c in components:
-        for dep in c.get("dependencies", []):
-            comps_with_deps_or_dependents.add(c["id"])
-            comps_with_deps_or_dependents.add(dep)
-
-    gates = [
-        gate("Has system overview summary",
-             len(spec.get("overview", {}).get("summary", "")) >= 30, "draft"),
-        gate("Has at least one subsystem",
-             len(spec.get("overview", {}).get("subsystems", [])) >= 1, "draft"),
-        gate("Has at least 2 components", len(components) >= 2, "draft"),
-        gate("Has at least one data flow", len(flows) >= 1, "draft"),
-        gate("Has at least one constraint", len(constraints) >= 1, "draft"),
-        gate("All components have REQ refs",
-             len(comps_with_reqs) == len(components), "review",
-             detail=f"{len(components) - len(comps_with_reqs)} component(s) missing reqRefs"),
-        gate("All components participate in at least one dependency",
-             len(comps_with_deps_or_dependents) == len(components), "review",
-             detail="Isolated components found" if len(comps_with_deps_or_dependents) < len(components) else ""),
-        gate("goalSpecVersion is set", bool(spec.get("goalSpecVersion")), "review"),
-        gate("dataSpecVersion is set", bool(spec.get("dataSpecVersion")), "confirmed"),
-        gate("apiSpecVersion is set", bool(spec.get("apiSpecVersion")), "confirmed"),
-    ]
-    return CompletenessScore(spec="archspec", status=status, gates=gates)
-
-
-def assess_dataspec(spec: dict) -> CompletenessScore:
-    status = spec.get("status", "draft") if "status" in spec else "draft"
-    entities = spec.get("entities", [])
-    relationships = spec.get("relationships", [])
-    enums = spec.get("enums", [])
-
-    entities_with_desc = [e for e in entities if e.get("description")]
-    entities_with_examples = [
-        e for e in entities
-        if any(f.get("example") for f in e.get("fields", []))
-    ]
-    rel_participants = set()
-    for r in relationships:
-        rel_participants.add(r.get("from"))
-        rel_participants.add(r.get("to"))
-    entity_names = {e["name"] for e in entities}
-    orphans = entity_names - rel_participants
-
-    # Find entities only referenced as field types, never in relationships
-    type_referenced = set()
-    for entity in entities:
-        for field_def in entity.get("fields", []):
-            base = field_def.get("type", "").replace("[]", "")
-            if base in entity_names and base != entity["name"]:
-                type_referenced.add(base)
-    standalone = type_referenced - rel_participants
-
-    # Orphan percentage
-    orphan_pct = (len(orphans) / len(entities) * 100) if entities else 0
-
-    gates = [
-        gate("Has at least one entity", len(entities) >= 1, "draft"),
-        gate("Has at least one relationship", len(relationships) >= 1, "draft"),
-        gate("All entities have descriptions",
-             len(entities_with_desc) == len(entities), "review",
-             detail=f"{len(entities)-len(entities_with_desc)} entity/entities missing descriptions"),
-        gate("No orphan entities",
-             len(orphans) == 0 or len(entities) <= 1, "review",
-             detail=f"Orphans: {orphans}" if orphans and len(entities) > 1 else ""),
-        gate("Orphan entities < 20%",
-             orphan_pct < 20, "review",
-             detail=f"{orphan_pct:.0f}% of entities are orphans ({len(orphans)}/{len(entities)})"),
-        gate("All entities have at least one field with an example",
-             len(entities_with_examples) == len(entities), "confirmed",
-             detail=f"{len(entities)-len(entities_with_examples)} entity/entities missing field examples"),
-        gate("No standalone type-only entities",
-             len(standalone) == 0 or len(standalone) <= 2, "review",
-             detail=f"Standalone type-only entities: {standalone}" if standalone else ""),
-        gate("Has enums if domain uses categorical values",
-             True, "draft",   # advisory — can't auto-detect need for enums
-             detail="Review whether domain categorical values should be enums"),
-    ]
-    return CompletenessScore(spec="dataspec", status=status, gates=gates)
-
-
-def assess_apispec(spec: dict, data: Optional[dict] = None) -> CompletenessScore:
-    status = spec.get("status", "draft") if "status" in spec else "draft"
-    functions = spec.get("functions", [])
-
-    fns_with_desc = [f for f in functions if f.get("description")]
-    fns_with_errors = [f for f in functions if f.get("errors")]
-    fns_with_entity = [f for f in functions if f.get("entity")]
-    fns_pure_declared = [f for f in functions if "pure" in f]
-
-    gates = [
-        gate("Has at least one function", len(functions) >= 1, "draft"),
-        gate("All functions have descriptions",
-             len(fns_with_desc) == len(functions), "review",
-             detail=f"{len(functions)-len(fns_with_desc)} function(s) missing descriptions"),
-        gate("All functions have documented error conditions",
-             len(fns_with_errors) == len(functions), "review",
-             detail=f"{len(functions)-len(fns_with_errors)} function(s) with no errors documented"),
-        gate("All functions declare entity affinity",
-             len(fns_with_entity) == len(functions), "review",
-             detail=f"{len(functions)-len(fns_with_entity)} function(s) missing entity field"),
-        gate("All functions declare pure/impure",
-             len(fns_pure_declared) == len(functions), "confirmed",
-             detail=f"{len(functions)-len(fns_pure_declared)} function(s) missing 'pure' field"),
-        gate("dataSpecVersion is set", bool(spec.get("dataSpecVersion")), "review"),
-    ]
-    return CompletenessScore(spec="apispec", status=status, gates=gates)
-
-
-def assess_testspec(spec: dict, api: Optional[dict] = None) -> CompletenessScore:
-    status = spec.get("status", "draft")
-    tests = spec.get("tests", [])
-    coverage = spec.get("functionCoverage", [])
-
-    fn_ids = {fn["id"] for fn in api.get("functions", [])} if api else set()
-    tested_fns = {t["fnRef"] for t in tests if t.get("fnRef")}
-    error_tests = [t for t in tests if t.get("category") == "error-path"]
-    coverage_fns = {c["fnRef"] for c in coverage}
-
-    all_out_of_scope = all(c.get("outOfScope") for c in coverage)
-    verification = spec.get("verificationStatus", "pending")
-
-    gates = [
-        gate("Has at least one test", len(tests) >= 1, "draft"),
-        gate("Has functionCoverage summary", len(coverage) >= 1, "draft"),
-        gate("Has error-path tests", len(error_tests) >= 1, "review"),
-        gate("All ApiSpec functions have tests",
-             fn_ids <= tested_fns, "review",
-             detail=f"Untested: {fn_ids - tested_fns}" if api and not fn_ids <= tested_fns else ""),
-        gate("All functions have out-of-scope declarations",
-             all_out_of_scope, "review",
-             detail="Some functionCoverage entries missing outOfScope" if not all_out_of_scope else ""),
-        gate("functionCoverage covers all tested functions",
-             tested_fns <= coverage_fns, "review",
-             detail=f"Missing: {tested_fns - coverage_fns}" if not tested_fns <= coverage_fns else ""),
-        gate("apiSpecVersion is set", bool(spec.get("apiSpecVersion")), "review"),
-        gate("Independent verification completed",
-             verification == "passed", "confirmed",
-             detail=f"verificationStatus is '{verification}'" if verification != "passed" else ""),
-    ]
-    return CompletenessScore(spec="testspec", status=status, gates=gates)
-
-
-def assess_taskplan(plan: dict, goal_spec: Optional[dict] = None,
-                    design_spec: Optional[dict] = None,
-                    arch_spec: Optional[dict] = None) -> CompletenessScore:
-    """Completeness gates for TaskPlan.
-
-    Validates that epics cover requirements from GoalSpec, capabilities from
-    DesignSpec, and components from ArchitectureSpec.
-    """
-    epics = plan.get("epics", [])
-    milestones = plan.get("milestones", [])
-
-    # Collect all epic text for matching
-    epic_texts = []
-    for epic in epics:
-        text = ' '.join([
-            epic.get("title", ""),
-            epic.get("summary", ""),
-            epic.get("objective", ""),
-            " ".join(epic.get("scope", {}).get("inScope", [])),
-        ]).lower()
-        epic_texts.append(text)
-
-    gates = [
-        # Draft: basic structure
-        gate("Has at least one milestone", len(milestones) >= 1, "draft"),
-        gate("Has at least one epic", len(epics) >= 1, "draft"),
-        gate("Every epic covers at least one requirement", all(
-            epic.get("requirements") for epic in epics
-        ), "draft"),
-        gate("All epics assigned to a milestone", all(
-            epic.get("milestone") for epic in epics
-        ), "draft"),
-
-        # Review: quality and completeness
-        gate("All epics have acceptance criteria", all(
-            epic.get("acceptanceCriteria") for epic in epics
-        ), "review"),
-        gate("All epics have scope (inScope + outOfScope)", all(
-            epic.get("scope", {}).get("inScope") and epic.get("scope", {}).get("outOfScope")
-            for epic in epics
-        ), "review"),
-        gate("All epics have explicit dependencies", all(
-            epic.get("dependencies", {}).get("blockedBy") is not None or
-            epic.get("dependencies", {}).get("blocks") is not None
-            for epic in epics
-        ), "review"),
-        gate("Epics are in dependency order", True, "review",
-             detail="Dependency order validated by lint_taskplan.py"),
-        gate("No circular dependencies", True, "review",
-             detail="Circular dependency check validated by lint_taskplan.py"),
-        gate("All milestones have demonstrable outcomes", all(
-            m.get("outcome") and len(m.get("outcome", "")) >= 10
-            for m in milestones
-        ), "review"),
-        gate("All epics have an objective", all(
-            epic.get("objective") for epic in epics
-        ), "review"),
-        gate("All acceptance criteria are meaningful length", all(
-            all(len(ac.strip()) >= 15 for ac in epic.get("acceptanceCriteria", []))
-            for epic in epics
-        ), "review"),
-        gate("All scope items are meaningful length", all(
-            all(len(item.strip()) >= 10 for item in epic.get("scope", {}).get("inScope", []))
-            and all(len(item.strip()) >= 10 for item in epic.get("scope", {}).get("outOfScope", []))
-            for epic in epics
-        ), "review"),
-
-        # Cross-spec: GoalSpec coverage
-        gate("All GoalSpec requirements covered by epics", True, "review",
-             detail="Requirement coverage validated by lint_taskplan.py"),
-    ]
-
-    # Cross-spec: DesignSpec capability coverage
-    if design_spec:
-        capabilities = design_spec.get("capabilities", [])
-        if capabilities:
-            uncovered = []
-            for cap in capabilities:
-                cap_name = cap.get("name", "").lower()
-                if not cap_name:
-                    continue
-                if not any(cap_name in text for text in epic_texts):
-                    uncovered.append(cap.get("name"))
-            gates.append(gate(
-                "All DesignSpec capabilities covered by epics",
-                len(uncovered) == 0, "review",
-                detail=f"Uncovered: {', '.join(uncovered)}" if uncovered else ""
-            ))
-
-    # Cross-spec: ArchitectureSpec component coverage
-    if arch_spec:
-        components = arch_spec.get("components", [])
-        if components:
-            uncovered = []
-            for comp in components:
-                comp_name = comp.get("name", "").lower()
-                if not comp_name:
-                    continue
-                if not any(comp_name in text for text in epic_texts):
-                    uncovered.append(comp.get("name"))
-            gates.append(gate(
-                "All ArchitectureSpec components covered by epics",
-                len(uncovered) == 0, "review",
-                detail=f"Uncovered: {', '.join(uncovered)}" if uncovered else ""
-            ))
-
-    if goal_spec:
-        gates.append(gate("No epic implements a non-goal", True, "review",
-                          detail="Non-goal compliance validated by lint_taskplan.py"))
-
-    status = plan.get("status", "draft")
-    return CompletenessScore(spec="taskplan", status=status, gates=gates)
-
-
-def assess_glossary_full(spec: dict) -> CompletenessScore:
-    terms = spec.get("terms", [])
-    categories = {t.get("category") for t in terms if t.get("category")}
-    has_domain = "domain" in categories
-
-    base = assess_glossary(spec)
-    base.gates.append(
-        gate("Has domain-category terms", has_domain, "review",
-             detail="No terms tagged 'domain' — consider categorising terms")
-    )
-    return base
-
-
-# ── Suite-level completeness ──────────────────────────────────────────────────
-
-SPEC_ORDER = ["goalspec", "glossary", "designspec", "archspec",
-              "dataspec", "apispec", "testspec", "plan", "issues"]
-
-def suite_completeness_pct(scores: list[CompletenessScore]) -> int:
-    if not scores:
-        return 0
-    total = sum(s.total for s in scores)
-    passed = sum(s.passed for s in scores)
-    return int(100 * passed / total) if total else 0
 
 
 # ── Linter loader ─────────────────────────────────────────────────────────────
@@ -570,7 +155,7 @@ _LAYERS = [
         path_key="goal",
         skip_reason="No goalspec provided.",
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, st, glossary=l.get("glossary")),
-        assess_fn=lambda s, l: assess_goalspec(s),
+        assess_fn=lambda s, l: assess("goalspec", s, l),
     ),
     LayerConfig(
         name="glossary",
@@ -581,7 +166,7 @@ _LAYERS = [
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp,
             {"goal": l.get("goal"), "arch": l.get("arch"),
              "data": l.get("data"), "api": l.get("api")}, st),
-        assess_fn=lambda s, l: assess_glossary_full(s),
+        assess_fn=lambda s, l: assess("glossary", s, l),
     ),
     LayerConfig(
         name="designspec",
@@ -591,7 +176,7 @@ _LAYERS = [
         skip_reason="No designspec provided.",
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("goal"), st,
             glossary=l.get("glossary")),
-        assess_fn=lambda s, l: assess_designspec(s),
+        assess_fn=lambda s, l: assess("designspec", s, l),
     ),
     LayerConfig(
         name="archspec",
@@ -602,7 +187,7 @@ _LAYERS = [
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("goal"), st,
             glossary=l.get("glossary"), data_spec=l.get("data"),
             api_spec=l.get("api")),
-        assess_fn=lambda s, l: assess_archspec(s),
+        assess_fn=lambda s, l: assess("archspec", s, l),
     ),
     LayerConfig(
         name="dataspec",
@@ -612,7 +197,7 @@ _LAYERS = [
         skip_reason="No dataspec provided.",
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, st, l.get("api"),
             glossary=l.get("glossary")),
-        assess_fn=lambda s, l: assess_dataspec(s),
+        assess_fn=lambda s, l: assess("dataspec", s, l),
     ),
     LayerConfig(
         name="apispec",
@@ -621,7 +206,7 @@ _LAYERS = [
         path_key="api",
         skip_reason="No apispec provided.",
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("data"), st),
-        assess_fn=lambda s, l: assess_apispec(s, l.get("data")),
+        assess_fn=lambda s, l: assess("apispec", s, l),
     ),
     LayerConfig(
         name="testspec",
@@ -631,7 +216,7 @@ _LAYERS = [
         skip_reason="No testspec provided.",
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("api"),
             l.get("glossary"), st),
-        assess_fn=lambda s, l: assess_testspec(s, l.get("api")),
+        assess_fn=lambda s, l: assess("testspec", s, l),
     ),
     LayerConfig(
         name="taskplan",
@@ -642,8 +227,7 @@ _LAYERS = [
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, l.get("goal"), l.get("design"),
             l.get("arch"), l.get("data"), l.get("api"), l.get("test"),
             l.get("glossary"), st),
-        assess_fn=lambda s, l: assess_taskplan(s, l.get("goal"), l.get("design"),
-            l.get("arch")),
+        assess_fn=lambda s, l: assess("plan", s, l),
     ),
 ]
 
