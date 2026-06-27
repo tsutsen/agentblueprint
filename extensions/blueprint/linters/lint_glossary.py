@@ -276,7 +276,7 @@ CROSS_SPEC_DEPS = ["goal", "arch", "data", "api"]
 
 class GlossaryLinter(BaseLinter):
     """Linter for Glossary artifacts."""
-    
+
     SPEC_NAME = "glossary"
     SEMANTIC_RULES = SEMANTIC_RULES
     MISC_CHECKS = MISC_CHECKS

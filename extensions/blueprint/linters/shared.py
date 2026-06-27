@@ -18,7 +18,7 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal, TypedDict, Union
+from typing import Any, Literal, Optional, TypedDict, Union
 
 
 # ── TypedDict schemas for semantic rules ─────────────────────────────────────
@@ -88,7 +88,7 @@ class ContainsPatternsRule(_TargetRuleBase):
     max_count: int
 
 
-class CoversAllRule(TypedDict, total=False):
+class CoversAllRule(_TargetRuleBase):
     """Check that target items reference all items in should_cover_all.
 
     target path includes the ref field: "overview.subsystems.componentRefs"
@@ -96,24 +96,16 @@ class CoversAllRule(TypedDict, total=False):
     type: Literal["covers_all"]
     target: str
     should_cover_all: str
-    severity: str
-    category: str
-    hint: str
     covered_label: str
-    target_label: str
 
 
-class NotOrphanRule(TypedDict, total=False):
+class NotOrphanRule(_TargetRuleBase):
     """Check for isolated items (no *Refs outgoing, no *Refs incoming).
 
     Auto-discovers all *Refs/*Ref fields — no deps_field needed.
     """
     type: Literal["not_orphan"]
     target: str
-    severity: str
-    category: str
-    target_label: str
-    hint: str
 
 
 
@@ -404,16 +396,13 @@ def validate_project_and_version(spec: dict, spec_name: str, goal: dict,
 
 
 def _validate_glossary_ref(refs: list, label: str, name: str, gl_ids: set,
-                           result: "LayerResult") -> bool:
+                           result: "LayerResult") -> None:
     """Validate a single item's glossary refs (private helper)."""
-    if not refs:
-        return False
     for ref in refs:
         if gl_ids and ref not in gl_ids:
             result.add("error", "glossary_ref_missing",
                 f"{label} '{name}': glossaryRef '{ref}' not found in Glossary.",
                 hint=f"Add a glossary entry with id='{ref}' or correct the reference.")
-    return True
 
 
 def validate_glossary_refs(glossary: dict, result: "LayerResult",
@@ -629,6 +618,17 @@ def _extract_nested_texts(items: list) -> list[str]:
 
 # ── Path-based rule system ────────────────────────────────────────────────────
 
+
+def _derive_label(segment: str) -> str:
+    """Derive a human-readable label from a path segment.
+
+    Handles camelCase and snake_case:  "dataFlow" → "Data Flow",
+    "functionalRequirements" → "Functional Requirements".
+    """
+    label = re.sub(r"([A-Z])", r" \1", segment).title().replace("_", " ").strip()
+    return label
+
+
 @dataclass
 class Resolved:
     """Result of resolving a target path."""
@@ -678,8 +678,7 @@ def resolve_path(path: str, spec: dict, extra_specs: dict) -> Resolved:
     # Better: derive from first segment
     label = first_segment.replace("_", " ").title().replace(" ", "")
     # Handle camelCase-like names (dataFlow → Data Flow)
-    import re as _re
-    label = _re.sub(r"([A-Z])", r" \1", first_segment).title().replace("_", " ").strip()
+    label = _derive_label(first_segment)
 
     current_items = items
     parent_ids = []
@@ -917,7 +916,6 @@ def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None
     For single-property checks, use target path: "entities.fields.name"
     For multi-property checks on the same item, use extra_keys: ["layout", "wireframe"]
     """
-    import re
     severity = rule.get("severity", "warning")
     category = rule.get("category", "pattern_match")
     target_label = rule.get("target_label", resolved.parent_label)
@@ -1193,7 +1191,7 @@ def _validate_all_ids(spec: dict, result: LayerResult) -> None:
             validate_sequential(ids, id_type, result)
 
 
-def _strict_mode(result: LayerResult) -> None:
+def _apply_strict_mode(result: LayerResult) -> None:
     """Convert all warnings to errors."""
     for w in result.warnings:
         w.severity = "error"
@@ -1293,7 +1291,7 @@ class BaseLinter:
     def _strict_mode(self) -> None:
         """Convert warnings to errors if strict mode."""
         if self.strict:
-            _strict_mode(self.result)
+            _apply_strict_mode(self.result)
     
     @classmethod
     def main(cls):
