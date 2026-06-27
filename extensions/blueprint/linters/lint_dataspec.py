@@ -21,7 +21,6 @@ Usage:
 """
 
 import json
-import re
 from pathlib import Path
 from typing import Optional, Set
 from shared import BaseLinter, LayerResult, SemanticRule, validate_spec_ids, validate_project_and_version
