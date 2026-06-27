@@ -468,17 +468,16 @@ class IssuesLinter(BaseLinter):
                  strict: bool = False):
         self.epics_dir = Path(epics_dir)
         self.epic_id = epic_id
-        self.schema_path = schema_path
-        self.strict = strict
-        self.result = LayerResult(name=self.SPEC_NAME)
-        self.extra_specs: dict = {}
+
+        # Load epic and issue files first (need to build spec before base init)
         self._issue_files: list = []
         self._epic_data: dict = {}
-
-        # Load epic and issue files, then build spec dict
         self._load_epic()
         self._load_issue_files()
-        self.spec = {"_issue_files": self._issue_files, "_epic_data": self._epic_data}
+        dynamic_spec = {"_issue_files": self._issue_files, "_epic_data": self._epic_data}
+
+        # Initialize base class with dynamically built spec
+        super().__init__(dynamic_spec, schema_path, strict)
 
     def _load_epic(self) -> None:
         """Load the epic file for context (acceptance criteria, scope)."""
@@ -566,11 +565,8 @@ class IssuesLinter(BaseLinter):
     
     def _run_misc_checks(self) -> None:
         """Run custom issue-specific checks."""
-        # Pass issue files and epic data to misc checks via spec
-        spec = {"_issue_files": self._issue_files, "_epic_data": self._epic_data}
-        
-        for name, func in self.MISC_CHECKS:
-            func(spec, self.result, self.extra_specs)
+        for func in self.MISC_CHECKS:
+            func(self.spec, self.result, self.extra_specs)
     
     def _run_semantic_rules(self) -> None:
         """Run semantic rules with issue files context."""

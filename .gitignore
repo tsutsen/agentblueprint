@@ -23,3 +23,6 @@ Thumbs.db
 *.swp
 *.swo
 extensions/blueprint/scripts/graph-visualize/graph-simplification-analysis.md
+
+# Linters analysis
+extensions/blueprint/linters/REFACTORING_REPORT.md

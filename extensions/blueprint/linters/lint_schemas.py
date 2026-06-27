@@ -294,11 +294,4 @@ class SchemaValidator:
         self._issues.append(Issue(severity, category, message, hint))
 
 
-def validate_against_schema(schema_path: str | Path, doc_path: str | Path) -> list[Issue]:
-    """Convenience function: validate a JSON file against a schema file."""
-    return SchemaValidator.validate_file(schema_path, doc_path)
 
-
-def validate_schema_doc(schema: dict, doc: dict) -> list[Issue]:
-    """Convenience function: validate a document against a schema dict."""
-    return SchemaValidator(schema).validate(doc)

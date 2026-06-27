@@ -231,24 +231,6 @@ def _gate_epic_dependencies(spec: dict, extra_specs: dict) -> CompletenessGate:
     )
 
 
-def _gate_dependency_order(spec: dict, extra_specs: dict) -> CompletenessGate:
-    """Epics are in dependency order (validated by lint_taskplan)."""
-    return CompletenessGate(
-        description="Epics are in dependency order",
-        passed=True, required_at="review",
-        detail="Dependency order validated by lint_taskplan.py",
-    )
-
-
-def _gate_no_circular_deps(spec: dict, extra_specs: dict) -> CompletenessGate:
-    """No circular dependencies (validated by lint_taskplan)."""
-    return CompletenessGate(
-        description="No circular dependencies",
-        passed=True, required_at="review",
-        detail="Circular dependency check validated by lint_taskplan.py",
-    )
-
-
 def _gate_milestone_outcomes(spec: dict, extra_specs: dict) -> CompletenessGate:
     """All milestones have demonstrable outcomes."""
     milestones = spec.get("milestones", [])
@@ -300,15 +282,6 @@ def _gate_scope_item_length(spec: dict, extra_specs: dict) -> CompletenessGate:
         description="All scope items are meaningful length",
         passed=all_meaningful, required_at="review",
         detail="Some scope items too short" if not all_meaningful else "",
-    )
-
-
-def _gate_requirement_coverage(spec: dict, extra_specs: dict) -> CompletenessGate:
-    """All GoalSpec requirements covered by epics (validated by lint_taskplan)."""
-    return CompletenessGate(
-        description="All GoalSpec requirements covered by epics",
-        passed=True, required_at="review",
-        detail="Requirement coverage validated by lint_taskplan.py",
     )
 
 
@@ -372,15 +345,6 @@ def _gate_arch_component_coverage(spec: dict, extra_specs: dict) -> Completeness
     )
 
 
-def _gate_non_goal_compliance(spec: dict, extra_specs: dict) -> CompletenessGate:
-    """No epic implements a non-goal (validated by lint_taskplan)."""
-    return CompletenessGate(
-        description="No epic implements a non-goal",
-        passed=True, required_at="review",
-        detail="Non-goal compliance validated by lint_taskplan.py",
-    )
-
-
 # ── Linter Class ──────────────────────────────────────────────────────────────
 
 
@@ -394,16 +358,12 @@ class TaskPlanLinter(BaseLinter):
     MISC_GATES = [
         _gate_epic_scope,
         _gate_epic_dependencies,
-        _gate_dependency_order,
-        _gate_no_circular_deps,
         _gate_milestone_outcomes,
         _gate_epic_objectives,
         _gate_acceptance_criteria_length,
         _gate_scope_item_length,
-        _gate_requirement_coverage,
         _gate_design_capability_coverage,
         _gate_arch_component_coverage,
-        _gate_non_goal_compliance,
     ]
     MISC_CHECKS = [
         _check_requirement_coverage,
@@ -415,10 +375,6 @@ class TaskPlanLinter(BaseLinter):
         _check_req_id_reference,
     ]
     CROSS_SPEC_DEPS = ["goal", "design", "arch"]
-    GLOSSARY_CHECKS = [
-        ("Epic", "glossaryRefs", "epics"),
-        ("Milestone", "glossaryRefs", "milestones"),
-    ]
 
 
 # Canonical linter class for lint_all.py

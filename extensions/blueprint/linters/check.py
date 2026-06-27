@@ -339,6 +339,9 @@ def check_orphans(items: list) -> list[str]:
 def check_has_no_cycles(items: list, deps_field: str = "dependencies") -> list[list[str]]:
     """Check that dependency graph has no cycles.
 
+    Uses 3-color DFS (WHITE/GRAY/BLACK) to correctly detect cycles
+    even when nodes are reachable from multiple starting points.
+
     Returns list of cycle paths (each a list of node IDs forming the cycle).
     Returns empty list if no cycles found.
     """
@@ -354,24 +357,29 @@ def check_has_no_cycles(items: list, deps_field: str = "dependencies") -> list[l
         if iid:
             graph[iid] = list(_normalize_ref(item.get(deps_field, [])))
 
-    # Detect cycles via DFS
-    visited = set()
-    cycles = []
+    # Detect cycles via 3-color DFS
+    # WHITE (0) = unvisited, GRAY (1) = in current path, BLACK (2) = fully explored
+    WHITE, GRAY, BLACK = 0, 1, 2
+    color: dict[str, int] = {node: WHITE for node in graph}
+    cycles: list[list[str]] = []
 
-    def dfs(node, path):
-        if node in path:
-            cycles.append(path[path.index(node):] + [node])
-            return
-        if node in visited:
-            return
-        visited.add(node)
+    def dfs(node: str, path: list[str]) -> None:
+        color[node] = GRAY
         path.append(node)
         for dep in graph.get(node, []):
-            dfs(dep, path)
+            if dep not in color:
+                # dep not in graph nodes (external ref), skip
+                continue
+            if color[dep] == GRAY:
+                # Found a cycle: extract cycle from path
+                cycles.append(path[path.index(dep):] + [dep])
+            elif color[dep] == WHITE:
+                dfs(dep, path)
         path.pop()
+        color[node] = BLACK
 
     for node in graph:
-        if node not in visited:
+        if color[node] == WHITE:
             dfs(node, [])
 
     return cycles
@@ -409,7 +417,7 @@ _CHECK_BUILDERS: dict[str, callable] = {
     "unique":       lambda d, res, s, e: ("unique", res.values, res.parent_ids),
     "no_overlap":   lambda d, res, s, e: ("no_overlap", res.values, res.parent_ids),
     "item_count":   lambda d, res, s, e: (
-        "item_count", res.values, res.parent_ids, d["count"], d.get("compare_mode", 1),
+        "item_count", res.values, res.parent_ids, d["count"], d.get("compare_mode", "more"),
     ),
     "patterns":     lambda d, res, s, e: (
         "patterns", res.values, res.parent_ids,

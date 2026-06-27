@@ -164,36 +164,37 @@ def _check_circular_definitions(spec: dict, result: LayerResult, extra_specs: di
         used.discard(name)  # self-reference handled separately
         usage_graph[name] = used
 
-    # DFS cycle detection
-    visited = set()
-    path = []
+    # DFS cycle detection using 3-color algorithm
+    # WHITE=0 unvisited, GRAY=1 in current path, BLACK=2 fully explored
+    WHITE, GRAY, BLACK = 0, 1, 2
+    color: Dict[str, int] = {t["name"]: WHITE for t in terms}
+    path: list[str] = []
+    reported: set[frozenset] = set()
 
-    def dfs(node: str) -> Optional[list]:
-        if node in path:
-            return path[path.index(node):]
-        if node in visited:
-            return None
-        visited.add(node)
+    def dfs(node: str) -> None:
+        color[node] = GRAY
         path.append(node)
         for dep in usage_graph.get(node, set()):
-            cycle = dfs(dep)
-            if cycle:
-                return cycle
-        path.pop()
-        return None
-
-    reported = set()
-    for term in terms:
-        name = term["name"]
-        if name not in visited:
-            cycle = dfs(name)
-            if cycle:
-                key = frozenset(cycle)
+            if dep not in color:
+                continue
+            if color[dep] == GRAY:
+                # Found a cycle
+                cycle = path[path.index(dep):] + [dep]
+                key = frozenset(cycle[:-1])
                 if key not in reported:
                     reported.add(key)
                     result.add("warning", "circular_definition",
-                        f"Circular definition detected: {' → '.join(cycle + [cycle[0]])}.",
+                        f"Circular definition detected: {' → '.join(cycle)}.",
                         hint="Rewrite one definition to break the cycle.")
+            elif color[dep] == WHITE:
+                dfs(dep)
+        path.pop()
+        color[node] = BLACK
+
+    for term in terms:
+        name = term["name"]
+        if color[name] == WHITE:
+            dfs(name)
 
 
 def _check_cross_spec_coverage(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
