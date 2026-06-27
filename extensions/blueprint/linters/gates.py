@@ -2,7 +2,7 @@
 """
 gates.py — Declarative completeness gates.
 
-Gates and rules share the same abstract structure:
+Gates and rules share the same abstract CheckDef structure (check.py):
   - Both resolve a `target` path via resolve_path()
   - Both dispatch by `type` to a handler
   - Both carry target_label, category, hint
@@ -11,41 +11,20 @@ The only difference is output:
   - Rules → Issue(severity, category, message) on LayerResult
   - Gates → CompletenessGate(description, passed, required_at) on CompletenessScore
 
-CheckDef is the abstract base. GateDef and SemanticRule extend it.
-Shared check logic lives in shared.py (check_non_empty, check_count, etc.).
+CheckDef and shared check functions live in check.py.
 """
 
 from dataclasses import dataclass
 from typing import Literal, TypedDict, Union
 
+from check import CheckDef, check_all_have, check_count, check_coverage, check_non_empty, check_none_match, check_value
 from shared import (
     CompletenessGate,
     CompletenessScore,
     Resolved,
+    _normalize_ref,
     resolve_path,
 )
-
-
-# ── Abstract check base ──────────────────────────────────────────────────────
-# This is the common TypedDict that both rules and gates extend.
-# Import from here to type-annotate SEMANTIC_RULES or COMPLETENESS_GATES.
-
-
-class CheckDef(TypedDict, total=False):
-    """Abstract base for rules and gates.
-
-    Concrete fields shared by both:
-        type        — dispatch key (e.g. "non_empty", "has_count")
-        target      — dot-separated path to resolve
-        target_label — human label for the target item
-        category    — issue/gate category identifier
-        hint        — optional hint text
-    """
-    type: str
-    target: str
-    target_label: str
-    category: str
-    hint: str
 
 
 # ── Gate-specific TypedDicts ─────────────────────────────────────────────────
@@ -121,8 +100,6 @@ def handle_gate_non_empty(
         f"{gate.get('target_label', resolved.parent_label)} is not empty")
     hint = gate.get("hint", "")
 
-    # Use shared check function
-    from shared import check_non_empty
     failures = check_non_empty(resolved.values, resolved.parent_ids)
 
     if not failures:
@@ -146,8 +123,6 @@ def handle_gate_has_count(
     description = gate.get("description",
         f"{target_label} has at least {count} item(s)")
 
-    # Use shared check function
-    from shared import check_count
     passed, detail = check_count(resolved.values, count)
 
     return [CompletenessGate(
@@ -169,8 +144,6 @@ def handle_gate_covers_all(
     # Resolve the should_cover_all path
     should_cover_resolved = resolve_path(gate["should_cover_all"], spec, extra_specs)
 
-    # Use shared check function
-    from shared import check_coverage, _normalize_ref
     target_refs = set()
     for val in resolved.values:
         for ref in _normalize_ref(val):
@@ -203,8 +176,6 @@ def handle_gate_all_have(
     description = gate.get("description",
         f"All {target_label} have {field_name}")
 
-    # Use shared check function
-    from shared import check_all_have
     items = resolved.values
     failures = check_all_have(items, field_name, min_length)
 
@@ -230,8 +201,6 @@ def handle_gate_none_match(
     description = gate.get("description",
         f"No {target_label} have {field_name} matching {pattern}")
 
-    # Use shared check function
-    from shared import check_none_match
     items = resolved.values
     matches = check_none_match(items, field_name, pattern)
 
@@ -255,8 +224,6 @@ def handle_gate_value_check(
     description = gate.get("description",
         f"{gate.get('target_label', resolved.parent_label)} is {expected}")
 
-    # Use shared check function
-    from shared import check_value
     value = resolved.values[0] if resolved.values else None
     passed, detail = check_value(value, expected)
 

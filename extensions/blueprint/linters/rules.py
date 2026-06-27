@@ -13,18 +13,16 @@ import re
 from dataclasses import dataclass
 from typing import Literal, TypedDict, Union
 
+from check import CheckDef, check_coverage, check_non_empty
 from shared import LayerResult, Resolved, _normalize_ref, resolve_path
 
 
 # ── TypedDict schemas for semantic rules ─────────────────────────────────────
 
 
-class _RuleBase(TypedDict, total=False):
-    """Optional fields shared by all rule types."""
-    target_label: str
-    category: str
+class _RuleBase(CheckDef, total=False):
+    """Optional fields shared by all rule types (extends CheckDef)."""
     severity: str
-    hint: str
 
 
 class _TargetRuleBase(_RuleBase, total=False):
@@ -137,8 +135,6 @@ def handle_non_empty(resolved: Resolved, rule: dict, result: LayerResult, spec: 
     target_label = rule.get("target_label", resolved.parent_label)
     hint = rule.get("hint", "")
 
-    # Use shared check function
-    from shared import check_non_empty
     for pid, detail in check_non_empty(resolved.values, resolved.parent_ids):
         hint_text = hint or f"Provide a value for {target_label.lower()} '{pid}'."
         result.add(severity, category,
@@ -321,7 +317,6 @@ def handle_coverage(resolved: Resolved, rule: dict, result: LayerResult, spec: d
         item.get("id", str(item)) if isinstance(item, dict) else str(item)
         for item in should_cover_all_resolved.values
     ]
-    from shared import check_coverage
     for iid in check_coverage(covered_refs, should_cover_ids):
         # Look up description from items
         desc = ""
