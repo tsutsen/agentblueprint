@@ -604,7 +604,7 @@ def resolve_path(path: str, spec: dict, extra_specs: dict) -> Resolved:
 # ── Handler functions (new rule system) ───────────────────────────────────────
 
 
-def handle_non_empty(resolved: Resolved, rule: dict, result: LayerResult) -> None:
+def handle_non_empty(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
     """Check that resolved values are not empty/missing."""
     severity = rule.get("severity", "warning")
     category = rule.get("category", "empty")
@@ -625,8 +625,15 @@ def handle_non_empty(resolved: Resolved, rule: dict, result: LayerResult) -> Non
                 hint=hint or f"Provide a value.")
 
 
-def handle_exists(resolved: Resolved, valid: set, rule: dict, result: LayerResult) -> None:
+def handle_exists(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
     """Check that resolved values exist in the valid set."""
+    # Resolve the valid set from inside path
+    valid_path = rule["inside"]
+    valid_resolved = resolve_path(valid_path, spec, extra_specs)
+    valid = set()
+    for v in valid_resolved.values:
+        valid.add(str(v))
+
     severity = rule.get("severity", "error")
     category = rule.get("category", "missing")
     target_label = rule.get("target_label", resolved.parent_label)
@@ -644,7 +651,7 @@ def handle_exists(resolved: Resolved, valid: set, rule: dict, result: LayerResul
                     hint=hint or f"Add '{ref}' to the target or correct the reference.")
 
 
-def handle_unique(resolved: Resolved, rule: dict, result: LayerResult) -> None:
+def handle_unique(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
     """Check that resolved values are unique."""
     severity = rule.get("severity", "warning")
     category = rule.get("category", "duplicate")
@@ -663,7 +670,7 @@ def handle_unique(resolved: Resolved, rule: dict, result: LayerResult) -> None:
             seen[str_val] = pid or val
 
 
-def handle_no_overlap(resolved: Resolved, rule: dict, result: LayerResult) -> None:
+def handle_no_overlap(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
     """Check that list fields don't share values across parent items."""
     severity = rule.get("severity", "warning")
     category = rule.get("category", "overlap")
@@ -681,7 +688,7 @@ def handle_no_overlap(resolved: Resolved, rule: dict, result: LayerResult) -> No
             seen[item] = pid
 
 
-def handle_item_count(resolved: Resolved, rule: dict, result: LayerResult) -> None:
+def handle_item_count(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
     """Check list length against threshold."""
     severity = rule.get("severity", "warning")
     category = rule.get("category", "count")
@@ -707,7 +714,7 @@ def handle_item_count(resolved: Resolved, rule: dict, result: LayerResult) -> No
                 hint=hint or f"A {target_label.lower()} should have at least {count} items.")
 
 
-def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None:
+def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
     """Check text values against regex patterns.
 
     When `negate` is True (format validation): flag values that DON'T match any pattern.
@@ -768,25 +775,28 @@ def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult) -> None
                 result.add(severity, category, msg, hint=hint or f"Review {target_label.lower()} for {category}.")
 
 
-def handle_coverage(resolved_should_cover_all: Resolved, resolved_target: Resolved, rule: dict, result: LayerResult) -> None:
+def handle_coverage(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
     """Check that target items reference all items in should_cover_all.
 
     target path includes the ref field: "overview.subsystems.componentRefs"
     """
+    # Resolve the should_cover_all path
+    should_cover_all_resolved = resolve_path(rule["should_cover_all"], spec, extra_specs)
+
     severity = rule.get("severity", "warning")
     category = rule.get("category", "uncovered")
     hint_template = rule.get("hint")
-    covered_label = rule.get("covered_label", resolved_should_cover_all.parent_label)
+    covered_label = rule.get("covered_label", should_cover_all_resolved.parent_label)
     target_label = rule.get("target_label", "source")
 
     # Collect refs from target path (already flat list of ref values)
     covered_refs = set()
-    for item in resolved_target.values:
+    for item in resolved.values:
         for ref in _normalize_ref(item):
             covered_refs.add(ref)
 
     # Find uncovered items
-    covered_items = resolved_should_cover_all.values
+    covered_items = should_cover_all_resolved.values
     for item in covered_items:
         iid = item.get("id", str(item)) if isinstance(item, dict) else str(item)
         desc = item.get("description", "") if isinstance(item, dict) else ""
@@ -799,7 +809,7 @@ def handle_coverage(resolved_should_cover_all: Resolved, resolved_target: Resolv
                 hint=hint_text)
 
 
-def handle_orphans(resolved: Resolved, rule: dict, result: LayerResult) -> None:
+def handle_orphans(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
     """Warn if items are isolated (no *Refs outgoing, no *Refs incoming).
 
     Auto-discovers all *Refs fields on items — no deps_field needed.
@@ -843,7 +853,7 @@ def handle_orphans(resolved: Resolved, rule: dict, result: LayerResult) -> None:
                 hint=hint or f"An isolated {target_label.lower()} may indicate a design issue.")
 
 
-def handle_has_no_cycles(resolved: Resolved, rule: dict, result: LayerResult) -> None:
+def handle_has_no_cycles(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
     """Check that dependency graph has no cycles."""
     severity = rule.get("severity", "error")
     category = rule.get("category", "circular_dependency")
@@ -896,20 +906,17 @@ def handle_has_no_cycles(resolved: Resolved, rule: dict, result: LayerResult) ->
 @dataclass
 class RuleHandler:
     func: callable
-    needs_valid: bool = False
-    needs_coverage: bool = False
-    needs_orphans: bool = False
 
 
 _RULE_HANDLERS = {
     "non_empty":         RuleHandler(handle_non_empty),
-    "exists":            RuleHandler(handle_exists, needs_valid=True),
+    "exists":            RuleHandler(handle_exists),
     "is_unique":         RuleHandler(handle_unique),
     "not_shared":        RuleHandler(handle_no_overlap),
     "has_item_count":    RuleHandler(handle_item_count),
     "contains_patterns": RuleHandler(handle_patterns),
-    "covers_all":        RuleHandler(handle_coverage, needs_coverage=True),
-    "not_orphan":        RuleHandler(handle_orphans, needs_orphans=True),
+    "covers_all":        RuleHandler(handle_coverage),
+    "not_orphan":        RuleHandler(handle_orphans),
     "has_no_cycles":     RuleHandler(handle_has_no_cycles),
 }
 
@@ -1000,24 +1007,8 @@ def _run_new_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_
             continue
 
         try:
-            if handler.needs_coverage:
-                should_cover_all = resolve_path(rule["should_cover_all"], spec, extra_specs)
-                resolved = resolve_path(rule["target"], spec, extra_specs)
-                handle_coverage(should_cover_all, resolved, rule, result)
-            elif handler.needs_orphans:
-                resolved = resolve_path(rule["target"], spec, extra_specs)
-                handle_orphans(resolved, rule, result)
-            else:
-                resolved = resolve_path(rule["target"], spec, extra_specs)
-                if handler.needs_valid:
-                    valid_path = rule["inside"]
-                    valid_resolved = resolve_path(valid_path, spec, extra_specs)
-                    valid = set()
-                    for v in valid_resolved.values:
-                        valid.add(str(v))
-                    handler.func(resolved, valid, rule, result)
-                else:
-                    handler.func(resolved, rule, result)
+            resolved = resolve_path(rule["target"], spec, extra_specs)
+            handler.func(resolved, rule, result, spec, extra_specs)
         except Exception as e:
             result.add("error", "rule_bug",
                 f"Rule '{rule_type}' ({rule.get('target', '?')}): {e}")
