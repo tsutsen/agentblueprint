@@ -28,13 +28,13 @@ class CheckDef(TypedDict, total=False):
     """Abstract base for rules and gates.
 
     Concrete fields shared by both:
-        type          — dispatch key (e.g. "non_empty", "has_count")
+        check         — dispatch key (e.g. "non_empty", "has_count")
         target        — dot-separated path to resolve
         target_label  — human label for the target item
         category      — issue/gate category identifier
         hint          — optional hint text
     """
-    type: str
+    check: str
     target: str
     target_label: str
     category: str

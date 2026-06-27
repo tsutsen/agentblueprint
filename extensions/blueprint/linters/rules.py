@@ -42,7 +42,7 @@ class _TargetRuleBase(_RuleBase, total=False):
 
 class NonEmptyRule(_TargetRuleBase):
     """Check that a field is not empty/missing."""
-    type: Literal["non_empty"]
+    check: Literal["non_empty"]
     target: str
 
 
@@ -51,7 +51,7 @@ class ExistsRule(_TargetRuleBase):
 
     'inside' path includes the ID field: "components.id"
     """
-    type: Literal["exists"]
+    check: Literal["exists"]
     target: str
     inside: str
     ref_label: str
@@ -59,19 +59,19 @@ class ExistsRule(_TargetRuleBase):
 
 class IsUniqueRule(_TargetRuleBase):
     """Check that values in a field are unique."""
-    type: Literal["is_unique"]
+    check: Literal["is_unique"]
     target: str
 
 
 class NotSharedRule(_TargetRuleBase):
     """Check that list items are not shared across parent items."""
-    type: Literal["not_shared"]
+    check: Literal["not_shared"]
     target: str
 
 
 class HasItemCountRule(_TargetRuleBase):
     """Check list length against threshold."""
-    type: Literal["has_item_count"]
+    check: Literal["has_item_count"]
     target: str
     count: int
     compare_mode: Literal["more", "less", "equal"]
@@ -83,7 +83,7 @@ class ContainsPatternsRule(_TargetRuleBase):
     For single-property checks, append to target path (e.g. "entities.fields.name").
     For multi-property checks on the same item, use extra_keys.
     """
-    type: Literal["contains_patterns"]
+    check: Literal["contains_patterns"]
     target: str
     patterns: list
     negate: bool
@@ -96,7 +96,7 @@ class CoversAllRule(_TargetRuleBase):
 
     target path includes the ref field: "overview.subsystems.componentRefs"
     """
-    type: Literal["covers_all"]
+    check: Literal["covers_all"]
     target: str
     should_cover_all: str
     covered_label: str
@@ -107,7 +107,7 @@ class NotOrphanRule(_TargetRuleBase):
 
     Auto-discovers all *Refs/*Ref fields — no deps_field needed.
     """
-    type: Literal["not_orphan"]
+    check: Literal["not_orphan"]
     target: str
 
 
@@ -116,7 +116,7 @@ class HasNoCyclesRule(_TargetRuleBase):
 
     'deps' specifies the key holding dependency references (default: 'dependencies').
     """
-    type: Literal["has_no_cycles"]
+    check: Literal["has_no_cycles"]
     target: str
     deps: str
 
@@ -309,22 +309,22 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
     "has_no_cycles":     ["target", "category"],
 }
 
-# Known fields per rule type (for detecting typos — includes 'type' itself)
+# Known fields per rule type (for detecting typos — includes 'check' itself)
 _KNOWN_FIELDS: dict[str, set[str]] = {
-    "non_empty":         {"type", "target", "target_label", "category", "severity", "hint"},
-    "exists":            {"type", "target", "inside", "ref_label",
+    "non_empty":         {"check", "target", "target_label", "category", "severity", "hint"},
+    "exists":            {"check", "target", "inside", "ref_label",
                           "target_label", "category", "severity", "hint"},
-    "is_unique":         {"type", "target", "target_label", "category", "severity", "hint"},
-    "not_shared":        {"type", "target", "target_label", "category", "severity", "hint"},
-    "has_item_count":    {"type", "target", "count", "compare_mode",
+    "is_unique":         {"check", "target", "target_label", "category", "severity", "hint"},
+    "not_shared":        {"check", "target", "target_label", "category", "severity", "hint"},
+    "has_item_count":    {"check", "target", "count", "compare_mode",
                           "target_label", "category", "severity", "hint"},
-    "contains_patterns": {"type", "target", "patterns", "negate", "extra_keys", "max_count",
+    "contains_patterns": {"check", "target", "patterns", "negate", "extra_keys", "max_count",
                           "target_label", "category", "severity", "hint"},
-    "covers_all":        {"type", "target", "should_cover_all", "covered_label", "target_label",
+    "covers_all":        {"check", "target", "should_cover_all", "covered_label", "target_label",
                           "severity", "category", "hint"},
-    "not_orphan":        {"type", "target", "category",
+    "not_orphan":        {"check", "target", "category",
                           "target_label", "severity", "hint"},
-    "has_no_cycles":     {"type", "target", "deps", "target_label",
+    "has_no_cycles":     {"check", "target", "deps", "target_label",
                           "category", "severity", "hint"},
 }
 
@@ -335,9 +335,9 @@ def _validate_rule(rule: dict) -> list[str]:
     Returns list of error messages (empty = valid).
     """
     errors = []
-    rule_type = rule.get("type", "")
+    rule_type = rule.get("check", "")
     if not rule_type:
-        errors.append("missing 'type'")
+        errors.append("missing 'check'")
         return errors
 
     required = _REQUIRED_FIELDS.get(rule_type, [])
@@ -390,7 +390,7 @@ handle_has_no_cycles     = _RULE_HANDLERS["has_no_cycles"].func
 def _run_new_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_specs: dict) -> None:
     """Execute declarative semantic rules using the new path-based system."""
     for rule in rules:
-        rule_type = rule.get("type")
+        rule_type = rule.get("check")
         handler = _RULE_HANDLERS.get(rule_type)
         if not handler:
             result.add("warning", "unknown_rule", f"Unknown rule type: {rule_type}")

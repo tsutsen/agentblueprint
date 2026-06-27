@@ -234,7 +234,7 @@ def run_gates(
     all_gates: list[CompletenessGate] = []
 
     for gate_def in gates:
-        gate_type = gate_def.get("type")
+        gate_type = gate_def.get("check")
         handler = _GATE_HANDLERS.get(gate_type)
 
         if not handler:

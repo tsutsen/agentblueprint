@@ -41,7 +41,7 @@ from rules import SemanticRule
 SEMANTIC_RULES: list[SemanticRule] = [
     # Design goals must not contain implementation details
     {
-        "type": "contains_patterns",
+        "check": "contains_patterns",
         "target": "designGoals.goal",
         "patterns": [
             "database", "api", "endpoint", "framework", "library",
@@ -54,7 +54,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
 
     # UXAC must not contain subjective language
     {
-        "type": "contains_patterns",
+        "check": "contains_patterns",
         "target": "uxAcceptanceCriteria.description",
         "patterns": [
             "feel", "feels", "intuitive", "easy", "simple", "nice",
@@ -67,7 +67,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     
     # Screen specs must reference valid screens
     {
-        "type": "exists",
+        "check": "exists",
         "target": "screenSpecs.screenRef",
         "inside": "screenInventory.id",
         "target_label": "Screen spec",
@@ -78,7 +78,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     
     # Screens must have states
     {
-        "type": "non_empty",
+        "check": "non_empty",
         "target": "screenSpecs.states",
         "target_label": "Screen spec",
         "category": "screen_no_states",
@@ -87,7 +87,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     
     # UXAC must have refs
     {
-        "type": "non_empty",
+        "check": "non_empty",
         "target": "uxAcceptanceCriteria.refs",
         "target_label": "UXAC",
         "category": "uxac_no_refs",
@@ -96,7 +96,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     
     # UXAC refs must resolve to GoalSpec
     {
-        "type": "exists",
+        "check": "exists",
         "target": "uxAcceptanceCriteria.refs.usRefs",
         "inside": "goal:userStories.id",
         "target_label": "UXAC",
@@ -105,7 +105,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "hint": "Add to GoalSpec userStories or correct the reference.",
     },
     {
-        "type": "exists",
+        "check": "exists",
         "target": "uxAcceptanceCriteria.refs.reqRefs",
         "inside": "goal:functionalRequirements.id",
         "target_label": "UXAC",
@@ -116,7 +116,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     
     # User stories must be covered by journeys
     {
-        "type": "covers_all",
+        "check": "covers_all",
         "target": "userJourneys.usRefs",
         "should_cover_all": "goal:userStories",
         "category": "us_uncovered",
@@ -126,7 +126,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
 
     # Screens in inventory must be covered by screen specs
     {
-        "type": "covers_all",
+        "check": "covers_all",
         "target": "screenSpecs.screenRef",
         "should_cover_all": "screenInventory.id",
         "category": "screen_unspecified",
@@ -136,7 +136,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     
     # Journey personaRef must resolve to personas
     {
-        "type": "exists",
+        "check": "exists",
         "target": "userJourneys.personaRef",
         "inside": "personas.id",
         "target_label": "User journey",
@@ -147,7 +147,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     
     # Journey usRefs must resolve to GoalSpec userStories
     {
-        "type": "exists",
+        "check": "exists",
         "target": "userJourneys.usRefs",
         "inside": "goal:userStories.id",
         "target_label": "User journey",
@@ -158,7 +158,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     
     # Journey step screenRefs must resolve to screen inventory
     {
-        "type": "exists",
+        "check": "exists",
         "target": "userJourneys.steps.screenRef",
         "inside": "screenInventory.id",
         "target_label": "Journey step",
@@ -169,7 +169,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     
     # Screen specs must not contain forbidden content
     {
-        "type": "contains_patterns",
+        "check": "contains_patterns",
         "target": "screenSpecs",
         "extra_keys": ["layout", "wireframe"],
         "patterns": [
@@ -213,7 +213,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Glossary refs: Personas must reference valid glossary terms
     {
-        "type": "exists",
+        "check": "exists",
         "target": "personas.glossaryRefs",
         "inside": "glossary.terms.id",
         "target_label": "Persona",
@@ -222,7 +222,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Glossary refs: Screens must reference valid glossary terms
     {
-        "type": "exists",
+        "check": "exists",
         "target": "screenInventory.glossaryRefs",
         "inside": "glossary.terms.id",
         "target_label": "Screen",
@@ -360,31 +360,31 @@ def _check_screens_reachable(spec: dict, result: LayerResult, extra_specs: dict)
 # ── Completeness Gates ────────────────────────────────────────────────────────
 
 COMPLETENESS_GATES: list = [
-    {"type": "has_count", "target": "designGoals", "count": 1,
+    {"check": "has_count", "target": "designGoals", "count": 1,
      "target_label": "design goal", "category": "completeness", "required_at": "draft",
      "description": "Has design goals"},
-    {"type": "has_count", "target": "personas", "count": 1,
+    {"check": "has_count", "target": "personas", "count": 1,
      "target_label": "persona", "category": "completeness", "required_at": "draft",
      "description": "Has at least one persona"},
-    {"type": "has_count", "target": "userJourneys", "count": 1,
+    {"check": "has_count", "target": "userJourneys", "count": 1,
      "target_label": "user journey", "category": "completeness", "required_at": "draft",
      "description": "Has at least one user journey"},
-    {"type": "has_count", "target": "screenInventory", "count": 1,
+    {"check": "has_count", "target": "screenInventory", "count": 1,
      "target_label": "screen", "category": "completeness", "required_at": "draft",
      "description": "Has screen inventory"},
-    {"type": "has_count", "target": "interactionPatterns", "count": 1,
+    {"check": "has_count", "target": "interactionPatterns", "count": 1,
      "target_label": "interaction pattern", "category": "completeness", "required_at": "review",
      "description": "Has interaction patterns"},
-    {"type": "has_count", "target": "uxAcceptanceCriteria", "count": 1,
+    {"check": "has_count", "target": "uxAcceptanceCriteria", "count": 1,
      "target_label": "UX acceptance criterion", "category": "completeness", "required_at": "review",
      "description": "Has UX acceptance criteria"},
-    {"type": "has_count", "target": "visualDesignRequirements", "count": 1,
+    {"check": "has_count", "target": "visualDesignRequirements", "count": 1,
      "target_label": "visual design requirement", "category": "completeness", "required_at": "review",
      "description": "Has visual design requirements"},
-    {"type": "has_count", "target": "accessibilityRequirements", "count": 1,
+    {"check": "has_count", "target": "accessibilityRequirements", "count": 1,
      "target_label": "accessibility requirement", "category": "completeness", "required_at": "review",
      "description": "Has accessibility requirements"},
-    {"type": "has_count", "target": "designSystem.components", "count": 1,
+    {"check": "has_count", "target": "designSystem.components", "count": 1,
      "target_label": "design system component", "category": "completeness", "required_at": "confirmed",
      "description": "Has design system components"},
 ]

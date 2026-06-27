@@ -207,7 +207,7 @@ def _check_type_refs(spec: dict, result: LayerResult, extra_specs: dict = None) 
 SEMANTIC_RULES: list[SemanticRule] = [
     # Entity references must exist in data spec
     {
-        "type": "exists",
+        "check": "exists",
         "target": "functions.entity",
         "inside": "data:entities.name",
         "target_label": "Function",
@@ -217,7 +217,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Function descriptions must not be empty
     {
-        "type": "non_empty",
+        "check": "non_empty",
         "target": "functions.description",
         "target_label": "Function",
         "category": "missing_function_description",
@@ -225,7 +225,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Parameter descriptions must not be empty
     {
-        "type": "non_empty",
+        "check": "non_empty",
         "target": "functions.inputs.description",
         "target_label": "Parameter",
         "category": "missing_parameter_description",
@@ -258,26 +258,26 @@ CROSS_SPEC_DEPS = ["data"]
 # ── Completeness Gates ────────────────────────────────────────────────────────
 
 COMPLETENESS_GATES: list = [
-    {"type": "has_count", "target": "functions", "count": 1,
+    {"check": "has_count", "target": "functions", "count": 1,
      "target_label": "function", "category": "completeness", "required_at": "draft",
      "description": "Has at least one function"},
-    {"type": "all_have", "target": "functions", "field": "description",
+    {"check": "all_have", "target": "functions", "field": "description",
      "min_length": 1, "target_label": "function", "category": "completeness",
      "required_at": "review",
      "description": "All functions have descriptions"},
-    {"type": "all_have", "target": "functions", "field": "errors",
+    {"check": "all_have", "target": "functions", "field": "errors",
      "min_length": 1, "target_label": "function", "category": "completeness",
      "required_at": "review",
      "description": "All functions have documented error conditions"},
-    {"type": "all_have", "target": "functions", "field": "entity",
+    {"check": "all_have", "target": "functions", "field": "entity",
      "min_length": 1, "target_label": "function", "category": "completeness",
      "required_at": "review",
      "description": "All functions declare entity affinity"},
-    {"type": "all_have", "target": "functions", "field": "pure",
+    {"check": "all_have", "target": "functions", "field": "pure",
      "min_length": 1, "target_label": "function", "category": "completeness",
      "required_at": "confirmed",
      "description": "All functions declare pure/impure"},
-    {"type": "value_check", "target": "dataSpecVersion", "expected": "truthy",
+    {"check": "value_check", "target": "dataSpecVersion", "expected": "truthy",
      "target_label": "dataSpecVersion", "category": "completeness", "required_at": "review",
      "description": "dataSpecVersion is set"},
 ]

@@ -242,7 +242,7 @@ def _check_cross_spec_coverage(spec: dict, result: LayerResult, extra_specs: dic
 SEMANTIC_RULES: list[SemanticRule] = [
     # Related terms must reference existing glossary terms
     {
-        "type": "exists",
+        "check": "exists",
         "target": "terms.relatedTerms",
         "inside": "terms.id",
         "target_label": "Term",
@@ -273,14 +273,14 @@ CROSS_SPEC_DEPS = ["goal", "arch", "data", "api"]
 # ── Completeness Gates ────────────────────────────────────────────────────────
 
 COMPLETENESS_GATES: list = [
-    {"type": "has_count", "target": "terms", "count": 3,
+    {"check": "has_count", "target": "terms", "count": 3,
      "target_label": "term", "category": "completeness", "required_at": "draft",
      "description": "Has at least 3 terms"},
-    {"type": "all_have", "target": "terms", "field": "definition",
+    {"check": "all_have", "target": "terms", "field": "definition",
      "min_length": 10, "target_label": "term", "category": "completeness",
      "required_at": "draft",
      "description": "All terms have definitions >= 10 chars"},
-    {"type": "has_count", "target": "terms", "count": 5,
+    {"check": "has_count", "target": "terms", "count": 5,
      "target_label": "term", "category": "completeness", "required_at": "review",
      "description": "Has at least 5 terms"},
 ]

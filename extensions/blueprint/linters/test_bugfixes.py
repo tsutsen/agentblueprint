@@ -235,13 +235,13 @@ def test_check_functions_are_pure():
 
 def test_rule_schema_validation():
     """Verify _validate_rule catches schema errors."""
-    errors = rules._validate_rule({"type": "non_empty"})
+    errors = rules._validate_rule({"check": "non_empty"})
     assert any("target" in e for e in errors), f"Should flag missing target: {errors}"
 
-    errors = rules._validate_rule({"type": "non_empty", "target": "x", "category": "c", "unknown": 1})
+    errors = rules._validate_rule({"check": "non_empty", "target": "x", "category": "c", "unknown": 1})
     assert any("unknown" in e for e in errors), f"Should flag unknown field: {errors}"
 
-    errors = rules._validate_rule({"type": "non_empty", "target": "x", "category": "c"})
+    errors = rules._validate_rule({"check": "non_empty", "target": "x", "category": "c"})
     assert errors == [], f"Valid rule should have no errors: {errors}"
 
     print("  ✓ Rule schema validation works correctly")

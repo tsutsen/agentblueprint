@@ -431,7 +431,7 @@ class IssuesLinter(BaseLinter):
     SEMANTIC_RULES = [
         # blocked_by references must exist in the epic's issue files
         {
-            "type": "exists",
+            "check": "exists",
             "target": "_issue_files.blocked_by",
             "inside": "_issue_files",
             "target_label": "Issue",
@@ -441,7 +441,7 @@ class IssuesLinter(BaseLinter):
         },
         # milestone must exist in TaskPlan milestones
         {
-            "type": "exists",
+            "check": "exists",
             "target": "_issue_files.milestone",
             "inside": "taskplan:milestones",
             "target_label": "Issue",

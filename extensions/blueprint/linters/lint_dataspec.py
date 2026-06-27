@@ -227,7 +227,7 @@ def _check_entity_visibility(spec: dict, result: LayerResult, extra_specs: dict 
 SEMANTIC_RULES: list[SemanticRule] = [
     # Entity names must be PascalCase
     {
-        "type": "contains_patterns",
+        "check": "contains_patterns",
         "target": "entities.name",
         "patterns": [r"^[A-Z][A-Za-z0-9]*$"],
         "negate": True,
@@ -237,7 +237,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Field names must be camelCase
     {
-        "type": "contains_patterns",
+        "check": "contains_patterns",
         "target": "entities.fields.name",
         "patterns": [r"^[a-z][A-Za-z0-9]*$"],
         "negate": True,
@@ -247,7 +247,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Method names must be camelCase
     {
-        "type": "contains_patterns",
+        "check": "contains_patterns",
         "target": "entities.methods.name",
         "patterns": [r"^[a-z][A-Za-z0-9]*$"],
         "negate": True,
@@ -257,7 +257,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Enum names must be PascalCase
     {
-        "type": "contains_patterns",
+        "check": "contains_patterns",
         "target": "enums.name",
         "patterns": [r"^[A-Z][A-Za-z0-9]*$"],
         "negate": True,
@@ -267,7 +267,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Enum values must be SCREAMING_SNAKE_CASE
     {
-        "type": "contains_patterns",
+        "check": "contains_patterns",
         "target": "enums.values.name",
         "patterns": [r"^[A-Z][A-Z0-9_]*$"],
         "negate": True,
@@ -277,7 +277,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Entity extends must reference existing entity
     {
-        "type": "exists",
+        "check": "exists",
         "target": "entities.extends",
         "inside": "entities.name",
         "target_label": "Entity",
@@ -287,7 +287,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Relationship from must reference existing entity
     {
-        "type": "exists",
+        "check": "exists",
         "target": "relationships.from",
         "inside": "entities.name",
         "target_label": "Relationship",
@@ -297,7 +297,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Relationship to must reference existing entity
     {
-        "type": "exists",
+        "check": "exists",
         "target": "relationships.to",
         "inside": "entities.name",
         "target_label": "Relationship",
@@ -307,7 +307,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Relationship type must be valid
     {
-        "type": "non_empty",
+        "check": "non_empty",
         "target": "relationships.type",
         "target_label": "Relationship",
         "category": "rel_type_invalid",
@@ -339,13 +339,19 @@ CROSS_SPEC_DEPS = []
 # ── Completeness Gates ────────────────────────────────────────────────────────
 
 COMPLETENESS_GATES: list = [
-    {"type": "has_count", "target": "entities", "count": 1,
-     "target_label": "entity", "category": "completeness", "required_at": "draft",
-     "description": "Has at least one entity"},
-    {"type": "has_count", "target": "relationships", "count": 1,
+    {
+        "check": "has_count",
+        "target": "entities",
+        "count": 1,
+        "target_label": "entity",
+        "category": "completeness",
+        "required_at": "draft",
+        "description": "Has at least one entity"
+    },
+    {"check": "has_count", "target": "relationships", "count": 1,
      "target_label": "relationship", "category": "completeness", "required_at": "draft",
      "description": "Has at least one relationship"},
-    {"type": "all_have", "target": "entities", "field": "description",
+    {"check": "all_have", "target": "entities", "field": "description",
      "min_length": 1, "target_label": "entity", "category": "completeness",
      "required_at": "review",
      "description": "All entities have descriptions"},
