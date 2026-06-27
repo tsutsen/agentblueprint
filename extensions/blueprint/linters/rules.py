@@ -21,8 +21,8 @@ SEMANTIC_RULES lists.
 from dataclasses import dataclass
 from typing import Literal, TypedDict, Union
 
-from check import CheckDef, CheckResult, dispatch_check
-from path import _normalize_ref, resolve_path
+from check import CheckDef, CheckResult, dispatch_check, _CHECK_BUILDERS
+from path import resolve_path
 from linter_types import LayerResult, Resolved
 
 
@@ -136,19 +136,20 @@ SemanticRule = Union[
 
 # ── Rule handler factory ─────────────────────────────────────────────────────
 # All rule handlers follow the same pattern:
-#   1) Extract params from rule dict
+#   1) Look up the shared build_args from _CHECK_BUILDERS[check_name]
 #   2) Call a pure check function via dispatch_check()
 #   3) Format CheckResult.results into LayerResult.add() calls
 #
 # _make_rule_handler() generates a handler from:
-#   - build_args: (rule, resolved, spec, extra_specs) -> (check_name, *args)
+#   - check_name: key in _CHECK_BUILDERS (shared build_args for rules + gates)
 #   - format_fn: (rule, resolved, CheckResult) -> list[IssueTuple]
 
 
-def _make_rule_handler(build_args, format_fn):
-    """Generate a rule handler from arg builder and result formatter."""
+def _make_rule_handler(check_name: str, format_fn):
+    """Generate a rule handler from check name and result formatter."""
+    builder = _CHECK_BUILDERS[check_name]
     def handler(resolved, rule, result, spec, extra_specs):
-        args = build_args(rule, resolved, spec, extra_specs)
+        args = builder(rule, resolved, spec, extra_specs)
         cr = dispatch_check(args[0], *args[1:],
                             values=resolved.values, parent_ids=resolved.parent_ids)
         for severity, category, message, hint in format_fn(rule, resolved, cr):
@@ -160,7 +161,7 @@ def _make_rule_handler(build_args, format_fn):
 
 _RULE_DEFS = {
     "non_empty": {
-        "build_args": lambda r, res, s, e: ("non_empty", res.values, res.parent_ids),
+        "check": "non_empty",
         "format": lambda r, res, cr: [
             (r.get("severity", "warning"),
              r.get("category", "empty"),
@@ -171,11 +172,7 @@ _RULE_DEFS = {
     },
 
     "exists": {
-        "build_args": lambda r, res, s, e: (
-            "exists",
-            res.values, res.parent_ids,
-            {str(v) for v in resolve_path(r["inside"], s, e).values},
-        ),
+        "check": "exists",
         "format": lambda r, res, cr: [
             (r.get("severity", "error"),
              r.get("category", "missing"),
@@ -186,7 +183,7 @@ _RULE_DEFS = {
     },
 
     "is_unique": {
-        "build_args": lambda r, res, s, e: ("unique", res.values, res.parent_ids),
+        "check": "unique",
         "format": lambda r, res, cr: [
             (r.get("severity", "warning"),
              r.get("category", "duplicate"),
@@ -197,7 +194,7 @@ _RULE_DEFS = {
     },
 
     "not_shared": {
-        "build_args": lambda r, res, s, e: ("no_overlap", res.values, res.parent_ids),
+        "check": "no_overlap",
         "format": lambda r, res, cr: [
             (r.get("severity", "warning"),
              r.get("category", "overlap"),
@@ -208,9 +205,7 @@ _RULE_DEFS = {
     },
 
     "has_item_count": {
-        "build_args": lambda r, res, s, e: (
-            "item_count", res.values, res.parent_ids, r["count"], r.get("compare_mode", 1),
-        ),
+        "check": "item_count",
         "format": lambda r, res, cr: [
             (r.get("severity", "warning"),
              r.get("category", "count"),
@@ -221,15 +216,7 @@ _RULE_DEFS = {
     },
 
     "contains_patterns": {
-        "build_args": lambda r, res, s, e: (
-            "patterns",
-            res.values, res.parent_ids,
-            r.get("patterns", []),
-            r.get("negate", False),
-            r.get("extra_keys", []),
-            res.group_sizes,
-            r.get("max_count"),
-        ),
+        "check": "patterns",
         "format": lambda r, res, cr: [
             (r.get("severity", "warning"),
              r.get("category", "pattern_match"),
@@ -240,12 +227,7 @@ _RULE_DEFS = {
     },
 
     "covers_all": {
-        "build_args": lambda r, res, s, e: (
-            "coverage",
-            {_ref for v in res.values for _ref in _normalize_ref(v)},
-            [i.get("id", str(i)) if isinstance(i, dict) else str(i)
-             for i in resolve_path(r["should_cover_all"], s, e).values],
-        ),
+        "check": "coverage",
         "format": lambda r, res, cr: [
             (r.get("severity", "warning"),
              r.get("category", "uncovered"),
@@ -256,7 +238,7 @@ _RULE_DEFS = {
     },
 
     "not_orphan": {
-        "build_args": lambda r, res, s, e: ("orphans", res.values),
+        "check": "orphans",
         "format": lambda r, res, cr: [
             (r.get("severity", "warning"),
              r.get("category", "isolated"),
@@ -267,7 +249,7 @@ _RULE_DEFS = {
     },
 
     "has_no_cycles": {
-        "build_args": lambda r, res, s, e: ("has_no_cycles", res.values, r.get("deps", "dependencies")),
+        "check": "has_no_cycles",
         "format": lambda r, res, cr: [
             (r.get("severity", "error"),
              r.get("category", "circular_dependency"),
@@ -287,7 +269,7 @@ class RuleHandler:
 
 
 _RULE_HANDLERS: dict[str, RuleHandler] = {
-    name: RuleHandler(_make_rule_handler(defn["build_args"], defn["format"]))
+    name: RuleHandler(_make_rule_handler(defn["check"], defn["format"]))
     for name, defn in _RULE_DEFS.items()
 }
 

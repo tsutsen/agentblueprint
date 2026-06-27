@@ -377,6 +377,52 @@ def check_has_no_cycles(items: list, deps_field: str = "dependencies") -> list[l
     return cycles
 
 
+# ── Shared build_args for check dispatch ─────────────────────────────────────
+# Called by both rule handlers (rules.py) and gate handlers (gates.py) to
+# construct positional args for a pure check function.
+#
+# Each builder: (def_dict, resolved, spec, extra_specs) -> (check_name, *args)
+# The `def_dict` is the rule or gate definition dict.
+# `resolved` is the Resolved namedtuple from resolve_path().
+# `spec` / `extra_specs` are the primary spec and cross-spec context.
+#
+# This eliminates duplicated build_args lambdas in rules.py and gates.py.
+
+from path import _normalize_ref, resolve_path
+
+_CHECK_BUILDERS: dict[str, callable] = {
+    "non_empty":    lambda d, res, s, e: ("non_empty", res.values, res.parent_ids),
+    "count":        lambda d, res, s, e: ("count", res.values, d["count"]),
+    "coverage":     lambda d, res, s, e: (
+        "coverage",
+        {_ref for v in res.values for _ref in _normalize_ref(v)},
+        [i.get("id", str(i)) if isinstance(i, dict) else str(i)
+         for i in resolve_path(d["should_cover_all"], s, e).values],
+    ),
+    "all_have":     lambda d, res, s, e: ("all_have", res.values, d["field"], d.get("min_length", 0)),
+    "none_match":   lambda d, res, s, e: ("none_match", res.values, d["field"], d["pattern"]),
+    "value":        lambda d, res, s, e: ("value", res.values[0] if res.values else None, d["expected"]),
+    "exists":       lambda d, res, s, e: (
+        "exists", res.values, res.parent_ids,
+        {str(v) for v in resolve_path(d["inside"], s, e).values},
+    ),
+    "unique":       lambda d, res, s, e: ("unique", res.values, res.parent_ids),
+    "no_overlap":   lambda d, res, s, e: ("no_overlap", res.values, res.parent_ids),
+    "item_count":   lambda d, res, s, e: (
+        "item_count", res.values, res.parent_ids, d["count"], d.get("compare_mode", 1),
+    ),
+    "patterns":     lambda d, res, s, e: (
+        "patterns", res.values, res.parent_ids,
+        d.get("patterns", []), d.get("negate", False), d.get("extra_keys", []),
+        res.group_sizes, d.get("max_count"),
+    ),
+    "orphans":      lambda d, res, s, e: ("orphans", res.values),
+    "has_no_cycles": lambda d, res, s, e: (
+        "has_no_cycles", res.values, d.get("deps", "dependencies"),
+    ),
+}
+
+
 # ── Unified dispatcher ───────────────────────────────────────────────────────
 # Called by both rule handlers (rules.py) and gate handlers (gates.py) to
 # invoke a pure check function and wrap results in a CheckResult namedtuple.

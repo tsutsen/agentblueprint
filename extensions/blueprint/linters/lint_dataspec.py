@@ -21,7 +21,7 @@ Usage:
 """
 
 from typing import Set
-from shared import BaseLinter, CompletenessGate, LayerResult, validate_spec_ids, validate_project_and_version
+from shared import BaseLinter, CompletenessGate, LayerResult
 from rules import SemanticRule
 
 
@@ -469,7 +469,7 @@ def _check_field_types(spec: dict, entity_names: Set[str], enum_names: Set[str],
     raw_primitives = spec.get("primitives", ["string", "number", "boolean", "null"])
     primitives = {p if isinstance(p, str) else p.get("id", "") for p in raw_primitives}
     valid_types = entity_names | enum_names | primitives
-    
+
     for entity in spec.get("entities", []):
         for field_def in entity.get("fields", []):
             ftype = field_def.get("type", "")
@@ -483,24 +483,24 @@ def _check_field_types(spec: dict, entity_names: Set[str], enum_names: Set[str],
 def _check_relationship_types(spec: dict, entity_names: Set[str], enum_names: Set[str], result: LayerResult) -> None:
     """Validate relationship endpoints and types."""
     valid_types = {"association", "composition", "aggregation", "dependency", "realization"}
-    
+
     for rel in spec.get("relationships", []):
         from_entity = rel.get("from", "")
         to_entity = rel.get("to", "")
         rel_type = rel.get("type", "")
-        
+
         # Check from/to are valid entities (not enums)
         if to_entity in enum_names:
             result.add("error", "rel_to_enum",
                 f"Relationship targets enum '{to_entity}' which cannot be a relationship target.",
                 hint="Enums are type references, not entities. Remove this relationship — the type is already referenced via a field definition.")
-        
+
         # Check relationship type is valid
         if rel_type and rel_type not in valid_types:
             result.add("error", "rel_type_invalid",
                 f"Relationship between '{from_entity}' and '{to_entity}': type '{rel_type}' is not valid.",
                 hint=f"Valid types: {', '.join(sorted(valid_types))}")
-        
+
         # Warn about self-referencing relationships
         if from_entity == to_entity and from_entity in entity_names:
             result.add("warning", "rel_self_reference",

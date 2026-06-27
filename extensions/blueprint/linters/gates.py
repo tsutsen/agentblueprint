@@ -18,12 +18,9 @@ from dataclasses import dataclass
 from typing import Literal, TypedDict, Union
 
 from check import (
-    CheckDef, CheckResult, dispatch_check,
+    CheckDef, CheckResult, dispatch_check, _CHECK_BUILDERS,
 )
-from path import (
-    _normalize_ref,
-    resolve_path,
-)
+from path import resolve_path
 from linter_types import (
     CompletenessGate,
     CompletenessScore,
@@ -91,19 +88,20 @@ GateDef = Union[
 
 # ── Gate handler factory ─────────────────────────────────────────────────────
 # All gate handlers follow the same pattern:
-#   1) Extract params from gate dict
+#   1) Look up the shared build_args from _CHECK_BUILDERS[check_name]
 #   2) Call a pure check function via dispatch_check()
 #   3) Format CheckResult.results into list[CompletenessGate]
 #
 # _make_gate_handler() generates a handler from:
-#   - build_args: (gate, resolved, spec, extra_specs) -> (check_name, *args)
+#   - check_name: key in _CHECK_BUILDERS (shared build_args for rules + gates)
 #   - format_fn: (gate, resolved, CheckResult) -> list[CompletenessGate]
 
 
-def _make_gate_handler(build_args, format_fn):
-    """Generate a gate handler from arg builder and result formatter."""
+def _make_gate_handler(check_name: str, format_fn):
+    """Generate a gate handler from check name and result formatter."""
+    builder = _CHECK_BUILDERS[check_name]
     def handler(resolved, gate, spec, extra_specs):
-        args = build_args(gate, resolved, spec, extra_specs)
+        args = builder(gate, resolved, spec, extra_specs)
         cr = dispatch_check(args[0], *args[1:],
                             values=resolved.values, parent_ids=resolved.parent_ids)
         return format_fn(gate, resolved, cr)
@@ -114,7 +112,7 @@ def _make_gate_handler(build_args, format_fn):
 
 _GATE_DEFS = {
     "non_empty": {
-        "build_args": lambda g, r, s, e: ("non_empty", r.values, r.parent_ids),
+        "check": "non_empty",
         "format": lambda g, r, cr: [
             CompletenessGate(
                 description=g.get("description",
@@ -126,7 +124,7 @@ _GATE_DEFS = {
         ],
     },
     "has_count": {
-        "build_args": lambda g, r, s, e: ("count", r.values, g["count"]),
+        "check": "count",
         "format": lambda g, r, cr: [
             CompletenessGate(
                 description=g.get("description",
@@ -137,12 +135,7 @@ _GATE_DEFS = {
         ],
     },
     "covers_all": {
-        "build_args": lambda g, r, s, e: (
-            "coverage",
-            {_ref for v in r.values for _ref in _normalize_ref(v)},
-            [i.get("id", str(i)) if isinstance(i, dict) else str(i)
-             for i in resolve_path(g["should_cover_all"], s, e).values],
-        ),
+        "check": "coverage",
         "format": lambda g, r, cr: [
             CompletenessGate(
                 description=g.get("description",
@@ -154,7 +147,7 @@ _GATE_DEFS = {
         ],
     },
     "all_have": {
-        "build_args": lambda g, r, s, e: ("all_have", r.values, g["field"], g.get("min_length", 0)),
+        "check": "all_have",
         "format": lambda g, r, cr: [
             CompletenessGate(
                 description=g.get("description",
@@ -166,7 +159,7 @@ _GATE_DEFS = {
         ],
     },
     "none_match": {
-        "build_args": lambda g, r, s, e: ("none_match", r.values, g["field"], g["pattern"]),
+        "check": "none_match",
         "format": lambda g, r, cr: [
             CompletenessGate(
                 description=g.get("description",
@@ -178,7 +171,7 @@ _GATE_DEFS = {
         ],
     },
     "value_check": {
-        "build_args": lambda g, r, s, e: ("value", r.values[0] if r.values else None, g["expected"]),
+        "check": "value",
         "format": lambda g, r, cr: [
             CompletenessGate(
                 description=g.get("description",
@@ -200,7 +193,7 @@ class GateHandler:
 
 
 _GATE_HANDLERS: dict[str, GateHandler] = {
-    name: GateHandler(_make_gate_handler(defn["build_args"], defn["format"]))
+    name: GateHandler(_make_gate_handler(defn["check"], defn["format"]))
     for name, defn in _GATE_DEFS.items()
 }
 
