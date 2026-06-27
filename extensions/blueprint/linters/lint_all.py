@@ -144,6 +144,94 @@ def _run_layer(cfg: LayerConfig, linter_dir: Path, schema_dir: Optional[Path],
     return layer
 
 
+def _run_issues_layer(cfg: LayerConfig, linter_dir: Path, schema_dir: Optional[Path],
+                      paths: dict, loaded: dict, strict: bool, args) -> LayerResult:
+    """Execute the issues lint layer from its config.
+
+    Special handling: uses epics_dir and epic_id from args instead of schema.
+    """
+    epic_id = getattr(args, 'epic', None)
+    epics_dir = getattr(args, 'epics_dir', 'tasks/epics')
+    if not epic_id:
+        return LayerResult(name=cfg.name, skipped=True, skip_reason=cfg.skip_reason)
+
+    linter_path = linter_dir / cfg.linter_file
+    layer = LayerResult(name=cfg.name)
+    if not linter_path.exists():
+        layer.skipped = True
+        layer.skip_reason = f"Linter not found: {linter_path}"
+        return layer
+    try:
+        mod = load_linter(linter_path)
+        lr = cfg.call_fn(mod, epics_dir, epic_id, loaded, strict)
+        layer.errors, layer.warnings = issues_from_lr(lr)
+    except Exception as e:
+        layer.add("error", "runner_error", f"Linter raised: {e}",
+                  hint="Check the linter and spec file for errors.")
+    return layer
+
+
+# ── Layer factory functions ──────────────────────────────────────────────────
+# Named functions replace inline lambdas for readability.
+# Each call_fn: (mod, spec, schema_path, loaded, strict) -> LayerResult
+
+
+def _call_goalspec(m, s, sp, l, st):
+    return m.LinterClass(s, sp, st).run(glossary=l.get("glossary"))
+
+
+def _call_glossary(m, s, sp, l, st):
+    return m.LinterClass(s, sp, st).run(
+        goal=l.get("goal"), arch=l.get("arch"),
+        data=l.get("data"), api=l.get("api"))
+
+
+def _call_designspec(m, s, sp, l, st):
+    return m.LinterClass(s, sp, st).run(
+        goal=l.get("goal"), glossary=l.get("glossary"))
+
+
+def _call_archspec(m, s, sp, l, st):
+    return m.LinterClass(s, sp, st).run(
+        goal=l.get("goal"), glossary=l.get("glossary"),
+        data=l.get("data"), api=l.get("api"))
+
+
+def _call_dataspec(m, s, sp, l, st):
+    return m.LinterClass(s, sp, st).run(
+        api=l.get("api"), glossary=l.get("glossary"))
+
+
+def _call_apispec(m, s, sp, l, st):
+    return m.LinterClass(s, sp, st).run(data=l.get("data"))
+
+
+def _call_testspec(m, s, sp, l, st):
+    return m.LinterClass(s, sp, st).run(
+        api=l.get("api"), glossary=l.get("glossary"))
+
+
+def _call_taskplan(m, s, sp, l, st):
+    return m.LinterClass(s, sp, st).run(
+        goal=l.get("goal"), design=l.get("design"),
+        arch=l.get("arch"), data=l.get("data"),
+        api=l.get("api"), test=l.get("test"),
+        glossary=l.get("glossary"))
+
+
+def _call_issues(m, epics_dir, epic_id, l, st):
+    """Issues layer: special handling (no schema, epics_dir + epic_id args)."""
+    return m.LinterClass(epics_dir, epic_id, strict=st).run(
+        taskplan=l.get("plan"),
+        goal=l.get("goal"),
+        glossary=l.get("glossary"))
+
+
+def _assess(m, s, l):
+    """Standard completeness assessment: run LinterClass.run_completeness()."""
+    return m.LinterClass(s, None, False).run_completeness(l)
+
+
 # ── Layer definitions ─────────────────────────────────────────────────────
 
 _LAYERS = [
@@ -153,9 +241,8 @@ _LAYERS = [
         schema_file="goalspec.schema.json",
         path_key="goal",
         skip_reason="No goalspec provided.",
-        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(glossary=l.get("glossary")),
-
-        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
+        call_fn=_call_goalspec,
+        assess_fn=_assess,
     ),
     LayerConfig(
         name="glossary",
@@ -163,11 +250,8 @@ _LAYERS = [
         schema_file="glossary.schema.json",
         path_key="glossary",
         skip_reason="No glossary provided.",
-        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(
-            goal=l.get("goal"), arch=l.get("arch"),
-            data=l.get("data"), api=l.get("api")),
-
-        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
+        call_fn=_call_glossary,
+        assess_fn=_assess,
     ),
     LayerConfig(
         name="designspec",
@@ -175,10 +259,8 @@ _LAYERS = [
         schema_file="designspec.schema.json",
         path_key="design",
         skip_reason="No designspec provided.",
-        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(
-            goal=l.get("goal"), glossary=l.get("glossary")),
-
-        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
+        call_fn=_call_designspec,
+        assess_fn=_assess,
     ),
     LayerConfig(
         name="archspec",
@@ -186,11 +268,8 @@ _LAYERS = [
         schema_file="archspec.schema.json",
         path_key="arch",
         skip_reason="No archspec provided.",
-        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(
-            goal=l.get("goal"), glossary=l.get("glossary"),
-            data=l.get("data"), api=l.get("api")),
-
-        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
+        call_fn=_call_archspec,
+        assess_fn=_assess,
     ),
     LayerConfig(
         name="dataspec",
@@ -198,10 +277,8 @@ _LAYERS = [
         schema_file="dataspec.schema.json",
         path_key="data",
         skip_reason="No dataspec provided.",
-        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(
-            api=l.get("api"), glossary=l.get("glossary")),
-
-        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
+        call_fn=_call_dataspec,
+        assess_fn=_assess,
     ),
     LayerConfig(
         name="apispec",
@@ -209,9 +286,8 @@ _LAYERS = [
         schema_file="apispec.schema.json",
         path_key="api",
         skip_reason="No apispec provided.",
-        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(data=l.get("data")),
-
-        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
+        call_fn=_call_apispec,
+        assess_fn=_assess,
     ),
     LayerConfig(
         name="testspec",
@@ -219,10 +295,8 @@ _LAYERS = [
         schema_file="testspec.schema.json",
         path_key="test",
         skip_reason="No testspec provided.",
-        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(
-            api=l.get("api"), glossary=l.get("glossary")),
-
-        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
+        call_fn=_call_testspec,
+        assess_fn=_assess,
     ),
     LayerConfig(
         name="taskplan",
@@ -230,40 +304,19 @@ _LAYERS = [
         schema_file="taskplan.schema.json",
         path_key="plan",
         skip_reason="No taskplan provided.",
-        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(
-            goal=l.get("goal"), design=l.get("design"),
-            arch=l.get("arch"), data=l.get("data"),
-            api=l.get("api"), test=l.get("test"),
-            glossary=l.get("glossary")),
-
-        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
+        call_fn=_call_taskplan,
+        assess_fn=_assess,
+    ),
+    LayerConfig(
+        name="issues",
+        linter_file="lint_issues.py",
+        schema_file="",  # issues has no schema
+        path_key="epic",  # uses epic as the path key
+        skip_reason="No --epic provided (issues lint is optional).",
+        call_fn=_call_issues,
+        assess_fn=None,  # issues don't have completeness gates
     ),
 ]
-
-
-def run_issues(linter_dir, paths, loaded, args, strict) -> LayerResult:
-    epic_id = getattr(args, 'epic', None)
-    epics_dir = getattr(args, 'epics_dir', 'tasks/epics')
-    if not epic_id:
-        return LayerResult(name="issues", skipped=True,
-                           skip_reason="No --epic provided (issues lint is optional).")
-    linter_path = linter_dir / "lint_issues.py"
-    layer = LayerResult(name="issues")
-    if not linter_path.exists():
-        layer.skipped = True
-        layer.skip_reason = f"Linter not found: {linter_path}"
-        return layer
-    try:
-        mod = load_linter(linter_path)
-        lr = mod.LinterClass(epics_dir, epic_id, strict=strict).run(
-            taskplan=loaded.get("plan"),
-            goal=loaded.get("goal"),
-            glossary=loaded.get("glossary"))
-        layer.errors, layer.warnings = issues_from_lr(lr)
-    except Exception as e:
-        layer.add("error", "runner_error", f"Linter raised: {e}",
-                  hint="Check the linter and spec file for errors.")
-    return layer
 
 
 # ── Completeness gate check layer ─────────────────────────────────────────────
@@ -319,14 +372,15 @@ def run_suite(paths, linter_dir, schema_dir, strict, stop_on_error, args=None) -
                 l.add("error", "load_error", f"Failed to load {paths[path_key]}: {e}")
                 suite.layers.append(l)
 
-    # Run all standard layers from config table
+    # Run all layers (including issues) from config table
     for cfg in _LAYERS:
-        if not add(_run_layer(cfg, linter_dir, schema_dir, paths, loaded, strict)):
-            return suite
-
-    # Issues layer — special (no schema, different args)
-    if not add(run_issues(linter_dir, paths, loaded, args, strict)):
-        return suite
+        if cfg.name == "issues":
+            # Issues layer: special handling (no schema, epics_dir + epic_id args)
+            if not add(_run_issues_layer(cfg, linter_dir, schema_dir, paths, loaded, strict, args)):
+                return suite
+        else:
+            if not add(_run_layer(cfg, linter_dir, schema_dir, paths, loaded, strict)):
+                return suite
 
     # Completeness gates layer — runs after all linters
     suite.layers.append(run_completeness_gates(suite))

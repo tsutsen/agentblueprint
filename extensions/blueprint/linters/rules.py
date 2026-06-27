@@ -296,7 +296,49 @@ _RULE_HANDLERS: dict[str, RuleHandler] = {
 
 # ── Rule schema validation ────────────────────────────────────────────────────
 
-# Required fields per rule type (beyond 'type' itself)
+# TypedDict classes for each rule type — used to auto-derive _KNOWN_FIELDS
+_RULE_TYPEREDDICTS: dict[str, type] = {
+    "non_empty": NonEmptyRule,
+    "exists": ExistsRule,
+    "is_unique": IsUniqueRule,
+    "not_shared": NotSharedRule,
+    "has_item_count": HasItemCountRule,
+    "contains_patterns": ContainsPatternsRule,
+    "covers_all": CoversAllRule,
+    "not_orphan": NotOrphanRule,
+    "has_no_cycles": HasNoCyclesRule,
+}
+
+
+def _typeddict_fields(cls: type) -> dict[str, type]:
+    """Get all field annotations from a TypedDict and its bases."""
+    fields = {}
+    for base in cls.__mro__:
+        if hasattr(base, "__annotations__"):
+            for name, annotation in base.__annotations__.items():
+                fields[name] = annotation
+    return fields
+
+
+# Auto-derived: known fields per rule type (from TypedDict annotations)
+# Includes: TypedDict fields + common fields (target_label, category, severity, hint)
+_COMMON_RULE_FIELDS = {"target_label", "category", "severity", "hint"}
+
+
+def _build_known_fields() -> dict[str, set[str]]:
+    """Build _KNOWN_FIELDS from TypedDict annotations + common fields."""
+    known: dict[str, set[str]] = {}
+    for rule_type, cls in _RULE_TYPEREDDICTS.items():
+        fields = set(_typeddict_fields(cls).keys())
+        # Add common fields that aren't in the TypedDict
+        fields.update(_COMMON_RULE_FIELDS)
+        known[rule_type] = fields
+    return known
+
+
+_KNOWN_FIELDS: dict[str, set[str]] = _build_known_fields()
+
+# Required fields per rule type (derived from TypedDict non-optional fields)
 _REQUIRED_FIELDS: dict[str, list[str]] = {
     "non_empty":         ["target", "category"],
     "exists":            ["target", "inside", "category"],
@@ -309,23 +351,24 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
     "has_no_cycles":     ["target", "category"],
 }
 
-# Known fields per rule type (for detecting typos — includes 'check' itself)
-_KNOWN_FIELDS: dict[str, set[str]] = {
-    "non_empty":         {"check", "target", "target_label", "category", "severity", "hint"},
-    "exists":            {"check", "target", "inside", "ref_label",
-                          "target_label", "category", "severity", "hint"},
-    "is_unique":         {"check", "target", "target_label", "category", "severity", "hint"},
-    "not_shared":        {"check", "target", "target_label", "category", "severity", "hint"},
-    "has_item_count":    {"check", "target", "count", "compare_mode",
-                          "target_label", "category", "severity", "hint"},
-    "contains_patterns": {"check", "target", "patterns", "negate", "extra_keys", "max_count",
-                          "target_label", "category", "severity", "hint"},
-    "covers_all":        {"check", "target", "should_cover_all", "covered_label", "target_label",
-                          "severity", "category", "hint"},
-    "not_orphan":        {"check", "target", "category",
-                          "target_label", "severity", "hint"},
-    "has_no_cycles":     {"check", "target", "deps", "target_label",
-                          "category", "severity", "hint"},
+# Type constraints per rule type: field -> (is_valid_func, error_msg)
+_TYPE_CONSTRAINTS: dict[str, dict[str, tuple[callable, str]]] = {
+    "has_item_count": {
+        "count": (lambda v: isinstance(v, int), "'count' must be an integer"),
+    },
+    "contains_patterns": {
+        "patterns": (lambda v: isinstance(v, list), "'patterns' must be a list"),
+        "extra_keys": (lambda v: isinstance(v, list), "'extra_keys' must be a list"),
+        "negate": (lambda v: isinstance(v, bool), "'negate' must be a boolean"),
+        "max_count": (lambda v: isinstance(v, int), "'max_count' must be an integer"),
+    },
+}
+
+# Literal value constraints (e.g. compare_mode must be one of these values)
+_LITERAL_CONSTRAINTS: dict[str, dict[str, tuple[set, str]]] = {
+    "has_item_count": {
+        "compare_mode": ({"more", "less", "equal"}, "'compare_mode' must be 'more', 'less', or 'equal'"),
+    },
 }
 
 
@@ -353,19 +396,15 @@ def _validate_rule(rule: dict) -> list[str]:
         if key not in known:
             errors.append(f"unknown field '{key}'")
 
-    # Type constraints
-    if "count" in rule and not isinstance(rule["count"], int):
-        errors.append("'count' must be an integer")
-    if "patterns" in rule and not isinstance(rule["patterns"], list):
-        errors.append("'patterns' must be a list")
-    if "extra_keys" in rule and not isinstance(rule["extra_keys"], list):
-        errors.append("'extra_keys' must be a list")
-    if "compare_mode" in rule and rule.get("compare_mode") not in ("more", "less", "equal"):
-        errors.append("'compare_mode' must be 'more', 'less', or 'equal'")
-    if "negate" in rule and not isinstance(rule["negate"], bool):
-        errors.append("'negate' must be a boolean")
-    if "max_count" in rule and not isinstance(rule["max_count"], int):
-        errors.append("'max_count' must be an integer")
+    # Type constraints (auto-derived from _TYPE_CONSTRAINTS)
+    for field, (validator, msg) in _TYPE_CONSTRAINTS.get(rule_type, {}).items():
+        if field in rule and not validator(rule[field]):
+            errors.append(msg)
+
+    # Literal value constraints (auto-derived from _LITERAL_CONSTRAINTS)
+    for field, (valid_values, msg) in _LITERAL_CONSTRAINTS.get(rule_type, {}).items():
+        if field in rule and rule[field] not in valid_values:
+            errors.append(msg)
 
     return errors
 
