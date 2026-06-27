@@ -205,11 +205,11 @@ def check_no_overlap(values: list, parent_ids: list) -> list[tuple[str, str, str
 
 
 def check_item_count(
-    values: list, parent_ids: list, count: int, compare_mode: int = 1
+    values: list, parent_ids: list, count: int, compare_mode: str = "more"
 ) -> list[tuple[str, str]]:
     """Check list length against threshold.
 
-    compare_mode: 1 = warn if > count, 0 = warn if == count, -1 = warn if < count
+    compare_mode: "more" = warn if > count, "equal" = warn if == count, "less" = warn if < count
 
     Returns list of (parent_id, detail) for items that fail.
     """
@@ -218,11 +218,11 @@ def check_item_count(
         if not isinstance(val, list):
             continue
         n = len(val)
-        if compare_mode == 1 and n > count:
+        if compare_mode == "more" and n > count:
             failures.append((pid, f"has {n} items (maximum {count})"))
-        elif compare_mode == 0 and n == count:
+        elif compare_mode == "equal" and n == count:
             failures.append((pid, f"has exactly {n} items"))
-        elif compare_mode == -1 and n < count:
+        elif compare_mode == "less" and n < count:
             failures.append((pid, f"has {n} items (minimum {count})"))
     return failures
 

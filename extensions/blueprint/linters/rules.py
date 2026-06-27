@@ -74,7 +74,7 @@ class HasItemCountRule(_TargetRuleBase):
     type: Literal["has_item_count"]
     target: str
     count: int
-    compare_mode: int
+    compare_mode: Literal["more", "less", "equal"]
 
 
 class ContainsPatternsRule(_TargetRuleBase):
@@ -360,8 +360,8 @@ def _validate_rule(rule: dict) -> list[str]:
         errors.append("'patterns' must be a list")
     if "extra_keys" in rule and not isinstance(rule["extra_keys"], list):
         errors.append("'extra_keys' must be a list")
-    if "compare_mode" in rule and rule.get("compare_mode") not in (-1, 0, 1):
-        errors.append("'compare_mode' must be -1, 0, or 1")
+    if "compare_mode" in rule and rule.get("compare_mode") not in ("more", "less", "equal"):
+        errors.append("'compare_mode' must be 'more', 'less', or 'equal'")
     if "negate" in rule and not isinstance(rule["negate"], bool):
         errors.append("'negate' must be a boolean")
     if "max_count" in rule and not isinstance(rule["max_count"], int):
