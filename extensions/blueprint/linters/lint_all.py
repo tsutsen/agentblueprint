@@ -509,142 +509,143 @@ def issues_from_lr(lr) -> tuple[list[Issue], list[Issue]]:
     return errors, warnings
 
 
-# ── Layer runners ─────────────────────────────────────────────────────────────
+@dataclass
+class LayerConfig:
+    """Configuration for a single lint layer.
 
-def _run(name: str, linter_path: Path, fn, strict: bool) -> LayerResult:
-    layer = LayerResult(name=name)
+    call_fn(mod, spec, schema_path, loaded, strict) -> LayerResult from linter
+    assess_fn(spec, loaded) -> CompletenessScore (optional)
+    """
+    name: str
+    linter_file: str
+    schema_file: str
+    path_key: str
+    skip_reason: str
+    call_fn: callable
+    assess_fn: callable = None
+
+
+def _run_layer(cfg: LayerConfig, linter_dir: Path, schema_dir: Optional[Path],
+               paths: dict, loaded: dict, strict: bool) -> LayerResult:
+    """Execute one lint layer from its config.
+
+    Handles: path check, JSON loading, schema resolution, linter loading,
+    invocation, and completeness assessment.
+    """
+    path_val = paths.get(cfg.path_key)
+    if not path_val:
+        return LayerResult(name=cfg.name, skipped=True, skip_reason=cfg.skip_reason)
+
+    spec = json.loads(Path(path_val).read_text())
+    schema_path = (schema_dir / cfg.schema_file) if schema_dir else None
+    linter_path = linter_dir / cfg.linter_file
+
+    layer = LayerResult(name=cfg.name)
     if not linter_path.exists():
         layer.skipped = True
         layer.skip_reason = f"Linter not found: {linter_path}"
         return layer
+
     try:
-        lr = fn(strict)
+        mod = load_linter(linter_path)
+        lr = cfg.call_fn(mod, spec, schema_path, loaded, strict)
         layer.errors, layer.warnings = issues_from_lr(lr)
     except Exception as e:
         layer.add("error", "runner_error", f"Linter raised: {e}",
                   hint="Check the linter and spec file for errors.")
+
+    if cfg.assess_fn:
+        layer.completeness = cfg.assess_fn(spec, loaded)
+
     return layer
 
 
-def run_goalspec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
-    if not paths.get("goal"):
-        return LayerResult(name="goalspec", skipped=True, skip_reason="No goalspec provided.")
-    linter_path = linter_dir / "lint_goalspec.py"
-    spec = json.loads(Path(paths["goal"]).read_text())
-    schema_path = (schema_dir / "goalspec.schema.json") if schema_dir else None
-    mod = load_linter(linter_path)
-    layer = _run("goalspec", linter_path,
-                 lambda s: mod.run_lint(spec, schema_path, s,
-                                        glossary=loaded.get("glossary")), strict)
-    layer.completeness = assess_goalspec(spec)
-    return layer
+# ── Layer definitions ─────────────────────────────────────────────────────
 
-
-def run_glossary(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
-    if not paths.get("glossary"):
-        return LayerResult(name="glossary", skipped=True, skip_reason="No glossary provided.")
-    linter_path = linter_dir / "lint_glossary.py"
-    spec = json.loads(Path(paths["glossary"]).read_text())
-    schema_path = (schema_dir / "glossary.schema.json") if schema_dir else None
-    mod = load_linter(linter_path)
-    other = {"goal": loaded.get("goal"), "arch": loaded.get("arch"),
-             "data": loaded.get("data"), "api":  loaded.get("api")}
-    layer = _run("glossary", linter_path, lambda s: mod.run_lint(spec, schema_path, other, s), strict)
-    layer.completeness = assess_glossary_full(spec)
-    return layer
-
-
-def run_designspec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
-    if not paths.get("design"):
-        return LayerResult(name="designspec", skipped=True, skip_reason="No designspec provided.")
-    linter_path = linter_dir / "lint_designspec.py"
-    spec = json.loads(Path(paths["design"]).read_text())
-    schema_path = (schema_dir / "designspec.schema.json") if schema_dir else None
-    mod = load_linter(linter_path)
-    layer = _run("designspec", linter_path,
-                 lambda s: mod.run_lint(spec, schema_path, loaded.get("goal"), s,
-                                        glossary=loaded.get("glossary")), strict)
-    layer.completeness = assess_designspec(spec)
-    return layer
-
-
-def run_archspec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
-    if not paths.get("arch"):
-        return LayerResult(name="archspec", skipped=True, skip_reason="No archspec provided.")
-    linter_path = linter_dir / "lint_archspec.py"
-    spec = json.loads(Path(paths["arch"]).read_text())
-    schema_path = (schema_dir / "archspec.schema.json") if schema_dir else None
-    mod = load_linter(linter_path)
-    layer = _run("archspec", linter_path,
-                 lambda s: mod.run_lint(spec, schema_path, loaded.get("goal"), s,
-                                        glossary=loaded.get("glossary"),
-                                        data_spec=loaded.get("data"),
-                                        api_spec=loaded.get("api")), strict)
-    layer.completeness = assess_archspec(spec)
-    return layer
-
-
-def run_dataspec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
-    if not paths.get("data"):
-        return LayerResult(name="dataspec", skipped=True, skip_reason="No dataspec provided.")
-    linter_path = linter_dir / "lint_dataspec.py"
-    spec = json.loads(Path(paths["data"]).read_text())
-    schema_path = (schema_dir / "dataspec.schema.json") if schema_dir else None
-    api_spec = loaded.get("api")
-    mod = load_linter(linter_path)
-    layer = _run("dataspec", linter_path,
-                 lambda s: mod.run_lint(spec, schema_path, s, api_spec,
-                                        glossary=loaded.get("glossary")), strict)
-    layer.completeness = assess_dataspec(spec)
-    return layer
-
-
-def run_apispec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
-    if not paths.get("api"):
-        return LayerResult(name="apispec", skipped=True, skip_reason="No apispec provided.")
-    linter_path = linter_dir / "lint_apispec.py"
-    spec = json.loads(Path(paths["api"]).read_text())
-    schema_path = (schema_dir / "apispec.schema.json") if schema_dir else None
-    mod = load_linter(linter_path)
-    layer = _run("apispec", linter_path,
-                 lambda s: mod.run_lint(spec, schema_path, loaded.get("data"), s), strict)
-    layer.completeness = assess_apispec(spec, loaded.get("data"))
-    return layer
-
-
-def run_testspec(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
-    if not paths.get("test"):
-        return LayerResult(name="testspec", skipped=True, skip_reason="No testspec provided.")
-    linter_path = linter_dir / "lint_testspec.py"
-    spec = json.loads(Path(paths["test"]).read_text())
-    schema_path = (schema_dir / "testspec.schema.json") if schema_dir else None
-    api = loaded.get("api")
-    glossary = loaded.get("glossary")
-    mod = load_linter(linter_path)
-    layer = _run("testspec", linter_path,
-                 lambda s: mod.run_lint(spec, schema_path, api, glossary, s), strict)
-    layer.completeness = assess_testspec(spec, api)
-    return layer
-
-
-def run_taskplan(linter_dir, schema_dir, paths, loaded, strict) -> LayerResult:
-    if not paths.get("plan"):
-        return LayerResult(name="taskplan", skipped=True, skip_reason="No taskplan provided.")
-    linter_path = linter_dir / "lint_taskplan.py"
-    spec = json.loads(Path(paths["plan"]).read_text())
-    goal_spec = loaded.get("goal")
-    design_spec = loaded.get("design")
-    arch_spec = loaded.get("arch")
-    data_spec = loaded.get("data")
-    api_spec = loaded.get("api")
-    test_spec = loaded.get("test")
-    mod = load_linter(linter_path)
-    layer = _run("taskplan", linter_path,
-                 lambda s: mod.run_lint(spec, goal_spec, design_spec, arch_spec,
-                                        data_spec, api_spec, test_spec,
-                                        loaded.get("glossary"), s), strict)
-    layer.completeness = assess_taskplan(spec, goal_spec, design_spec, arch_spec)
-    return layer
+_LAYERS = [
+    LayerConfig(
+        name="goalspec",
+        linter_file="lint_goalspec.py",
+        schema_file="goalspec.schema.json",
+        path_key="goal",
+        skip_reason="No goalspec provided.",
+        call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, st, glossary=l.get("glossary")),
+        assess_fn=lambda s, l: assess_goalspec(s),
+    ),
+    LayerConfig(
+        name="glossary",
+        linter_file="lint_glossary.py",
+        schema_file="glossary.schema.json",
+        path_key="glossary",
+        skip_reason="No glossary provided.",
+        call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp,
+            {"goal": l.get("goal"), "arch": l.get("arch"),
+             "data": l.get("data"), "api": l.get("api")}, st),
+        assess_fn=lambda s, l: assess_glossary_full(s),
+    ),
+    LayerConfig(
+        name="designspec",
+        linter_file="lint_designspec.py",
+        schema_file="designspec.schema.json",
+        path_key="design",
+        skip_reason="No designspec provided.",
+        call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("goal"), st,
+            glossary=l.get("glossary")),
+        assess_fn=lambda s, l: assess_designspec(s),
+    ),
+    LayerConfig(
+        name="archspec",
+        linter_file="lint_archspec.py",
+        schema_file="archspec.schema.json",
+        path_key="arch",
+        skip_reason="No archspec provided.",
+        call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("goal"), st,
+            glossary=l.get("glossary"), data_spec=l.get("data"),
+            api_spec=l.get("api")),
+        assess_fn=lambda s, l: assess_archspec(s),
+    ),
+    LayerConfig(
+        name="dataspec",
+        linter_file="lint_dataspec.py",
+        schema_file="dataspec.schema.json",
+        path_key="data",
+        skip_reason="No dataspec provided.",
+        call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, st, l.get("api"),
+            glossary=l.get("glossary")),
+        assess_fn=lambda s, l: assess_dataspec(s),
+    ),
+    LayerConfig(
+        name="apispec",
+        linter_file="lint_apispec.py",
+        schema_file="apispec.schema.json",
+        path_key="api",
+        skip_reason="No apispec provided.",
+        call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("data"), st),
+        assess_fn=lambda s, l: assess_apispec(s, l.get("data")),
+    ),
+    LayerConfig(
+        name="testspec",
+        linter_file="lint_testspec.py",
+        schema_file="testspec.schema.json",
+        path_key="test",
+        skip_reason="No testspec provided.",
+        call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("api"),
+            l.get("glossary"), st),
+        assess_fn=lambda s, l: assess_testspec(s, l.get("api")),
+    ),
+    LayerConfig(
+        name="taskplan",
+        linter_file="lint_taskplan.py",
+        schema_file="taskplan.schema.json",
+        path_key="plan",
+        skip_reason="No taskplan provided.",
+        call_fn=lambda m, s, sp, l, st: m.run_lint(s, l.get("goal"), l.get("design"),
+            l.get("arch"), l.get("data"), l.get("api"), l.get("test"),
+            l.get("glossary"), st),
+        assess_fn=lambda s, l: assess_taskplan(s, l.get("goal"), l.get("design"),
+            l.get("arch")),
+    ),
+]
 
 
 def run_issues(linter_dir, paths, loaded, args, strict) -> LayerResult:
@@ -654,12 +655,19 @@ def run_issues(linter_dir, paths, loaded, args, strict) -> LayerResult:
         return LayerResult(name="issues", skipped=True,
                            skip_reason="No --epic provided (issues lint is optional).")
     linter_path = linter_dir / "lint_issues.py"
-    mod = load_linter(linter_path)
-    taskplan = loaded.get("plan")
-    goal = loaded.get("goal")
-    glossary = loaded.get("glossary")
-    layer = _run("issues", linter_path,
-                 lambda s: mod.run_lint(epic_id, epics_dir, taskplan, goal, glossary, s), strict)
+    layer = LayerResult(name="issues")
+    if not linter_path.exists():
+        layer.skipped = True
+        layer.skip_reason = f"Linter not found: {linter_path}"
+        return layer
+    try:
+        mod = load_linter(linter_path)
+        lr = mod.run_lint(epic_id, epics_dir, loaded.get("plan"),
+                          loaded.get("goal"), loaded.get("glossary"), strict)
+        layer.errors, layer.warnings = issues_from_lr(lr)
+    except Exception as e:
+        layer.add("error", "runner_error", f"Linter raised: {e}",
+                  hint="Check the linter and spec file for errors.")
     return layer
 
 
@@ -716,15 +724,14 @@ def run_suite(paths, linter_dir, schema_dir, strict, stop_on_error, args=None) -
                 l.add("error", "load_error", f"Failed to load {paths[path_key]}: {e}")
                 suite.layers.append(l)
 
-    if not add(run_goalspec(linter_dir, schema_dir, paths, loaded, strict)):  return suite
-    if not add(run_glossary(linter_dir, schema_dir, paths, loaded, strict)):  return suite
-    if not add(run_designspec(linter_dir, schema_dir, paths, loaded, strict)):return suite
-    if not add(run_archspec(linter_dir, schema_dir, paths, loaded, strict)):  return suite
-    if not add(run_dataspec(linter_dir, schema_dir, paths, loaded, strict)):  return suite
-    if not add(run_apispec(linter_dir, schema_dir, paths, loaded, strict)):   return suite
-    if not add(run_testspec(linter_dir, schema_dir, paths, loaded, strict)):  return suite
-    if not add(run_taskplan(linter_dir, schema_dir, paths, loaded, strict)):   return suite
-    if not add(run_issues(linter_dir, paths, loaded, args, strict)):           return suite
+    # Run all standard layers from config table
+    for cfg in _LAYERS:
+        if not add(_run_layer(cfg, linter_dir, schema_dir, paths, loaded, strict)):
+            return suite
+
+    # Issues layer — special (no schema, different args)
+    if not add(run_issues(linter_dir, paths, loaded, args, strict)):
+        return suite
 
     # Completeness gates layer — runs after all linters
     suite.layers.append(run_completeness_gates(suite))
