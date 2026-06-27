@@ -400,22 +400,6 @@ def _normalize_ref(ref_value: str | list[str] | None) -> list[str]:
     return ref_value or []
 
 
-def _extract_nested_texts(items: list) -> list[str]:
-    """Extract text values from a list of strings or dicts.
-    
-    Args:
-        items: List of strings or dicts with 'text' key.
-    
-    Returns:
-        List of text strings.
-    
-    Examples:
-        >>> _extract_nested_texts(["a", {"text": "b"}])
-        ["a", "b"]
-    """
-    return [item if isinstance(item, str) else item.get("text", "") for item in items]
-
-
 # ── Path-based rule system ────────────────────────────────────────────────────
 
 
