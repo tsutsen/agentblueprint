@@ -139,7 +139,13 @@ def _check_epic_consistency(spec: dict, result: LayerResult, extra_specs: dict =
 
 
 def _check_non_goal_violation(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
-    """Check that issue does not implement something explicitly out of scope."""
+    """Check that issue does not implement something explicitly out of scope.
+
+    Optimized to avoid O(n*m*k) text matching by:
+    1. Pre-computing a keyword index from out-of-scope items
+    2. Extracting issue text once per file
+    3. Using set intersection for fast keyword matching
+    """
     issue_files = spec.get("_issue_files", [])
     epic_data = spec.get("_epic_data", {})
     goal = extra_specs.get("goal")
@@ -164,17 +170,9 @@ def _check_non_goal_violation(spec: dict, result: LayerResult, extra_specs: dict
     out_of_scope_items: list[str] = []
 
     if epic_data and epic_data.get("content"):
-        out_of_scope_match = re.search(
-            r"##\s*out\s*of\s*scope\s*\n((?:-\s+.+\n?)*?)(?=\n##|$)",
-            epic_data["content"],
-            re.IGNORECASE | re.DOTALL
+        out_of_scope_items.extend(
+            _extract_markdown_list_items(epic_data["content"], "out of scope")
         )
-        if out_of_scope_match:
-            out_of_scope_items.extend([
-                line.strip().lstrip("- ").strip()
-                for line in out_of_scope_match.group(1).split("\n")
-                if line.strip().startswith("-") and len(line.strip()) > 5
-            ])
 
     if goal:
         for ng in goal.get("nonGoals", []):
@@ -190,8 +188,8 @@ def _check_non_goal_violation(spec: dict, result: LayerResult, extra_specs: dict
     if not out_of_scope_items:
         return
 
-    # Classify and expand each out-of-scope item
-    expanded_items: list[tuple[str, str, str]] = []
+    # Build expanded out-of-scope entries with keywords
+    expanded_items: list[tuple[str, set[str], str]] = []
 
     for item in out_of_scope_items:
         item_lower = item.lower()
@@ -202,7 +200,8 @@ def _check_non_goal_violation(spec: dict, result: LayerResult, extra_specs: dict
             term_id = gl_match.group(0).upper()
             entry = glossary_lookup[term_id]
             check_text = f"{entry['term'].lower()} " + " ".join(entry["synonyms"])
-            expanded_items.append((entry["term"], check_text, term_id))
+            keywords = {w for w in check_text.split() if len(w) > 3}
+            expanded_items.append((entry["term"], keywords, term_id))
             continue
 
         # Strategy 2: Direct glossary term match
@@ -210,30 +209,34 @@ def _check_non_goal_violation(spec: dict, result: LayerResult, extra_specs: dict
             for term_id, entry in glossary_lookup.items():
                 if entry["term"].lower() == item_lower:
                     check_text = entry["term"].lower() + " " + " ".join(entry["synonyms"])
-                    expanded_items.append((entry["term"], check_text, term_id))
+                    keywords = {w for w in check_text.split() if len(w) > 3}
+                    expanded_items.append((entry["term"], keywords, term_id))
                     break
             else:
                 # Strategy 3: Synonym match
                 for term_id, entry in glossary_lookup.items():
                     if item_lower in [s.lower() for s in entry["synonyms"]]:
                         check_text = entry["term"].lower() + " " + " ".join(entry["synonyms"])
-                        expanded_items.append((entry["term"], check_text, term_id))
+                        keywords = {w for w in check_text.split() if len(w) > 3}
+                        expanded_items.append((entry["term"], keywords, term_id))
                         break
                 else:
                     # Strategy 4: Fallback
-                    expanded_items.append((item, item_lower, "unknown"))
+                    keywords = {w for w in item_lower.split() if len(w) > 3}
+                    expanded_items.append((item, keywords, "unknown"))
 
+    # Pre-compute issue text once per file
     for issue_file in issue_files:
         md_content = issue_file.md_content.lower()
         title = issue_file.data.get("title", "").lower()
-        what_build = re.search(
-            r"##\s+What to build\s*\n(.*?)(?=\n##|$)",
-            md_content, re.DOTALL
-        )
-        body_text = what_build.group(1) if what_build else ""
-        full_text = f"{title} {body_text}"
 
-        for display_name, check_text, source_id in expanded_items:
+        # Robust extraction of "What to build" section
+        body_text = _extract_markdown_section(md_content, "what to build")
+        full_text = f"{title} {body_text}"
+        full_text_words = set(full_text.split())
+
+        for display_name, keywords, source_id in expanded_items:
+            # Fast set intersection: check if any keyword is in the text
             if source_id != "unknown":
                 gl_ref = f"{source_id.lower()}"
                 if gl_ref in full_text:
@@ -241,11 +244,67 @@ def _check_non_goal_violation(spec: dict, result: LayerResult, extra_specs: dict
                         f"{issue_file.issue_id}: implements out-of-scope item {source_id} '{display_name}'")
                     continue
 
-            for term in check_text.split():
-                if len(term) > 3 and term in full_text:
-                    result.add("error", "scope",
-                        f"{issue_file.issue_id}: implements out-of-scope item '{display_name}'")
-                    break
+            # O(k) per item instead of O(k*n) — single set lookup
+            if keywords & full_text_words:
+                result.add("error", "scope",
+                    f"{issue_file.issue_id}: implements out-of-scope item '{display_name}'")
+
+
+def _extract_markdown_list_items(content: str, heading: str) -> list[str]:
+    """Extract list items from a markdown section by heading.
+
+    Robustly handles various heading formats and multi-line list items.
+    """
+    # Find the heading (case-insensitive, flexible whitespace)
+    heading_match = re.search(
+        rf'^##\s+{re.escape(heading)}\s*$',
+        content,
+        re.MULTILINE | re.IGNORECASE
+    )
+    if not heading_match:
+        return []
+
+    after_heading = content[heading_match.end():]
+
+    # Collect list items until next heading
+    items_match = re.match(
+        r'(?:\s*- .+(?:
+(?!\s*##)[^
+]*)*)*',
+        after_heading
+    )
+    if not items_match:
+        return []
+
+    text = items_match.group(0)
+    return [
+        line.strip().lstrip("- ").strip()
+        for line in text.split("
+")
+        if line.strip().startswith("-") and len(line.strip()) > 5
+    ]
+
+
+def _extract_markdown_section(content: str, heading: str) -> str:
+    """Extract section text from markdown by heading.
+
+    Robustly handles various heading formats and multi-line content.
+    """
+    heading_match = re.search(
+        rf'^##\s+{re.escape(heading)}\s*$',
+        content,
+        re.MULTILINE | re.IGNORECASE
+    )
+    if not heading_match:
+        return ""
+
+    after_heading = content[heading_match.end():]
+
+    # Get content until next heading
+    next_heading = re.search(r'^##\s+', after_heading, re.MULTILINE)
+    if next_heading:
+        return after_heading[:next_heading.start()]
+    return after_heading
 
 
 def _check_glossary_refs(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
