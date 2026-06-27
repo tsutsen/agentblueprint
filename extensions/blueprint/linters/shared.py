@@ -247,145 +247,151 @@ def resolve_path(path: str, spec: dict, extra_specs: dict) -> Resolved:
     if not segments:
         return Resolved([], [], "")
 
-    # Check for extra_spec prefix
+    # Parse path: handle "spec:key" prefix
     first_segment = segments[0]
     extra_spec_name = None
     if ":" in first_segment:
         extra_spec_name, first_segment = first_segment.split(":", 1)
 
-    # Pick root
-    if extra_spec_name:
-        root = extra_specs.get(extra_spec_name) or {}
-    else:
-        root = spec
-
     # Navigate first segment → root list
+    root = (extra_specs.get(extra_spec_name) or {}) if extra_spec_name else spec
     items = root.get(first_segment, [])
     if not isinstance(items, list):
         items = [items] if items else []
 
-    # Compute label from path
     label = re.sub(r"([A-Z])", r" \1", first_segment).title().replace("_", " ").strip()
 
     current_items = items
-    parent_ids = []
-    parent_items = []
-    group_sizes = []
+    parent_ids: list[str] = []
+    parent_items: list[dict] = []
+    group_sizes: list[int] = []
 
+    # Navigate remaining segments
     for seg_idx in range(1, len(segments)):
         seg = segments[seg_idx]
         if not current_items:
             break
 
-        first_item = current_items[0] if current_items else {}
+        first_item = current_items[0]
+        if isinstance(first_item, str):
+            break  # items are already scalars
 
         if isinstance(first_item, dict) and seg in first_item:
             val = first_item[seg]
             if isinstance(val, list):
-                # Flatten nested lists
-                new_items = []
-                new_parent_ids = []
-                new_parent_items = []
-                new_group_sizes = []
-                for i, item in enumerate(current_items):
-                    nested = item.get(seg, [])
-                    if isinstance(nested, list):
-                        # Use parent_items for ID when available (e.g. refs.usRefs)
-                        pi = parent_items[i] if i < len(parent_items) else item
-                        pid = pi.get("id", pi.get("name", item.get("id", item.get("name", "?"))))
-                        for nested_item in nested:
-                            new_items.append(nested_item)
-                            new_parent_ids.append(pid)
-                            new_parent_items.append(pi)
-                            new_group_sizes.append(len(nested))
-                current_items = new_items
-                parent_ids = new_parent_ids
-                parent_items = new_parent_items
-                group_sizes = new_group_sizes
+                current_items, parent_ids, parent_items, group_sizes = (
+                    _flatten_list_segment(current_items, seg, parent_ids, parent_items)
+                )
+            elif seg_idx + 1 < len(segments) and isinstance(val, dict):
+                # Navigate into the dict and continue
+                current_items, parent_ids, parent_items, group_sizes = (
+                    _navigate_dict_segment(current_items, seg, parent_ids, parent_items)
+                )
             else:
-                # Scalar or dict — check if we need to navigate further
-                if seg_idx + 1 < len(segments) and isinstance(val, dict):
-                    # Navigate into the dict and continue, preserving parent context
-                    new_items = [item.get(seg, {}) for item in current_items]
-                    # Preserve parent IDs from parent_items if available, else from current item
-                    new_parent_ids = []
-                    new_parent_items = []
-                    new_group_sizes = []
-                    for i, item in enumerate(current_items):
-                        # Propagate existing parent context, or derive from current item
-                        if parent_ids and i < len(parent_ids):
-                            pid = parent_ids[i]
-                            pi = parent_items[i] if i < len(parent_items) else item
-                        else:
-                            pi = item
-                            pid = pi.get("id", pi.get("name", "?")) if isinstance(pi, dict) else "?"
-                        new_parent_ids.append(pid)
-                        new_parent_items.append(pi)
-                        new_group_sizes.append(1)
-                    current_items = new_items
-                    parent_ids = new_parent_ids
-                    parent_items = new_parent_items
-                    group_sizes = new_group_sizes
-                else:
-                    # Scalar property — extract and return
-                    values = []
-                    new_parent_ids = []
-                    new_parent_items = []
-                    new_group_sizes = []
-                    for i, item in enumerate(current_items):
-                        values.append(item.get(seg) if isinstance(item, dict) else item)
-                        # Use parent context if available, otherwise fall back to item's own id
-                        if parent_ids and i < len(parent_ids):
-                            pid = parent_ids[i]
-                            pi = parent_items[i] if i < len(parent_items) else item
-                        else:
-                            pid = item.get("id", item.get("name", "?")) if isinstance(item, dict) else "?"
-                            pi = item
-                        new_parent_ids.append(pid)
-                        new_parent_items.append(pi)
-                        new_group_sizes.append(1)
-                    return Resolved(
-                        values=values,
-                        parent_ids=new_parent_ids,
-                        parent_label=label,
-                        parent_items=new_parent_items,
-                        group_sizes=new_group_sizes,
-                    )
-        elif isinstance(first_item, str):
-            # Items are already scalars
-            break
+                # Terminal scalar — extract and return
+                return _extract_scalars(current_items, seg, parent_ids, parent_items, label)
 
-    # Reached end — return current items as values
-    # For single-segment paths or dict-nesting where parent has no id, derive from items' own id/name
-    if current_items:
-        first = current_items[0]
-        if isinstance(first, dict):
-            if not parent_ids:
-                # Single-segment path: use items' own identifiers
-                for item in current_items:
-                    pid = item.get("id", item.get("name", "?"))
-                    parent_ids.append(pid)
-                    parent_items.append(item)
-                    group_sizes.append(1)
-            elif all(pid == "?" for pid in parent_ids):
-                # Dict-nesting where parent segment has no id (e.g. overview.subsystems)
-                # Fall back to items' own identifiers
-                for i, item in enumerate(current_items):
-                    pid = item.get("id", item.get("name", "?"))
-                    parent_ids[i] = pid
-                    parent_items[i] = item
-        elif isinstance(first, str):
-            if not parent_ids:
-                parent_ids = list(current_items)
-                parent_items = list(current_items)
-                group_sizes = [1] * len(current_items)
-    return Resolved(
-        values=current_items,
-        parent_ids=parent_ids,
-        parent_label=label,
-        parent_items=parent_items,
-        group_sizes=group_sizes,
-    )
+    return _resolve_final(current_items, parent_ids, parent_items, group_sizes, label)
+
+
+def _get_item_id(item: dict, fallback: str = "?") -> str:
+    """Derive identifier from an item dict."""
+    if not isinstance(item, dict):
+        return fallback
+    return item.get("id", item.get("name", fallback))
+
+
+def _get_parent_context(i: int, item: dict, parent_ids: list[str], parent_items: list[dict]) -> tuple[str, dict]:
+    """Resolve parent_id and parent_item for index i.
+
+    Propagates existing parent context, or derives from the item itself.
+    """
+    if parent_ids and i < len(parent_ids):
+        return parent_ids[i], (parent_items[i] if i < len(parent_items) else item)
+    return _get_item_id(item, "?"), item
+
+
+def _flatten_list_segment(
+    items: list, seg: str, parent_ids: list[str], parent_items: list[dict]
+) -> tuple[list, list[str], list[dict], list[int]]:
+    """Flatten a nested list segment (e.g. components.reqRefs).
+
+    Each nested item inherits the parent's id.
+    """
+    new_items, new_ids, new_parents, new_sizes = [], [], [], []
+    for i, item in enumerate(items):
+        nested = item.get(seg, [])
+        if not isinstance(nested, list):
+            continue
+        pi = parent_items[i] if i < len(parent_items) else item
+        pid = _get_item_id(pi, _get_item_id(item, "?"))
+        for nested_item in nested:
+            new_items.append(nested_item)
+            new_ids.append(pid)
+            new_parents.append(pi)
+            new_sizes.append(len(nested))
+    return new_items, new_ids, new_parents, new_sizes
+
+
+def _navigate_dict_segment(
+    items: list, seg: str, parent_ids: list[str], parent_items: list[dict]
+) -> tuple[list, list[str], list[dict], list[int]]:
+    """Navigate into a dict segment and continue traversing.
+
+    Preserves existing parent context or derives from current item.
+    """
+    new_items = [item.get(seg, {}) for item in items]
+    new_ids, new_parents, new_sizes = [], [], []
+    for i, item in enumerate(items):
+        pid, pi = _get_parent_context(i, item, parent_ids, parent_items)
+        new_ids.append(pid)
+        new_parents.append(pi)
+        new_sizes.append(1)
+    return new_items, new_ids, new_parents, new_sizes
+
+
+def _extract_scalars(
+    items: list, seg: str, parent_ids: list[str], parent_items: list[dict], label: str
+) -> Resolved:
+    """Extract scalar values from the terminal segment."""
+    values, new_ids, new_parents, new_sizes = [], [], [], []
+    for i, item in enumerate(items):
+        values.append(item.get(seg) if isinstance(item, dict) else item)
+        pid, pi = _get_parent_context(i, item, parent_ids, parent_items)
+        new_ids.append(pid)
+        new_parents.append(pi)
+        new_sizes.append(1)
+    return Resolved(values, new_ids, label, new_parents, new_sizes)
+
+
+def _resolve_final(
+    items: list, parent_ids: list[str], parent_items: list[dict],
+    group_sizes: list[int], label: str,
+) -> Resolved:
+    """Finalize after loop — handle empty or unresolved parent_ids."""
+    if not items:
+        return Resolved([], [], label, [], [])
+
+    first = items[0]
+    if isinstance(first, dict):
+        if not parent_ids:
+            # Single-segment path: use items' own identifiers
+            for item in items:
+                parent_ids.append(_get_item_id(item, "?"))
+                parent_items.append(item)
+                group_sizes.append(1)
+        elif all(pid == "?" for pid in parent_ids):
+            # Dict-nesting where parent has no id (e.g. overview.subsystems)
+            for i, item in enumerate(items):
+                parent_ids[i] = _get_item_id(item, "?")
+                parent_items[i] = item
+    elif isinstance(first, str):
+        if not parent_ids:
+            parent_ids = list(items)
+            parent_items = list(items)
+            group_sizes = [1] * len(items)
+
+    return Resolved(items, parent_ids, label, parent_items, group_sizes)
 
 
 def _validate_all_ids(spec: dict, result: LayerResult) -> None:
