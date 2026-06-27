@@ -451,16 +451,16 @@ class IssuesLinter(BaseLinter):
         },
     ]
     MISC_CHECKS = [
-        ("id_sequence", _check_id_sequence),
-        ("dependency_ordering", _check_dependency_ordering),
-        ("dependency_cycles", _check_dependency_cycles),
-        ("epic_consistency", _check_epic_consistency),
-        ("non_goal_violation", _check_non_goal_violation),
-        ("glossary_refs", _check_glossary_refs),
-        ("coverage", _check_coverage),
-        ("schema", _check_schema),
-        ("file_naming", _check_file_naming),
-        ("body", _check_body),
+        _check_id_sequence,
+        _check_dependency_ordering,
+        _check_dependency_cycles,
+        _check_epic_consistency,
+        _check_non_goal_violation,
+        _check_glossary_refs,
+        _check_coverage,
+        _check_schema,
+        _check_file_naming,
+        _check_body,
     ]
     CROSS_SPEC_DEPS = ["taskplan", "goal", "glossary"]
 
@@ -584,11 +584,8 @@ def run_lint(epic_id: str, epics_dir: str, taskplan: Optional[dict] = None,
     return linter.run(taskplan=taskplan, goal=goal, glossary=glossary)
 
 
-def run_lint(epic_id: str, epics_dir: str, taskplan: Optional[dict] = None,
-             goal: Optional[dict] = None, glossary: Optional[dict] = None, strict: bool = False):
-    """Run the issue linter for a single epic. Returns a LayerResult."""
-    linter = IssuesLinter(epics_dir, epic_id, strict=strict)
-    return linter.run(taskplan=taskplan, goal=goal, glossary=glossary)
+# Canonical linter class for lint_all.py
+LinterClass = IssuesLinter
 
 
 def _load_json(path: str, label: str) -> Optional[dict]:

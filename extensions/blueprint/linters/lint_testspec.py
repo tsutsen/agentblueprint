@@ -355,13 +355,13 @@ SEMANTIC_RULES: list[SemanticRule] = [
 # ── Misc Checks ───────────────────────────────────────────────────────────────
 
 MISC_CHECKS = [
-    ("id_fn_consistency", _check_id_fn_consistency),
-    ("category_rules", _check_category_rules),
-    ("placeholder_values", _check_placeholder_values),
-    ("api_refs", _check_api_refs),
-    ("function_coverage", _check_function_coverage_summary),
-    ("glossary_refs", _check_glossary_refs),
-    ("lifecycle", _check_lifecycle),
+    _check_id_fn_consistency,
+    _check_category_rules,
+    _check_placeholder_values,
+    _check_api_refs,
+    _check_function_coverage_summary,
+    _check_glossary_refs,
+    _check_lifecycle,
 ]
 
 
@@ -463,14 +463,6 @@ class TestSpecLinter(BaseLinter):
     ]
     MISC_CHECKS = MISC_CHECKS
     CROSS_SPEC_DEPS = CROSS_SPEC_DEPS
-
-
-# ── Backward-compatible entry point ───────────────────────────────────────────
-
-def run_lint(spec, schema_path, api, glossary, strict):
-    """Backward-compatible entry point for lint_all.py."""
-    linter = TestSpecLinter(spec, schema_path, strict)
-    return linter.run(api=api, glossary=glossary)
 
 
 # Canonical linter class for lint_all.py

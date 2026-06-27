@@ -236,17 +236,17 @@ SEMANTIC_RULES: list[SemanticRule] = [
 # ── Misc Checks ───────────────────────────────────────────────────────────────
 
 MISC_CHECKS = [
-    ("fn_name_format", _check_fn_name_format),
-    ("param_name_format", _check_param_name_format),
-    ("output_type_format", _check_output_type_format),
-    ("error_code_format", _check_errors_format),
-    ("fn_visibility", _check_visibility),
-    ("duplicate_names", _check_duplicate_names),
-    ("missing_descriptions", _check_missing_descriptions),
-    ("required_param_desc", _check_required_param_description),
-    ("internal_function", _check_internal_function_visibility),
-    ("fn_no_errors", _check_fn_no_errors),
-    ("type_refs", _check_type_refs),
+    _check_fn_name_format,
+    _check_param_name_format,
+    _check_output_type_format,
+    _check_errors_format,
+    _check_visibility,
+    _check_duplicate_names,
+    _check_missing_descriptions,
+    _check_required_param_description,
+    _check_internal_function_visibility,
+    _check_fn_no_errors,
+    _check_type_refs,
 ]
 
 
@@ -318,14 +318,6 @@ class ApiSpecLinter(BaseLinter):
             self.result.add("error", "version_mismatch",
                 f"ApiSpec dataSpecVersion '{api_data_ver}' does not match DataSpec version '{data_ver}'.",
                 hint="Update dataSpecVersion in the API spec after updating the data spec.")
-
-
-# ── Backward-compatible entry point ───────────────────────────────────────────
-
-def run_lint(spec, schema_path, data_spec, strict):
-    """Backward-compatible entry point for lint_all.py."""
-    linter = ApiSpecLinter(spec, schema_path, strict)
-    return linter.run(data=data_spec)
 
 
 # Canonical linter class for lint_all.py

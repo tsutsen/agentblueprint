@@ -430,19 +430,8 @@ class ArchSpecLinter(BaseLinter):
     SEMANTIC_RULES = SEMANTIC_RULES
     COMPLETENESS_GATES = COMPLETENESS_GATES
     MISC_GATES = [_gate_overview_summary, _gate_component_dependencies]
-    MISC_CHECKS = [("components_in_flows", _check_components_in_data_flows)]
+    MISC_CHECKS = [_check_components_in_data_flows]
     CROSS_SPEC_DEPS = ["goal", "data", "api", "glossary"]
-
-
-# ── Backward Compatibility ────────────────────────────────────────────────────
-
-
-def run_lint(
-    spec, schema_path, goal, strict, glossary=None, data_spec=None, api_spec=None
-):
-    """Backward-compatible entry point for lint_all.py."""
-    linter = ArchSpecLinter(spec, schema_path, strict)
-    return linter.run(goal=goal, data=data_spec, api=api_spec, glossary=glossary)
 
 
 # Canonical linter class for lint_all.py

@@ -153,7 +153,8 @@ _LAYERS = [
         schema_file="goalspec.schema.json",
         path_key="goal",
         skip_reason="No goalspec provided.",
-        call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, st, glossary=l.get("glossary")),
+        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(glossary=l.get("glossary")),
+
         assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
     LayerConfig(
@@ -162,9 +163,10 @@ _LAYERS = [
         schema_file="glossary.schema.json",
         path_key="glossary",
         skip_reason="No glossary provided.",
-        call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp,
-            {"goal": l.get("goal"), "arch": l.get("arch"),
-             "data": l.get("data"), "api": l.get("api")}, st),
+        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(
+            goal=l.get("goal"), arch=l.get("arch"),
+            data=l.get("data"), api=l.get("api")),
+
         assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
     LayerConfig(
@@ -173,8 +175,9 @@ _LAYERS = [
         schema_file="designspec.schema.json",
         path_key="design",
         skip_reason="No designspec provided.",
-        call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("goal"), st,
-            glossary=l.get("glossary")),
+        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(
+            goal=l.get("goal"), glossary=l.get("glossary")),
+
         assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
     LayerConfig(
@@ -183,9 +186,10 @@ _LAYERS = [
         schema_file="archspec.schema.json",
         path_key="arch",
         skip_reason="No archspec provided.",
-        call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("goal"), st,
-            glossary=l.get("glossary"), data_spec=l.get("data"),
-            api_spec=l.get("api")),
+        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(
+            goal=l.get("goal"), glossary=l.get("glossary"),
+            data=l.get("data"), api=l.get("api")),
+
         assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
     LayerConfig(
@@ -194,8 +198,9 @@ _LAYERS = [
         schema_file="dataspec.schema.json",
         path_key="data",
         skip_reason="No dataspec provided.",
-        call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, st, l.get("api"),
-            glossary=l.get("glossary")),
+        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(
+            api=l.get("api"), glossary=l.get("glossary")),
+
         assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
     LayerConfig(
@@ -204,7 +209,8 @@ _LAYERS = [
         schema_file="apispec.schema.json",
         path_key="api",
         skip_reason="No apispec provided.",
-        call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("data"), st),
+        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(data=l.get("data")),
+
         assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
     LayerConfig(
@@ -213,8 +219,9 @@ _LAYERS = [
         schema_file="testspec.schema.json",
         path_key="test",
         skip_reason="No testspec provided.",
-        call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("api"),
-            l.get("glossary"), st),
+        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(
+            api=l.get("api"), glossary=l.get("glossary")),
+
         assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
     LayerConfig(
@@ -223,9 +230,12 @@ _LAYERS = [
         schema_file="taskplan.schema.json",
         path_key="plan",
         skip_reason="No taskplan provided.",
-        call_fn=lambda m, s, sp, l, st: m.run_lint(s, l.get("goal"), l.get("design"),
-            l.get("arch"), l.get("data"), l.get("api"), l.get("test"),
-            l.get("glossary"), st),
+        call_fn=lambda m, s, sp, l, st: m.LinterClass(s, sp, st).run(
+            goal=l.get("goal"), design=l.get("design"),
+            arch=l.get("arch"), data=l.get("data"),
+            api=l.get("api"), test=l.get("test"),
+            glossary=l.get("glossary")),
+
         assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
 ]
@@ -245,8 +255,10 @@ def run_issues(linter_dir, paths, loaded, args, strict) -> LayerResult:
         return layer
     try:
         mod = load_linter(linter_path)
-        lr = mod.run_lint(epic_id, epics_dir, loaded.get("plan"),
-                          loaded.get("goal"), loaded.get("glossary"), strict)
+        lr = mod.LinterClass(epics_dir, epic_id, strict=strict).run(
+            taskplan=loaded.get("plan"),
+            goal=loaded.get("goal"),
+            glossary=loaded.get("glossary"))
         layer.errors, layer.warnings = issues_from_lr(lr)
     except Exception as e:
         layer.add("error", "runner_error", f"Linter raised: {e}",

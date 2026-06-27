@@ -319,15 +319,15 @@ SEMANTIC_RULES: list[SemanticRule] = [
 # ── Misc Checks ───────────────────────────────────────────────────────────────
 
 MISC_CHECKS = [
-    ("primitives", _check_primitives),
-    ("pk_naming", _check_pk_naming),
-    ("duplicate_fields", _check_duplicate_fields),
-    ("enum_entity_conflict", _check_enum_entity_conflict),
-    ("entity_visibility", _check_entity_visibility),
-    ("abstract_relationships", _check_abstract_entity_relationships),
-    ("duplicate_relationships", _check_duplicate_relationships),
-    ("missing_descriptions", _check_missing_descriptions),
-    ("relationship_label", _check_relationship_label_keywords),
+    _check_primitives,
+    _check_pk_naming,
+    _check_duplicate_fields,
+    _check_enum_entity_conflict,
+    _check_entity_visibility,
+    _check_abstract_entity_relationships,
+    _check_duplicate_relationships,
+    _check_missing_descriptions,
+    _check_relationship_label_keywords,
 ]
 
 
@@ -450,7 +450,7 @@ class DataSpecLinter(BaseLinter):
 
     def _run_misc_checks(self) -> None:
         """Run misc checks with entity/enum names available."""
-        for name, func in self.MISC_CHECKS:
+        for func in self.MISC_CHECKS:
             func(self.spec, self.result, self.extra_specs)
 
     def _validate_cross_spec_consistency(self) -> None:
@@ -506,14 +506,6 @@ def _check_relationship_types(spec: dict, entity_names: Set[str], enum_names: Se
             result.add("warning", "rel_self_reference",
                 f"Self-referencing relationship: '{from_entity}' → '{to_entity}'.",
                 hint="Self-referencing relationships are valid (e.g., tree structures) but often indicate a design choice that should be reviewed.")
-
-
-# ── Backward-compatible entry point ───────────────────────────────────────────
-
-def run_lint(spec, schema_path, strict, api_spec=None, glossary=None):
-    """Backward-compatible entry point for lint_all.py."""
-    linter = DataSpecLinter(spec, schema_path, strict)
-    return linter.run(api=api_spec, glossary=glossary)
 
 
 # Canonical linter class for lint_all.py

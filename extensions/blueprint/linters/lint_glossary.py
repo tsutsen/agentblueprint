@@ -256,12 +256,12 @@ SEMANTIC_RULES: list[SemanticRule] = [
 # ── Misc Checks ───────────────────────────────────────────────────────────────
 
 MISC_CHECKS = [
-    ("related_terms_format", _check_related_terms),
-    ("synonym_conflicts", _check_synonym_conflicts),
-    ("definition_quality", _check_definition_quality),
-    ("self_reference", _check_self_reference),
-    ("circular_definitions", _check_circular_definitions),
-    ("cross_spec_coverage", _check_cross_spec_coverage),
+    _check_related_terms,
+    _check_synonym_conflicts,
+    _check_definition_quality,
+    _check_self_reference,
+    _check_circular_definitions,
+    _check_cross_spec_coverage,
 ]
 
 
@@ -313,14 +313,6 @@ class GlossaryLinter(BaseLinter):
     MISC_GATES = [_gate_terms_examples_or_related]
     MISC_CHECKS = MISC_CHECKS
     CROSS_SPEC_DEPS = CROSS_SPEC_DEPS
-
-
-# ── Backward-compatible entry point ───────────────────────────────────────────
-
-def run_lint(glossary, schema_path, other_specs, strict):
-    """Backward-compatible entry point for lint_all.py."""
-    linter = GlossaryLinter(glossary, schema_path, strict)
-    return linter.run(**other_specs)
 
 
 # Canonical linter class for lint_all.py

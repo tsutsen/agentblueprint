@@ -43,7 +43,7 @@ class BaseLinter:
     SEMANTIC_RULES: list = []
     COMPLETENESS_GATES: list = []  # Declarative GateDef list (from gates.py)
     MISC_GATES: list = []  # List of func(spec, extra_specs) -> CompletenessGate
-    MISC_CHECKS: list = []  # List of (name, func) tuples
+    MISC_CHECKS: list = []  # List of check functions (bare, like MISC_GATES)
     CROSS_SPEC_DEPS: list = []  # e.g., ["goal", "data", "api"]
 
     def __init__(self, spec: dict, schema_path: Optional[Path], strict: bool):
@@ -100,7 +100,7 @@ class BaseLinter:
 
     def _run_misc_checks(self) -> None:
         """Run custom/spec-specific checks."""
-        for name, func in self.MISC_CHECKS:
+        for func in self.MISC_CHECKS:
             func(self.spec, self.result, self.extra_specs)
 
     def _strict_mode(self) -> None:

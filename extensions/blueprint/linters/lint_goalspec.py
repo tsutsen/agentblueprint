@@ -477,22 +477,14 @@ class GoalSpecLinter(BaseLinter):
     ]
     CROSS_SPEC_DEPS = ["glossary"]
     MISC_CHECKS = [
-        ("objective", _check_objective),
-        ("functional_requirements", _check_functional_requirements),
-        ("nfrs", _check_nfrs),
-        ("user_stories", _check_user_stories),
-        ("success_criteria", _check_success_criteria),
-        ("coverage", _check_coverage),
-        ("non_goals", _check_non_goals),
+        _check_objective,
+        _check_functional_requirements,
+        _check_nfrs,
+        _check_user_stories,
+        _check_success_criteria,
+        _check_coverage,
+        _check_non_goals,
     ]
-
-
-# ── Backward Compatibility ────────────────────────────────────────────────────
-
-def run_lint(spec, schema_path, strict, glossary=None):
-    """Backward-compatible entry point for lint_all.py."""
-    linter = GoalSpecLinter(spec, schema_path, strict)
-    return linter.run(glossary=glossary)
 
 
 # Canonical linter class for lint_all.py

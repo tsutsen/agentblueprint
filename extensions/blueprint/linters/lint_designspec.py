@@ -426,20 +426,12 @@ class DesignSpecLinter(BaseLinter):
     MISC_GATES = [_gate_screens_have_specs, _gate_journeys_ref_stories]
     CROSS_SPEC_DEPS = ["goal", "glossary"]
     MISC_CHECKS = [
-        ("personas", _check_personas),
-        ("journeys", _check_journeys),
-        ("ia", _check_ia),
-        ("screen_specs", _check_screen_specs),
-        ("screens_reachable", _check_screens_reachable),
+        _check_personas,
+        _check_journeys,
+        _check_ia,
+        _check_screen_specs,
+        _check_screens_reachable,
     ]
-
-
-# ── Backward Compatibility ────────────────────────────────────────────────────
-
-def run_lint(spec, schema_path, goal, strict, glossary=None):
-    """Backward-compatible entry point for lint_all.py."""
-    linter = DesignSpecLinter(spec, schema_path, strict)
-    return linter.run(goal=goal, glossary=glossary)
 
 
 # Canonical linter class for lint_all.py
