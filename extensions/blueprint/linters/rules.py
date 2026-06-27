@@ -5,25 +5,26 @@ rules.py — Declarative rule handlers, schemas, and dispatch.
 Defines TypedDict schemas for all rule types, the handler registry,
 and the _run_new_semantic_rules dispatch function.
 
-Architecture:
+Architecture (shared with gates.py):
   - Pure check functions live in check.py
+  - Shared build_args live in check.py as _CHECK_BUILDERS
   - Each rule type is defined in _RULE_DEFS with:
-      build_args: (rule, resolved, spec, extra_specs) -> (check_name, *args)
-      format: (rule, resolved, CheckResult) -> list[IssueTuple]
-      where IssueTuple = (severity, category, message, hint)
-  - _make_rule_handler() wraps build_args + format into a handler
+      check: str          — key in _CHECK_BUILDERS
+      format: lambda       — (spec, data, result) -> list[Issue]
+  - format lambdas use named Issue(severity, category, message, hint)
+  - _make_rule_handler() wraps builder + format into a dispatchable handler
   - _RULE_HANDLERS maps rule type -> handler (auto-generated from _RULE_DEFS)
 
 All linters import SemanticRule from here to type-annotate their
 SEMANTIC_RULES lists.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, astuple
 from typing import Literal, TypedDict, Union
 
 from check import CheckDef, CheckResult, dispatch_check, _CHECK_BUILDERS
 from path import resolve_path
-from linter_types import LayerResult, Resolved
+from linter_types import Issue, LayerResult, Resolved
 
 
 # ── TypedDict schemas for semantic rules ─────────────────────────────────────
@@ -138,11 +139,11 @@ SemanticRule = Union[
 # All rule handlers follow the same pattern:
 #   1) Look up the shared build_args from _CHECK_BUILDERS[check_name]
 #   2) Call a pure check function via dispatch_check()
-#   3) Format CheckResult.results into LayerResult.add() calls
+#   3) Format CheckResult.results into Issue objects → LayerResult.add() calls
 #
 # _make_rule_handler() generates a handler from:
 #   - check_name: key in _CHECK_BUILDERS (shared build_args for rules + gates)
-#   - format_fn: (rule, resolved, CheckResult) -> list[IssueTuple]
+#   - format_fn: (spec, data, result) -> list[Issue]
 
 
 def _make_rule_handler(check_name: str, format_fn):
@@ -152,8 +153,8 @@ def _make_rule_handler(check_name: str, format_fn):
         args = builder(rule, resolved, spec, extra_specs)
         cr = dispatch_check(args[0], *args[1:],
                             values=resolved.values, parent_ids=resolved.parent_ids)
-        for severity, category, message, hint in format_fn(rule, resolved, cr):
-            result.add(severity, category, message, hint=hint)
+        for issue in format_fn(rule, resolved, cr):
+            result.add(*astuple(issue))
     return handler
 
 
@@ -162,100 +163,118 @@ def _make_rule_handler(check_name: str, format_fn):
 _RULE_DEFS = {
     "non_empty": {
         "check": "non_empty",
-        "format": lambda r, res, cr: [
-            (r.get("severity", "warning"),
-             r.get("category", "empty"),
-             f"{r.get('target_label', res.parent_label)} '{pid}': {detail}.",
-             r.get("hint") or f"Provide a value for {r.get('target_label', res.parent_label).lower()} '{pid}'.")
-            for pid, detail in cr.results
+        "format": lambda spec, data, result: [
+            Issue(
+                severity=spec.get("severity", "warning"),
+                category=spec.get("category", "empty"),
+                message=f"{spec.get('target_label', data.parent_label)} '{pid}': {detail}.",
+                hint=spec.get("hint") or f"Provide a value for {spec.get('target_label', data.parent_label).lower()} '{pid}'.",
+            )
+            for pid, detail in result.results
         ],
     },
 
     "exists": {
         "check": "exists",
-        "format": lambda r, res, cr: [
-            (r.get("severity", "error"),
-             r.get("category", "missing"),
-             f"{r.get('target_label', res.parent_label)} '{pid}': ref '{ref}' not found in {r.get('ref_label', 'valid set')}.",
-             r.get("hint") or f"Add '{ref}' to the target or correct the reference.")
-            for ref, pid in cr.results
+        "format": lambda spec, data, result: [
+            Issue(
+                severity=spec.get("severity", "error"),
+                category=spec.get("category", "missing"),
+                message=f"{spec.get('target_label', data.parent_label)} '{pid}': ref '{ref}' not found in {spec.get('ref_label', 'valid set')}.",
+                hint=spec.get("hint") or f"Add '{ref}' to the target or correct the reference.",
+            )
+            for ref, pid in result.results
         ],
     },
 
     "is_unique": {
         "check": "unique",
-        "format": lambda r, res, cr: [
-            (r.get("severity", "warning"),
-             r.get("category", "duplicate"),
-             f"Duplicate {r.get('target_label', res.parent_label).lower()} '{val}' (also '{first_pid}').",
-             r.get("hint") or f"Each {r.get('target_label', res.parent_label).lower()} must have a unique identifier.")
-            for val, first_pid, dup_pid in cr.results
+        "format": lambda spec, data, result: [
+            Issue(
+                severity=spec.get("severity", "warning"),
+                category=spec.get("category", "duplicate"),
+                message=f"Duplicate {spec.get('target_label', data.parent_label).lower()} '{val}' (also '{first_pid}').",
+                hint=spec.get("hint") or f"Each {spec.get('target_label', data.parent_label).lower()} must have a unique identifier.",
+            )
+            for val, first_pid, dup_pid in result.results
         ],
     },
 
     "not_shared": {
         "check": "no_overlap",
-        "format": lambda r, res, cr: [
-            (r.get("severity", "warning"),
-             r.get("category", "overlap"),
-             f"Item '{item}' is assigned to multiple {r.get('target_label', res.parent_label).lower()}: {first_pid} and {dup_pid}.",
-             r.get("hint") or f"Each item should belong to exactly one {r.get('target_label', res.parent_label).lower()}.")
-            for item, first_pid, dup_pid in cr.results
+        "format": lambda spec, data, result: [
+            Issue(
+                severity=spec.get("severity", "warning"),
+                category=spec.get("category", "overlap"),
+                message=f"Item '{item}' is assigned to multiple {spec.get('target_label', data.parent_label).lower()}: {first_pid} and {dup_pid}.",
+                hint=spec.get("hint") or f"Each item should belong to exactly one {spec.get('target_label', data.parent_label).lower()}.",
+            )
+            for item, first_pid, dup_pid in result.results
         ],
     },
 
     "has_item_count": {
         "check": "item_count",
-        "format": lambda r, res, cr: [
-            (r.get("severity", "warning"),
-             r.get("category", "count"),
-             f"{r.get('target_label', res.parent_label)} '{pid}': {detail}.",
-             r.get("hint", ""))
-            for pid, detail in cr.results
+        "format": lambda spec, data, result: [
+            Issue(
+                severity=spec.get("severity", "warning"),
+                category=spec.get("category", "count"),
+                message=f"{spec.get('target_label', data.parent_label)} '{pid}': {detail}.",
+                hint=spec.get("hint", ""),
+            )
+            for pid, detail in result.results
         ],
     },
 
     "contains_patterns": {
         "check": "patterns",
-        "format": lambda r, res, cr: [
-            (r.get("severity", "warning"),
-             r.get("category", "pattern_match"),
-             f"{r.get('target_label', res.parent_label)} '{pid}': {detail}.",
-             r.get("hint") or f"Review {r.get('target_label', res.parent_label).lower()} for {r.get('category', 'pattern_match')}.")
-            for pid, detail in cr.results
+        "format": lambda spec, data, result: [
+            Issue(
+                severity=spec.get("severity", "warning"),
+                category=spec.get("category", "pattern_match"),
+                message=f"{spec.get('target_label', data.parent_label)} '{pid}': {detail}.",
+                hint=spec.get("hint") or f"Review {spec.get('target_label', data.parent_label).lower()} for {spec.get('category', 'pattern_match')}.",
+            )
+            for pid, detail in result.results
         ],
     },
 
     "covers_all": {
         "check": "coverage",
-        "format": lambda r, res, cr: [
-            (r.get("severity", "warning"),
-             r.get("category", "uncovered"),
-             f"{r.get('covered_label', '?')} {iid} is not covered by any {r.get('target_label', 'source')}.",
-             r.get("hint") or f"Add ref '{iid}' to a {r.get('target_label', 'source').lower()} responsible for this.")
-            for iid in cr.results
+        "format": lambda spec, data, result: [
+            Issue(
+                severity=spec.get("severity", "warning"),
+                category=spec.get("category", "uncovered"),
+                message=f"{spec.get('covered_label', '?')} {iid} is not covered by any {spec.get('target_label', 'source')}.",
+                hint=spec.get("hint") or f"Add ref '{iid}' to a {spec.get('target_label', 'source').lower()} responsible for this.",
+            )
+            for iid in result.results
         ],
     },
 
     "not_orphan": {
         "check": "orphans",
-        "format": lambda r, res, cr: [
-            (r.get("severity", "warning"),
-             r.get("category", "isolated"),
-             f"{r.get('target_label', res.parent_label)} '{iid}' is isolated: no dependencies and no dependents.",
-             r.get("hint") or f"An isolated {r.get('target_label', res.parent_label).lower()} may indicate a design issue.")
-            for iid in cr.results
+        "format": lambda spec, data, result: [
+            Issue(
+                severity=spec.get("severity", "warning"),
+                category=spec.get("category", "isolated"),
+                message=f"{spec.get('target_label', data.parent_label)} '{iid}' is isolated: no dependencies and no dependents.",
+                hint=spec.get("hint") or f"An isolated {spec.get('target_label', data.parent_label).lower()} may indicate a design issue.",
+            )
+            for iid in result.results
         ],
     },
 
     "has_no_cycles": {
         "check": "has_no_cycles",
-        "format": lambda r, res, cr: [
-            (r.get("severity", "error"),
-             r.get("category", "circular_dependency"),
-             f"Circular {r.get('target_label', res.parent_label).lower()} dependency detected: {' → '.join(cycle)}.",
-             r.get("hint") or "Refactor to break the cycle — introduce an abstraction or invert a dependency.")
-            for cycle in cr.results
+        "format": lambda spec, data, result: [
+            Issue(
+                severity=spec.get("severity", "error"),
+                category=spec.get("category", "circular_dependency"),
+                message=f"Circular {spec.get('target_label', data.parent_label).lower()} dependency detected: {' → '.join(cycle)}.",
+                hint=spec.get("hint") or "Refactor to break the cycle — introduce an abstraction or invert a dependency.",
+            )
+            for cycle in result.results
         ],
     },
 }
@@ -265,6 +284,7 @@ _RULE_DEFS = {
 
 @dataclass
 class RuleHandler:
+    """Rule handler: resolves target, checks condition, returns Issue list."""
     func: callable
 
 

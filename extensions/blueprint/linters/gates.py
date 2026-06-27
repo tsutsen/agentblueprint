@@ -2,14 +2,14 @@
 """
 gates.py — Declarative completeness gates.
 
-Gates and rules share the same abstract CheckDef structure (check.py):
-  - Both resolve a `target` path via resolve_path()
-  - Both dispatch by `type` to a handler
-  - Both carry target_label, category, hint
+Gates and rules share the same backbone (check.py):
+  - Shared build_args: _CHECK_BUILDERS
+  - Shared dispatch: dispatch_check()
+  - Both use format: (spec, data, result) -> list[OutputClass]
 
 The only difference is output:
-  - Rules → Issue(severity, category, message) on LayerResult
-  - Gates → CompletenessGate(description, passed, required_at) on CompletenessScore
+  - Rules → list[Issue] (one per violation, iterates over result.results)
+  - Gates → list[CompletenessGate] (one verdict, looks at all results together)
 
 CheckDef and shared check functions live in check.py.
 """
@@ -94,7 +94,7 @@ GateDef = Union[
 #
 # _make_gate_handler() generates a handler from:
 #   - check_name: key in _CHECK_BUILDERS (shared build_args for rules + gates)
-#   - format_fn: (gate, resolved, CheckResult) -> list[CompletenessGate]
+#   - format_fn: (spec, data, result) -> list[CompletenessGate]
 
 
 def _make_gate_handler(check_name: str, format_fn):
@@ -113,71 +113,71 @@ def _make_gate_handler(check_name: str, format_fn):
 _GATE_DEFS = {
     "non_empty": {
         "check": "non_empty",
-        "format": lambda g, r, cr: [
+        "format": lambda spec, data, result: [
             CompletenessGate(
-                description=g.get("description",
-                    f"{g.get('target_label', r.parent_label)} is not empty"),
-                passed=len(cr.results) == 0, required_at=g["required_at"],
-                detail=("Empty: " + ", ".join(f"'{pid}': {d}" for pid, d in cr.results)
-                        if cr.results else "")
+                description=spec.get("description",
+                    f"{spec.get('target_label', data.parent_label)} is not empty"),
+                passed=len(result.results) == 0, required_at=spec["required_at"],
+                detail=("Empty: " + ", ".join(f"'{pid}': {d}" for pid, d in result.results)
+                        if result.results else "")
             )
         ],
     },
     "has_count": {
         "check": "count",
-        "format": lambda g, r, cr: [
+        "format": lambda spec, data, result: [
             CompletenessGate(
-                description=g.get("description",
-                    f"{g.get('target_label', r.parent_label)} has at least {g['count']} item(s)"),
-                passed=cr.results[0], required_at=g["required_at"],
-                detail=cr.results[1]
+                description=spec.get("description",
+                    f"{spec.get('target_label', data.parent_label)} has at least {spec['count']} item(s)"),
+                passed=result.results[0], required_at=spec["required_at"],
+                detail=result.results[1]
             )
         ],
     },
     "covers_all": {
         "check": "coverage",
-        "format": lambda g, r, cr: [
+        "format": lambda spec, data, result: [
             CompletenessGate(
-                description=g.get("description",
-                    f"All {g.get('covered_label', '')} covered by {g.get('target_label', 'source')}"),
-                passed=len(cr.results) == 0, required_at=g["required_at"],
-                detail=("Uncovered: " + ", ".join(str(u) for u in cr.results)
-                        if cr.results else "")
+                description=spec.get("description",
+                    f"All {spec.get('covered_label', '')} covered by {spec.get('target_label', 'source')}"),
+                passed=len(result.results) == 0, required_at=spec["required_at"],
+                detail=("Uncovered: " + ", ".join(str(u) for u in result.results)
+                        if result.results else "")
             )
         ],
     },
     "all_have": {
         "check": "all_have",
-        "format": lambda g, r, cr: [
+        "format": lambda spec, data, result: [
             CompletenessGate(
-                description=g.get("description",
-                    f"All {g.get('target_label', r.parent_label)} have {g['field']}"),
-                passed=len(cr.results) == 0, required_at=g["required_at"],
-                detail=(f"Missing {g['field']}: " + ", ".join(pid for pid, _ in cr.results)
-                        if cr.results else "")
+                description=spec.get("description",
+                    f"All {spec.get('target_label', data.parent_label)} have {spec['field']}"),
+                passed=len(result.results) == 0, required_at=spec["required_at"],
+                detail=(f"Missing {spec['field']}: " + ", ".join(pid for pid, _ in result.results)
+                        if result.results else "")
             )
         ],
     },
     "none_match": {
         "check": "none_match",
-        "format": lambda g, r, cr: [
+        "format": lambda spec, data, result: [
             CompletenessGate(
-                description=g.get("description",
-                    f"No {g.get('target_label', r.parent_label)} have {g['field']} matching {g['pattern']}"),
-                passed=len(cr.results) == 0, required_at=g["required_at"],
-                detail=("Matched: " + ", ".join(pid for pid, _ in cr.results)
-                        if cr.results else "")
+                description=spec.get("description",
+                    f"No {spec.get('target_label', data.parent_label)} have {spec['field']} matching {spec['pattern']}"),
+                passed=len(result.results) == 0, required_at=spec["required_at"],
+                detail=("Matched: " + ", ".join(pid for pid, _ in result.results)
+                        if result.results else "")
             )
         ],
     },
     "value_check": {
         "check": "value",
-        "format": lambda g, r, cr: [
+        "format": lambda spec, data, result: [
             CompletenessGate(
-                description=g.get("description",
-                    f"{g.get('target_label', r.parent_label)} is {g['expected']}"),
-                passed=cr.results[0], required_at=g["required_at"],
-                detail=cr.results[1]
+                description=spec.get("description",
+                    f"{spec.get('target_label', data.parent_label)} is {spec['expected']}"),
+                passed=result.results[0], required_at=spec["required_at"],
+                detail=result.results[1]
             )
         ],
     },
@@ -188,7 +188,7 @@ _GATE_DEFS = {
 
 @dataclass
 class GateHandler:
-    """Gate handler: resolves target, checks condition, returns gates list."""
+    """Gate handler: resolves target, checks condition, returns CompletenessGate list."""
     func: callable
 
 
