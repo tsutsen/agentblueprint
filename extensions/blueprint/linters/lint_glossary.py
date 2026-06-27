@@ -26,7 +26,7 @@ import sys
 import argparse
 from pathlib import Path
 from typing import Optional, Dict
-from shared import BaseLinter, LayerResult, validate_spec_ids
+from shared import BaseLinter, LayerResult, SemanticRule, validate_spec_ids
 
 
 # ── Term extraction from other specs ─────────────────────────────────────────
@@ -241,7 +241,7 @@ def _check_cross_spec_coverage(spec: dict, result: LayerResult, extra_specs: dic
 
 # ── Semantic Rules ────────────────────────────────────────────────────────────
 
-SEMANTIC_RULES = [
+SEMANTIC_RULES: list[SemanticRule] = [
     # Related terms must reference existing glossary terms
     {
         "type": "exists",

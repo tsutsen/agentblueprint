@@ -29,7 +29,7 @@ import sys
 import argparse
 from pathlib import Path
 from typing import Optional, Dict, Set
-from shared import BaseLinter, LayerResult, validate_spec_ids
+from shared import BaseLinter, LayerResult, SemanticRule, validate_spec_ids
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -306,7 +306,7 @@ def _check_lifecycle(spec: dict, result: LayerResult, extra_specs: dict = None) 
 
 # ── Semantic Rules ────────────────────────────────────────────────────────────
 
-SEMANTIC_RULES = [
+SEMANTIC_RULES: list[SemanticRule] = [
     # Test IDs must be unique
     {
         "type": "is_unique",

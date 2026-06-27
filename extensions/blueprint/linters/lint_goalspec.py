@@ -27,6 +27,7 @@ from typing import Optional
 from shared import (
     BaseLinter,
     LayerResult,
+    SemanticRule,
     find_duplicates,
     print_human,
     print_json_output,
@@ -37,7 +38,7 @@ from shared import (
 
 # ── Semantic Rules ────────────────────────────────────────────────────────────
 
-SEMANTIC_RULES = [
+SEMANTIC_RULES: list[SemanticRule] = [
     # FRs must have descriptions
     {
         "type": "non_empty",

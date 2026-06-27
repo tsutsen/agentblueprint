@@ -30,12 +30,13 @@ from typing import Optional
 from shared import (
     BaseLinter,
     LayerResult,
+    SemanticRule,
     find_cycles,
 )
 
 # ── Semantic Rules ────────────────────────────────────────────────────────────
 
-SEMANTIC_RULES = [
+SEMANTIC_RULES: list[SemanticRule] = [
     # Components must have reqRefs
     {
         "type": "non_empty",

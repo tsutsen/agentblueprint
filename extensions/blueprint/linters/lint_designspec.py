@@ -35,6 +35,7 @@ from typing import Optional
 from shared import (
     BaseLinter,
     LayerResult,
+    SemanticRule,
     print_human,
     print_json_output,
     validate_coverage,
@@ -45,7 +46,7 @@ from shared import (
 
 # ── Semantic Rules ────────────────────────────────────────────────────────────
 
-SEMANTIC_RULES = [
+SEMANTIC_RULES: list[SemanticRule] = [
     # Design goals must not contain implementation details
     {
         "type": "contains_patterns",

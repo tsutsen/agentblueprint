@@ -24,7 +24,7 @@ import json
 import re
 from pathlib import Path
 from typing import Optional, Set
-from shared import BaseLinter, LayerResult, validate_spec_ids, validate_project_and_version
+from shared import BaseLinter, LayerResult, SemanticRule, validate_spec_ids, validate_project_and_version
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -226,7 +226,7 @@ def _check_entity_visibility(spec: dict, result: LayerResult, extra_specs: dict 
 
 # ── Semantic Rules ────────────────────────────────────────────────────────────
 
-SEMANTIC_RULES = [
+SEMANTIC_RULES: list[SemanticRule] = [
     # Entity names must be PascalCase
     {
         "type": "contains_patterns",

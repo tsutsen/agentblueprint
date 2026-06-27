@@ -22,7 +22,7 @@ import json
 import re
 from pathlib import Path
 from typing import Optional, Dict, Any
-from shared import BaseLinter, LayerResult, validate_project_and_version
+from shared import BaseLinter, LayerResult, SemanticRule, validate_project_and_version
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -206,7 +206,7 @@ def _check_type_refs(spec: dict, result: LayerResult, extra_specs: dict = None) 
 
 # ── Semantic Rules ────────────────────────────────────────────────────────────
 
-SEMANTIC_RULES = [
+SEMANTIC_RULES: list[SemanticRule] = [
     # Entity references must exist in data spec
     {
         "type": "exists",
