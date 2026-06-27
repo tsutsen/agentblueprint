@@ -5,16 +5,25 @@ rules.py — Declarative rule handlers, schemas, and dispatch.
 Defines TypedDict schemas for all rule types, the handler registry,
 and the _run_new_semantic_rules dispatch function.
 
+Architecture:
+  - Pure check functions live in check.py
+  - Each rule type is defined in _RULE_DEFS with:
+      build_args: (rule, resolved, spec, extra_specs) -> (check_name, *args)
+      format: (rule, resolved, CheckResult) -> list[IssueTuple]
+      where IssueTuple = (severity, category, message, hint)
+  - _make_rule_handler() wraps build_args + format into a handler
+  - _RULE_HANDLERS maps rule type -> handler (auto-generated from _RULE_DEFS)
+
 All linters import SemanticRule from here to type-annotate their
 SEMANTIC_RULES lists.
 """
 
-import re
 from dataclasses import dataclass
 from typing import Literal, TypedDict, Union
 
 from check import CheckDef, CheckResult, dispatch_check
-from shared import LayerResult, Resolved, _normalize_ref, resolve_path
+from path import _normalize_ref, resolve_path
+from linter_types import LayerResult, Resolved
 
 
 # ── TypedDict schemas for semantic rules ─────────────────────────────────────
@@ -125,327 +134,165 @@ SemanticRule = Union[
 ]
 
 
-# ── Rule handlers ─────────────────────────────────────────────────────────────
-# Handlers using pure check functions call dispatch_check() from check.py
-# to invoke the shared logic. Handlers with custom traversal logic
-# (exists, unique, no_overlap, patterns, orphans, has_no_cycles)
-# remain as standalone functions.
+# ── Rule handler factory ─────────────────────────────────────────────────────
+# All rule handlers follow the same pattern:
+#   1) Extract params from rule dict
+#   2) Call a pure check function via dispatch_check()
+#   3) Format CheckResult.results into LayerResult.add() calls
+#
+# _make_rule_handler() generates a handler from:
+#   - build_args: (rule, resolved, spec, extra_specs) -> (check_name, *args)
+#   - format_fn: (rule, resolved, CheckResult) -> list[IssueTuple]
 
 
-def handle_non_empty(resolved, rule, result, spec, extra_specs):
-    """Check that resolved values are not empty/missing. Uses dispatch_check('non_empty')."""
-    cr = dispatch_check("non_empty", resolved.values, resolved.parent_ids,
-                        values=resolved.values, parent_ids=resolved.parent_ids)
-    severity = rule.get("severity", "warning")
-    category = rule.get("category", "empty")
-    target_label = rule.get("target_label", resolved.parent_label)
-    hint = rule.get("hint", "")
-    for pid, detail in cr.results:
-        hint_text = hint or f"Provide a value for {target_label.lower()} '{pid}'."
-        result.add(severity, category,
-                    f"{target_label} '{pid}': {detail}.",
-                    hint=hint_text)
+def _make_rule_handler(build_args, format_fn):
+    """Generate a rule handler from arg builder and result formatter."""
+    def handler(resolved, rule, result, spec, extra_specs):
+        args = build_args(rule, resolved, spec, extra_specs)
+        cr = dispatch_check(args[0], *args[1:],
+                            values=resolved.values, parent_ids=resolved.parent_ids)
+        for severity, category, message, hint in format_fn(rule, resolved, cr):
+            result.add(severity, category, message, hint=hint)
+    return handler
 
 
-def handle_exists(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
-    """Check that resolved values exist in the valid set."""
-    # Resolve the valid set from inside path
-    valid_path = rule["inside"]
-    valid_resolved = resolve_path(valid_path, spec, extra_specs)
-    valid = set()
-    for v in valid_resolved.values:
-        valid.add(str(v))
+# ── Rule definitions (data-driven) ───────────────────────────────────────────
 
-    severity = rule.get("severity", "error")
-    category = rule.get("category", "missing")
-    target_label = rule.get("target_label", resolved.parent_label)
-    ref_label = rule.get("ref_label", "valid set")
-    hint = rule.get("hint", "")
-    for val, pid in zip(resolved.values, resolved.parent_ids):
-        if val is None:
-            continue
-        # Handle both single values and lists of refs
-        refs = _normalize_ref(val)
-        for ref in refs:
-            if ref and ref not in valid:
-                result.add(severity, category,
-                    f"{target_label} '{pid}': ref '{ref}' not found in {ref_label}.",
-                    hint=hint or f"Add '{ref}' to the target or correct the reference.")
+_RULE_DEFS = {
+    "non_empty": {
+        "build_args": lambda r, res, s, e: ("non_empty", res.values, res.parent_ids),
+        "format": lambda r, res, cr: [
+            (r.get("severity", "warning"),
+             r.get("category", "empty"),
+             f"{r.get('target_label', res.parent_label)} '{pid}': {detail}.",
+             r.get("hint") or f"Provide a value for {r.get('target_label', res.parent_label).lower()} '{pid}'.")
+            for pid, detail in cr.results
+        ],
+    },
 
+    "exists": {
+        "build_args": lambda r, res, s, e: (
+            "exists",
+            res.values, res.parent_ids,
+            {str(v) for v in resolve_path(r["inside"], s, e).values},
+        ),
+        "format": lambda r, res, cr: [
+            (r.get("severity", "error"),
+             r.get("category", "missing"),
+             f"{r.get('target_label', res.parent_label)} '{pid}': ref '{ref}' not found in {r.get('ref_label', 'valid set')}.",
+             r.get("hint") or f"Add '{ref}' to the target or correct the reference.")
+            for ref, pid in cr.results
+        ],
+    },
 
-def handle_unique(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
-    """Check that resolved values are unique."""
-    severity = rule.get("severity", "warning")
-    category = rule.get("category", "duplicate")
-    target_label = rule.get("target_label", resolved.parent_label)
-    hint = rule.get("hint", "")
-    seen: dict[str, str] = {}
-    for val, pid in zip(resolved.values, resolved.parent_ids):
-        if not val:
-            continue
-        str_val = str(val)
-        if str_val in seen:
-            result.add(severity, category,
-                f"Duplicate {target_label.lower()} '{str_val}' (also '{seen[str_val]}').",
-                hint=hint or f"Each {target_label.lower()} must have a unique identifier.")
-        else:
-            seen[str_val] = pid or val
+    "is_unique": {
+        "build_args": lambda r, res, s, e: ("unique", res.values, res.parent_ids),
+        "format": lambda r, res, cr: [
+            (r.get("severity", "warning"),
+             r.get("category", "duplicate"),
+             f"Duplicate {r.get('target_label', res.parent_label).lower()} '{val}' (also '{first_pid}').",
+             r.get("hint") or f"Each {r.get('target_label', res.parent_label).lower()} must have a unique identifier.")
+            for val, first_pid, dup_pid in cr.results
+        ],
+    },
 
+    "not_shared": {
+        "build_args": lambda r, res, s, e: ("no_overlap", res.values, res.parent_ids),
+        "format": lambda r, res, cr: [
+            (r.get("severity", "warning"),
+             r.get("category", "overlap"),
+             f"Item '{item}' is assigned to multiple {r.get('target_label', res.parent_label).lower()}: {first_pid} and {dup_pid}.",
+             r.get("hint") or f"Each item should belong to exactly one {r.get('target_label', res.parent_label).lower()}.")
+            for item, first_pid, dup_pid in cr.results
+        ],
+    },
 
-def handle_no_overlap(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
-    """Check that list fields don't share values across parent items."""
-    severity = rule.get("severity", "warning")
-    category = rule.get("category", "overlap")
-    target_label = rule.get("target_label", resolved.parent_label)
-    hint = rule.get("hint", "")
-    seen: dict[str, str] = {}
-    for val, pid in zip(resolved.values, resolved.parent_ids):
-        if not isinstance(val, list):
-            continue
-        for item in val:
-            if item in seen and seen[item] != pid:
-                result.add(severity, category,
-                    f"Item '{item}' is assigned to multiple {target_label.lower()}: {seen[item]} and {pid}.",
-                    hint=hint or f"Each item should belong to exactly one {target_label.lower()}.")
-            seen[item] = pid
+    "has_item_count": {
+        "build_args": lambda r, res, s, e: (
+            "item_count", res.values, res.parent_ids, r["count"], r.get("compare_mode", 1),
+        ),
+        "format": lambda r, res, cr: [
+            (r.get("severity", "warning"),
+             r.get("category", "count"),
+             f"{r.get('target_label', res.parent_label)} '{pid}': {detail}.",
+             r.get("hint", ""))
+            for pid, detail in cr.results
+        ],
+    },
 
+    "contains_patterns": {
+        "build_args": lambda r, res, s, e: (
+            "patterns",
+            res.values, res.parent_ids,
+            r.get("patterns", []),
+            r.get("negate", False),
+            r.get("extra_keys", []),
+            res.group_sizes,
+            r.get("max_count"),
+        ),
+        "format": lambda r, res, cr: [
+            (r.get("severity", "warning"),
+             r.get("category", "pattern_match"),
+             f"{r.get('target_label', res.parent_label)} '{pid}': {detail}.",
+             r.get("hint") or f"Review {r.get('target_label', res.parent_label).lower()} for {r.get('category', 'pattern_match')}.")
+            for pid, detail in cr.results
+        ],
+    },
 
-def handle_item_count(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
-    """Check list length against threshold."""
-    severity = rule.get("severity", "warning")
-    category = rule.get("category", "count")
-    target_label = rule.get("target_label", resolved.parent_label)
-    hint = rule.get("hint", "")
-    count = rule["count"]
-    compare_mode = rule.get("compare_mode", 1)
-    for val, pid in zip(resolved.values, resolved.parent_ids):
-        if not isinstance(val, list):
-            continue
-        n = len(val)
-        if compare_mode == 1 and n > count:
-            result.add(severity, category,
-                f"{target_label} '{pid}' has {n} items — consider splitting.",
-                hint=hint or f"A {target_label.lower()} with >{count} items may be too complex.")
-        elif compare_mode == 0 and n == count:
-            result.add(severity, category,
-                f"{target_label} '{pid}' has exactly {n} items.",
-                hint=hint)
-        elif compare_mode == -1 and n < count:
-            result.add(severity, category,
-                f"{target_label} '{pid}' has {n} items (minimum {count}).",
-                hint=hint or f"A {target_label.lower()} should have at least {count} items.")
+    "covers_all": {
+        "build_args": lambda r, res, s, e: (
+            "coverage",
+            {_ref for v in res.values for _ref in _normalize_ref(v)},
+            [i.get("id", str(i)) if isinstance(i, dict) else str(i)
+             for i in resolve_path(r["should_cover_all"], s, e).values],
+        ),
+        "format": lambda r, res, cr: [
+            (r.get("severity", "warning"),
+             r.get("category", "uncovered"),
+             f"{r.get('covered_label', '?')} {iid} is not covered by any {r.get('target_label', 'source')}.",
+             r.get("hint") or f"Add ref '{iid}' to a {r.get('target_label', 'source').lower()} responsible for this.")
+            for iid in cr.results
+        ],
+    },
 
+    "not_orphan": {
+        "build_args": lambda r, res, s, e: ("orphans", res.values),
+        "format": lambda r, res, cr: [
+            (r.get("severity", "warning"),
+             r.get("category", "isolated"),
+             f"{r.get('target_label', res.parent_label)} '{iid}' is isolated: no dependencies and no dependents.",
+             r.get("hint") or f"An isolated {r.get('target_label', res.parent_label).lower()} may indicate a design issue.")
+            for iid in cr.results
+        ],
+    },
 
-def handle_patterns(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
-    """Check text values against regex patterns.
-
-    When `negate` is True (format validation): flag values that DON'T match any pattern.
-    When `negate` is False (default, forbidden content): flag values that DO match.
-
-    For single-property checks, use target path: "entities.fields.name"
-    For multi-property checks on the same item, use extra_keys: ["layout", "wireframe"]
-    """
-    severity = rule.get("severity", "warning")
-    category = rule.get("category", "pattern_match")
-    target_label = rule.get("target_label", resolved.parent_label)
-    hint = rule.get("hint", "")
-    patterns = rule.get("patterns", [])
-    extra_keys = rule.get("extra_keys", [])
-    max_count = rule.get("max_count")
-    negate = rule.get("negate", False)
-
-    for idx, (val, pid) in enumerate(zip(resolved.values, resolved.parent_ids)):
-        # Check group size limit (skip items from parents with too many nested items)
-        if max_count is not None and resolved.group_sizes and idx < len(resolved.group_sizes):
-            if resolved.group_sizes[idx] > max_count:
-                continue
-
-        # Extract text — extra_keys for multi-property, or raw string from path
-        if extra_keys and isinstance(val, dict):
-            texts = [val.get(k, "") for k in extra_keys]
-        elif isinstance(val, str):
-            texts = [val]
-        else:
-            continue
-
-        for text in texts:
-            matches = []
-            any_match = False
-            for p in patterns:
-                if isinstance(p, str):
-                    pattern, pattern_label = p, p
-                else:
-                    pattern, pattern_label = p
-                if negate:
-                    # Format validation: check if text matches the expected pattern
-                    if re.fullmatch(pattern, text):
-                        any_match = True
-                else:
-                    # Forbidden content: check if pattern is found in text
-                    found = re.findall(pattern, text.lower())
-                    if found:
-                        matches.append((pattern_label, found))
-                        any_match = True
-
-            if negate and not any_match:
-                # Format validation failed — text didn't match any pattern
-                msg = f"{target_label} '{pid}': value '{text}' doesn't match expected pattern: {', '.join(str(p) for p in patterns)}"
-                result.add(severity, category, msg, hint=hint or f"Review {target_label.lower()} for {category}.")
-            elif not negate and matches:
-                # Forbidden content found
-                msg = f"{target_label} '{pid}': {', '.join(f'{l}: {m}' for l, m in matches)}."
-                result.add(severity, category, msg, hint=hint or f"Review {target_label.lower()} for {category}.")
+    "has_no_cycles": {
+        "build_args": lambda r, res, s, e: ("has_no_cycles", res.values, r.get("deps", "dependencies")),
+        "format": lambda r, res, cr: [
+            (r.get("severity", "error"),
+             r.get("category", "circular_dependency"),
+             f"Circular {r.get('target_label', res.parent_label).lower()} dependency detected: {' → '.join(cycle)}.",
+             r.get("hint") or "Refactor to break the cycle — introduce an abstraction or invert a dependency.")
+            for cycle in cr.results
+        ],
+    },
+}
 
 
-def handle_coverage(resolved, rule, result, spec, extra_specs):
-    """Check that target items reference all items in should_cover_all.
-
-    Uses dispatch_check('coverage') for the pure check logic.
-    target path includes the ref field: "overview.subsystems.componentRefs"
-    """
-    should_cover_all_resolved = resolve_path(rule["should_cover_all"], spec, extra_specs)
-
-    covered_refs = {_ref for item in resolved.values for _ref in _normalize_ref(item)}
-    should_cover_ids = [
-        i.get("id", str(i)) if isinstance(i, dict) else str(i)
-        for i in should_cover_all_resolved.values
-    ]
-    cr = dispatch_check("coverage", covered_refs, should_cover_ids,
-                        values=resolved.values, parent_ids=resolved.parent_ids)
-
-    severity = rule.get("severity", "warning")
-    category = rule.get("category", "uncovered")
-    hint_template = rule.get("hint")
-    covered_label = rule.get("covered_label", should_cover_all_resolved.parent_label)
-    target_label = rule.get("target_label", "source")
-
-    for iid in cr.results:
-        desc = ""
-        for item in should_cover_all_resolved.values:
-            if isinstance(item, dict) and item.get("id") == iid:
-                desc = item.get("description", "")
-                break
-        desc_short = desc[:60] + "..." if desc else ""
-        hint_text = (hint_template or
-            f"Add ref '{iid}' to a {target_label} responsible for this.")
-        result.add(severity, category,
-                    f"{covered_label} {iid} ('{desc_short}') is not covered by any {target_label}.",
-                    hint=hint_text)
-
-
-def handle_orphans(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
-    """Warn if items are isolated (no *Refs outgoing, no *Refs incoming).
-
-    Auto-discovers all *Refs fields on items — no deps_field needed.
-    """
-    severity = rule.get("severity", "warning")
-    category = rule.get("category", "isolated")
-    target_label = rule.get("target_label", resolved.parent_label)
-    hint = rule.get("hint", "")
-
-    items = resolved.values
-    if not items or not isinstance(items[0], dict):
-        return
-
-    # Auto-discover all *Refs fields
-    ref_fields = []
-    for item in items:
-        for key in item:
-            if key.endswith("Refs") or key.endswith("Ref"):
-                ref_fields.append(key)
-
-    if not ref_fields:
-        return
-
-    # Build referenced set
-    referenced_ids = set()
-    for item in items:
-        for f in ref_fields:
-            for ref in _normalize_ref(item.get(f, [])):
-                referenced_ids.add(ref)
-
-    # Check each item
-    for item in items:
-        iid = item.get("id", "")
-        if not iid:
-            continue
-
-        # Check if this item references anything via any *Refs field
-        has_outgoing = any(item.get(f) for f in ref_fields)
-        is_referenced = iid in referenced_ids
-        if not has_outgoing and not is_referenced:
-            result.add(severity, category,
-                f"{target_label} '{iid}' is isolated: no dependencies and no dependents.",
-                hint=hint or f"An isolated {target_label.lower()} may indicate a design issue.")
-
-
-def handle_has_no_cycles(resolved: Resolved, rule: dict, result: LayerResult, spec: dict, extra_specs: dict) -> None:
-    """Check that dependency graph has no cycles."""
-    severity = rule.get("severity", "error")
-    category = rule.get("category", "circular_dependency")
-    target_label = rule.get("target_label", resolved.parent_label)
-    deps_field = rule.get("deps", "dependencies")
-    hint = rule.get("hint", "")
-
-    items = resolved.values
-    if not items or not isinstance(items[0], dict):
-        return
-
-    # Build dependency graph
-    graph: dict[str, list[str]] = {}
-    for item in items:
-        iid = item.get("id", "")
-        if iid:
-            graph[iid] = list(_normalize_ref(item.get(deps_field, [])))
-
-    # Detect cycles via DFS
-    visited = set()
-    path = []
-
-    def dfs(node):
-        if node in path:
-            return path[path.index(node):]
-        if node in visited:
-            return None
-        visited.add(node)
-        path.append(node)
-        for dep in graph.get(node, []):
-            cycle = dfs(dep)
-            if cycle:
-                return cycle
-        path.pop()
-        return None
-
-    for node in graph:
-        if node not in visited:
-            cycle = dfs(node)
-            if cycle:
-                cycle_str = " → ".join(cycle + [cycle[0]])
-                result.add(severity, category,
-                    f"Circular {target_label.lower()} dependency detected: {cycle_str}.",
-                    hint=hint or f"Refactor to break the cycle — introduce an abstraction or invert a dependency.")
-                return  # Report first cycle only
-
-
-# ── Rule handler registry ─────────────────────────────────────────────────────
+# ── Rule handler registry (auto-generated) ────────────────────────────────────
 
 @dataclass
 class RuleHandler:
     func: callable
 
 
-_RULE_HANDLERS = {
-    "non_empty":         RuleHandler(handle_non_empty),
-    "exists":            RuleHandler(handle_exists),
-    "is_unique":         RuleHandler(handle_unique),
-    "not_shared":        RuleHandler(handle_no_overlap),
-    "has_item_count":    RuleHandler(handle_item_count),
-    "contains_patterns": RuleHandler(handle_patterns),
-    "covers_all":        RuleHandler(handle_coverage),
-    "not_orphan":        RuleHandler(handle_orphans),
-    "has_no_cycles":     RuleHandler(handle_has_no_cycles),
+_RULE_HANDLERS: dict[str, RuleHandler] = {
+    name: RuleHandler(_make_rule_handler(defn["build_args"], defn["format"]))
+    for name, defn in _RULE_DEFS.items()
 }
 
+
+# ── Rule schema validation ────────────────────────────────────────────────────
 
 # Required fields per rule type (beyond 'type' itself)
 _REQUIRED_FIELDS: dict[str, list[str]] = {
@@ -520,6 +367,23 @@ def _validate_rule(rule: dict) -> list[str]:
 
     return errors
 
+
+# ── Backward-compatible handler names ─────────────────────────────────────────
+# Kept for test_bugfixes.py and any external code that checks for these names.
+# They alias the auto-generated handlers.
+
+handle_non_empty         = _RULE_HANDLERS["non_empty"].func
+handle_exists            = _RULE_HANDLERS["exists"].func
+handle_unique            = _RULE_HANDLERS["is_unique"].func
+handle_no_overlap        = _RULE_HANDLERS["not_shared"].func
+handle_item_count        = _RULE_HANDLERS["has_item_count"].func
+handle_patterns          = _RULE_HANDLERS["contains_patterns"].func
+handle_coverage          = _RULE_HANDLERS["covers_all"].func
+handle_orphans           = _RULE_HANDLERS["not_orphan"].func
+handle_has_no_cycles     = _RULE_HANDLERS["has_no_cycles"].func
+
+
+# ── Rule runner ───────────────────────────────────────────────────────────────
 
 def _run_new_semantic_rules(rules: list, spec: dict, result: LayerResult, extra_specs: dict) -> None:
     """Execute declarative semantic rules using the new path-based system."""

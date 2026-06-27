@@ -45,7 +45,6 @@ from shared import (
     CompletenessScore,
     suite_completeness_pct,
     SPEC_ORDER,
-    assess,
 )
 
 
@@ -99,7 +98,7 @@ class LayerConfig:
     """Configuration for a single lint layer.
 
     call_fn(mod, spec, schema_path, loaded, strict) -> LayerResult from linter
-    assess_fn(spec, loaded) -> CompletenessScore (optional)
+    assess_fn(mod, spec, loaded) -> CompletenessScore (optional)
     """
     name: str
     linter_file: str
@@ -140,7 +139,7 @@ def _run_layer(cfg: LayerConfig, linter_dir: Path, schema_dir: Optional[Path],
                   hint="Check the linter and spec file for errors.")
 
     if cfg.assess_fn:
-        layer.completeness = cfg.assess_fn(spec, loaded)
+        layer.completeness = cfg.assess_fn(mod, spec, loaded)
 
     return layer
 
@@ -155,7 +154,7 @@ _LAYERS = [
         path_key="goal",
         skip_reason="No goalspec provided.",
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, st, glossary=l.get("glossary")),
-        assess_fn=lambda s, l: assess("goalspec", s, l),
+        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
     LayerConfig(
         name="glossary",
@@ -166,7 +165,7 @@ _LAYERS = [
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp,
             {"goal": l.get("goal"), "arch": l.get("arch"),
              "data": l.get("data"), "api": l.get("api")}, st),
-        assess_fn=lambda s, l: assess("glossary", s, l),
+        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
     LayerConfig(
         name="designspec",
@@ -176,7 +175,7 @@ _LAYERS = [
         skip_reason="No designspec provided.",
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("goal"), st,
             glossary=l.get("glossary")),
-        assess_fn=lambda s, l: assess("designspec", s, l),
+        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
     LayerConfig(
         name="archspec",
@@ -187,7 +186,7 @@ _LAYERS = [
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("goal"), st,
             glossary=l.get("glossary"), data_spec=l.get("data"),
             api_spec=l.get("api")),
-        assess_fn=lambda s, l: assess("archspec", s, l),
+        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
     LayerConfig(
         name="dataspec",
@@ -197,7 +196,7 @@ _LAYERS = [
         skip_reason="No dataspec provided.",
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, st, l.get("api"),
             glossary=l.get("glossary")),
-        assess_fn=lambda s, l: assess("dataspec", s, l),
+        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
     LayerConfig(
         name="apispec",
@@ -206,7 +205,7 @@ _LAYERS = [
         path_key="api",
         skip_reason="No apispec provided.",
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("data"), st),
-        assess_fn=lambda s, l: assess("apispec", s, l),
+        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
     LayerConfig(
         name="testspec",
@@ -216,7 +215,7 @@ _LAYERS = [
         skip_reason="No testspec provided.",
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, sp, l.get("api"),
             l.get("glossary"), st),
-        assess_fn=lambda s, l: assess("testspec", s, l),
+        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
     LayerConfig(
         name="taskplan",
@@ -227,7 +226,7 @@ _LAYERS = [
         call_fn=lambda m, s, sp, l, st: m.run_lint(s, l.get("goal"), l.get("design"),
             l.get("arch"), l.get("data"), l.get("api"), l.get("test"),
             l.get("glossary"), st),
-        assess_fn=lambda s, l: assess("plan", s, l),
+        assess_fn=lambda m, s, l: m.LinterClass(s, None, False).run_completeness(l),
     ),
 ]
 

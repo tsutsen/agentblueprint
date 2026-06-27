@@ -21,7 +21,7 @@ Usage:
 """
 
 from typing import Set
-from shared import BaseLinter, LayerResult, validate_spec_ids, validate_project_and_version
+from shared import BaseLinter, CompletenessGate, LayerResult, validate_spec_ids, validate_project_and_version
 from rules import SemanticRule
 
 
@@ -336,27 +336,123 @@ MISC_CHECKS = [
 CROSS_SPEC_DEPS = []
 
 
+# ── Completeness Gates ────────────────────────────────────────────────────────
+
+COMPLETENESS_GATES: list = [
+    {"type": "has_count", "target": "entities", "count": 1,
+     "target_label": "entity", "category": "completeness", "required_at": "draft",
+     "description": "Has at least one entity"},
+    {"type": "has_count", "target": "relationships", "count": 1,
+     "target_label": "relationship", "category": "completeness", "required_at": "draft",
+     "description": "Has at least one relationship"},
+    {"type": "all_have", "target": "entities", "field": "description",
+     "min_length": 1, "target_label": "entity", "category": "completeness",
+     "required_at": "review",
+     "description": "All entities have descriptions"},
+]
+
+
+# ── Misc Completeness Gates ───────────────────────────────────────────────────
+
+def _gate_no_orphan_entities(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """No orphan entities (not in any relationship from/to)."""
+    entities = spec.get("entities", [])
+    relationships = spec.get("relationships", [])
+    rel_participants = set()
+    for r in relationships:
+        rel_participants.add(r.get("from"))
+        rel_participants.add(r.get("to"))
+    orphans = {e["name"] for e in entities} - rel_participants
+    return CompletenessGate(
+        description="No orphan entities",
+        passed=len(orphans) == 0 or len(entities) <= 1, required_at="review",
+        detail=f"Orphans: {orphans}" if orphans and len(entities) > 1 else "",
+    )
+
+
+def _gate_orphan_threshold(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """Orphan entities < 20%."""
+    entities = spec.get("entities", [])
+    relationships = spec.get("relationships", [])
+    rel_participants = set()
+    for r in relationships:
+        rel_participants.add(r.get("from"))
+        rel_participants.add(r.get("to"))
+    orphans = {e["name"] for e in entities} - rel_participants
+    orphan_pct = (len(orphans) / len(entities) * 100) if entities else 0
+    return CompletenessGate(
+        description="Orphan entities < 20%",
+        passed=orphan_pct < 20, required_at="review",
+        detail=f"{orphan_pct:.0f}% of entities are orphans ({len(orphans)}/{len(entities)})",
+    )
+
+
+def _gate_field_examples(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All entities have at least one field with an example."""
+    entities = spec.get("entities", [])
+    with_examples = [
+        e for e in entities
+        if any(f.get("example") for f in e.get("fields", []))
+    ]
+    return CompletenessGate(
+        description="All entities have at least one field with an example",
+        passed=len(with_examples) == len(entities), required_at="confirmed",
+        detail=f"{len(entities) - len(with_examples)} entity/entities missing field examples",
+    )
+
+
+def _gate_no_standalone_entities(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """No standalone type-only entities (referenced as types but in no relationships)."""
+    entities = spec.get("entities", [])
+    relationships = spec.get("relationships", [])
+    entity_names = {e["name"] for e in entities}
+    rel_participants = set()
+    for r in relationships:
+        rel_participants.add(r.get("from"))
+        rel_participants.add(r.get("to"))
+    type_referenced = set()
+    for entity in entities:
+        for field_def in entity.get("fields", []):
+            base = field_def.get("type", "").replace("[]", "")
+            if base in entity_names and base != entity["name"]:
+                type_referenced.add(base)
+    standalone = type_referenced - rel_participants
+    return CompletenessGate(
+        description="No standalone type-only entities",
+        passed=len(standalone) == 0 or len(standalone) <= 2, required_at="review",
+        detail=f"Standalone type-only entities: {standalone}" if standalone else "",
+    )
+
+
 # ── Linter Class ──────────────────────────────────────────────────────────────
 
 class DataSpecLinter(BaseLinter):
     """Linter for DataSpec artifacts."""
-    
+
     SPEC_NAME = "dataspec"
+    SPEC_KEY = "dataspec"
     SEMANTIC_RULES = SEMANTIC_RULES
+    COMPLETENESS_GATES = COMPLETENESS_GATES
+    MISC_GATES = [
+        _gate_no_orphan_entities,
+        _gate_orphan_threshold,
+        _gate_field_examples,
+        _gate_no_standalone_entities,
+    ]
     MISC_CHECKS = MISC_CHECKS
     CROSS_SPEC_DEPS = CROSS_SPEC_DEPS
-    
+
     def __init__(self, spec, schema_path, strict):
         super().__init__(spec, schema_path, strict)
         # Pre-compute entity and enum names for cross-reference rules
         self._entity_names = {e["name"] for e in self.spec.get("entities", [])}
         self._enum_names = {e["name"] for e in self.spec.get("enums", [])}
-    
+
     def _run_misc_checks(self) -> None:
         """Run misc checks with entity/enum names available."""
         for name, func in self.MISC_CHECKS:
             func(self.spec, self.result, self.extra_specs)
-    
+
     def _validate_cross_spec_consistency(self) -> None:
         """Check project match, version pinning, field types, and relationship types."""
         super()._validate_cross_spec_consistency()
@@ -418,6 +514,10 @@ def run_lint(spec, schema_path, strict, api_spec=None, glossary=None):
     """Backward-compatible entry point for lint_all.py."""
     linter = DataSpecLinter(spec, schema_path, strict)
     return linter.run(api=api_spec, glossary=glossary)
+
+
+# Canonical linter class for lint_all.py
+LinterClass = DataSpecLinter
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────

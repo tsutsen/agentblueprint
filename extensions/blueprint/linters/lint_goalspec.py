@@ -22,6 +22,7 @@ import re
 
 from shared import (
     BaseLinter,
+    CompletenessGate,
     LayerResult,
     print_human,
     print_json_output,
@@ -392,11 +393,88 @@ def _check_non_goals(spec: dict, result: LayerResult, extra_specs: dict) -> None
                 hint="Explain why this is excluded: deferred, out of scope, handled elsewhere.")
 
 
+# ── Completeness Gates ─────────────────────────────────────────────────────
+
+COMPLETENESS_GATES: list = [
+    # Draft
+    {"type": "has_count", "target": "functionalRequirements", "count": 1,
+     "target_label": "FR", "category": "completeness", "required_at": "draft",
+     "description": "Has at least one functional requirement"},
+    {"type": "has_count", "target": "userStories", "count": 1,
+     "target_label": "user story", "category": "completeness", "required_at": "draft",
+     "description": "Has at least one user story"},
+    {"type": "has_count", "target": "successCriteria", "count": 1,
+     "target_label": "success criterion", "category": "completeness", "required_at": "draft",
+     "description": "Has at least one success criterion"},
+    {"type": "has_count", "target": "nonGoals", "count": 1,
+     "target_label": "non-goal", "category": "completeness", "required_at": "draft",
+     "description": "Has at least one non-goal"},
+    # Review
+    {"type": "none_match", "target": "nonFunctionalRequirements",
+     "field": "scale", "pattern": "^TBD",
+     "target_label": "NFR", "category": "completeness", "required_at": "review",
+     "description": "All NFRs have Scale and Meter defined (no TBD)"},
+    # Confirmed
+    {"type": "value_check", "target": "objective.confirmedAfterCompletion",
+     "expected": "truthy", "target_label": "confirmedAfterCompletion",
+     "category": "completeness", "required_at": "confirmed",
+     "description": "Objective re-confirmed after completion"},
+    {"type": "value_check", "target": "status", "expected": "confirmed",
+     "target_label": "status", "category": "completeness", "required_at": "confirmed",
+     "description": "Status is confirmed"},
+]
+
+
+# ── Misc Completeness Gates ───────────────────────────────────────────────────
+
+def _gate_objective_statement(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """Has project objective statement."""
+    stmt = spec.get("objective", {}).get("statement", "")
+    return CompletenessGate(
+        description="Has project objective",
+        passed=bool(stmt), required_at="draft",
+        detail="objective.statement is missing" if not stmt else "",
+    )
+
+
+def _gate_fr_story_coverage(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All FRs covered by at least one story."""
+    fr_ids = {fr["id"] for fr in spec.get("functionalRequirements", [])}
+    story_refs = {ref for us in spec.get("userStories", [])
+                  for ref in us.get("reqRefs", [])}
+    uncovered = fr_ids - story_refs
+    return CompletenessGate(
+        description="All FRs covered by at least one story",
+        passed=len(uncovered) == 0, required_at="review",
+        detail=f"Uncovered: {uncovered}" if uncovered else "",
+    )
+
+
+def _gate_fr_sc_coverage(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All FRs gated by at least one success criterion."""
+    fr_ids = {fr["id"] for fr in spec.get("functionalRequirements", [])}
+    sc_refs = {ref for sc in spec.get("successCriteria", [])
+               for ref in sc.get("refs", {}).get("reqRefs", [])}
+    uncovered = fr_ids - sc_refs
+    return CompletenessGate(
+        description="All FRs gated by at least one success criterion",
+        passed=len(uncovered) == 0, required_at="review",
+        detail=f"Uncovered: {uncovered}" if uncovered else "",
+    )
+
+
 # ── Linter Class ──────────────────────────────────────────────────────────────
 
 class GoalSpecLinter(BaseLinter):
     SPEC_NAME = "goalspec"
+    SPEC_KEY = "goalspec"
     SEMANTIC_RULES = SEMANTIC_RULES
+    COMPLETENESS_GATES = COMPLETENESS_GATES
+    MISC_GATES = [
+        _gate_objective_statement,
+        _gate_fr_story_coverage,
+        _gate_fr_sc_coverage,
+    ]
     CROSS_SPEC_DEPS = ["glossary"]
     MISC_CHECKS = [
         ("objective", _check_objective),
@@ -415,6 +493,10 @@ def run_lint(spec, schema_path, strict, glossary=None):
     """Backward-compatible entry point for lint_all.py."""
     linter = GoalSpecLinter(spec, schema_path, strict)
     return linter.run(glossary=glossary)
+
+
+# Canonical linter class for lint_all.py
+LinterClass = GoalSpecLinter
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────

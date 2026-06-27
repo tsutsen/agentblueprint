@@ -255,13 +255,43 @@ MISC_CHECKS = [
 CROSS_SPEC_DEPS = ["data"]
 
 
+# ── Completeness Gates ────────────────────────────────────────────────────────
+
+COMPLETENESS_GATES: list = [
+    {"type": "has_count", "target": "functions", "count": 1,
+     "target_label": "function", "category": "completeness", "required_at": "draft",
+     "description": "Has at least one function"},
+    {"type": "all_have", "target": "functions", "field": "description",
+     "min_length": 1, "target_label": "function", "category": "completeness",
+     "required_at": "review",
+     "description": "All functions have descriptions"},
+    {"type": "all_have", "target": "functions", "field": "errors",
+     "min_length": 1, "target_label": "function", "category": "completeness",
+     "required_at": "review",
+     "description": "All functions have documented error conditions"},
+    {"type": "all_have", "target": "functions", "field": "entity",
+     "min_length": 1, "target_label": "function", "category": "completeness",
+     "required_at": "review",
+     "description": "All functions declare entity affinity"},
+    {"type": "all_have", "target": "functions", "field": "pure",
+     "min_length": 1, "target_label": "function", "category": "completeness",
+     "required_at": "confirmed",
+     "description": "All functions declare pure/impure"},
+    {"type": "value_check", "target": "dataSpecVersion", "expected": "truthy",
+     "target_label": "dataSpecVersion", "category": "completeness", "required_at": "review",
+     "description": "dataSpecVersion is set"},
+]
+
+
 # ── Linter Class ──────────────────────────────────────────────────────────────
 
 class ApiSpecLinter(BaseLinter):
     """Linter for ApiSpec artifacts."""
-    
+
     SPEC_NAME = "apispec"
+    SPEC_KEY = "apispec"
     SEMANTIC_RULES = SEMANTIC_RULES
+    COMPLETENESS_GATES = COMPLETENESS_GATES
     MISC_CHECKS = MISC_CHECKS
     CROSS_SPEC_DEPS = CROSS_SPEC_DEPS
     
@@ -296,6 +326,10 @@ def run_lint(spec, schema_path, data_spec, strict):
     """Backward-compatible entry point for lint_all.py."""
     linter = ApiSpecLinter(spec, schema_path, strict)
     return linter.run(data=data_spec)
+
+
+# Canonical linter class for lint_all.py
+LinterClass = ApiSpecLinter
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────

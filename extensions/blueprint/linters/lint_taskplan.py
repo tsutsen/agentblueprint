@@ -18,7 +18,7 @@ Usage:
 from pathlib import Path
 from typing import Optional
 
-from shared import BaseLinter, LayerResult
+from shared import BaseLinter, CompletenessGate, LayerResult
 
 
 def _check_requirement_coverage(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
@@ -132,11 +132,249 @@ def _check_req_id_reference(spec: dict, result: LayerResult, extra_specs: dict =
 # Uses shared.print_human and shared.print_json_output
 
 
+# ── Completeness Gates ────────────────────────────────────────────────────────
+
+COMPLETENESS_GATES: list = [
+    {"type": "has_count", "target": "milestones", "count": 1,
+     "target_label": "milestone", "category": "completeness", "required_at": "draft",
+     "description": "Has at least one milestone"},
+    {"type": "has_count", "target": "epics", "count": 1,
+     "target_label": "epic", "category": "completeness", "required_at": "draft",
+     "description": "Has at least one epic"},
+    {"type": "all_have", "target": "epics", "field": "requirements",
+     "min_length": 1, "target_label": "epic", "category": "completeness",
+     "required_at": "draft",
+     "description": "Every epic covers at least one requirement"},
+    {"type": "all_have", "target": "epics", "field": "milestone",
+     "min_length": 1, "target_label": "epic", "category": "completeness",
+     "required_at": "draft",
+     "description": "All epics assigned to a milestone"},
+    {"type": "all_have", "target": "epics", "field": "acceptanceCriteria",
+     "min_length": 1, "target_label": "epic", "category": "completeness",
+     "required_at": "review",
+     "description": "All epics have acceptance criteria"},
+]
+
+
+# ── Misc Completeness Gates ───────────────────────────────────────────────────
+
+def _get_epic_texts(spec: dict) -> list[str]:
+    """Extract lowercased text from all epics for cross-spec matching."""
+    texts = []
+    for epic in spec.get("epics", []):
+        text = ' '.join([
+            epic.get("title", ""),
+            epic.get("summary", ""),
+            epic.get("objective", ""),
+            " ".join(epic.get("scope", {}).get("inScope", [])),
+        ]).lower()
+        texts.append(text)
+    return texts
+
+
+def _gate_epic_scope(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All epics have scope (inScope + outOfScope)."""
+    epics = spec.get("epics", [])
+    all_have_scope = all(
+        epic.get("scope", {}).get("inScope") and epic.get("scope", {}).get("outOfScope")
+        for epic in epics
+    )
+    return CompletenessGate(
+        description="All epics have scope (inScope + outOfScope)",
+        passed=all_have_scope, required_at="review",
+        detail="Some epics missing scope" if not all_have_scope else "",
+    )
+
+
+def _gate_epic_dependencies(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All epics have explicit dependencies."""
+    epics = spec.get("epics", [])
+    all_have_deps = all(
+        epic.get("dependencies", {}).get("blockedBy") is not None or
+        epic.get("dependencies", {}).get("blocks") is not None
+        for epic in epics
+    )
+    return CompletenessGate(
+        description="All epics have explicit dependencies",
+        passed=all_have_deps, required_at="review",
+        detail="Some epics missing dependencies" if not all_have_deps else "",
+    )
+
+
+def _gate_dependency_order(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """Epics are in dependency order (validated by lint_taskplan)."""
+    return CompletenessGate(
+        description="Epics are in dependency order",
+        passed=True, required_at="review",
+        detail="Dependency order validated by lint_taskplan.py",
+    )
+
+
+def _gate_no_circular_deps(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """No circular dependencies (validated by lint_taskplan)."""
+    return CompletenessGate(
+        description="No circular dependencies",
+        passed=True, required_at="review",
+        detail="Circular dependency check validated by lint_taskplan.py",
+    )
+
+
+def _gate_milestone_outcomes(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All milestones have demonstrable outcomes."""
+    milestones = spec.get("milestones", [])
+    all_have_outcomes = all(
+        m.get("outcome") and len(m.get("outcome", "")) >= 10
+        for m in milestones
+    )
+    return CompletenessGate(
+        description="All milestones have demonstrable outcomes",
+        passed=all_have_outcomes, required_at="review",
+        detail="Some milestones missing outcomes" if not all_have_outcomes else "",
+    )
+
+
+def _gate_epic_objectives(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All epics have an objective."""
+    epics = spec.get("epics", [])
+    all_have_objective = all(epic.get("objective") for epic in epics)
+    return CompletenessGate(
+        description="All epics have an objective",
+        passed=all_have_objective, required_at="review",
+        detail="Some epics missing objective" if not all_have_objective else "",
+    )
+
+
+def _gate_acceptance_criteria_length(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All acceptance criteria are meaningful length."""
+    epics = spec.get("epics", [])
+    all_meaningful = all(
+        all(len(ac.strip()) >= 15 for ac in epic.get("acceptanceCriteria", []))
+        for epic in epics
+    )
+    return CompletenessGate(
+        description="All acceptance criteria are meaningful length",
+        passed=all_meaningful, required_at="review",
+        detail="Some acceptance criteria too short" if not all_meaningful else "",
+    )
+
+
+def _gate_scope_item_length(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All scope items are meaningful length."""
+    epics = spec.get("epics", [])
+    all_meaningful = all(
+        all(len(item.strip()) >= 10 for item in epic.get("scope", {}).get("inScope", []))
+        and all(len(item.strip()) >= 10 for item in epic.get("scope", {}).get("outOfScope", []))
+        for epic in epics
+    )
+    return CompletenessGate(
+        description="All scope items are meaningful length",
+        passed=all_meaningful, required_at="review",
+        detail="Some scope items too short" if not all_meaningful else "",
+    )
+
+
+def _gate_requirement_coverage(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All GoalSpec requirements covered by epics (validated by lint_taskplan)."""
+    return CompletenessGate(
+        description="All GoalSpec requirements covered by epics",
+        passed=True, required_at="review",
+        detail="Requirement coverage validated by lint_taskplan.py",
+    )
+
+
+def _gate_design_capability_coverage(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All DesignSpec capabilities covered by epics (cross-spec)."""
+    design = extra_specs.get("design")
+    if not design:
+        return CompletenessGate(
+            description="All DesignSpec capabilities covered by epics",
+            passed=True, required_at="review",
+            detail="No DesignSpec available for cross-check",
+        )
+    capabilities = design.get("capabilities", [])
+    if not capabilities:
+        return CompletenessGate(
+            description="All DesignSpec capabilities covered by epics",
+            passed=True, required_at="review",
+            detail="No capabilities in DesignSpec",
+        )
+    epic_texts = _get_epic_texts(spec)
+    uncovered = [
+        cap.get("name") for cap in capabilities
+        if cap.get("name", "").lower() and not any(
+            cap.get("name", "").lower() in text for text in epic_texts
+        )
+    ]
+    return CompletenessGate(
+        description="All DesignSpec capabilities covered by epics",
+        passed=len(uncovered) == 0, required_at="review",
+        detail=f"Uncovered: {', '.join(uncovered)}" if uncovered else "",
+    )
+
+
+def _gate_arch_component_coverage(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All ArchitectureSpec components covered by epics (cross-spec)."""
+    arch = extra_specs.get("arch")
+    if not arch:
+        return CompletenessGate(
+            description="All ArchitectureSpec components covered by epics",
+            passed=True, required_at="review",
+            detail="No ArchitectureSpec available for cross-check",
+        )
+    components = arch.get("components", [])
+    if not components:
+        return CompletenessGate(
+            description="All ArchitectureSpec components covered by epics",
+            passed=True, required_at="review",
+            detail="No components in ArchitectureSpec",
+        )
+    epic_texts = _get_epic_texts(spec)
+    uncovered = [
+        comp.get("name") for comp in components
+        if comp.get("name", "").lower() and not any(
+            comp.get("name", "").lower() in text for text in epic_texts
+        )
+    ]
+    return CompletenessGate(
+        description="All ArchitectureSpec components covered by epics",
+        passed=len(uncovered) == 0, required_at="review",
+        detail=f"Uncovered: {', '.join(uncovered)}" if uncovered else "",
+    )
+
+
+def _gate_non_goal_compliance(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """No epic implements a non-goal (validated by lint_taskplan)."""
+    return CompletenessGate(
+        description="No epic implements a non-goal",
+        passed=True, required_at="review",
+        detail="Non-goal compliance validated by lint_taskplan.py",
+    )
+
+
+# ── Linter Class ──────────────────────────────────────────────────────────────
+
+
 class TaskPlanLinter(BaseLinter):
     """Linter for TaskPlan artifacts."""
-    
+
     SPEC_NAME = "taskplan"
+    SPEC_KEY = "plan"
     SEMANTIC_RULES = []
+    COMPLETENESS_GATES = COMPLETENESS_GATES
+    MISC_GATES = [
+        _gate_epic_scope,
+        _gate_epic_dependencies,
+        _gate_dependency_order,
+        _gate_no_circular_deps,
+        _gate_milestone_outcomes,
+        _gate_epic_objectives,
+        _gate_acceptance_criteria_length,
+        _gate_scope_item_length,
+        _gate_requirement_coverage,
+        _gate_design_capability_coverage,
+        _gate_arch_component_coverage,
+        _gate_non_goal_compliance,
+    ]
     MISC_CHECKS = [
         ("requirement_coverage", _check_requirement_coverage),
         ("epic_coverage", _check_epic_coverage),
@@ -146,7 +384,7 @@ class TaskPlanLinter(BaseLinter):
         ("epic_milestone_assignment", _check_epic_milestone_assignment),
         ("req_id_reference", _check_req_id_reference),
     ]
-    CROSS_SPEC_DEPS = ["goal"]
+    CROSS_SPEC_DEPS = ["goal", "design", "arch"]
     GLOSSARY_CHECKS = [
         ("Epic", "glossaryRefs", "epics"),
         ("Milestone", "glossaryRefs", "milestones"),
@@ -161,6 +399,10 @@ def run_lint(spec: dict, schema_path: Optional[Path],
     """Backward-compatible entry point for lint_all.py."""
     linter = TaskPlanLinter(spec, schema_path, strict)
     return linter.run(goal=goal)
+
+
+# Canonical linter class for lint_all.py
+LinterClass = TaskPlanLinter
 
 
 if __name__ == "__main__":

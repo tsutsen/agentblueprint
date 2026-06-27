@@ -26,7 +26,7 @@ Usage:
 import re
 import argparse
 from typing import Dict, Set
-from shared import BaseLinter, LayerResult, validate_spec_ids
+from shared import BaseLinter, CompletenessGate, LayerResult, validate_spec_ids
 from rules import SemanticRule
 
 
@@ -370,13 +370,97 @@ MISC_CHECKS = [
 CROSS_SPEC_DEPS = ["api", "glossary"]
 
 
+# ── Completeness Gates ────────────────────────────────────────────────────────
+
+COMPLETENESS_GATES: list = [
+    {"type": "has_count", "target": "tests", "count": 1,
+     "target_label": "test", "category": "completeness", "required_at": "draft",
+     "description": "Has at least one test"},
+    {"type": "has_count", "target": "functionCoverage", "count": 1,
+     "target_label": "functionCoverage entry", "category": "completeness", "required_at": "draft",
+     "description": "Has functionCoverage summary"},
+    {"type": "value_check", "target": "apiSpecVersion", "expected": "truthy",
+     "target_label": "apiSpecVersion", "category": "completeness", "required_at": "review",
+     "description": "apiSpecVersion is set"},
+    {"type": "value_check", "target": "verificationStatus", "expected": "confirmed",
+     "target_label": "verificationStatus", "category": "completeness", "required_at": "confirmed",
+     "description": "Independent verification completed"},
+]
+
+
+# ── Misc Completeness Gates ───────────────────────────────────────────────────
+
+def _gate_error_path_tests(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """Has error-path tests."""
+    tests = spec.get("tests", [])
+    error_tests = [t for t in tests if t.get("category") == "error-path"]
+    return CompletenessGate(
+        description="Has error-path tests",
+        passed=len(error_tests) >= 1, required_at="review",
+        detail="No error-path tests found" if not error_tests else "",
+    )
+
+
+def _gate_api_function_coverage(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All ApiSpec functions have tests (cross-spec)."""
+    api = extra_specs.get("api")
+    if not api:
+        return CompletenessGate(
+            description="All ApiSpec functions have tests",
+            passed=True, required_at="review",
+            detail="No ApiSpec available for cross-check",
+        )
+    tests = spec.get("tests", [])
+    fn_ids = {fn["id"] for fn in api.get("functions", [])}
+    tested_fns = {t["fnRef"] for t in tests if t.get("fnRef")}
+    untested = fn_ids - tested_fns
+    return CompletenessGate(
+        description="All ApiSpec functions have tests",
+        passed=len(untested) == 0, required_at="review",
+        detail=f"Untested: {untested}" if untested else "",
+    )
+
+
+def _gate_out_of_scope_declarations(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All functions have outOfScope declarations."""
+    coverage = spec.get("functionCoverage", [])
+    all_oos = all(c.get("outOfScope") for c in coverage)
+    return CompletenessGate(
+        description="All functions have out-of-scope declarations",
+        passed=all_oos, required_at="review",
+        detail="Some functionCoverage entries missing outOfScope" if not all_oos else "",
+    )
+
+
+def _gate_coverage_completeness(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """functionCoverage covers all tested functions."""
+    tests = spec.get("tests", [])
+    coverage = spec.get("functionCoverage", [])
+    tested_fns = {t["fnRef"] for t in tests if t.get("fnRef")}
+    coverage_fns = {c["fnRef"] for c in coverage}
+    missing_cov = tested_fns - coverage_fns
+    return CompletenessGate(
+        description="functionCoverage covers all tested functions",
+        passed=len(missing_cov) == 0, required_at="review",
+        detail=f"Missing: {missing_cov}" if missing_cov else "",
+    )
+
+
 # ── Linter Class ──────────────────────────────────────────────────────────────
 
 class TestSpecLinter(BaseLinter):
     """Linter for TestSpec artifacts."""
-    
+
     SPEC_NAME = "testspec"
+    SPEC_KEY = "testspec"
     SEMANTIC_RULES = SEMANTIC_RULES
+    COMPLETENESS_GATES = COMPLETENESS_GATES
+    MISC_GATES = [
+        _gate_error_path_tests,
+        _gate_api_function_coverage,
+        _gate_out_of_scope_declarations,
+        _gate_coverage_completeness,
+    ]
     MISC_CHECKS = MISC_CHECKS
     CROSS_SPEC_DEPS = CROSS_SPEC_DEPS
 
@@ -387,6 +471,10 @@ def run_lint(spec, schema_path, api, glossary, strict):
     """Backward-compatible entry point for lint_all.py."""
     linter = TestSpecLinter(spec, schema_path, strict)
     return linter.run(api=api, glossary=glossary)
+
+
+# Canonical linter class for lint_all.py
+LinterClass = TestSpecLinter
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────

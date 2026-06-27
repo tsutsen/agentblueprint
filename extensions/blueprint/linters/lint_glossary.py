@@ -23,7 +23,7 @@ Usage:
 import re
 import argparse
 from typing import Optional, Dict
-from shared import BaseLinter, LayerResult, validate_spec_ids
+from shared import BaseLinter, CompletenessGate, LayerResult, validate_spec_ids
 from rules import SemanticRule
 
 
@@ -270,13 +270,47 @@ MISC_CHECKS = [
 CROSS_SPEC_DEPS = ["goal", "arch", "data", "api"]
 
 
+# ── Completeness Gates ────────────────────────────────────────────────────────
+
+COMPLETENESS_GATES: list = [
+    {"type": "has_count", "target": "terms", "count": 3,
+     "target_label": "term", "category": "completeness", "required_at": "draft",
+     "description": "Has at least 3 terms"},
+    {"type": "all_have", "target": "terms", "field": "definition",
+     "min_length": 10, "target_label": "term", "category": "completeness",
+     "required_at": "draft",
+     "description": "All terms have definitions >= 10 chars"},
+    {"type": "has_count", "target": "terms", "count": 5,
+     "target_label": "term", "category": "completeness", "required_at": "review",
+     "description": "Has at least 5 terms"},
+]
+
+
+# ── Misc Completeness Gates ───────────────────────────────────────────────────
+
+def _gate_terms_examples_or_related(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All terms have examples or related terms."""
+    terms = spec.get("terms", [])
+    has_examples_or_related = all(
+        t.get("examples") or t.get("relatedTerms") for t in terms
+    )
+    return CompletenessGate(
+        description="All terms have examples or related terms",
+        passed=has_examples_or_related, required_at="confirmed",
+        detail="Some terms missing examples and relatedTerms" if not has_examples_or_related else "",
+    )
+
+
 # ── Linter Class ──────────────────────────────────────────────────────────────
 
 class GlossaryLinter(BaseLinter):
     """Linter for Glossary artifacts."""
 
     SPEC_NAME = "glossary"
+    SPEC_KEY = "glossary"
     SEMANTIC_RULES = SEMANTIC_RULES
+    COMPLETENESS_GATES = COMPLETENESS_GATES
+    MISC_GATES = [_gate_terms_examples_or_related]
     MISC_CHECKS = MISC_CHECKS
     CROSS_SPEC_DEPS = CROSS_SPEC_DEPS
 
@@ -287,6 +321,10 @@ def run_lint(glossary, schema_path, other_specs, strict):
     """Backward-compatible entry point for lint_all.py."""
     linter = GlossaryLinter(glossary, schema_path, strict)
     return linter.run(**other_specs)
+
+
+# Canonical linter class for lint_all.py
+LinterClass = GlossaryLinter
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────

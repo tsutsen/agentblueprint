@@ -28,6 +28,7 @@ Usage:
 
 from shared import (
     BaseLinter,
+    CompletenessGate,
     LayerResult,
     print_human,
     print_json_output,
@@ -356,11 +357,73 @@ def _check_screens_reachable(spec: dict, result: LayerResult, extra_specs: dict)
                 hint="Add a journey step that passes through this screen, or reconsider whether it is needed.")
 
 
+# ── Completeness Gates ────────────────────────────────────────────────────────
+
+COMPLETENESS_GATES: list = [
+    {"type": "has_count", "target": "designGoals", "count": 1,
+     "target_label": "design goal", "category": "completeness", "required_at": "draft",
+     "description": "Has design goals"},
+    {"type": "has_count", "target": "personas", "count": 1,
+     "target_label": "persona", "category": "completeness", "required_at": "draft",
+     "description": "Has at least one persona"},
+    {"type": "has_count", "target": "userJourneys", "count": 1,
+     "target_label": "user journey", "category": "completeness", "required_at": "draft",
+     "description": "Has at least one user journey"},
+    {"type": "has_count", "target": "screenInventory", "count": 1,
+     "target_label": "screen", "category": "completeness", "required_at": "draft",
+     "description": "Has screen inventory"},
+    {"type": "has_count", "target": "interactionPatterns", "count": 1,
+     "target_label": "interaction pattern", "category": "completeness", "required_at": "review",
+     "description": "Has interaction patterns"},
+    {"type": "has_count", "target": "uxAcceptanceCriteria", "count": 1,
+     "target_label": "UX acceptance criterion", "category": "completeness", "required_at": "review",
+     "description": "Has UX acceptance criteria"},
+    {"type": "has_count", "target": "visualDesignRequirements", "count": 1,
+     "target_label": "visual design requirement", "category": "completeness", "required_at": "review",
+     "description": "Has visual design requirements"},
+    {"type": "has_count", "target": "accessibilityRequirements", "count": 1,
+     "target_label": "accessibility requirement", "category": "completeness", "required_at": "review",
+     "description": "Has accessibility requirements"},
+    {"type": "has_count", "target": "designSystem.components", "count": 1,
+     "target_label": "design system component", "category": "completeness", "required_at": "confirmed",
+     "description": "Has design system components"},
+]
+
+
+# ── Misc Completeness Gates ───────────────────────────────────────────────────
+
+def _gate_screens_have_specs(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All screens have specs."""
+    screens = spec.get("screenInventory", [])
+    screen_ids = {s["id"] for s in screens}
+    spec_refs = {s["screenRef"] for s in spec.get("screenSpecs", [])}
+    unspecced = screen_ids - spec_refs
+    return CompletenessGate(
+        description="All screens have specs",
+        passed=len(unspecced) == 0, required_at="review",
+        detail=f"Missing specs: {unspecced}" if unspecced else "",
+    )
+
+
+def _gate_journeys_ref_stories(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All journeys reference user stories."""
+    journeys = spec.get("userJourneys", [])
+    all_ref_us = all(len(j.get("usRefs", [])) >= 1 for j in journeys)
+    return CompletenessGate(
+        description="All journeys reference user stories",
+        passed=all_ref_us, required_at="confirmed",
+        detail="Some journeys missing usRefs" if not all_ref_us else "",
+    )
+
+
 # ── Linter Class ──────────────────────────────────────────────────────────────
 
 class DesignSpecLinter(BaseLinter):
     SPEC_NAME = "designspec"
+    SPEC_KEY = "designspec"
     SEMANTIC_RULES = SEMANTIC_RULES
+    COMPLETENESS_GATES = COMPLETENESS_GATES
+    MISC_GATES = [_gate_screens_have_specs, _gate_journeys_ref_stories]
     CROSS_SPEC_DEPS = ["goal", "glossary"]
     MISC_CHECKS = [
         ("personas", _check_personas),
@@ -377,6 +440,10 @@ def run_lint(spec, schema_path, goal, strict, glossary=None):
     """Backward-compatible entry point for lint_all.py."""
     linter = DesignSpecLinter(spec, schema_path, strict)
     return linter.run(goal=goal, glossary=glossary)
+
+
+# Canonical linter class for lint_all.py
+LinterClass = DesignSpecLinter
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────

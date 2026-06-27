@@ -21,11 +21,12 @@ Usage:
                             [--goal goalspec.json] [--strict] [--json]
 """
 
+from rules import SemanticRule
 from shared import (
     BaseLinter,
+    CompletenessGate,
     LayerResult,
 )
-from rules import SemanticRule
 
 # ── Semantic Rules ────────────────────────────────────────────────────────────
 
@@ -85,10 +86,23 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "type": "contains_patterns",
         "target": "constraints.description",
         "patterns": [
-            "postgres", "mysql", "redis", "sqlite", "mongodb",
-            "fastapi", "flask", "django", "docker", "kubernetes",
-            "s3", "lambda", "python", "typescript", "rust",
-            "golang", "java",
+            "postgres",
+            "mysql",
+            "redis",
+            "sqlite",
+            "mongodb",
+            "fastapi",
+            "flask",
+            "django",
+            "docker",
+            "kubernetes",
+            "s3",
+            "lambda",
+            "python",
+            "typescript",
+            "rust",
+            "golang",
+            "java",
         ],
         "target_label": "Constraint",
         "category": "constraint_implementation_leak",
@@ -294,16 +308,130 @@ def _check_components_in_data_flows(
             )
 
 
+# ── Completeness Gates ────────────────────────────────────────────────────────
+
+COMPLETENESS_GATES: list = [
+    {
+        "type": "has_count",
+        "target": "overview.subsystems",
+        "count": 1,
+        "target_label": "subsystem",
+        "category": "completeness",
+        "required_at": "draft",
+        "description": "Has at least one subsystem",
+    },
+    {
+        "type": "has_count",
+        "target": "components",
+        "count": 2,
+        "target_label": "component",
+        "category": "completeness",
+        "required_at": "draft",
+        "description": "Has at least 2 components",
+    },
+    {
+        "type": "has_count",
+        "target": "dataFlow",
+        "count": 1,
+        "target_label": "data flow",
+        "category": "completeness",
+        "required_at": "draft",
+        "description": "Has at least one data flow",
+    },
+    {
+        "type": "has_count",
+        "target": "constraints",
+        "count": 1,
+        "target_label": "constraint",
+        "category": "completeness",
+        "required_at": "draft",
+        "description": "Has at least one constraint",
+    },
+    {
+        "type": "all_have",
+        "target": "components",
+        "field": "reqRefs",
+        "min_length": 1,
+        "target_label": "component",
+        "category": "completeness",
+        "required_at": "review",
+        "description": "All components have REQ refs",
+    },
+    {
+        "type": "value_check",
+        "target": "goalSpecVersion",
+        "expected": "truthy",
+        "target_label": "goalSpecVersion",
+        "category": "completeness",
+        "required_at": "review",
+        "description": "goalSpecVersion is set",
+    },
+    {
+        "type": "value_check",
+        "target": "dataSpecVersion",
+        "expected": "truthy",
+        "target_label": "dataSpecVersion",
+        "category": "completeness",
+        "required_at": "confirmed",
+        "description": "dataSpecVersion is set",
+    },
+    {
+        "type": "value_check",
+        "target": "apiSpecVersion",
+        "expected": "truthy",
+        "target_label": "apiSpecVersion",
+        "category": "completeness",
+        "required_at": "confirmed",
+        "description": "apiSpecVersion is set",
+    },
+]
+
+
+# ── Misc Completeness Gates ───────────────────────────────────────────────────
+
+
+def _gate_overview_summary(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """Has system overview summary (>= 30 chars)."""
+    summary = spec.get("overview", {}).get("summary", "")
+    return CompletenessGate(
+        description="Has system overview summary",
+        passed=len(summary) >= 30,
+        required_at="draft",
+        detail=f"overview.summary is too short ({len(summary)} chars)"
+        if len(summary) < 30
+        else "",
+    )
+
+
+def _gate_component_dependencies(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """All components participate in at least one dependency."""
+    components = spec.get("components", [])
+    deps_or_dependents = set()
+    for c in components:
+        for dep in c.get("dependencies", []):
+            deps_or_dependents.add(c["id"])
+            deps_or_dependents.add(dep)
+    return CompletenessGate(
+        description="All components participate in at least one dependency",
+        passed=len(deps_or_dependents) == len(components),
+        required_at="review",
+        detail="Isolated components found"
+        if len(deps_or_dependents) < len(components)
+        else "",
+    )
+
+
 # ── Linter Class ──────────────────────────────────────────────────────────────
 
 
 class ArchSpecLinter(BaseLinter):
     SPEC_NAME = "archspec"
+    SPEC_KEY = "archspec"
     SEMANTIC_RULES = SEMANTIC_RULES
+    COMPLETENESS_GATES = COMPLETENESS_GATES
+    MISC_GATES = [_gate_overview_summary, _gate_component_dependencies]
+    MISC_CHECKS = [("components_in_flows", _check_components_in_data_flows)]
     CROSS_SPEC_DEPS = ["goal", "data", "api", "glossary"]
-    MISC_CHECKS = [
-        ("components_in_flows", _check_components_in_data_flows),
-    ]
 
 
 # ── Backward Compatibility ────────────────────────────────────────────────────
@@ -315,6 +443,10 @@ def run_lint(
     """Backward-compatible entry point for lint_all.py."""
     linter = ArchSpecLinter(spec, schema_path, strict)
     return linter.run(goal=goal, data=data_spec, api=api_spec, glossary=glossary)
+
+
+# Canonical linter class for lint_all.py
+LinterClass = ArchSpecLinter
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────

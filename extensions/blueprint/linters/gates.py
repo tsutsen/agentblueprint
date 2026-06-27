@@ -18,14 +18,16 @@ from dataclasses import dataclass
 from typing import Literal, TypedDict, Union
 
 from check import (
-    CheckDef, CheckResult, _GATE_CHECKS, dispatch_check,
+    CheckDef, CheckResult, dispatch_check,
 )
-from shared import (
+from path import (
+    _normalize_ref,
+    resolve_path,
+)
+from linter_types import (
     CompletenessGate,
     CompletenessScore,
     Resolved,
-    _normalize_ref,
-    resolve_path,
 )
 
 
@@ -109,6 +111,7 @@ def _make_gate_handler(build_args, format_fn):
 
 
 # ── Gate definitions (data-driven) ───────────────────────────────────────────
+
 _GATE_DEFS = {
     "non_empty": {
         "build_args": lambda g, r, s, e: ("non_empty", r.values, r.parent_ids),
@@ -117,7 +120,7 @@ _GATE_DEFS = {
                 description=g.get("description",
                     f"{g.get('target_label', r.parent_label)} is not empty"),
                 passed=len(cr.results) == 0, required_at=g["required_at"],
-                detail=(f"Empty: {', '.join(f"'{pid}": {d}" for pid, d in cr.results)}"
+                detail=("Empty: " + ", ".join(f"'{pid}': {d}" for pid, d in cr.results)
                         if cr.results else "")
             )
         ],
@@ -145,7 +148,7 @@ _GATE_DEFS = {
                 description=g.get("description",
                     f"All {g.get('covered_label', '')} covered by {g.get('target_label', 'source')}"),
                 passed=len(cr.results) == 0, required_at=g["required_at"],
-                detail=(f"Uncovered: {', '.join(str(u) for u in cr.results)}"
+                detail=("Uncovered: " + ", ".join(str(u) for u in cr.results)
                         if cr.results else "")
             )
         ],
@@ -157,7 +160,7 @@ _GATE_DEFS = {
                 description=g.get("description",
                     f"All {g.get('target_label', r.parent_label)} have {g['field']}"),
                 passed=len(cr.results) == 0, required_at=g["required_at"],
-                detail=(f"Missing {g['field']}: {', '.join(pid for pid, _ in cr.results)}"
+                detail=(f"Missing {g['field']}: " + ", ".join(pid for pid, _ in cr.results)
                         if cr.results else "")
             )
         ],
@@ -169,7 +172,7 @@ _GATE_DEFS = {
                 description=g.get("description",
                     f"No {g.get('target_label', r.parent_label)} have {g['field']} matching {g['pattern']}"),
                 passed=len(cr.results) == 0, required_at=g["required_at"],
-                detail=(f"Matched: {', '.join(pid for pid, _ in cr.results)}"
+                detail=("Matched: " + ", ".join(pid for pid, _ in cr.results)
                         if cr.results else "")
             )
         ],
