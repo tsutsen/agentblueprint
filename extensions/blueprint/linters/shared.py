@@ -277,63 +277,6 @@ def find_cycles(items: list[dict], id_key: str, deps_key: str, valid: set[str],
                 return True
     return False
 
-
-def validate_exists(items: list, refs: str | list[str] = None, valid: set[str] | dict[str, set[str]] = None,
-                  result: "LayerResult" = None, label: str = "", ref_label: str = "",
-                  category: str = "missing", hint: str = "", severity: str = "error") -> None:
-    """Validate that items reference values in the valid set(s).
-    
-    Args:
-        items: List of items to check (dicts with keys, or flat list of strings).
-        refs: If items are dicts, ref key or keys (e.g., "dataRef" or ["reqRefs"]).
-              If items are strings, this is the valid set.
-        valid: If items are dicts, valid sets mapping ref keys to sets.
-               If items are strings, this is the valid set.
-        result: LayerResult to append warnings to.
-        label: Label for error messages (e.g., "Component").
-        ref_label: Label for the reference type (e.g., "DataSpec entity").
-        category: Category for the warning (e.g., "missing").
-        hint: Custom hint message (default: generic).
-        severity: Severity level: "error", "warning", or "info" (default: "error").
-    
-    Examples:
-        # Flat list of strings
-        validate_exists(refs, component_ids, result, label="Subsystem", ref_label="component")
-        
-        # Dicts with ref keys
-        validate_exists(steps, "dataRef", entity_names, result, "Flow step", "DataSpec entity")
-        
-        # Multiple ref keys
-        validate_exists(components, ["reqRefs", "nfrRefs"], {"reqRefs": req_ids, "nfrRefs": nfr_ids}, result, "Component")
-    """
-    # Determine if flat list or dicts
-    if not items:
-        return
-    
-    first = items[0]
-    if isinstance(first, str):
-        # Flat list of strings
-        valid_set = valid if valid else set()
-        for item in items:
-            if item not in valid_set:
-                result.add(severity, category,
-                    f"{label}: '{item}' not found in {ref_label or 'valid set'}.",
-                    hint=f"Add '{item}' to {ref_label or 'the target'} or correct the reference.")
-    elif isinstance(first, dict):
-        # List of dicts with ref keys
-        refs = [refs] if isinstance(refs, str) else refs
-        valid = {refs[0]: valid} if isinstance(valid, set) else valid
-        
-        for item in items:
-            iid = item.get("id", "?")
-            for refs_key in refs:
-                for ref in _normalize_ref(item.get(refs_key)):
-                    if ref not in valid.get(refs_key, set()):
-                        result.add(severity, category,
-                            f"{label} '{iid}': {refs_key} ref '{ref}' not found.",
-                            hint=f"Add '{ref}' to the target spec or correct the reference.")
-
-
 def validate_project_and_version(spec: dict, spec_name: str, goal: dict,
                               result: "LayerResult") -> None:
     """Check project match and version pinning against GoalSpec.

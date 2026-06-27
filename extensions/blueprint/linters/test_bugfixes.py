@@ -4,12 +4,11 @@ test_bugfixes.py — Verify bug fixes in shared.py.
 
 Bugs fixed:
   1. find_cycles: target_label → label in f-strings
-  2. validate_exists: target_label → label in f-strings
-  3. _validate_glossary_ref: target_label → label in f-string
-  4. validate_glossary_refs: target_label → label in f-strings
-  5. _validate_glossary_ref: duplicate function removed
+  2. _validate_glossary_ref: target_label → label in f-string
+  3. validate_glossary_refs: target_label → label in f-strings
+  4. _validate_glossary_ref: duplicate function removed
 
-Note: find_duplicates was removed entirely and replaced with is_unique rules.
+Note: find_duplicates and validate_exists were removed entirely.
 
 Run: python3 test_bugfixes.py
 """
@@ -22,7 +21,6 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from shared import (
     find_cycles,
-    validate_exists,
     _validate_glossary_ref,
     validate_glossary_refs,
     LayerResult,
@@ -66,43 +64,6 @@ def test_find_cycles_bad_ref():
     assert "Module" in result.errors[0].message
     assert "MISSING" in result.errors[0].message
     print(f"  ✓ find_cycles (bad ref) — 'Module' appears: {result.errors[0].message[:60]}")
-
-
-def test_validate_exists_flat():
-    """Bug 3: validate_exists with flat list of strings."""
-    result = LayerResult()
-    validate_exists(
-        ["REQ-001", "REQ-999"],
-        valid={"REQ-001"},
-        result=result,
-        label="Subsystem",
-        ref_label="requirement",
-    )
-    assert len(result.errors) == 1
-    assert "Subsystem" in result.errors[0].message
-    assert "REQ-999" in result.errors[0].message
-    print(f"  ✓ validate_exists (flat) — 'Subsystem' appears: {result.errors[0].message[:60]}")
-
-
-def test_validate_exists_dicts():
-    """Bug 3: validate_exists with dict items."""
-    items = [
-        {"id": "FLW-001", "dataRef": "ENT-001"},
-        {"id": "FLW-002", "dataRef": "ENT-999"},
-    ]
-    result = LayerResult()
-    validate_exists(
-        items,
-        refs="dataRef",
-        valid={"ENT-001"},
-        result=result,
-        label="Flow step",
-        ref_label="entity",
-    )
-    assert len(result.errors) == 1
-    assert "Flow step" in result.errors[0].message
-    assert "FLW-002" in result.errors[0].message
-    print(f"  ✓ validate_exists (dicts) — 'Flow step' appears: {result.errors[0].message[:60]}")
 
 
 def test_validate_glossary_ref_single():
@@ -174,7 +135,7 @@ def test_no_target_label_in_legacy():
     source = inspect.getsource(sys.modules["shared"])
 
     # Extract legacy function bodies
-    legacy_funcs = ["find_cycles", "validate_exists",
+    legacy_funcs = ["find_cycles",
                     "_validate_glossary_ref", "validate_glossary_refs"]
     for func_name in legacy_funcs:
         func = getattr(sys.modules["shared"], func_name)
@@ -197,21 +158,16 @@ def main():
     test_find_cycles_bad_ref()
     print()
 
-    print("Bug 3: validate_exists (target_label → label)")
-    test_validate_exists_flat()
-    test_validate_exists_dicts()
-    print()
-
-    print("Bug 4: _validate_glossary_ref (target_label → label)")
+    print("Bug 2: _validate_glossary_ref (target_label → label)")
     test_validate_glossary_ref_single()
     print()
 
-    print("Bug 5: validate_glossary_refs (target_label → label)")
+    print("Bug 3: validate_glossary_refs (target_label → label)")
     test_validate_glossary_refs_no_refs()
     test_validate_glossary_refs_bad_ref()
     print()
 
-    print("Bug 6: Duplicate _validate_glossary_ref removed")
+    print("Bug 4: Duplicate _validate_glossary_ref removed")
     test_no_duplicate_function()
     print()
 

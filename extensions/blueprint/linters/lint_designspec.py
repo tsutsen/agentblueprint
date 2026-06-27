@@ -37,7 +37,6 @@ from shared import (
     SemanticRule,
     print_human,
     print_json_output,
-    validate_exists,
     validate_glossary_refs,
 )
 
@@ -241,6 +240,17 @@ def _collect_ia_screen_refs(nodes: list) -> set:
     return refs
 
 
+def _check_ia_screen_refs_exist(nodes: list, screens: set[str], result: LayerResult) -> None:
+    """Recursively check that all IA screenRefs resolve to screen inventory."""
+    for node in nodes:
+        if node.get("screenRef") and node["screenRef"] not in screens:
+            result.add("error", "ia_screen_ref",
+                f"IA node '{node.get('name', '?')}': screenRef '{node['screenRef']}' not found in screen inventory.",
+                hint="Add the screen to the inventory or correct the reference.")
+        if node.get("children"):
+            _check_ia_screen_refs_exist(node["children"], screens, result)
+
+
 def _collect_ia_leaf_issues(nodes: list, result: LayerResult) -> None:
     """Leaf nodes (no children) must have a screenRef."""
     for node in nodes:
@@ -291,14 +301,10 @@ def _check_ia(spec: dict, result: LayerResult, extra_specs: dict) -> tuple:
     
     _collect_ia_leaf_issues(root, result)
     ia_screen_refs = _collect_ia_screen_refs(root)
-    
-    # IA screenRefs must resolve
-    ia_nodes = []
-    for node in root:
-        if node.get("screenRef"):
-            ia_nodes.append({"id": node.get("name", ""), "screenRef": node["screenRef"]})
-    validate_exists(ia_nodes, "screenRef", screens, result, "IA node", "screen inventory")
-    
+
+    # IA screenRefs must resolve (recursive walk)
+    _check_ia_screen_refs_exist(root, screens, result)
+
     return ia_screen_refs
 
 
