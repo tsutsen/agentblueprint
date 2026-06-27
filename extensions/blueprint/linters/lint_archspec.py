@@ -30,7 +30,6 @@ from shared import (
     BaseLinter,
     LayerResult,
     SemanticRule,
-    find_cycles,
 )
 
 # ── Semantic Rules ────────────────────────────────────────────────────────────
@@ -252,29 +251,28 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "ref_label": "Glossary",
         "category": "glossary_ref_missing",
     },
+    # Component dependencies must reference valid component IDs
+    {
+        "type": "exists",
+        "target": "components.dependencies",
+        "inside": "components.id",
+        "target_label": "Component",
+        "ref_label": "component",
+        "category": "dependency_ref",
+    },
+    # Component dependency graph must have no cycles
+    {
+        "type": "has_no_cycles",
+        "target": "components",
+        "deps": "dependencies",
+        "target_label": "Component",
+        "category": "circular_dependency",
+        "hint": "Refactor to break the cycle — introduce an abstraction or invert a dependency.",
+    },
 ]
 
 
 # ── Custom Checks ─────────────────────────────────────────────────────────────
-
-
-def _check_circular_dependencies(
-    spec: dict, result: LayerResult, extra_specs: dict
-) -> None:
-    """Check for circular component dependencies."""
-    components = spec.get("components", [])
-    component_ids = {c["id"] for c in components}
-
-    find_cycles(
-        components,
-        "id",
-        "dependencies",
-        component_ids,
-        result,
-        label="Component",
-        category="circular_dependency",
-        hint="Refactor to break the cycle — introduce an abstraction or invert a dependency.",
-    )
 
 
 def _check_components_in_data_flows(
@@ -309,7 +307,6 @@ class ArchSpecLinter(BaseLinter):
     SEMANTIC_RULES = SEMANTIC_RULES
     CROSS_SPEC_DEPS = ["goal", "data", "api", "glossary"]
     MISC_CHECKS = [
-        ("circular_deps", _check_circular_dependencies),
         ("components_in_flows", _check_components_in_data_flows),
     ]
 

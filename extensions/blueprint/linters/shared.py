@@ -108,6 +108,14 @@ class NotOrphanRule(_TargetRuleBase):
     target: str
 
 
+class HasNoCyclesRule(_TargetRuleBase):
+    """Check that dependency graph has no cycles.
+
+    'deps' specifies the key holding dependency references (default: 'dependencies').
+    """
+    type: Literal["has_no_cycles"]
+    target: str
+    deps: str
 
 
 
@@ -121,6 +129,7 @@ SemanticRule = Union[
     ContainsPatternsRule,
     CoversAllRule,
     NotOrphanRule,
+    HasNoCyclesRule,
 ]
 
 
@@ -210,73 +219,6 @@ def validate_sequential(ids: list[str], label: str, result: "LayerResult") -> No
                 f"{label} numbering skips from {expected-1:03d} to {n:03d}.",
                 hint=f"Consider renumbering to keep {label} IDs sequential.")
             break  # report first gap only
-
-
-def find_cycles(items: list[dict], id_key: str, deps_key: str, valid: set[str],
-                result: "LayerResult", label: str = "", category: str = "circular_dependency",
-                hint: str = "") -> bool:
-    """Build dependency graph, validate refs, check for cycles, and report issues.
-    
-    Args:
-        items: List of items with dependencies.
-        id_key: Key in each item that holds the ID.
-        deps_key: Key in each item that holds the list of dependencies.
-        valid: Set of valid dependency IDs.
-        result: LayerResult to append errors/warnings to.
-        label: Label for error messages (e.g., "Component").
-        category: Category for the warning (e.g., "circular_dependency").
-        hint: Custom hint message (default: generic).
-    
-    Returns:
-        True if a cycle was found, False otherwise.
-    """
-    # Build dependency graph and validate refs
-    graph: dict[str, list[str]] = {}
-    for item in items:
-        iid = item.get(id_key, "")
-        deps = item.get(deps_key, [])
-        graph[iid] = deps
-        
-        # Validate dependency refs
-        for dep in deps:
-            if dep not in valid:
-                result.add(
-                    "error", "dependency_ref",
-                    f"{label} '{iid}': dependency '{dep}' is not defined.",
-                    hint=f"Add an item with id='{dep}' or correct the dependency reference."
-                )
-    
-    # Check for cycles
-    visited = set()
-    path = []
-    
-    def dfs(node):
-        if node in path:
-            return path[path.index(node):]
-        if node in visited:
-            return None
-        visited.add(node)
-        path.append(node)
-        for dep in graph.get(node, []):
-            cycle = dfs(dep)
-            if cycle:
-                return cycle
-        path.pop()
-        return None
-    
-    for node in graph:
-        if node not in visited:
-            cycle = dfs(node)
-            if cycle:
-                cycle_str = " → ".join(cycle + [cycle[0]])
-                result.add(
-                    "error", category,
-                    f"Circular {label.lower()} dependency detected: {cycle_str}.",
-                    hint=hint or "Refactor to break the cycle — introduce an abstraction or invert a dependency."
-                )
-                return True
-    return False
-
 def validate_project_and_version(spec: dict, spec_name: str, goal: dict,
                               result: "LayerResult") -> None:
     """Check project match and version pinning against GoalSpec.
@@ -901,6 +843,54 @@ def handle_orphans(resolved: Resolved, rule: dict, result: LayerResult) -> None:
                 hint=hint or f"An isolated {target_label.lower()} may indicate a design issue.")
 
 
+def handle_has_no_cycles(resolved: Resolved, rule: dict, result: LayerResult) -> None:
+    """Check that dependency graph has no cycles."""
+    severity = rule.get("severity", "error")
+    category = rule.get("category", "circular_dependency")
+    target_label = rule.get("target_label", resolved.parent_label)
+    deps_field = rule.get("deps", "dependencies")
+    hint = rule.get("hint", "")
+
+    items = resolved.values
+    if not items or not isinstance(items[0], dict):
+        return
+
+    # Build dependency graph
+    graph: dict[str, list[str]] = {}
+    for item in items:
+        iid = item.get("id", "")
+        if iid:
+            graph[iid] = list(_normalize_ref(item.get(deps_field, [])))
+
+    # Detect cycles via DFS
+    visited = set()
+    path = []
+
+    def dfs(node):
+        if node in path:
+            return path[path.index(node):]
+        if node in visited:
+            return None
+        visited.add(node)
+        path.append(node)
+        for dep in graph.get(node, []):
+            cycle = dfs(dep)
+            if cycle:
+                return cycle
+        path.pop()
+        return None
+
+    for node in graph:
+        if node not in visited:
+            cycle = dfs(node)
+            if cycle:
+                cycle_str = " → ".join(cycle + [cycle[0]])
+                result.add(severity, category,
+                    f"Circular {target_label.lower()} dependency detected: {cycle_str}.",
+                    hint=hint or f"Refactor to break the cycle — introduce an abstraction or invert a dependency.")
+                return  # Report first cycle only
+
+
 # ── Rule handler registry (new) ───────────────────────────────────────────────
 
 @dataclass
@@ -920,6 +910,7 @@ _RULE_HANDLERS = {
     "contains_patterns": RuleHandler(handle_patterns),
     "covers_all":        RuleHandler(handle_coverage, needs_coverage=True),
     "not_orphan":        RuleHandler(handle_orphans, needs_orphans=True),
+    "has_no_cycles":     RuleHandler(handle_has_no_cycles),
 }
 
 
@@ -933,6 +924,7 @@ _REQUIRED_FIELDS: dict[str, list[str]] = {
     "contains_patterns": ["target", "patterns", "category"],
     "covers_all":        ["target", "should_cover_all", "category"],
     "not_orphan":        ["target", "category"],
+    "has_no_cycles":     ["target", "category"],
 }
 
 # Known fields per rule type (for detecting typos — includes 'type' itself)
@@ -950,6 +942,8 @@ _KNOWN_FIELDS: dict[str, set[str]] = {
                           "severity", "category", "hint"},
     "not_orphan":        {"type", "target", "category",
                           "target_label", "severity", "hint"},
+    "has_no_cycles":     {"type", "target", "deps", "target_label",
+                          "category", "severity", "hint"},
 }
 
 
