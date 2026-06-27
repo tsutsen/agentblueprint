@@ -261,14 +261,24 @@ def resolve_path(path: str, spec: dict, extra_specs: dict) -> Resolved:
 
     label = re.sub(r"([A-Z])", r" \1", first_segment).title().replace("_", " ").strip()
 
-    current_items = items
-    parent_ids: list[str] = []
-    parent_items: list[dict] = []
-    group_sizes: list[int] = []
+    # Navigate remaining segments (segments[1:])
+    return _traverse_segments(
+        segments[1:], items, label,
+        parent_ids=[], parent_items=[], group_sizes=[],
+    )
 
-    # Navigate remaining segments
-    for seg_idx in range(1, len(segments)):
-        seg = segments[seg_idx]
+
+def _traverse_segments(
+    segments: list[str], items: list, label: str,
+    parent_ids: list[str], parent_items: list[dict], group_sizes: list[int],
+) -> Resolved:
+    """Walk remaining path segments, flattening lists and navigating dicts.
+
+    Returns early via _extract_scalars on terminal segments.
+    Falls through to _resolve_final when loop completes.
+    """
+    current_items = items
+    for seg_idx, seg in enumerate(segments):
         if not current_items:
             break
 
@@ -283,12 +293,10 @@ def resolve_path(path: str, spec: dict, extra_specs: dict) -> Resolved:
                     _flatten_list_segment(current_items, seg, parent_ids, parent_items)
                 )
             elif seg_idx + 1 < len(segments) and isinstance(val, dict):
-                # Navigate into the dict and continue
                 current_items, parent_ids, parent_items, group_sizes = (
                     _navigate_dict_segment(current_items, seg, parent_ids, parent_items)
                 )
             else:
-                # Terminal scalar — extract and return
                 return _extract_scalars(current_items, seg, parent_ids, parent_items, label)
 
     return _resolve_final(current_items, parent_ids, parent_items, group_sizes, label)
