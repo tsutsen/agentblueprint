@@ -10,6 +10,7 @@ import { registerGenerateDiagrams } from "./tools/generate-diagrams";
 import { registerGenerateArtifactMarkdown } from "./tools/generate-artifact-markdown";
 import { registerSpecUpgrade } from "./tools/spec-upgrade";
 import { registerGraphTools } from "./tools/graph";
+import { registerGithubIssues } from "./tools/github-issues";
 
 export default function (pi: ExtensionAPI) {
   const extDir = path.resolve(__dirname);
@@ -24,4 +25,5 @@ export default function (pi: ExtensionAPI) {
   registerGenerateArtifactMarkdown(pi, extDir);
   registerSpecUpgrade(pi, extDir);
   registerGraphTools(pi, extDir);
+  registerGithubIssues(pi);
 }

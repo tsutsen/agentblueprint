@@ -12,13 +12,34 @@ DesignSpec, ArchitectureSpec, DataSpec, ApiSpec, and TestSpec — not by
 open-ended interview. The agent must derive a proposed structure from those
 artifacts first, present it for review, refine it, then write.
 
-Individual epic files live in `tasks/epics/EP-<NNN>/`. Each epic is a folder
-containing `EP-<NNN>-<slug>.md` (human-readable) and `EP-<NNN>-<slug>.json`
-(machine-readable). This file (`tasks/PLAN.md`) is the index — it references
-epics by ID but does not duplicate their content.
+Individual epic files live in `tasks/EP-<NNN>-<slug>/`. Each epic is a folder
+containing `EP-<NNN>-<slug>.json` (machine-readable) and
+`EP-<NNN>-<slug>.md` (human-readable, generated from JSON).
+This file (`tasks/PLAN.md`) is the index — it references epics by ID but does
+not duplicate their content.
 
 After all epics are written and approved, run `/skill:blueprint breakdown
-EP-NNN` to decompose each epic into independently-grabbable issues.
+EP-NNN-slug` to decompose each epic into independently-grabbable issues.
+
+---
+
+## Directory Structure
+
+```
+tasks/
+  PLAN.md                    ← epic index (human-readable)
+  PLAN.json                  ← milestones + epic list (machine-readable)
+  EP-001-userOnboarding/
+    EP-001-userOnboarding.json  ← epic definition
+    EP-001-userOnboarding.md    ← rendered from JSON
+    IS-001-implementLogin/
+      IS-001-implementLogin.json
+      IS-001-implementLogin.md
+      SI-001-createLoginSchema/
+        SI-001-createLoginSchema.json
+        SI-001-createLoginSchema.md
+        work/                   ← agent writes code here
+```
 
 ---
 
@@ -101,7 +122,63 @@ Bad epics:
 ### Phase 4 — Write
 
 After each epic is agreed, write its file immediately — do not batch.
-See blueprint skill for file structure and write order.
+Write the epic JSON to `tasks/EP-NNN-slug/EP-NNN-slug.json`.
+
+**Epic JSON schema:**
+
+```json
+{
+  "schemaVersion": "1.0.0",
+  "artifact": "Epic",
+  "id": "EP-001-userOnboarding",
+  "name": "Implement user onboarding flow",
+  "description": "End-to-end user registration, email verification, and account activation",
+  "status": "not_started",
+  "milestone": "MIL-001-Setup",
+  "scope": {
+    "inScope": [
+      {
+        "description": "Registration page with email and password fields",
+        "glRefs": ["GL-001-Authentication"],
+        "reqRefs": ["REQ-001-createAccount"],
+        "nfrRefs": ["NFR-001-security"],
+        "ujRefs": ["UJ-001-registration"],
+        "miscRefs": ["COMP-001-AuthService"]
+      }
+    ],
+    "outOfScope": [
+      {
+        "description": "Social login via Google",
+        "glRefs": [],
+        "reqRefs": [],
+        "nfrRefs": [],
+        "ujRefs": [],
+        "miscRefs": []
+      }
+    ]
+  },
+  "acceptanceCriteria": [
+    {
+      "description": "User can register with email and password",
+      "uxacRefs": ["UXAC-001-touchTarget"],
+      "scRefs": ["SC-001-userRegistration"],
+      "miscRefs": []
+    }
+  ],
+  "blockedBy": [],
+  "githubBranch": "EP-001-userOnboarding",
+  "created": "2026-07-01T14:32:00Z",
+  "updated": "2026-07-01T14:32:00Z"
+}
+```
+
+**Required fields:** `schemaVersion`, `artifact`, `id`, `name`, `description`,
+`status`, `milestone`, `acceptanceCriteria`, `created`, `updated`
+
+After writing the epic JSON:
+1. Generate the markdown from JSON using `generate_artifact_markdown` tool
+2. Call `gh_create_epic(jsonPath)` to sync to GitHub (creates GitHub Issue + EP branch)
+3. Update `tasks/PLAN.json` with the new epic entry
 
 ---
 
@@ -110,10 +187,10 @@ See blueprint skill for file structure and write order.
 Major checkpoints. Each must produce a demonstrable project outcome.
 
 Each milestone contains:
-* Identifier: M1, M2, M3 ...
+* Identifier: MIL-001-Setup, MIL-002-MVP, ...
 * Name: short, outcome-oriented (e.g. "Working ingestion pipeline", not "Sprint 2")
 * Outcome: one sentence describing what can be demonstrated at this milestone
-* Epics: list of EP-NNN IDs that must be complete
+* Epics: list of EP-NNN-slug IDs that must be complete
 
 A milestone with no demonstrable outcome should be merged with an adjacent one.
 
@@ -121,19 +198,19 @@ A milestone with no demonstrable outcome should be merged with an adjacent one.
 
 ### Epic Index
 
-Reference table only — content lives in `tasks/epics/EP-<NNN>/`. Do not
+Reference table only — content lives in `tasks/EP-NNN-slug/`. Do not
 duplicate epic content here.
 
 Each entry contains:
-* EP-NNN — sequential, zero-padded to three digits, project-global
+* EP-NNN-slug — sequential, zero-padded to three digits, project-global
 * Title — action-oriented (e.g. "Implement document ingestion pipeline")
 * Status — not_started | in_progress | complete
-* Milestone — M1, M2, ...
-* Requirements covered — REQ-IDs or short statements from GoalSpec
+* Milestone — MIL-001-Setup, ...
+* Requirements covered — REQ-IDs from scope.inScope[].reqRefs
 * Summary — one line describing what this epic delivers
 
 Validation (enforce before writing):
-* Every GoalSpec requirement appears in at least one epic's coverage list.
+* Every GoalSpec requirement appears in at least one epic's scope.inScope[].reqRefs.
   Flag uncovered requirements — do not silently omit them.
 * Every epic covers at least one requirement. An epic with no requirement
   is a scope addition — surface it to the user before including it.
@@ -144,21 +221,25 @@ Validation (enforce before writing):
 
 ### Epic file sections
 
-Each `tasks/epics/EP-<NNN>/EP-<NNN>-<slug>.md` contains:
+Each `tasks/EP-NNN-slug/EP-NNN-slug.json` contains:
 
-#### Objective
+#### Name & Description
 What capability this epic delivers and which requirements it addresses.
 Should NOT describe implementation details.
 
 #### Scope
-In scope: capabilities included. Out of scope: related work deferred.
+In scope: capabilities included with glossary/requirement refs.
+Out of scope: related work deferred.
 Be specific — vague scope produces scope creep.
 
 #### Acceptance Criteria
 Independently verifiable, binary (pass/fail) conditions describing observable behaviour.
+Each criterion can reference UX acceptance criteria (uxacRefs), success criteria (scRefs),
+and miscellaneous refs (miscRefs).
 
 #### Dependencies
-Blocked by / blocks epics. If none: "None."
+blockedBy: list of epic IDs that must complete first.
 
-#### Notes
-Open questions, risks, references. May be empty.
+#### GitHub Integration
+githubBranch: branch name for this epic (defaults to epic ID).
+githubIssueNumber: populated after gh_create_epic sync.

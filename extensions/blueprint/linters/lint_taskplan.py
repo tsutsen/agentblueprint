@@ -21,6 +21,23 @@ from typing import Optional
 from shared import BaseLinter, CompletenessGate, LayerResult
 
 
+def _extract_epic_req_refs(epic: dict) -> set:
+    """Extract requirement references from an epic, supporting both old and new schema."""
+    refs = set()
+    # Old schema: coverage[] as strings
+    for req_ref in epic.get("coverage", []):
+        refs.add(req_ref)
+    # New schema: scope.inScope[].reqRefs[]
+    for item in epic.get("scope", {}).get("inScope", []):
+        if isinstance(item, dict):
+            for ref in item.get("reqRefs", []):
+                refs.add(ref)
+    # Legacy: requirements[]
+    for req_ref in epic.get("requirements", []):
+        refs.add(req_ref)
+    return refs
+
+
 def _check_requirement_coverage(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
     """Check that every GoalSpec requirement appears in at least one epic's coverage list."""
     goal = extra_specs.get("goal")
@@ -32,8 +49,7 @@ def _check_requirement_coverage(spec: dict, result: LayerResult, extra_specs: di
     
     covered_reqs = set()
     for epic in epics:
-        for req_ref in epic.get("coverage", []):
-            covered_reqs.add(req_ref)
+        covered_reqs.update(_extract_epic_req_refs(epic))
     
     for req_id in req_ids:
         if req_id not in covered_reqs:
@@ -46,8 +62,8 @@ def _check_epic_coverage(spec: dict, result: LayerResult, extra_specs: dict = No
     """Check that every epic covers at least one requirement."""
     for epic in spec.get("epics", []):
         eid = epic.get("id", "?")
-        coverage = epic.get("coverage", [])
-        if not coverage:
+        req_refs = _extract_epic_req_refs(epic)
+        if not req_refs:
             result.add("warning", "epic_no_coverage",
                 f"Epic '{eid}' covers no requirements.",
                 hint="Add at least one requirement to this epic's coverage list.")
@@ -63,7 +79,7 @@ def _check_non_goal_check(spec: dict, result: LayerResult, extra_specs: dict = N
     epics = spec.get("epics", [])
     
     for epic in epics:
-        for req_ref in epic.get("coverage", []):
+        for req_ref in _extract_epic_req_refs(epic):
             if req_ref in non_goal_ids:
                 result.add("error", "epic_implements_non_goal",
                     f"Epic '{epic.get('id', '?')}' covers non-goal '{req_ref}'.",
@@ -76,7 +92,9 @@ def _check_dependency_order(spec: dict, result: LayerResult, extra_specs: dict =
     epic_ids = {epic["id"] for epic in epics}
     
     for i, epic in enumerate(epics):
-        for blocker in epic.get("blockers", []):
+        # Support both old 'blockers' and new 'blockedBy'
+        blockers = epic.get("blockers", epic.get("blockedBy", []))
+        for blocker in blockers:
             if blocker not in epic_ids:
                 result.add("warning", "unknown_blocker",
                     f"Epic '{epic.get('id', '?')}' blocks on unknown epic '{blocker}'.",
@@ -121,7 +139,7 @@ def _check_req_id_reference(spec: dict, result: LayerResult, extra_specs: dict =
     epics = spec.get("epics", [])
     
     for epic in epics:
-        for req_ref in epic.get("coverage", []):
+        for req_ref in _extract_epic_req_refs(epic):
             if req_ref not in req_ids:
                 result.add("error", "req_ref_missing",
                     f"Epic '{epic.get('id', '?')}': coverage reference '{req_ref}' not found in GoalSpec.",
@@ -192,11 +210,21 @@ def _get_epic_texts(spec: dict) -> list[str]:
     """Extract lowercased text from all epics for cross-spec matching."""
     texts = []
     for epic in spec.get("epics", []):
+        # Support both old string arrays and new structured scope items
+        in_scope_texts = []
+        for item in epic.get("scope", {}).get("inScope", []):
+            if isinstance(item, dict):
+                in_scope_texts.append(item.get("description", ""))
+            else:
+                in_scope_texts.append(str(item))
+
         text = ' '.join([
             epic.get("title", ""),
+            epic.get("name", ""),
             epic.get("summary", ""),
             epic.get("objective", ""),
-            " ".join(epic.get("scope", {}).get("inScope", [])),
+            epic.get("description", ""),
+            " ".join(in_scope_texts),
         ]).lower()
         texts.append(text)
     return texts
@@ -206,7 +234,7 @@ def _gate_epic_scope(spec: dict, extra_specs: dict) -> CompletenessGate:
     """All epics have scope (inScope + outOfScope)."""
     epics = spec.get("epics", [])
     all_have_scope = all(
-        epic.get("scope", {}).get("inScope") and epic.get("scope", {}).get("outOfScope")
+        epic.get("scope", {}).get("inScope") is not None
         for epic in epics
     )
     return CompletenessGate(
@@ -274,8 +302,14 @@ def _gate_scope_item_length(spec: dict, extra_specs: dict) -> CompletenessGate:
     """All scope items are meaningful length."""
     epics = spec.get("epics", [])
     all_meaningful = all(
-        all(len(item.strip()) >= 10 for item in epic.get("scope", {}).get("inScope", []))
-        and all(len(item.strip()) >= 10 for item in epic.get("scope", {}).get("outOfScope", []))
+        all(
+            len((item.get("description", "") if isinstance(item, dict) else str(item)).strip()) >= 10
+            for item in epic.get("scope", {}).get("inScope", [])
+        )
+        and all(
+            len((item.get("description", "") if isinstance(item, dict) else str(item)).strip()) >= 10
+            for item in epic.get("scope", {}).get("outOfScope", [])
+        )
         for epic in epics
     )
     return CompletenessGate(
