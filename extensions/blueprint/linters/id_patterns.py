@@ -16,11 +16,9 @@ Usage:
 # ── Composable pattern parts ─────────────────────────────────────────────────
 # Change these to update every ID pattern at once.
 
-SEP = "-"                        # separator between parts
-ENUM = r"\d{3}"                  # 3-digit number (used by most IDs)
-ENUM_MIL = r"\d+"                # 1+ digit (used by milestones)
-SLUG = r"[A-Z][a-zA-Z0-9]*"     # PascalCase name (used by most IDs)
-SLUG_MIL = r"[A-Z][a-zA-Z]*"    # Name without digits (used by milestones)
+SEP = "-"                # separator between parts
+ENUM = r"\d{3}"            # 3-digit number
+SLUG = r"[A-Z][a-zA-Z0-9]*"  # PascalCase name
 
 # ── ID definitions ───────────────────────────────────────────────────────────
 # Each entry: (key, prefix, enumeration, slug)
@@ -62,8 +60,7 @@ _ID_DEFS = [
     ("ep",      "EP",   ENUM, SLUG),
     ("is",      "IS",   ENUM, SLUG),
     ("si",      "SI",   ENUM, SLUG),
-    # Milestone (special: 1+ digits, name without digits)
-    ("milestone", "MIL", ENUM_MIL, SLUG_MIL),
+    ("milestone", "MIL", ENUM, SLUG),
 ]
 
 # ── Build ID_PATTERNS from definitions ───────────────────────────────────────
@@ -76,8 +73,7 @@ for key, prefix, enumeration, slug in _ID_DEFS:
         "hint": f"Format: {prefix}-NNN-PascalCase",
     }
 
-# Special hint for milestone
-ID_PATTERNS["milestone"]["hint"] = "Format: MIL-NNN-NamePascalCase (e.g. MIL-001-Setup)"
+
 
 
 # Section path → ID pattern type mapping (single source of truth for ID validation)
