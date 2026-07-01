@@ -36,8 +36,9 @@ class IssueFile:
 
 # ── Schema patterns ───────────────────────────────────────────────────────────
 
-EPIC_ID_RE = re.compile(r"^EP-\d{3}$")
-ISSUE_ID_RE = re.compile(r"^IS-\d{3}$")
+EPIC_ID_RE = re.compile(r"^EP-\d{3}-[a-z][a-zA-Z0-9]*$")
+ISSUE_ID_RE = re.compile(r"^IS-\d{3}-[a-z][a-zA-Z0-9]*$")
+SUB_ISSUE_ID_RE = re.compile(r"^SI-\d{3}-[a-z][a-zA-Z0-9]*$")
 MILESTONE_RE = re.compile(r"^MIL-\d+-[A-Z][a-zA-Z]*$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 GL_ID_RE = re.compile(r"^GL-\d{3}$")
@@ -268,9 +269,7 @@ def _extract_markdown_list_items(content: str, heading: str) -> list[str]:
 
     # Collect list items until next heading
     items_match = re.match(
-        r'(?:\s*- .+(?:
-(?!\s*##)[^
-]*)*)*',
+        r'(?:\s*- .+(?:\n(?![\s]*##)[^\n]*)*)*',
         after_heading
     )
     if not items_match:
@@ -279,8 +278,7 @@ def _extract_markdown_list_items(content: str, heading: str) -> list[str]:
     text = items_match.group(0)
     return [
         line.strip().lstrip("- ").strip()
-        for line in text.split("
-")
+        for line in text.split("\n")
         if line.strip().startswith("-") and len(line.strip()) > 5
     ]
 
@@ -493,9 +491,133 @@ def _check_body(spec: dict, result: LayerResult, extra_specs: dict = None) -> No
     for issue_file in issue_files:
         md = issue_file.md_content
 
-        if "## What to build" not in md:
+        # Support both old "What to build" and new "Description" sections
+        if "## What to build" not in md and "## Description" not in md:
             result.add("error", "structure",
-                f"{issue_file.issue_id}: missing 'What to build' section")
+                f"{issue_file.issue_id}: missing 'What to build' or 'Description' section")
+
+def _check_enum_values(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Check that type, status, priority, effort have valid values."""
+    VALID_TYPES = {"AFK", "HITL"}
+    VALID_STATUSES = {"not_started", "in_progress", "needs_review", "complete"}
+    VALID_PRIORITIES = {"P0", "P1", "P2", "P3"}
+    VALID_EFFORTS = {"XS", "S", "M", "L", "XL"}
+
+    for issue_file in spec.get("_issue_files", []):
+        data = issue_file.data
+        if not data:
+            continue
+        iid = issue_file.issue_id
+
+        type_ = data.get("type")
+        if type_ and type_ not in VALID_TYPES:
+            result.add("error", "schema",
+                f"{iid}: type '{type_}' is invalid. Must be one of {sorted(VALID_TYPES)}.")
+
+        status = data.get("status")
+        if status and status not in VALID_STATUSES:
+            result.add("error", "schema",
+                f"{iid}: status '{status}' is invalid. Must be one of {sorted(VALID_STATUSES)}.")
+
+        priority = data.get("priority")
+        if priority and priority not in VALID_PRIORITIES:
+            result.add("error", "schema",
+                f"{iid}: priority '{priority}' is invalid. Must be one of {sorted(VALID_PRIORITIES)}.")
+
+        effort = data.get("effort")
+        if effort and effort not in VALID_EFFORTS:
+            result.add("error", "schema",
+                f"{iid}: effort '{effort}' is invalid. Must be one of {sorted(VALID_EFFORTS)}.")
+
+
+def _check_sub_issue_structure(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Check that sub-issue directories under each issue are correctly structured."""
+    issue_files = spec.get("_issue_files", [])
+    if not issue_files:
+        return
+
+    for issue_file in issue_files:
+        issue_dir = issue_file.md_path.parent
+        if not issue_dir.exists():
+            continue
+
+        # Look for SI directories
+        si_dirs = [d for d in issue_dir.iterdir() if d.is_dir() and SUB_ISSUE_ID_RE.match(d.name)]
+        for si_dir in si_dirs:
+            si_id = si_dir.name
+            si_json = si_dir / f"{si_id}.json"
+            si_md = si_dir / f"{si_id}.md"
+            work_dir = si_dir / "work"
+
+            if not si_json.exists():
+                result.add("error", "structure",
+                    f"{si_id}: missing JSON file at {si_json}")
+            if not si_md.exists():
+                result.add("warning", "structure",
+                    f"{si_id}: missing markdown file at {si_md}")
+            if not work_dir.exists():
+                result.add("info", "structure",
+                    f"{si_id}: missing 'work/' directory — create when agent starts work")
+
+
+def _check_scope_refs(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Check that scope items have proper ref fields (new schema)."""
+    issue_files = spec.get("_issue_files", [])
+    glossary = extra_specs.get("glossary")
+
+    if not issue_files:
+        return
+
+    gl_ids = set()
+    if glossary:
+        gl_ids = {t.get("id", "") for t in glossary.get("terms", [])}
+
+    for issue_file in issue_files:
+        data = issue_file.data
+        if not data:
+            continue
+        iid = issue_file.issue_id
+
+        for scope_type in ["inScope", "outOfScope"]:
+            for item in data.get("scope", {}).get(scope_type, []):
+                if not isinstance(item, dict):
+                    continue
+
+                # Check glRefs reference valid glossary terms
+                for ref in item.get("glRefs", []):
+                    if gl_ids and ref not in gl_ids:
+                        result.add("warning", "ref",
+                            f"{iid}: {scope_type} glRefs '{ref}' not found in glossary.")
+
+
+def _check_required_fields(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Check that required fields are present (new schema)."""
+    required = [
+        "schemaVersion", "artifact", "id", "name", "description",
+        "type", "status", "milestone", "acceptanceCriteria",
+        "created", "updated",
+    ]
+
+    for issue_file in spec.get("_issue_files", []):
+        data = issue_file.data
+        if not data:
+            continue
+        for field in required:
+            if field not in data:
+                result.add("error", "schema",
+                    f"{issue_file.issue_id}: missing required field '{field}'.")
+
+
+def _check_artifact_type(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
+    """Check that artifact type is 'Issue'."""
+    for issue_file in spec.get("_issue_files", []):
+        data = issue_file.data
+        if not data:
+            continue
+        if data.get("artifact") != "Issue":
+            result.add("error", "schema",
+                f"{issue_file.issue_id}: artifact must be 'Issue', got '{data.get('artifact')}'.")
+
 
 class IssuesLinter(BaseLinter):
     """BaseLinter wrapper for issue file validation.
@@ -532,6 +654,9 @@ class IssuesLinter(BaseLinter):
         },
     ]
     MISC_CHECKS = [
+        _check_required_fields,
+        _check_artifact_type,
+        _check_enum_values,
         _check_id_sequence,
         _check_dependency_ordering,
         _check_dependency_cycles,
@@ -539,9 +664,11 @@ class IssuesLinter(BaseLinter):
         _check_non_goal_violation,
         _check_glossary_refs,
         _check_coverage,
+        _check_scope_refs,
         _check_schema,
         _check_file_naming,
         _check_body,
+        _check_sub_issue_structure,
     ]
     CROSS_SPEC_DEPS = ["taskplan", "goal", "glossary"]
 

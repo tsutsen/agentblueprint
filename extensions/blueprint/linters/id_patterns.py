@@ -49,6 +49,7 @@ ID_PATTERNS = {
     # ── TaskPlan / Issues ─────────────────────────────────────────────────────
     "ep": {"pattern": r"^EP-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "EP-001-userOnboarding", "hint": "Format: EP-NNN-lowerCamelCase"},
     "is": {"pattern": r"^IS-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "IS-001-implementLogin", "hint": "Format: IS-NNN-lowerCamelCase"},
+    "si": {"pattern": r"^SI-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "SI-001-createLoginSchema", "hint": "Format: SI-NNN-lowerCamelCase"},
     "milestone": {"pattern": r"^MIL-\d+-[A-Z][a-zA-Z]*$", "example": "MIL-001-Setup", "hint": "Format: MIL-NNN-NamePascalCase (e.g. MIL-001-Setup)"},
 }
 
@@ -86,6 +87,8 @@ SECTION_ID_PATTERNS = {
     # TaskPlan
     "epics": "ep",
     "milestones": "milestone",
+    "issues": "is",
+    "subIssues": "si",
     # Glossary
     "terms": "gl",
 }

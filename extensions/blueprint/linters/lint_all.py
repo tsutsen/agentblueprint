@@ -171,6 +171,34 @@ def _run_issues_layer(cfg: LayerConfig, linter_dir: Path, schema_dir: Optional[P
     return layer
 
 
+def _run_subissues_layer(cfg: LayerConfig, linter_dir: Path, schema_dir: Optional[Path],
+                         paths: dict, loaded: dict, strict: bool, args) -> LayerResult:
+    """Execute the sub-issues lint layer from its config.
+
+    Special handling: uses epics_dir, epic_id, and issue_id from args.
+    """
+    epic_id = getattr(args, 'epic', None)
+    issue_id = getattr(args, 'issue', None)
+    epics_dir = getattr(args, 'epics_dir', 'tasks')
+    if not epic_id or not issue_id:
+        return LayerResult(name=cfg.name, skipped=True, skip_reason=cfg.skip_reason)
+
+    linter_path = linter_dir / cfg.linter_file
+    layer = LayerResult(name=cfg.name)
+    if not linter_path.exists():
+        layer.skipped = True
+        layer.skip_reason = f"Linter not found: {linter_path}"
+        return layer
+    try:
+        mod = load_linter(linter_path)
+        lr = cfg.call_fn(mod, epics_dir, epic_id, issue_id, loaded, strict)
+        layer.errors, layer.warnings = issues_from_lr(lr)
+    except Exception as e:
+        layer.add("error", "runner_error", f"Linter raised: {e}",
+                  hint="Check the linter and spec file for errors.")
+    return layer
+
+
 # ── Layer factory functions ──────────────────────────────────────────────────
 # Named functions replace inline lambdas for readability.
 # Each call_fn: (mod, spec, schema_path, loaded, strict) -> LayerResult
@@ -224,6 +252,12 @@ def _call_issues(m, epics_dir, epic_id, l, st):
     return m.LinterClass(epics_dir, epic_id, strict=st).run(
         taskplan=l.get("plan"),
         goal=l.get("goal"),
+        glossary=l.get("glossary"))
+
+
+def _call_subissues(m, epics_dir, epic_id, issue_id, l, st):
+    """Sub-issues layer: special handling (epics_dir + epic_id + issue_id args)."""
+    return m.LinterClass(epics_dir, epic_id, issue_id, strict=st).run(
         glossary=l.get("glossary"))
 
 
@@ -316,6 +350,15 @@ _LAYERS = [
         call_fn=_call_issues,
         assess_fn=None,  # issues don't have completeness gates
     ),
+    LayerConfig(
+        name="subissues",
+        linter_file="lint_subissues.py",
+        schema_file="",  # sub-issues has no schema
+        path_key="issue",  # uses issue as the path key
+        skip_reason="No --issue provided (sub-issues lint is optional).",
+        call_fn=_call_subissues,
+        assess_fn=None,  # sub-issues don't have completeness gates
+    ),
 ]
 
 
@@ -377,6 +420,10 @@ def run_suite(paths, linter_dir, schema_dir, strict, stop_on_error, args=None) -
         if cfg.name == "issues":
             # Issues layer: special handling (no schema, epics_dir + epic_id args)
             if not add(_run_issues_layer(cfg, linter_dir, schema_dir, paths, loaded, strict, args)):
+                return suite
+        elif cfg.name == "subissues":
+            # Sub-issues layer: special handling (epics_dir + epic_id + issue_id)
+            if not add(_run_subissues_layer(cfg, linter_dir, schema_dir, paths, loaded, strict, args)):
                 return suite
         else:
             if not add(_run_layer(cfg, linter_dir, schema_dir, paths, loaded, strict)):
@@ -519,9 +566,10 @@ def main():
     parser.add_argument("--test",     help="Path to testspec JSON")
     parser.add_argument("--plan",     help="Path to taskplan JSON")
     parser.add_argument("--glossary", help="Path to glossary JSON")
-    parser.add_argument("--epic",     help="Epic ID for issues lint (e.g., EP-001)")
-    parser.add_argument("--epics-dir", default="tasks/epics",
-                        help="Path to epics directory (default: tasks/epics)")
+    parser.add_argument("--epic",     help="Epic ID for issues lint (e.g., EP-001-userOnboarding)")
+    parser.add_argument("--issue",    help="Issue ID for sub-issues lint (e.g., IS-001-implementLogin)")
+    parser.add_argument("--epics-dir", default="tasks",
+                        help="Path to tasks/epics directory (default: tasks)")
     parser.add_argument("--schemas",  default=".", help="Directory with *.schema.json files")
     parser.add_argument("--linters",  default=".", help="Directory with lint_*.py files")
     parser.add_argument("--strict",   action="store_true", help="Treat warnings as errors")
