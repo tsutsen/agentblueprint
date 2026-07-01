@@ -428,7 +428,7 @@ All IDs follow the format `PREFIX-NNN-suffix` where NNN is a 3-digit zero-padded
 | DesignSpec | `DG-NNN-PascalCase` | **DG** — Design Guideline | `DG-001-MinimizeCognitiveLoad` |
 | | `SCR-NNN-PascalCase` | **SCR** — Screen | `SCR-001-LandingPage` |
 | | `DT-NNN-PascalCase` | **DT** — Design Token | `DT-001-PrimaryColor` |
-| | `PAT-NNN-camelCase` | **PAT** — Pattern | `PAT-001-keyboardNavigation` |
+| | `PAT-NNN-lowerCamelCase` | **PAT** — Pattern | `PAT-001-keyboardNavigation` |
 | | `PRS-NNN-PascalCase` | **PRS** — Persona | `PRS-001-PowerDeveloper` |
 | | `SPC-NNN` | **SPC** — Screen Pattern | `SPC-001` |
 | | `UJ-NNN-lowerCamelCase` | **UJ** — User Journey | `UJ-001-findProduct` |
@@ -447,6 +447,7 @@ All IDs follow the format `PREFIX-NNN-suffix` where NNN is a 3-digit zero-padded
 | TaskPlan | `EP-NNN-lowerCamelCase` | **EP** — Epic | `EP-001-userOnboarding` |
 | | `MIL-NNN-NamePascalCase` | **MIL** — Milestone | `MIL-001-Setup` |
 | Issues | `IS-NNN-lowerCamelCase` | **IS** — Implementation Story | `IS-001-implementLogin` |
+| | `SI-NNN-lowerCamelCase` | **SI** — Sub-Issue | `SI-001-createLoginSchema` |
 
 **Suffix rules:**
 - `lowerCamelCase`: starts lowercase, e.g. `createAccount`, `touchTarget`
