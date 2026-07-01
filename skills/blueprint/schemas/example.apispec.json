@@ -2,69 +2,112 @@
   "version": "1.0.0",
   "schemaVersion": "2.0.0",
   "module": "LLMGateway",
-  "description": "API functions for the LLM Gateway — query routing, backend management, and log inspection.",
+  "description": "API functions for the LLM Gateway \u2014 query routing, backend management, and log inspection.",
   "dataSpecVersion": "1.0.0",
-
   "functions": [
     {
-      "id": "FN-routeQuery",
+      "id": "FN-000-Authenticate",
       "name": "routeQuery",
       "description": "Routes a query to the most appropriate backend based on classification and availability.",
       "entity": "Query",
       "inputs": [
-        { "name": "content", "type": "string", "required": true, "description": "The query text to route.", "example": "Translate this to French" },
-        { "name": "overrideBackendId", "type": "string", "required": false, "description": "Optional backend override. If provided, bypasses classification and routes directly.", "example": "bck_xyz789" }
+        {
+          "name": "content",
+          "type": "string",
+          "required": true,
+          "description": "The query text to route.",
+          "example": "Translate this to French"
+        },
+        {
+          "name": "overrideBackendId",
+          "type": "string",
+          "required": false,
+          "description": "Optional backend override. If provided, bypasses classification and routes directly.",
+          "example": "bck_xyz789"
+        }
       ],
       "output": {
         "type": "Query",
         "description": "The routed query with status updated to COMPLETED."
       },
       "errors": [
-        { "code": "NO_BACKENDS_AVAILABLE", "condition": "No backends are currently available.", "returnType": "ServiceUnavailableError" },
-        { "code": "INVALID_OVERRIDE", "condition": "The overrideBackendId does not match any configured backend.", "returnType": "ValidationError" }
+        {
+          "code": "NO_BACKENDS_AVAILABLE",
+          "condition": "No backends are currently available.",
+          "returnType": "ServiceUnavailableError"
+        },
+        {
+          "code": "INVALID_OVERRIDE",
+          "condition": "The overrideBackendId does not match any configured backend.",
+          "returnType": "ValidationError"
+        }
       ],
       "pure": false,
       "visibility": "public"
     },
     {
-      "id": "FN-cancelQuery",
+      "id": "FN-001-CreateUser",
       "name": "cancelQuery",
       "description": "Cancels an in-flight query. Only queries in PENDING or ROUTED status can be cancelled.",
       "entity": "Query",
       "inputs": [
-        { "name": "queryId", "type": "string", "required": true, "description": "The ID of the query to cancel.", "example": "qry_def456" }
+        {
+          "name": "queryId",
+          "type": "string",
+          "required": true,
+          "description": "The ID of the query to cancel.",
+          "example": "qry_def456"
+        }
       ],
       "output": {
         "type": "Query",
         "description": "The cancelled query with status updated to FAILED."
       },
       "errors": [
-        { "code": "NOT_FOUND", "condition": "No query exists with this ID.", "returnType": "NotFoundError" },
-        { "code": "ALREADY_COMPLETED", "condition": "The query has already completed or been cancelled.", "returnType": "ConflictError" }
+        {
+          "code": "NOT_FOUND",
+          "condition": "No query exists with this ID.",
+          "returnType": "NotFoundError"
+        },
+        {
+          "code": "ALREADY_COMPLETED",
+          "condition": "The query has already completed or been cancelled.",
+          "returnType": "ConflictError"
+        }
       ],
       "pure": false,
       "visibility": "public"
     },
     {
-      "id": "FN-getBackend",
+      "id": "FN-002-GetUser",
       "name": "getBackend",
       "description": "Fetches a backend by ID.",
       "entity": "Backend",
       "inputs": [
-        { "name": "backendId", "type": "string", "required": true, "description": "The backend identifier.", "example": "bck_xyz789" }
+        {
+          "name": "backendId",
+          "type": "string",
+          "required": true,
+          "description": "The backend identifier.",
+          "example": "bck_xyz789"
+        }
       ],
       "output": {
         "type": "Backend",
         "description": "The backend with its current availability status."
       },
       "errors": [
-        { "code": "NOT_FOUND", "condition": "No backend exists with this ID.", "returnType": "NotFoundError" }
+        {
+          "code": "NOT_FOUND",
+          "condition": "No backend exists with this ID.",
+          "returnType": "NotFoundError"
+        }
       ],
       "pure": true,
       "visibility": "public"
     },
     {
-      "id": "FN-listBackends",
+      "id": "FN-003-ListUsers",
       "name": "listBackends",
       "description": "Lists all configured backends with their availability status.",
       "entity": "Backend",
@@ -78,13 +121,25 @@
       "visibility": "public"
     },
     {
-      "id": "FN-getQueryHistory",
+      "id": "FN-004-UpdateUser",
       "name": "getQueryHistory",
       "description": "Retrieves past query log entries, optionally filtered by backend or time range.",
       "entity": "LogEntry",
       "inputs": [
-        { "name": "limit", "type": "number", "required": false, "description": "Maximum number of entries to return.", "example": 20 },
-        { "name": "backendId", "type": "string", "required": false, "description": "Optional filter by backend ID.", "example": "bck_xyz789" }
+        {
+          "name": "limit",
+          "type": "number",
+          "required": false,
+          "description": "Maximum number of entries to return.",
+          "example": 20
+        },
+        {
+          "name": "backendId",
+          "type": "string",
+          "required": false,
+          "description": "Optional filter by backend ID.",
+          "example": "bck_xyz789"
+        }
       ],
       "output": {
         "type": "LogEntry[]",
@@ -95,19 +150,29 @@
       "visibility": "public"
     },
     {
-      "id": "FN-getQuery",
+      "id": "FN-005-DeleteUser",
       "name": "getQuery",
       "description": "Fetches a query by ID.",
       "entity": "Query",
       "inputs": [
-        { "name": "queryId", "type": "string", "required": true, "description": "The query identifier.", "example": "qry_def456" }
+        {
+          "name": "queryId",
+          "type": "string",
+          "required": true,
+          "description": "The query identifier.",
+          "example": "qry_def456"
+        }
       ],
       "output": {
         "type": "Query",
         "description": "The query with its current status and routing metadata."
       },
       "errors": [
-        { "code": "NOT_FOUND", "condition": "No query exists with this ID.", "returnType": "NotFoundError" }
+        {
+          "code": "NOT_FOUND",
+          "condition": "No query exists with this ID.",
+          "returnType": "NotFoundError"
+        }
       ],
       "pure": true,
       "visibility": "public"

@@ -18,7 +18,7 @@
     "glId": {
       "type": "string",
       "description": "Glossary term identifier, format GL-NNN-PascalCase.",
-      "pattern": "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "gl"
     },
     "enumId": {
       "type": "string",
@@ -28,42 +28,42 @@
     "entId": {
       "type": "string",
       "description": "Entity identifier (ENT-NNN-entityName).",
-      "pattern": "^ENT-\\d{3}-[A-Z][A-Za-z0-9]*$"
+      "x_idPattern": "ent"
     },
     "relId": {
       "type": "string",
       "description": "Relationship identifier (REL-NNN-relationshipName).",
-      "pattern": "^REL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "rel"
     },
     "primId": {
       "type": "string",
       "description": "Primitive type identifier (PRIM-NNN-primitiveName).",
-      "pattern": "^PRIM-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "prim"
     },
     "compId": {
       "type": "string",
       "description": "Component identifier from ArchitectureSpec, format COMP-NNN-PascalCase.",
-      "pattern": "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "comp"
     },
     "reqId": {
       "type": "string",
       "description": "^REQ identifier.",
-      "pattern": "^REQ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "req"
     },
     "nfrId": {
       "type": "string",
       "description": "^NFR identifier.",
-      "pattern": "^NFR-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "nfr"
     },
     "conId": {
       "type": "string",
       "description": "^CON identifier.",
-      "pattern": "^CON-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "con"
     },
     "fnId": {
       "type": "string",
       "description": "Function identifier from ApiSpec, format FN-NNN-slug.",
-      "pattern": "^FN-\\d{3}-[a-z][A-Za-z0-9]*$"
+      "x_idPattern": "fn"
     }
   },
   "properties": {
@@ -317,7 +317,6 @@
             "description": "REQ-IDs from GoalSpec that this entity supports. Used for entity\u2192requirement traceability.",
             "items": {
               "type": "string",
-              "pattern": "^REQ-\\d{3}$",
               "$ref": "#/definitions/reqId"
             }
           },
@@ -326,7 +325,6 @@
             "description": "NFR-IDs from GoalSpec that this entity helps satisfy (e.g. performance, data quality).",
             "items": {
               "type": "string",
-              "pattern": "^NFR-\\d{3}$",
               "$ref": "#/definitions/nfrId"
             }
           },
@@ -335,7 +333,6 @@
             "description": "CON-IDs from ArchitectureSpec constraints that affect this entity (e.g. data retention, partitioning).",
             "items": {
               "type": "string",
-              "pattern": "^CON-\\d{3}$",
               "$ref": "#/definitions/conId"
             }
           }

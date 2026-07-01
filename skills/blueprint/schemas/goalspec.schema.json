@@ -20,17 +20,17 @@
     "reqId": {
       "type": "string",
       "description": "Functional requirement identifier.",
-      "pattern": "^REQ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "req"
     },
     "nfrId": {
       "type": "string",
       "description": "Non-functional requirement identifier.",
-      "pattern": "^NFR-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "nfr"
     },
     "scId": {
       "type": "string",
       "description": "Success criterion identifier.",
-      "pattern": "^SC-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "sc"
     },
     "planguageLevel": {
       "type": "string",
@@ -40,17 +40,17 @@
     "glId": {
       "type": "string",
       "description": "Glossary term identifier, format GL-NNN-PascalCase.",
-      "pattern": "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "gl"
     },
     "usId": {
       "type": "string",
       "description": "User story identifier, format US-NNN (3-digit zero-padded).",
-      "pattern": "^US-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "us"
     },
     "ngId": {
       "type": "string",
       "description": "Non-goal identifier, format NG-NNN (3-digit zero-padded).",
-      "pattern": "^NG-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "ng"
     }
   },
   "properties": {

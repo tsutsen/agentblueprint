@@ -38,22 +38,22 @@
     "reqId": {
       "type": "string",
       "description": "Functional requirement identifier, format REQ-NNN (3-digit zero-padded).",
-      "pattern": "^REQ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "req"
     },
     "usId": {
       "type": "string",
       "description": "User story identifier, format US-NNN (3-digit zero-padded).",
-      "pattern": "^US-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "us"
     },
     "uxacId": {
       "type": "string",
       "description": "UX acceptance criterion identifier, format UXAC-NNN (3-digit zero-padded).",
-      "pattern": "^UXAC-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "uxac"
     },
     "vdrId": {
       "type": "string",
       "description": "Visual design requirement identifier, format VDR-NNN (3-digit zero-padded).",
-      "pattern": "^VDR-\\d{3}$"
+      "x_idPattern": "vdr"
     },
     "arId": {
       "type": "string",
@@ -124,42 +124,42 @@
     "glId": {
       "type": "string",
       "description": "Glossary term identifier, format GL-NNN-PascalCase.",
-      "pattern": "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "gl"
     },
     "dgId": {
       "type": "string",
       "description": "Design goal identifier, format DG-NNN (3-digit zero-padded).",
-      "pattern": "^DG-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "dg"
     },
     "spcId": {
       "type": "string",
       "description": "Screen spec identifier, format SPC-NNN (3-digit zero-padded).",
-      "pattern": "^SPC-\\d{3}$"
+      "x_idPattern": "spc"
     },
     "patId": {
       "type": "string",
       "description": "Interaction pattern identifier, format PAT-NNN-camelCase (e.g. 'PAT-001-pipelineStatus').",
-      "pattern": "^PAT-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "pat"
     },
     "ujId": {
       "type": "string",
       "description": "^UJ identifier.",
-      "pattern": "^UJ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "uj"
     },
     "dtId": {
       "type": "string",
       "description": "^DT identifier.",
-      "pattern": "^DT-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "dt"
     },
     "nfrId": {
       "type": "string",
       "description": "Non-functional requirement identifier, format NFR-NNN-slug.",
-      "pattern": "^NFR-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "nfr"
     },
     "compId": {
       "type": "string",
       "description": "Component identifier, format COMP-NNN-Name.",
-      "pattern": "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "comp"
     }
   },
   "properties": {

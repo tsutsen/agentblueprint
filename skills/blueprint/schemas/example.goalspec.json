@@ -11,35 +11,35 @@
   },
   "functionalRequirements": [
     {
-      "id": "REQ-001",
+      "id": "REQ-000-CreateAccount",
       "actor": "developer",
       "description": "Developer can submit a query and receive a response routed to an appropriate backend.",
       "notes": "Routing decision is invisible to the developer unless they opt into verbose mode."
     },
     {
-      "id": "REQ-002",
+      "id": "REQ-001-Login",
       "actor": "developer",
       "description": "Developer can configure which backends are available and their priority order."
     },
     {
-      "id": "REQ-003",
+      "id": "REQ-002-Logout",
       "actor": "developer",
       "description": "Developer can view a log of past queries, which backend handled each, and response latency."
     },
     {
-      "id": "REQ-004",
+      "id": "REQ-003-ResetPassword",
       "actor": "developer",
       "description": "Developer can force a specific backend for a query by passing an explicit override flag."
     },
     {
-      "id": "REQ-005",
+      "id": "REQ-004-UpdateProfile",
       "actor": "gateway",
       "description": "Gateway falls back to the next available backend if the preferred backend is unavailable."
     }
   ],
   "nonFunctionalRequirements": [
     {
-      "id": "NFR-001",
+      "id": "NFR-000-ResponseTime",
       "category": "Performance",
       "scale": "Routing overhead in milliseconds added to a query round-trip",
       "meter": "Measured locally with a no-op backend at 50 sequential queries",
@@ -50,7 +50,7 @@
       "description": "Performance requirement: < 50ms"
     },
     {
-      "id": "NFR-002",
+      "id": "NFR-001-Availability",
       "category": "Reliability",
       "scale": "Percentage of queries that fail due to gateway error (not backend error)",
       "meter": "Error rate measured over 1000 consecutive queries in integration test",
@@ -61,7 +61,7 @@
       "description": "Reliability requirement: < 1%"
     },
     {
-      "id": "NFR-003",
+      "id": "NFR-002-Security",
       "category": "Portability",
       "scale": "Supported operating systems without code changes",
       "meter": "Manual smoke test on each platform after each release",
@@ -74,7 +74,7 @@
   ],
   "userStories": [
     {
-      "id": "US-001",
+      "id": "US-000-Login",
       "actor": "developer",
       "capability": "submit a query without specifying a backend",
       "outcome": "I can focus on my task instead of managing which model to use",
@@ -85,7 +85,7 @@
       "description": "As a developer, I want to submit a query without specifying a backend so that I can focus on my task instead of managing which model to use"
     },
     {
-      "id": "US-002",
+      "id": "US-001-Register",
       "actor": "developer",
       "capability": "configure backend priority from a config file",
       "outcome": "I can adjust routing behaviour without modifying code",
@@ -95,7 +95,7 @@
       "description": "As a developer, I want to configure backend priority from a config file so that I can adjust routing behaviour without modifying code"
     },
     {
-      "id": "US-003",
+      "id": "US-002-Search",
       "actor": "developer",
       "capability": "inspect which backend handled each of my past queries",
       "outcome": "I can understand routing decisions and tune my configuration",
@@ -105,7 +105,7 @@
       "description": "As a developer, I want to inspect which backend handled each of my past queries so that I can understand routing decisions and tune my configuration"
     },
     {
-      "id": "US-004",
+      "id": "US-003-ViewProfile",
       "actor": "developer",
       "capability": "force a specific backend for a single query",
       "outcome": "I can test a backend directly without changing my configuration",
@@ -117,7 +117,7 @@
   ],
   "successCriteria": [
     {
-      "id": "SC-001",
+      "id": "SC-000-AccountCreated",
       "description": "A query submitted without a backend override is routed and returns a response with no manual backend selection required.",
       "refs": {
         "reqRefs": [
@@ -127,7 +127,7 @@
       "verificationMethod": "Automated integration test with two configured backends."
     },
     {
-      "id": "SC-002",
+      "id": "SC-001-LoginSuccess",
       "description": "When the preferred backend is down, the gateway routes to the next configured backend and the query succeeds.",
       "refs": {
         "reqRefs": [
@@ -137,7 +137,7 @@
       "verificationMethod": "Integration test with primary backend disabled."
     },
     {
-      "id": "SC-003",
+      "id": "SC-002-LogoutComplete",
       "description": "Routing overhead does not exceed 50ms on the reference machine at 50 sequential queries.",
       "refs": {
         "nfrRefs": [
@@ -147,7 +147,7 @@
       "verificationMethod": "Latency benchmark with no-op backend."
     },
     {
-      "id": "SC-004",
+      "id": "SC-003-PasswordReset",
       "description": "All REQ-001 through REQ-005 pass their acceptance tests.",
       "refs": {
         "reqRefs": [
@@ -163,28 +163,28 @@
   ],
   "nonGoals": [
     {
-      "id": "NG-001",
+      "id": "NG-000-MobileApp",
       "name": "Multi-user access control",
       "capability": "Multi-user access control",
       "description": "The system will not support multiple users or account management in this release.",
       "reason": "Deferred to a future version; single-developer use only for this release."
     },
     {
-      "id": "NG-002",
+      "id": "NG-001-ThirdPartyIntegration",
       "name": "Web-based management UI",
       "capability": "Web-based management UI",
       "description": "No web interface will be provided; configuration is done via CLI and config files.",
       "reason": "Out of scope; CLI and config file are sufficient for the target user."
     },
     {
-      "id": "NG-003",
+      "id": "NG-002-LegacyMigration",
       "name": "Model fine-tuning or training",
       "capability": "Fine-tuning or training of models",
       "description": "The gateway will not modify or train models; it only routes to existing backends.",
       "reason": "Out of scope; gateway routes to existing backends, does not modify them."
     },
     {
-      "id": "NG-004",
+      "id": "NG-003-FeatureX",
       "name": "Cross-provider billing and cost tracking",
       "capability": "Billing and cost tracking across cloud providers",
       "description": "Detailed cost tracking and billing integration is not included in this release.",

@@ -1,8 +1,11 @@
 {
   "artifact": "Issue",
-  "id": "IS-001",
+  "id": "IS-000-ImplementLogin",
   "title": "Implement user authentication flow",
-  "titleGlossaryRefs": ["GL-001", "GL-004"],
+  "titleGlossaryRefs": [
+    "GL-001",
+    "GL-004"
+  ],
   "type": "HITL",
   "status": "not_started",
   "epic": "EP-001",
@@ -13,11 +16,15 @@
   "inScope": [
     {
       "description": "User login with email and password",
-      "glossaryRefs": ["GL-001"]
+      "glossaryRefs": [
+        "GL-001"
+      ]
     },
     {
       "description": "Password reset via email link",
-      "glossaryRefs": ["GL-002"]
+      "glossaryRefs": [
+        "GL-002"
+      ]
     }
   ],
   "outOfScope": [
@@ -28,11 +35,15 @@
   "acceptanceCriteria": [
     {
       "description": "User can log in with valid credentials",
-      "glossaryRefs": ["GL-001"]
+      "glossaryRefs": [
+        "GL-001"
+      ]
     },
     {
       "description": "Invalid credentials show appropriate error message",
-      "glossaryRefs": ["GL-003"]
+      "glossaryRefs": [
+        "GL-003"
+      ]
     },
     {
       "description": "Password reset link expires after 1 hour"
