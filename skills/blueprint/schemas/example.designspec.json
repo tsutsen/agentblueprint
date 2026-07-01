@@ -274,7 +274,7 @@
         {
           "trigger": "Developer runs `gateway status`",
           "response": "Gateway prints the status view to stdout and exits.",
-          "patternRef": "PAT-001-commandOutput"
+          "patternRef": "PAT-001-CommandOutput"
         },
         {
           "trigger": "Developer runs `gateway status --watch`",
@@ -326,7 +326,7 @@
         {
           "trigger": "Developer runs `gateway log --backend local/qwen3-27b`",
           "response": "Log view pre-filtered to the specified backend.",
-          "patternRef": "PAT-001-commandOutput"
+          "patternRef": "PAT-001-CommandOutput"
         }
       ]
     },
@@ -360,14 +360,14 @@
         {
           "trigger": "Developer runs `gateway config`",
           "response": "Config view printed to stdout.",
-          "patternRef": "PAT-001-commandOutput"
+          "patternRef": "PAT-001-CommandOutput"
         }
       ]
     }
   ],
   "interactionPatterns": [
     {
-      "id": "PAT-001-commandOutput",
+      "id": "PAT-001-CommandOutput",
       "name": "Command Output",
       "description": "A command runs, prints its output to stdout, and exits with code 0 on success or non-zero on failure. Output is human-readable by default and machine-parseable with --json flag.",
       "examples": [
@@ -424,7 +424,7 @@
   ],
   "visualDesignRequirements": [
     {
-      "id": "VDR-001",
+      "id": "VDR-001-ContrastRatio",
       "description": "All output must render correctly in a standard 80-column terminal without line wrapping.",
       "rationale": "Developers use split-pane terminals and small windows.",
       "name": "All output must render correctly in a standard 80-..."
