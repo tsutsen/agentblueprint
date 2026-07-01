@@ -215,7 +215,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     {
         "target": "personas.glossaryRefs",
         "check": "exists",
-        "inside": "glossary.terms.id",
+        "inside": "glossary:terms.id",
         "target_label": "Persona",
         "ref_label": "Glossary",
         "category": "glossary_ref_missing",
@@ -224,7 +224,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     {
         "target": "screenInventory.glossaryRefs",
         "check": "exists",
-        "inside": "glossary.terms.id",
+        "inside": "glossary:terms.id",
         "target_label": "Screen",
         "ref_label": "Glossary",
         "category": "glossary_ref_missing",
