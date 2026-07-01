@@ -43,7 +43,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     {
         "target": "dataFlow.steps.componentRef",
         "check": "exists",
-        "inside": "components",
+        "inside": "components.id",
         "target_label": "Flow step",
         "ref_label": "component",
         "category": "flow_component_ref",
