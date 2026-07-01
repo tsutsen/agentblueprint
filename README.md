@@ -428,10 +428,10 @@ All IDs follow the format `PREFIX-NNN-suffix` where NNN is a 3-digit zero-padded
 | | `DT-NNN-PascalCase` | **DT** — Design Token | `DT-001-PrimaryColor` |
 | | `PAT-NNN-PascalCase` | **PAT** — Pattern | `PAT-001-KeyboardNavigation` |
 | | `PRS-NNN-PascalCase` | **PRS** — Persona | `PRS-001-PowerDeveloper` |
-| | `SPC-NNN` | **SPC** — Screen Pattern | `SPC-001` |
+| | `SPC-NNN-PascalCase` | **SPC** — Screen Pattern | `SPC-001-LoginScreen` |
 | | `UJ-NNN-PascalCase` | **UJ** — User Journey | `UJ-001-FindProduct` |
 | | `UXAC-NNN-PascalCase` | **UXAC** — UX Acceptance Criterion | `UXAC-001-TouchTarget` |
-| | `VDR-NNN` | **VDR** — Visual Design Requirement | `VDR-001` |
+| | `VDR-NNN-PascalCase` | **VDR** — Visual Design Requirement | `VDR-001-ContrastRatio` |
 | ArchitectureSpec | `COMP-NNN-PascalCase` | **COMP** — Component | `COMP-001-AuthService` |
 | | `CON-NNN-PascalCase` | **CON** — Constraint | `CON-001-AuthenticationRequired` |
 | | `FLW-NNN-PascalCase` | **FLW** — Data Flow | `FLW-001-SessionCreation` |

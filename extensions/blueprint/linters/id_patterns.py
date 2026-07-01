@@ -28,10 +28,10 @@ ID_PATTERNS = {
     "dt": {"pattern": r"^DT-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "DT-001-PrimaryColor", "hint": "Format: DT-NNN-PascalCase"},
     "pat": {"pattern": r"^PAT-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "PAT-001-KeyboardNavigation", "hint": "Format: PAT-NNN-PascalCase"},
     "prs": {"pattern": r"^PRS-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "PRS-001-PowerDeveloper", "hint": "Format: PRS-NNN-PascalCase"},
-    "spc": {"pattern": r"^SPC-\d{3}$", "example": "SPC-001", "hint": "Format: SPC-NNN (3-digit zero-padded)"},
+    "spc": {"pattern": r"^SPC-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "SPC-001-LoginScreen", "hint": "Format: SPC-NNN-PascalCase"},
     "uj": {"pattern": r"^UJ-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "UJ-001-FindProduct", "hint": "Format: UJ-NNN-PascalCase"},
     "uxac": {"pattern": r"^UXAC-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "UXAC-001-TouchTarget", "hint": "Format: UXAC-NNN-PascalCase"},
-    "vdr": {"pattern": r"^VDR-\d{3}$", "example": "VDR-001", "hint": "Format: VDR-NNN (3-digit zero-padded)"},
+    "vdr": {"pattern": r"^VDR-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "VDR-001-ContrastRatio", "hint": "Format: VDR-NNN-PascalCase"},
     # ── ArchitectureSpec ──────────────────────────────────────────────────────
     "comp": {"pattern": r"^COMP-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "COMP-001-AuthService", "hint": "Format: COMP-NNN-PascalCase"},
     "con": {"pattern": r"^CON-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "CON-001-AuthenticationRequired", "hint": "Format: CON-NNN-PascalCase"},
