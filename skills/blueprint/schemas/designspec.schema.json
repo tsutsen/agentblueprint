@@ -138,8 +138,8 @@
     },
     "patId": {
       "type": "string",
-      "description": "Interaction pattern identifier, format PAT-NNN (3-digit zero-padded).",
-      "pattern": "^PAT-\\d{3}$"
+      "description": "Interaction pattern identifier, format PAT-NNN-camelCase (e.g. 'PAT-001-pipelineStatus').",
+      "pattern": "^PAT-\\d{3}-[a-z][a-zA-Z0-9]*$"
     },
     "ujId": {
       "type": "string",
@@ -734,7 +734,7 @@
         "properties": {
           "id": {
             "$ref": "#/definitions/patId",
-            "description": "Unique kebab-case identifier for this interaction pattern (e.g. 'keyboard-navigation').",
+            "description": "Unique identifier for this interaction pattern, format PAT-NNN-camelCase (e.g. 'PAT-001-keyboardNavigation').",
             "x_idPattern": "pat"
           },
           "name": {
