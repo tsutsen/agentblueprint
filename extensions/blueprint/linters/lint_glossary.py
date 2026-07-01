@@ -79,10 +79,11 @@ def _check_related_terms(spec: dict, result: LayerResult, extra_specs: dict = No
     for entry in terms:
         for related in entry.get("relatedTerms", []):
             # Check format
-            if not re.match(r"^GL-\d{3,}$", related):
+            gl_pattern = ID_PATTERNS["gl"]["pattern"]
+            if not re.match(gl_pattern, related):
                 result.add("error", "related_term_format",
-                    f"Term '{entry['name']}': relatedTerm '{related}' is not a valid GL-NNN ID.",
-                    hint="Use GL-NNN format (e.g., GL-001, GL-042).")
+                    f"Term '{entry['name']}': relatedTerm '{related}' is not a valid GL-NNN-TermName ID.",
+                    hint=f"Use GL-NNN-TermName format (e.g., GL-001-Authentication).")
             elif related not in valid_ids:
                 result.add("error", "related_term_missing",
                     f"Term '{entry['name']}': relatedTerm '{related}' not found in glossary.",
