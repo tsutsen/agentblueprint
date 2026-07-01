@@ -21,60 +21,59 @@ ENUM = r"\d{3}"            # 3-digit number
 SLUG = r"[A-Z][a-zA-Z0-9]*"  # PascalCase name
 
 # ── ID definitions ───────────────────────────────────────────────────────────
-# Each entry: (key, prefix, enumeration, slug)
-# Standard IDs use SEP+ENUM+SLUG; milestones use SEP+ENUM_MIL+SLUG_MIL.
+# Each entry: (key, enumeration, slug)
+# prefix = key.upper() automatically.
 
 _ID_DEFS = [
     # GoalSpec
-    ("req",     "REQ", ENUM, SLUG),
-    ("nfr",     "NFR", ENUM, SLUG),
-    ("us",      "US",  ENUM, SLUG),
-    ("sc",      "SC",  ENUM, SLUG),
-    ("ng",      "NG",  ENUM, SLUG),
+    ("req",    ENUM, SLUG),
+    ("nfr",    ENUM, SLUG),
+    ("us",     ENUM, SLUG),
+    ("sc",     ENUM, SLUG),
+    ("ng",     ENUM, SLUG),
     # Glossary
-    ("gl",      "GL",  ENUM, SLUG),
-    ("dg",      "DG",  ENUM, SLUG),
-    ("scr",     "SCR", ENUM, SLUG),
-    ("dt",      "DT",  ENUM, SLUG),
-    ("pat",     "PAT", ENUM, SLUG),
-    ("prs",     "PRS", ENUM, SLUG),
-    ("spc",     "SPC", ENUM, SLUG),
-    ("uj",      "UJ",  ENUM, SLUG),
-    ("uxac",    "UXAC", ENUM, SLUG),
-    ("vdr",     "VDR", ENUM, SLUG),
+    ("gl",     ENUM, SLUG),
+    ("dg",     ENUM, SLUG),
+    ("scr",    ENUM, SLUG),
+    ("dt",     ENUM, SLUG),
+    ("pat",    ENUM, SLUG),
+    ("prs",    ENUM, SLUG),
+    ("spc",    ENUM, SLUG),
+    ("uj",     ENUM, SLUG),
+    ("uxac",   ENUM, SLUG),
+    ("vdr",    ENUM, SLUG),
     # ArchitectureSpec
-    ("comp",    "COMP", ENUM, SLUG),
-    ("con",     "CON",  ENUM, SLUG),
-    ("flw",     "FLW",  ENUM, SLUG),
+    ("comp",   ENUM, SLUG),
+    ("con",    ENUM, SLUG),
+    ("flw",    ENUM, SLUG),
     # DataSpec
-    ("ent",     "ENT",  ENUM, SLUG),
-    ("num",     "NUM",  ENUM, SLUG),
-    ("prim",    "PRIM", ENUM, SLUG),
-    ("rel",     "REL",  ENUM, SLUG),
+    ("ent",    ENUM, SLUG),
+    ("num",    ENUM, SLUG),
+    ("prim",   ENUM, SLUG),
+    ("rel",    ENUM, SLUG),
     # ApiSpec
-    ("fn",      "FN",   ENUM, SLUG),
+    ("fn",     ENUM, SLUG),
     # TestSpec
-    ("tst",     "TST",  ENUM, SLUG),
-    ("fc",      "FC",   ENUM, SLUG),
+    ("tst",    ENUM, SLUG),
+    ("fc",     ENUM, SLUG),
     # TaskPlan / Issues
-    ("ep",      "EP",   ENUM, SLUG),
-    ("is",      "IS",   ENUM, SLUG),
-    ("si",      "SI",   ENUM, SLUG),
-    ("milestone", "MIL", ENUM, SLUG),
+    ("ep",     ENUM, SLUG),
+    ("is",     ENUM, SLUG),
+    ("si",     ENUM, SLUG),
+    # Milestones
+    ("mil",    ENUM, SLUG),
 ]
 
 # ── Build ID_PATTERNS from definitions ───────────────────────────────────────
 ID_PATTERNS = {}
-for key, prefix, enumeration, slug in _ID_DEFS:
+for key, enumeration, slug in _ID_DEFS:
+    prefix = key.upper()
     pattern = rf"^{prefix}-{enumeration}-{slug}$"
     ID_PATTERNS[key] = {
         "pattern": pattern,
         "example": f"{prefix}-001-Example",
         "hint": f"Format: {prefix}-NNN-PascalCase",
     }
-
-
-
 
 # Section path → ID pattern type mapping (single source of truth for ID validation)
 SECTION_ID_PATTERNS = {
@@ -109,7 +108,7 @@ SECTION_ID_PATTERNS = {
     "functionCoverage": "fc",
     # TaskPlan
     "epics": "ep",
-    "milestones": "milestone",
+    "milestones": "mil",
     "issues": "is",
     "subIssues": "si",
     # Glossary

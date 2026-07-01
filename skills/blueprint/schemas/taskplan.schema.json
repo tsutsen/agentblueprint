@@ -20,8 +20,7 @@
     },
     "milestoneId": {
       "type": "string",
-      "description": "Milestone identifier, sequential.",
-      "pattern": "^MIL-\\d+-[A-Z][a-zA-Z]*$"
+      "description": "Milestone identifier, sequential."
     },
     "epicStatus": {
       "type": "string",
@@ -81,7 +80,7 @@
         "properties": {
           "id": {
             "$ref": "#/definitions/milestoneId",
-            "x_idPattern": "milestone"
+            "x_idPattern": "mil"
           },
           "name": {
             "type": "string",

@@ -151,11 +151,16 @@ class SchemaValidator:
 
     def _validate_node(self, node: Any, schema: dict, path: list[str], root: dict | None = None):
         """Recursively validate a node against its schema."""
+        # Preserve x_idPattern before $ref resolution (it lives on the wrapper, not the ref target)
+        x_id_pattern = schema.get("x_idPattern")
+
         # Resolve $ref if present
         if "$ref" in schema:
             ref_schema = self._resolve_ref(schema["$ref"])
             if ref_schema:
-                schema = ref_schema
+                schema = dict(ref_schema)  # shallow copy so we can add x_idPattern
+                if x_id_pattern:
+                    schema["x_idPattern"] = x_id_pattern
             else:
                 return  # Can't resolve ref, skip
 
