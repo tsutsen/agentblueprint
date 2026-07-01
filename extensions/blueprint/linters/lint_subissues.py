@@ -35,9 +35,9 @@ VALID_PRIORITIES = {"P0", "P1", "P2", "P3"}
 VALID_EFFORTS = {"XS", "S", "M", "L", "XL"}
 VALID_FILE_ACTIONS = {"create", "modify", "delete"}
 ISO_8601_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
-SI_ID_RE = re.compile(r"^SI-\d{3}-[a-z][a-zA-Z0-9]*$")
-IS_ID_RE = re.compile(r"^IS-\d{3}-[a-z][a-zA-Z0-9]*$")
-EP_ID_RE = re.compile(r"^EP-\d{3}-[a-z][a-zA-Z0-9]*$")
+SI_ID_RE = re.compile(r"^SI-\d{3}-[A-Z][a-zA-Z0-9]*$")
+IS_ID_RE = re.compile(r"^IS-\d{3}-[A-Z][a-zA-Z0-9]*$")
+EP_ID_RE = re.compile(r"^EP-\d{3}-[A-Z][a-zA-Z0-9]*$")
 
 
 @dataclass

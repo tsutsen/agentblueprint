@@ -23,26 +23,26 @@ of work that an agent can execute.
 
 ```
 tasks/
-  EP-001-userOnboarding/
-    EP-001-userOnboarding.json    ← epic file
-    EP-001-userOnboarding.md
-    IS-001-implementLogin/
-      IS-001-implementLogin.json  ← issue file
-      IS-001-implementLogin.md
-      SI-001-createLoginSchema/
-        SI-001-createLoginSchema.json
-        SI-001-createLoginSchema.md
+  EP-001-UserOnboarding/
+    EP-001-UserOnboarding.json    ← epic file
+    EP-001-UserOnboarding.md
+    IS-001-ImplementLogin/
+      IS-001-ImplementLogin.json  ← issue file
+      IS-001-ImplementLogin.md
+      SI-001-CreateLoginSchema/
+        SI-001-CreateLoginSchema.json
+        SI-001-CreateLoginSchema.md
         work/                     ← agent writes code here
-      SI-002-createLoginAPI/
-        SI-002-createLoginAPI.json
-        SI-002-createLoginAPI.md
+      SI-002-CreateLoginAPI/
+        SI-002-CreateLoginAPI.json
+        SI-002-CreateLoginAPI.md
         work/
-    IS-002-verifyEmail/
-      IS-002-verifyEmail.json
-      IS-002-verifyEmail.md
+    IS-002-VerifyEmail/
+      IS-002-VerifyEmail.json
+      IS-002-VerifyEmail.md
 ```
 
-Issue IDs are **project-global**, sequential (`IS-001-implementLogin`, `IS-002-verifyEmail`, ...),
+Issue IDs are **project-global**, sequential (`IS-001-ImplementLogin`, `IS-002-VerifyEmail`, ...),
 and never restart per epic. Always scan `tasks/*/IS-*/` for the highest
 existing IS-NNN before creating new issues.
 
@@ -58,7 +58,7 @@ Each issue has two files: `IS-NNN-slug.md` (human-readable) and `IS-NNN-slug.jso
 {
   "schemaVersion": "1.0.0",
   "artifact": "Issue",
-  "id": "IS-001-implementLogin",
+  "id": "IS-001-ImplementLogin",
   "name": "Implement user login",
   "description": "Vertical slice: user authenticates with email/password and receives a session token",
   "type": "AFK",
@@ -99,8 +99,8 @@ Each issue has two files: `IS-NNN-slug.md` (human-readable) and `IS-NNN-slug.jso
   "effort": "M",
   "tags": ["auth", "backend"],
   "githubIssueNumber": null,
-  "githubBranch": "IS-001-implementLogin",
-  "githubParentBranch": "EP-001-userOnboarding",
+  "githubBranch": "IS-001-ImplementLogin",
+  "githubParentBranch": "EP-001-UserOnboarding",
   "created": "2026-07-01T14:32:00Z",
   "updated": "2026-07-01T14:32:00Z"
 }
@@ -115,7 +115,7 @@ Each issue has two files: `IS-NNN-slug.md` (human-readable) and `IS-NNN-slug.jso
 ### Issue Markdown (generated from JSON)
 
 ```markdown
-# IS-001-implementLogin: Implement user login
+# IS-001-ImplementLogin: Implement user login
 
 ## Description
 Vertical slice: user authenticates with email/password and receives a session token
@@ -143,8 +143,8 @@ MIL-001-Setup
 None — can start immediately.
 
 ## Sub-issues
-- [ ] SI-001-createLoginSchema: Create login database schema
-- [ ] SI-002-createLoginAPI: Create login API endpoint
+- [ ] SI-001-CreateLoginSchema: Create login database schema
+- [ ] SI-002-CreateLoginAPI: Create login API endpoint
 ```
 
 The sub-issue checklist is assembled by reading `tasks/EP-NNN/IS-NNN/*/` directories.
@@ -287,7 +287,7 @@ Verify the update by reading back the front matter.
 Run `lint_subissues.py` for each issue to validate sub-issue files:
 
 ```
-python lint_subissues.py --epic EP-001-userOnboarding --issue IS-001-implementLogin
+python lint_subissues.py --epic EP-001-UserOnboarding --issue IS-001-ImplementLogin
 ```
 
 This checks:
@@ -307,7 +307,7 @@ This checks:
 {
   "schemaVersion": "1.0.0",
   "artifact": "SubIssue",
-  "id": "SI-001-createLoginSchema",
+  "id": "SI-001-CreateLoginSchema",
   "name": "Create login database schema",
   "description": "Create users table with email and password_hash columns, plus indexes",
   "type": "AFK",
@@ -338,10 +338,10 @@ This checks:
   "priority": "P1",
   "effort": "S",
   "tags": ["database", "schema"],
-  "isRefs": ["IS-001-implementLogin"],
-  "epRefs": ["EP-001-userOnboarding"],
-  "githubBranch": "SI-001-createLoginSchema",
-  "githubBaseBranch": "EP-001-userOnboarding",
+  "isRefs": ["IS-001-ImplementLogin"],
+  "epRefs": ["EP-001-UserOnboarding"],
+  "githubBranch": "SI-001-CreateLoginSchema",
+  "githubBaseBranch": "EP-001-UserOnboarding",
   "githubPrNumber": null,
   "created": "2026-07-01T14:32:00Z",
   "updated": "2026-07-01T14:32:00Z"

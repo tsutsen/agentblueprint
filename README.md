@@ -413,26 +413,24 @@ project/
 
 ## ID Naming Conventions
 
-All IDs follow the format `PREFIX-NNN-suffix` where NNN is a 3-digit zero-padded number. The suffix format depends on the ID type.
-
-**Rule:** _Named things_ should have a camelCase slug and _implementation_ items should have a PascalCase slug.
+All IDs follow the format `PREFIX-NNN-suffix` where NNN is a 3-digit zero-padded number. All suffixes use **PascalCase**.
 
 | Spec | Pattern | Abbreviation | Example |
 |------|---------|--------------|----------|
-| GoalSpec | `REQ-NNN-lowerCamelCase` | **REQ** — Requirement | `REQ-001-createAccount` |
-| | `NFR-NNN-lowerCamelCase` | **NFR** — Non-Functional Requirement | `NFR-001-responseTime` |
-| | `US-NNN-lowerCamelCase` | **US** — User Story | `US-001-login` |
-| | `SC-NNN-lowerCamelCase` | **SC** — Scenario | `SC-001-dataIntegrity` |
-| | `NG-NNN-lowerCamelCase` | **NG** — Non-Goal | `NG-001-webSearch` |
+| GoalSpec | `REQ-NNN-PascalCase` | **REQ** — Requirement | `REQ-001-CreateAccount` |
+| | `NFR-NNN-PascalCase` | **NFR** — Non-Functional Requirement | `NFR-001-ResponseTime` |
+| | `US-NNN-PascalCase` | **US** — User Story | `US-001-Login` |
+| | `SC-NNN-PascalCase` | **SC** — Scenario | `SC-001-DataIntegrity` |
+| | `NG-NNN-PascalCase` | **NG** — Non-Goal | `NG-001-WebSearch` |
 | Glossary | `GL-NNN-PascalCase` | **GL** — Glossary Term | `GL-001-Authentication` |
 | DesignSpec | `DG-NNN-PascalCase` | **DG** — Design Guideline | `DG-001-MinimizeCognitiveLoad` |
 | | `SCR-NNN-PascalCase` | **SCR** — Screen | `SCR-001-LandingPage` |
 | | `DT-NNN-PascalCase` | **DT** — Design Token | `DT-001-PrimaryColor` |
-| | `PAT-NNN-lowerCamelCase` | **PAT** — Pattern | `PAT-001-keyboardNavigation` |
+| | `PAT-NNN-PascalCase` | **PAT** — Pattern | `PAT-001-KeyboardNavigation` |
 | | `PRS-NNN-PascalCase` | **PRS** — Persona | `PRS-001-PowerDeveloper` |
 | | `SPC-NNN` | **SPC** — Screen Pattern | `SPC-001` |
-| | `UJ-NNN-lowerCamelCase` | **UJ** — User Journey | `UJ-001-findProduct` |
-| | `UXAC-NNN-lowerCamelCase` | **UXAC** — UX Acceptance Criterion | `UXAC-001-touchTarget` |
+| | `UJ-NNN-PascalCase` | **UJ** — User Journey | `UJ-001-FindProduct` |
+| | `UXAC-NNN-PascalCase` | **UXAC** — UX Acceptance Criterion | `UXAC-001-TouchTarget` |
 | | `VDR-NNN` | **VDR** — Visual Design Requirement | `VDR-001` |
 | ArchitectureSpec | `COMP-NNN-PascalCase` | **COMP** — Component | `COMP-001-AuthService` |
 | | `CON-NNN-PascalCase` | **CON** — Constraint | `CON-001-AuthenticationRequired` |
@@ -441,17 +439,16 @@ All IDs follow the format `PREFIX-NNN-suffix` where NNN is a 3-digit zero-padded
 | | `NUM-NNN-PascalCase` | **NUM** — Enum | `NUM-001-Status` |
 | | `PRIM-NNN-PascalCase` | **PRIM** — Primitive | `PRIM-001-UserId` |
 | | `REL-NNN-PascalCase` | **REL** — Relationship | `REL-001-UserOrders` |
-| ApiSpec | `FN-NNN-lowerCamelCase` | **FN** — Function | `FN-001-authenticate` |
-| TestSpec | `TST-NNN-lowerCamelCase` | **TST** — Test Case | `TST-001-exportReportAsPDF` |
-| | `FC-NNN-lowerCamelCase` | **FC** — Failure Case | `FC-001-authenticate` |
-| TaskPlan | `EP-NNN-lowerCamelCase` | **EP** — Epic | `EP-001-userOnboarding` |
-| | `MIL-NNN-NamePascalCase` | **MIL** — Milestone | `MIL-001-Setup` |
-| Issues | `IS-NNN-lowerCamelCase` | **IS** — Implementation Story | `IS-001-implementLogin` |
-| | `SI-NNN-lowerCamelCase` | **SI** — Sub-Issue | `SI-001-createLoginSchema` |
+| ApiSpec | `FN-NNN-PascalCase` | **FN** — Function | `FN-001-Authenticate` |
+| TestSpec | `TST-NNN-PascalCase` | **TST** — Test Case | `TST-001-ExportReportAsPDF` |
+| | `FC-NNN-PascalCase` | **FC** — Failure Case | `FC-001-Authenticate` |
+| TaskPlan | `EP-NNN-PascalCase` | **EP** — Epic | `EP-001-UserOnboarding` |
+| | `MIL-NNN-PascalCase` | **MIL** — Milestone | `MIL-001-Setup` |
+| Issues | `IS-NNN-PascalCase` | **IS** — Implementation Story | `IS-001-ImplementLogin` |
+| | `SI-NNN-PascalCase` | **SI** — Sub-Issue | `SI-001-CreateLoginSchema` |
 
 **Suffix rules:**
-- `lowerCamelCase`: starts lowercase, e.g. `createAccount`, `touchTarget`
-- `PascalCase`: starts uppercase, e.g. `Authentication`, `MinimizeCognitiveLoad`
+- `PascalCase`: starts uppercase, e.g. `Authentication`, `CreateAccount`, `MinimizeCognitiveLoad`
 - No suffix: just `PREFIX-NNN` (3-digit zero-padded), e.g. `VDR-001`
 
 ## Design Principles

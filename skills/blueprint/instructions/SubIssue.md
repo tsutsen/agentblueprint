@@ -19,20 +19,20 @@ Sub-issues live inside their parent issue's directory:
 
 ```
 tasks/
-  EP-001-userOnboarding/
-    IS-001-implementLogin/
-      SI-001-createLoginSchema/
-        SI-001-createLoginSchema.json  ← sub-issue definition
-        SI-001-createLoginSchema.md    ← rendered from JSON
+  EP-001-UserOnboarding/
+    IS-001-ImplementLogin/
+      SI-001-CreateLoginSchema/
+        SI-001-CreateLoginSchema.json  ← sub-issue definition
+        SI-001-CreateLoginSchema.md    ← rendered from JSON
         work/                          ← agent writes code here
-      SI-002-createLoginAPI/
-        SI-002-createLoginAPI.json
-        SI-002-createLoginAPI.md
+      SI-002-CreateLoginAPI/
+        SI-002-CreateLoginAPI.json
+        SI-002-CreateLoginAPI.md
         work/
 ```
 
-Sub-issue IDs are **project-global**, sequential (`SI-001-createLoginSchema`,
-`SI-002-createLoginAPI`, ...), and never restart per issue. Always scan
+Sub-issue IDs are **project-global**, sequential (`SI-001-CreateLoginSchema`,
+`SI-002-CreateLoginAPI`, ...), and never restart per issue. Always scan
 `tasks/*/IS-*/SI-*/` for the highest existing SI-NNN before creating new
 sub-issues.
 
@@ -44,7 +44,7 @@ sub-issues.
 {
   "schemaVersion": "1.0.0",
   "artifact": "SubIssue",
-  "id": "SI-001-createLoginSchema",
+  "id": "SI-001-CreateLoginSchema",
   "name": "Create login database schema",
   "description": "Create users table with email and password_hash columns, plus indexes",
   "type": "AFK",
@@ -75,10 +75,10 @@ sub-issues.
   "priority": "P1",
   "effort": "S",
   "tags": ["database", "schema"],
-  "isRefs": ["IS-001-implementLogin"],
-  "epRefs": ["EP-001-userOnboarding"],
-  "githubBranch": "SI-001-createLoginSchema",
-  "githubBaseBranch": "EP-001-userOnboarding",
+  "isRefs": ["IS-001-ImplementLogin"],
+  "epRefs": ["EP-001-UserOnboarding"],
+  "githubBranch": "SI-001-CreateLoginSchema",
+  "githubBaseBranch": "EP-001-UserOnboarding",
   "githubPrNumber": null,
   "created": "2026-07-01T14:32:00Z",
   "updated": "2026-07-01T14:32:00Z"
@@ -181,7 +181,7 @@ file to the user as it completes.
 Run `lint_subissues.py` to validate all sub-issues:
 
 ```
-python lint_subissues.py --epic EP-001-userOnboarding --issue IS-001-implementLogin
+python lint_subissues.py --epic EP-001-UserOnboarding --issue IS-001-ImplementLogin
 ```
 
 This checks:

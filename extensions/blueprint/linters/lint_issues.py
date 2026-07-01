@@ -36,9 +36,9 @@ class IssueFile:
 
 # ── Schema patterns ───────────────────────────────────────────────────────────
 
-EPIC_ID_RE = re.compile(r"^EP-\d{3}-[a-z][a-zA-Z0-9]*$")
-ISSUE_ID_RE = re.compile(r"^IS-\d{3}-[a-z][a-zA-Z0-9]*$")
-SUB_ISSUE_ID_RE = re.compile(r"^SI-\d{3}-[a-z][a-zA-Z0-9]*$")
+EPIC_ID_RE = re.compile(r"^EP-\d{3}-[A-Z][a-zA-Z0-9]*$")
+ISSUE_ID_RE = re.compile(r"^IS-\d{3}-[A-Z][a-zA-Z0-9]*$")
+SUB_ISSUE_ID_RE = re.compile(r"^SI-\d{3}-[A-Z][a-zA-Z0-9]*$")
 MILESTONE_RE = re.compile(r"^MIL-\d+-[A-Z][a-zA-Z]*$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 GL_ID_RE = re.compile(r"^GL-\d{3}$")

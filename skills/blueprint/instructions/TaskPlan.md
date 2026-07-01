@@ -29,15 +29,15 @@ EP-NNN-slug` to decompose each epic into independently-grabbable issues.
 tasks/
   PLAN.md                    ← epic index (human-readable)
   PLAN.json                  ← milestones + epic list (machine-readable)
-  EP-001-userOnboarding/
-    EP-001-userOnboarding.json  ← epic definition
-    EP-001-userOnboarding.md    ← rendered from JSON
-    IS-001-implementLogin/
-      IS-001-implementLogin.json
-      IS-001-implementLogin.md
-      SI-001-createLoginSchema/
-        SI-001-createLoginSchema.json
-        SI-001-createLoginSchema.md
+  EP-001-UserOnboarding/
+    EP-001-UserOnboarding.json  ← epic definition
+    EP-001-UserOnboarding.md    ← rendered from JSON
+    IS-001-ImplementLogin/
+      IS-001-ImplementLogin.json
+      IS-001-ImplementLogin.md
+      SI-001-CreateLoginSchema/
+        SI-001-CreateLoginSchema.json
+        SI-001-CreateLoginSchema.md
         work/                   ← agent writes code here
 ```
 
@@ -130,7 +130,7 @@ Write the epic JSON to `tasks/EP-NNN-slug/EP-NNN-slug.json`.
 {
   "schemaVersion": "1.0.0",
   "artifact": "Epic",
-  "id": "EP-001-userOnboarding",
+  "id": "EP-001-UserOnboarding",
   "name": "Implement user onboarding flow",
   "description": "End-to-end user registration, email verification, and account activation",
   "status": "not_started",
@@ -166,7 +166,7 @@ Write the epic JSON to `tasks/EP-NNN-slug/EP-NNN-slug.json`.
     }
   ],
   "blockedBy": [],
-  "githubBranch": "EP-001-userOnboarding",
+  "githubBranch": "EP-001-UserOnboarding",
   "created": "2026-07-01T14:32:00Z",
   "updated": "2026-07-01T14:32:00Z"
 }
