@@ -415,6 +415,8 @@ project/
 
 All IDs follow the format `PREFIX-NNN-suffix` where NNN is a 3-digit zero-padded number. The suffix format depends on the ID type.
 
+**Rule:** _Named things_ should have a camelCase slug and _implementation_ items should have a PascalCase slug.
+
 | Spec | Pattern | Abbreviation | Example |
 |------|---------|--------------|----------|
 | GoalSpec | `REQ-NNN-lowerCamelCase` | **REQ** — Requirement | `REQ-001-createAccount` |
