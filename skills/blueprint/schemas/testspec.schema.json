@@ -20,8 +20,8 @@
     },
     "testId": {
       "type": "string",
-      "description": "Format: TST-<functionName>-<NNN>, e.g. TST-createUser-001",
-      "pattern": "^TST-\\d{3}-[a-z][A-Za-z0-9]*$"
+      "description": "Test identifier, format TST-NNN-PascalCase.",
+      "x_idPattern": "tst"
     },
     "fnRef": {
       "type": "string",

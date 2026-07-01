@@ -25,6 +25,7 @@ import argparse
 from typing import Optional, Dict
 from shared import BaseLinter, CompletenessGate, LayerResult, validate_spec_ids
 from rules import SemanticRule
+from id_patterns import ID_PATTERNS
 
 
 # ── Term extraction from other specs ─────────────────────────────────────────

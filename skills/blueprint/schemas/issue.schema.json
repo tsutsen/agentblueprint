@@ -110,14 +110,13 @@
     },
     "epic": {
       "type": "string",
-      "description": "Parent epic identifier. Format: EP-NNN (3-digit zero-padded).",
-      "pattern": "^EP-\\d{3}$"
+      "description": "Parent epic identifier. Format: EP-NNN-PascalCase.",
+      "x_idPattern": "ep"
     },
     "blocked_by": {
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^IS-\\d{3}-[a-z][a-zA-Z0-9]*$",
         "x_idPattern": "is"
       },
       "description": "List of IS-NNN identifiers that block this issue. Empty array if none.",
@@ -125,8 +124,8 @@
     },
     "milestone": {
       "type": "string",
-      "description": "Milestone identifier. Format: M1, M2, etc.",
-      "pattern": "^M\\d+$"
+      "description": "Milestone identifier. Format: MIL-NNN-PascalCase.",
+      "x_idPattern": "mil"
     },
     "created": {
       "type": "string",

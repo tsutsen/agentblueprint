@@ -18,8 +18,8 @@
   "definitions": {
     "componentId": {
       "type": "string",
-      "description": "kebab-case component identifier, e.g. 'search-service', 'api-gateway'.",
-      "pattern": "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "description": "Component identifier, format COMP-NNN-PascalCase.",
+      "x_idPattern": "comp"
     },
     "reqId": {
       "type": "string",
@@ -43,8 +43,8 @@
     },
     "flowId": {
       "type": "string",
-      "description": "Data flow identifier, format FLOW-NNN-flowName.",
-      "pattern": "^FLW-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "description": "Data flow identifier, format FLW-NNN-PascalCase.",
+      "x_idPattern": "flw"
     },
     "conId": {
       "type": "string",
@@ -251,8 +251,7 @@
             }
           }
         },
-        "x_idPattern": "comp",
-        "pattern": "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+        "x_idPattern": "comp"
       }
     },
     "dataModel": {

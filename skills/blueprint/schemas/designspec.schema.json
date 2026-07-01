@@ -27,13 +27,13 @@
   "definitions": {
     "screenId": {
       "type": "string",
-      "description": "Screen identifier, format SCR-NNN-name.",
-      "pattern": "^SCR-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "description": "Screen identifier, format SCR-NNN-PascalCase.",
+      "x_idPattern": "scr"
     },
     "personaId": {
       "type": "string",
       "description": "Persona identifier, format PRS-NNN-PascalCase.",
-      "pattern": "^PRS-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "prs"
     },
     "reqId": {
       "type": "string",
@@ -325,8 +325,7 @@
             }
           }
         },
-        "x_idPattern": "prs",
-        "pattern": "^PRS-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+        "x_idPattern": "prs"
       }
     },
     "userJourneys": {
@@ -816,8 +815,7 @@
             }
           }
         ],
-        "x_idPattern": "vdr",
-        "pattern": "^VDR-\\d{3}$"
+        "x_idPattern": "vdr"
       }
     },
     "designSystem": {
@@ -1007,9 +1005,8 @@
             "type": "array",
             "description": "GL-NNN identifiers for related glossary terms.",
             "items": {
-              "type": "string",
-              "pattern": "^GL-\\d{3}$",
-              "$ref": "#/definitions/glId"
+              "$ref": "#/definitions/glId",
+              "x_idPattern": "gl"
             }
           }
         },

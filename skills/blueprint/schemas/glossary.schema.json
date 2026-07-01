@@ -73,8 +73,8 @@
             "type": "array",
             "description": "GL-NNN identifiers of other terms in this glossary that are closely related.",
             "items": {
-              "type": "string",
-              "pattern": "^GL-\\d{3}$"
+              "$ref": "#/definitions/glId",
+              "x_idPattern": "gl"
             }
           },
           "category": {

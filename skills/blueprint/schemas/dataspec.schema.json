@@ -23,7 +23,7 @@
     "enumId": {
       "type": "string",
       "description": "Enum identifier (NUM-NNN-enumName).",
-      "pattern": "^NUM-\\d{3}-[A-Z][A-Za-z0-9]*$"
+      "x_idPattern": "num"
     },
     "entId": {
       "type": "string",

@@ -15,8 +15,8 @@
   "definitions": {
     "epicId": {
       "type": "string",
-      "description": "Epic identifier, sequential and zero-padded.",
-      "pattern": "^EP-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "description": "Epic identifier, format EP-NNN-PascalCase.",
+      "x_idPattern": "ep"
     },
     "milestoneId": {
       "type": "string",
@@ -148,8 +148,8 @@
             "description": "REQ-IDs from GoalSpec covered by this epic. Must not be empty.",
             "minItems": 1,
             "items": {
-              "type": "string",
-              "pattern": "^REQ-\\d{3}$"
+              "$ref": "#/definitions/reqId",
+              "x_idPattern": "req"
             }
           },
           "summary": {
