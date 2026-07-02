@@ -6,7 +6,7 @@ description: >
   decomposition (issues). Conducts schema-driven interviews, writes sections
   via the write_spec_fields tool, and produces JSON + Markdown output.
   Use when creating artifacts or breaking down epics into issues.
-version: 2.0.0
+version: 3.0.0
 ---
 
 # Blueprint
@@ -22,13 +22,79 @@ for every artifact.
 Blueprint is responsible for:
 
 1. Determining which artifact is being created.
-2. Loading the artifact schema.
+2. Loading the artifact schema (JSON Schema, generated from proto YAML).
 3. Loading dependency artifacts.
 4. Running structural lint on existing artifacts and surfacing findings.
 5. Conducting schema-driven interviews (one question at a time).
 6. Writing sections via the `write_spec_fields` tool.
 7. Producing JSON and Markdown output for every completed artifact.
 8. Producing handoff recommendations.
+9. Managing schema evolution (proto YAML sources, regeneration, ID patterns).
+
+---
+
+## Schema Management
+
+Schemas are **declarative YAML sources** that generate JSON Schema files.
+This keeps ID patterns, field definitions, and ref types in one maintainable place.
+
+### Directory layout
+
+```
+skills/blueprint/schemas/proto/
+  blocks/
+    refs.yaml       ← ID patterns (single source of truth, e.g. REQ-NNN, US-NNN)
+    base.yaml       ← Shared base fields (id, name, description, etc.)
+  artifact/
+    goalspec.yaml   ← Proto-schema for each artifact
+    glossary.yaml
+    designspec.yaml
+    archspec.yaml
+    dataspec.yaml
+    apispec.yaml
+    testspec.yaml
+    taskplan.yaml
+    issue.yaml
+  specs/            ← Generated JSON schemas (git-ignored, regenerated)
+  generate_schema.py ← Generator: YAML → JSON Schema
+```
+
+### When to regenerate schemas
+
+Run `generate_schema.py` after any of:
+- Modifying a `proto/artifact/*.yaml` (adding/removing fields, types, refs)
+- Modifying `proto/blocks/refs.yaml` (adding new ID patterns)
+- Modifying `proto/blocks/base.yaml` (changing shared fields)
+
+```bash
+cd skills/blueprint/schemas/proto
+python3 generate_schema.py
+```
+
+This overwrites `proto/specs/*.schema.json` and copies them to
+`skills/blueprint/schemas/*.schema.json` for the linter to consume.
+
+### Adding new ID patterns
+
+1. Add the pattern to `proto/blocks/refs.yaml` (lowercase key, e.g. `myid`)
+2. Reference it in artifact proto-schemas via `ref: myid`
+3. Regenerate schemas
+
+**Rules:**
+- All ref keys must be lowercase (no `FLD`, `FUNC`, etc.)
+- `ref: <type>` auto-injects `id`, `name`, `description` — never list them in `fields`
+- Use `namedTypes` for recursive structures and shared object types
+- `fn` is NOT an alias for `func` — keep them separate
+
+### Instructions vs Schemas
+
+- **`skills/blueprint/instructions/*.md`** — Human-readable guides for each
+  artifact type. Used during interviews to understand section semantics.
+- **`skills/blueprint/schemas/*.schema.json`** — Machine-generated JSON Schema
+  files. Used by the linter and `load_artifact` tool for validation.
+
+The instructions explain *what* each section means. The schemas enforce *how*
+it must be structured.
 
 ---
 
@@ -38,6 +104,8 @@ Blueprint is responsible for:
 |----------------------|-----------------------------|
 | Artifact creation    | `/skill:blueprint <type>`   |
 | Epic decomposition   | `/skill:blueprint issues`   |
+| Schema regeneration  | `python3 skills/blueprint/schemas/proto/generate_schema.py` |
+| Lint all artifacts   | `python3 extensions/blueprint/linters/lint_all.py --schemas skills/blueprint/schemas` |
 
 ---
 
@@ -114,26 +182,35 @@ If the command is `issues <epic-id>` (e.g., `issues EP-001`):
 1. Extract the epic ID from the argument.
 2. Verify the epic exists at `tasks/epics/EP-NNN/EP-NNN-slug.md`.
 3. If not found, abort and ask the user to run `/skill:blueprint plan` first.
-4. Proceed to the schema's Process Override section (defined in Issue.md).
+4. Proceed to the schema's Process Override section (defined in `instructions/Issue.md`).
+
+**Epic → Issue → SubIssue flow:**
+- TaskPlan (`plan` command) produces epics in `tasks/epics/`.
+- Each epic is decomposed into issues (`IS-NNN`) via the `issues` command.
+- Issues can be further decomposed into sub-issues (`SI-NNN`) via `issues` on the issue.
+- All IDs follow patterns from `proto/blocks/refs.yaml` (`epic`, `issue`, `subissue`).
 
 ---
 
 ### Artifact Table
 
-| # | Command        | Artifact         | Schema                        | Dependencies                                                                                              | Output (Markdown + JSON)                                          |
-|---|----------------|------------------|-------------------------------|-----------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
-| 0 | `goal`         | GoalSpec         | `skills/blueprint/instructions/GoalSpec.md`         | (none)                                                                                                  | `artifacts/GoalSpec.md` + `artifacts/GoalSpec.json`              |
-| 1 | `glossary`     | Glossary         | `skills/blueprint/instructions/Glossary.md`         | `artifacts/GoalSpec.json`                                                                                 | `artifacts/Glossary.md` + `artifacts/Glossary.json`              |
-| 2 | `design`       | DesignSpec       | `skills/blueprint/instructions/DesignSpec.md`       | `artifacts/GoalSpec.json`, `artifacts/Glossary.json`                                                      | `artifacts/DesignSpec.md` + `artifacts/DesignSpec.json`          |
-| 3 | `architecture` | ArchitectureSpec | `skills/blueprint/instructions/ArchitectureSpec.md` | `artifacts/GoalSpec.json`, `artifacts/Glossary.json`                                                      | `artifacts/ArchitectureSpec.md` + `artifacts/ArchitectureSpec.json` |
-| 4 | `data`         | DataSpec         | `skills/blueprint/instructions/DataSpec.md`   | `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`                                              | `artifacts/DataSpec.md` + `artifacts/DataSpec.json`              |
-| 5 | `api`          | ApiSpec          | `skills/blueprint/instructions/ApiSpec.md`    | `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json`               | `artifacts/ApiSpec.md` + `artifacts/ApiSpec.json`   |
-| 6 | `test`         | TestSpec         | `skills/blueprint/instructions/TestSpec.md`   | `artifacts/GoalSpec.json`, `artifacts/ApiSpec.json`, `artifacts/DataSpec.json`                        | `artifacts/TestSpec.md` + `artifacts/TestSpec.json` |
-| 7 | `plan`         | TaskPlan         | `skills/blueprint/instructions/TaskPlan.md`         | `artifacts/GoalSpec.json`, `artifacts/DesignSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json`, `artifacts/ApiSpec.json`, `artifacts/TestSpec.json` | `tasks/PLAN.md` + `tasks/epics/` |
-| 8 | `issues <epic-id>` | Issue | `skills/blueprint/instructions/Issue.md` | `tasks/PLAN.md`, `tasks/epics/EP-NNN/` | `epics/EP-NNN/IS-NNN/` (md + json) |
+| # | Command        | Artifact         | Guide (instructions)                            | JSON Schema (generated)                   | Dependencies                                                                                              | Output (Markdown + JSON)                                          |
+|---|----------------|------------------|-------------------------------------------------|-------------------------------------------|-----------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
+| 0 | `goal`         | GoalSpec         | `instructions/GoalSpec.md`              | `goalspec.schema.json`             | (none)                                                                                                  | `artifacts/GoalSpec.md` + `artifacts/GoalSpec.json`              |
+| 1 | `glossary`     | Glossary         | `instructions/Glossary.md`              | `glossary.schema.json`               | `artifacts/GoalSpec.json`                                                                                 | `artifacts/Glossary.md` + `artifacts/Glossary.json`              |
+| 2 | `design`       | DesignSpec       | `instructions/DesignSpec.md`            | `designspec.schema.json`             | `artifacts/GoalSpec.json`, `artifacts/Glossary.json`                                                      | `artifacts/DesignSpec.md` + `artifacts/DesignSpec.json`          |
+| 3 | `architecture` | ArchitectureSpec | `instructions/ArchitectureSpec.md`      | `archspec.schema.json`               | `artifacts/GoalSpec.json`, `artifacts/Glossary.json`                                                      | `artifacts/ArchitectureSpec.md` + `artifacts/ArchitectureSpec.json` |
+| 4 | `data`         | DataSpec         | `instructions/DataSpec.md`          | `dataspec.schema.json`       | `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`                                              | `artifacts/DataSpec.md` + `artifacts/DataSpec.json`              |
+| 5 | `api`          | ApiSpec          | `instructions/ApiSpec.md`         | `apispec.schema.json`        | `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json`               | `artifacts/ApiSpec.md` + `artifacts/ApiSpec.json`   |
+| 6 | `test`         | TestSpec         | `instructions/TestSpec.md`        | `testspec.schema.json`       | `artifacts/GoalSpec.json`, `artifacts/ApiSpec.json`, `artifacts/DataSpec.json`                        | `artifacts/TestSpec.md` + `artifacts/TestSpec.json` |
+| 7 | `plan`         | TaskPlan         | `instructions/TaskPlan.md`              | `taskplan.schema.json`             | `artifacts/GoalSpec.json`, `artifacts/DesignSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json`, `artifacts/ApiSpec.json`, `artifacts/TestSpec.json` | `tasks/PLAN.md` + `tasks/epics/` |
+| 8 | `issues <epic-id>` | Issue | `instructions/Issue.md` | `issue.schema.json` | `tasks/PLAN.md`, `tasks/epics/EP-NNN/` | `tasks/epics/EP-NNN/IS-NNN/` (md + json) |
 
-`plan` produces multiple files. All behaviour is defined in `skills/blueprint/instructions/TaskPlan.md`.
-`issues` decomposes an epic into independently-grabbable issues.
+All paths under `instructions/` and `.schema.json` are relative to `skills/blueprint/`.
+
+`plan` produces multiple files. All behaviour is defined in `instructions/TaskPlan.md`.
+`issues` decomposes an epic into independently-grabbable issues, each with acceptance
+criteria traceable to the epic. Sub-issues (`SI-NNN`) can further decompose an issue.
 
 **Dependency note:** JSON artifacts are preferred over Markdown as dependencies
 because they are machine-readable and can be validated. When loading dependencies,
@@ -179,6 +256,9 @@ args:
 
 Dynamically determine which artifact types have JSON files on disk and include
 only those. Do not hardcode a static list.
+
+**Fresh project:** If no JSON artifacts exist on disk, skip this step entirely
+and proceed to Step 3.
 
 **If `decision: "block"`:**
 
@@ -317,6 +397,19 @@ On success, show the JSON path and updated timestamp:
 
 On revision request: re-interview affected sections, rewrite, re-verify.
 
+**Error recovery:** If `write_spec_fields` fails (disk error, JSON parse error,
+permission denied), report the error to the user immediately. Do not continue
+the interview. Help the user resolve the underlying issue and retry the write.
+If the JSON file becomes corrupted, load the last known good state from disk
+before retrying.
+
+**Cross-spec version sync:** When creating ArchitectureSpec, DataSpec, ApiSpec,
+or TestSpec, ensure the version reference field matches the referenced spec:
+- `archspec.goalSpecVersion` must match `goalspec.version` (with optional `v` prefix)
+- `dataspec.goalSpecVersion` must match `goalspec.version`
+- `apispec.dataSpecVersion` must match `dataspec.version`
+- `testspec.apiSpecVersion` must match `apispec.version`
+
 After the last section is written, proceed to Step 6.
 
 ---
@@ -329,8 +422,8 @@ Before linting, present the completed artifact to the user for review:
 > it is correct, or let me know what needs to change."
 
 Do not proceed to lint or handoff until the user explicitly confirms.
-This gate is mandatory for all artifacts except GoalSpec (which is the
-starting point).
+This gate is mandatory for ALL artifacts — every spec can contain errors
+that should be caught by the user before automated linting.
 
 ### Step 7 — Lint
 
@@ -396,7 +489,49 @@ After handoff completes, remind the user:
 
 ---
 
-## Glossary Alignment Pass (Final Step)
+## Troubleshooting Common Lint Failures
+
+The linter checks three layers: **schema validation** (JSON Schema),
+**semantic rules** (cross-field consistency), and **completeness gates**
+(declarative readiness criteria). Here are common failures and fixes:
+
+### Schema errors
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `type_undefined` | Field references an ID not in the glossary or referenced spec | Add the ID to the correct spec or use a valid primitive type |
+| `schema_additional_properties` | Field not allowed by schema | Check the proto-schema `fields` list; add field if legitimate |
+| `id_format` | ID doesn't match pattern (e.g. `REQ-000-Name`) | Use `PREFIX-NNN-Name` format from `refs.yaml` |
+| `id_gap` | Non-sequential ID numbers | IDs must be sequential from 0; fill gaps or renumber |
+
+### Semantic rule errors
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `version_drift` | `archspec.goalSpecVersion` ≠ `goalspec.version` | Sync the version reference (strip/add `v` prefix as needed) |
+| `rel_from_missing` / `rel_to_missing` | Relationship references non-existent entity ID | Use valid entity IDs from `entities[].id` |
+| `fr_uncovered` | FR not referenced by any component in archspec | Add FR ID to a component's `reqRefs` |
+| `nfr_uncovered` | NFR not referenced by any component | Add NFR ID to a component's `nfrRefs` |
+| `us_uncovered` | User story not in any designspec user journey | Add US ID to a journey's `usRefs` |
+| `component_unassigned` | Component not in any subsystem | Add component ID to a subsystem's `componentRefs` |
+| `component_not_in_flow` | Component not in any data flow step | Add step referencing the component |
+
+### Completeness gate warnings
+
+| Warning | Cause | Fix |
+|---------|-------|-----|
+| `nfr_single_level` | NFR only has `must`, missing `plan`/`wish` | Add all three levels |
+| `missing_expected_output` | Test lacks `expectedOutput` | Add output (skip for error-path tests) |
+| `error_path_missing_code` | Error-path test lacks `errorCode` | Add error code |
+| `*_gate` (future) | Gate required at higher lifecycle status | Will block when status advances; fix proactively |
+
+### Gate levels
+
+Gates have `required_at` status: `draft` → `review` → `confirmed`.
+- Gates required at current status = **errors** (block)
+- Gates required at future status = **warnings** (advisory)
+
+To advance an artifact's status, all gates for that level must pass.
 
 **When to run:** After ALL other specs (GoalSpec, DesignSpec, ArchitectureSpec,
 DataSpec, ApiSpec, TestSpec, TaskPlan) are complete and linted.
