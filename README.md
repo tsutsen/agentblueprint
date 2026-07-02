@@ -79,8 +79,6 @@ AgentBlueprint/
     │           ├── example.testspec.json
     │           ├── example.taskplan.json
     │           └── suite.json
-    └── interview/
-        └── SKILL.md          ← interview skill
     └── lint/
         └── SKILL.md          ← on-demand lint suite runner
 ```
@@ -90,7 +88,6 @@ AgentBlueprint/
 | Skill | Purpose |
 |-------|---------|
 | `blueprint` | Orchestrator — loads schemas, manages dependencies, runs linters, delegates |
-| `interview` | Conducts schema-driven interviews with structured questioning |
 | `lint` | Runs the full SDLC lint suite — validates artifacts, checks completeness gates, detects drift |
 
 ### Schemas
