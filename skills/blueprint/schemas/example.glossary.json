@@ -248,7 +248,7 @@
     {
       "id": "GL-015-Gateway",
       "name": "Gateway",
-      "definition": "The CLI tool itself (gateway command).",
+      "definition": "The command-line interface that routes queries to AI backends.",
       "synonyms": [
         "CLI",
         "tool"
@@ -264,7 +264,7 @@
     {
       "id": "GL-016-User",
       "name": "User",
-      "definition": "An authenticated user account in the system.",
+      "definition": "An authenticated account with permissions to interact with the system.",
       "synonyms": [
         "account"
       ],
