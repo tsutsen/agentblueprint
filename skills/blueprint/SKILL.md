@@ -29,85 +29,8 @@ Blueprint is responsible for:
 6. Writing sections via the `write_spec_fields` tool.
 7. Producing JSON and Markdown output for every completed artifact.
 8. Producing handoff recommendations.
-9. Managing schema evolution (proto YAML sources, regeneration, ID patterns).
 
----
-
-## Schema Management
-
-Schemas are **declarative YAML sources** that generate JSON Schema files.
-This keeps ID patterns, field definitions, and ref types in one maintainable place.
-
-### Directory layout
-
-```
-skills/blueprint/schemas/proto/
-  blocks/
-    refs.yaml       ← ID patterns (single source of truth, e.g. REQ-NNN, US-NNN)
-    base.yaml       ← Shared base fields (id, name, description, etc.)
-  artifact/
-    goalspec.yaml   ← Proto-schema for each artifact
-    glossary.yaml
-    designspec.yaml
-    archspec.yaml
-    dataspec.yaml
-    apispec.yaml
-    testspec.yaml
-    taskplan.yaml
-    issue.yaml
-  specs/            ← Generated JSON schemas (git-ignored, regenerated)
-  generate_schema.py ← Generator: YAML → JSON Schema
-```
-
-### When to regenerate schemas
-
-Run `generate_schema.py` after any of:
-- Modifying a `proto/artifact/*.yaml` (adding/removing fields, types, refs)
-- Modifying `proto/blocks/refs.yaml` (adding new ID patterns)
-- Modifying `proto/blocks/base.yaml` (changing shared fields)
-
-```bash
-cd skills/blueprint/schemas/proto
-python3 generate_schema.py --all    # regenerate all 9 schemas
-# or
-python3 generate_schema.py goalspec  # regenerate one schema
-```
-
-This overwrites `proto/specs/*.schema.json` and copies them to
-`skills/blueprint/schemas/*.schema.json` for the linter to consume.
-
-### Adding new ID patterns
-
-1. Add the pattern to `proto/blocks/refs.yaml` (lowercase key, e.g. `myid`)
-2. Reference it in artifact proto-schemas via `ref: myid`
-3. Regenerate schemas
-
-**Rules:**
-- All ref keys must be lowercase (no `FLD`, `FUNC`, etc.)
-- `ref: <type>` auto-injects `id`, `name`, `description` — never list them in `fields`
-- Use `namedTypes` for recursive structures and shared object types
-- `fn` is NOT an alias for `func` — keep them separate
-
-### Instructions vs Schemas
-
-- **`skills/blueprint/instructions/*.md`** — Human-readable guides for each
-  artifact type. Used during interviews to understand section semantics.
-- **`skills/blueprint/schemas/*.schema.json`** — Machine-generated JSON Schema
-  files. Used by the linter and `load_artifact` tool for validation.
-
-The instructions explain *what* each section means. The schemas enforce *how*
-it must be structured.
-
----
-
-## Suite Overview
-
-| Concern              | Command                     |
-|----------------------|-----------------------------|
-| Artifact creation    | `/skill:blueprint <type>`   |
-| Epic decomposition   | `/skill:blueprint issues`   |
-| Schema regeneration  | `python3 skills/blueprint/schemas/proto/generate_schema.py` |
-| Lint all artifacts   | `python3 extensions/blueprint/linters/lint_all.py --schemas skills/blueprint/schemas` |
+`instructions/*.md` explain section semantics for the interview. `schemas/*.schema.json` enforce structure for validation.
 
 ---
 
@@ -150,47 +73,17 @@ When conducting an interview, follow these rules strictly:
 
 ---
 
-## Output Format
-
-After each section is complete, produce:
-
-```yaml
-section: <SectionName>
-confidence: <high | medium | low>
-content: <section content, formatted per schema requirements>
-open_questions:
-  - <any unresolved questions for the user to address later>
-```
-
-Low confidence or non-empty `open_questions` must be flagged to the user
-before writing the section. Do not proceed silently.
-
----
-
 ## Session Orientation
 
-**Every time a command is invoked at the start of a session**, perform the
-following steps before anything else. Do not skip them or read any files
-beyond what is listed.
-
-> **Resumption exception:** If the current session already contains a partial
-> interview for this artifact type, skip orientation and resume from the first
-> unanswered question.
-
-### Issues command
-
-If the command is `issues <epic-id>` (e.g., `issues EP-001`):
-
-1. Extract the epic ID from the argument.
-2. Verify the epic exists at `tasks/epics/EP-NNN/EP-NNN-slug.md`.
-3. If not found, abort and ask the user to run `/skill:blueprint plan` first.
-4. Proceed to the schema's Process Override section (defined in `instructions/Issue.md`).
+Run the steps below at the start of every session, unless resuming a partial
+interview (in which case skip to the first unanswered question).
 
 **Epic → Issue → SubIssue flow:**
-- TaskPlan (`plan` command) produces epics in `tasks/epics/`.
-- Each epic is decomposed into issues (`IS-NNN`) via the `issues` command.
-- Issues can be further decomposed into sub-issues (`SI-NNN`) via `issues` on the issue.
-- All IDs follow patterns from `proto/blocks/refs.yaml` (`epic`, `issue`, `subissue`).
+- TaskPlan (`plan`) produces epics in `tasks/epics/`.
+- Each epic decomposes into issues (`IS-NNN`) via the `issues` command.
+- Issues decompose further into sub-issues (`SI-NNN`) via `issues` on the issue.
+
+For the issues process, follow `instructions/Issue.md`.
 
 ---
 
@@ -214,79 +107,23 @@ All paths under `instructions/` and `.schema.json` are relative to `skills/bluep
 `issues` decomposes an epic into independently-grabbable issues, each with acceptance
 criteria traceable to the epic. Sub-issues (`SI-NNN`) can further decompose an issue.
 
-**Dependency note:** JSON artifacts are preferred over Markdown as dependencies
-because they are machine-readable and can be validated. When loading dependencies,
-prefer `.json` over `.md` when both exist. Load `.md` only when `.json` is absent.
-
-**Process Override note:** If the loaded schema contains a `## Process Override`
-section, execute it instead of Steps 1–7 of the Standard Flow. Pass the schema's
-context (dependencies, loaded content) to the override steps.
+**Dependency note:** Prefer `.json` over `.md` when loading dependencies.
 
 ---
 
-### Step 1 — Load artifact (schema + dependencies)
+### Step 1 — Load artifact
 
-Call the `load_artifact` tool:
-
-```
-tool: load_artifact
-args:
-  artifactType: <goal|glossary|design|arch|data|api|test|plan|issues>
-```
-
-The tool resolves the schema and all dependencies (preferring JSON over Markdown),
-validates that required dependencies exist, and returns a structured result.
-
-**For `issues`:** the tool returns the Issue schema. Proceed to Step 2.
-
-**If required dependencies are missing:** the tool returns an error. Do not proceed.
-Ask the user to create the missing artifacts first.
-
----
+Call `load_artifact` with the artifact type. If required dependencies are
+missing, stop and ask the user to create them first.
 
 ### Step 2 — Lint existing artifacts
 
-Call the `lint` tool with `mode: "assess"` (default) to run the suite linter
-and get a decision:
+If no JSON artifacts exist on disk, skip to Step 3.
 
-```
-tool: lint
-args:
-  artifacts: [<list only artifact types whose JSON exists on disk>]
-  mode: "assess"
-```
-
-Dynamically determine which artifact types have JSON files on disk and include
-only those. Do not hardcode a static list.
-
-**Fresh project:** If no JSON artifacts exist on disk, skip this step entirely
-and proceed to Step 3.
-
-**If `decision: "block"`:**
-
-Report the blocking errors to the user before starting the interview:
-
-> "The linter found <N> error(s) in existing artifacts before we begin.
-> These must be resolved for the suite to remain consistent."
-
-List each error with its category, message, and hint.
-
-Ask the user: "Fix these now before continuing, or proceed with the interview
-and address them in the affected artifact's own session?"
-
-If the user chooses to fix now: do not start the interview. Help the user
-correct the affected artifacts, re-run the linter, and confirm clean before
-proceeding.
-
-**If `decision: "proceed"` with warnings:**
-
-Briefly note the warning count but do not block:
-
-> "Linter passed. <N> warning(s) noted — see lint report for details."
-
-**If `decision: "proceed"` with no warnings:**
-
-Proceed silently.
+Otherwise call `lint(mode: "assess")` listing only artifact types whose JSON
+exists. If `decision: "block"`, report errors and ask the user to fix them
+now or defer. If `"proceed"` with warnings, note the count and continue.
+If clean, proceed silently.
 
 ---
 
@@ -311,8 +148,7 @@ If resuming, ask: "Resume from the last confirmed section, or restart from the b
 
 ### Step 4 — Interview
 
-Conduct the interview directly, following the **Interview Rules** and **Output Format**
-defined at the top of this document.
+Conduct the interview directly, following the **Interview Rules**.
 
 **For each section, in order:**
 
@@ -321,19 +157,9 @@ defined at the top of this document.
 3. Wait for the user's answer.
 4. Validate the answer against the schema, loaded context, and other specs.
 5. If the answer is incomplete, ask follow-up questions.
-6. When the section is complete, produce the YAML output:
-
-```yaml
-section: <SectionName>
-confidence: <high | medium | low>
-content: <validated section content>
-open_questions:
-  - <any unresolved questions>
-```
-
-7. If confidence is low or there are open questions, flag them to the user
+6. If confidence is low or there are open questions, flag them to the user
    before proceeding. Do not write the section yet.
-8. Once the user confirms the section content, proceed to Step 5 to write it.
+7. Once the user confirms the section content, proceed to Step 5 to write it.
 
 **If the user has resolved all open questions and confidence is high:**
 Write the section via `write_spec_fields` (Step 5), then move to the next section.
@@ -345,54 +171,8 @@ and start at the specified section.
 
 ### Step 5 — Section persistence
 
-After each section is confirmed, write the JSON field using the
-`write_spec_fields` tool. The tool loads the existing JSON from disk,
-applies all updates, and writes back — **atomic and incremental**. No need
-to track the full JSON state.
-
-```
-tool: write_spec_fields
-args:
-  filePath: artifacts/<ArtifactType>.json
-  field: <field label>
-  content: <validated section content>
-  updates: [
-    { jsonPath: <dot-separated path>, jsonValue: <value> },
-    ...
-  ]
-```
-
-**Single field:**
-
-```
-tool: write_spec_fields
-args:
-  filePath: artifacts/GoalSpec.json
-  field: Project Objective
-  content: "The system shall provide..."
-  updates: [
-    { jsonPath: "objective.statement", jsonValue: "The system shall provide..." }
-  ]
-```
-
-**Multiple fields (one call):**
-
-```
-tool: write_spec_fields
-args:
-  filePath: artifacts/GoalSpec.json
-  field: Functional Requirements
-  content: "FR-001: User can login. FR-002: User can logout."
-  updates: [
-    { jsonPath: "functionalRequirements", jsonValue: [
-      { "id": "FR-001", "description": "User can login", "priority": "high" },
-      { "id": "FR-002", "description": "User can logout", "priority": "medium" }
-    ]}
-  ]
-```
-
-The JSON is the single source of truth — Markdown is derived later via
-`generate_artifact_markdown`.
+After each section is confirmed, write the JSON field using `write_spec_fields`.
+The tool is atomic and incremental — no need to track full JSON state.
 
 On success, show the JSON path and updated timestamp:
 "Field written: <FieldLabel>. JSON: <path>."
@@ -418,172 +198,21 @@ After the last section is written, proceed to Step 6.
 
 ### Step 6 — Confirmation gate
 
-Before linting, present the completed artifact to the user for review:
+Present the completed artifact to the user for review. Do not proceed until
+the user explicitly confirms.
 
-> "Here is the completed <ArtifactName>. Please review it and confirm
-> it is correct, or let me know what needs to change."
+### Step 7 — Finalize
 
-Do not proceed to lint or handoff until the user explicitly confirms.
-This gate is mandatory for ALL artifacts — every spec can contain errors
-that should be caught by the user before automated linting.
+Run `lint(mode: "assess")` on the artifact type. If it fails, show errors
+and fix only with user approval, then re-validate. On success:
 
-### Step 7 — Lint
+1. `generate_artifact_markdown` — regenerate Markdown from JSON (JSON is the single source of truth)
+2. `handoff` — display available next steps
 
-Now validate the JSON artifact against its schema:
-
-```
-tool: lint
-args:
-  artifacts: ["<type>"]  # e.g. ["goal"]
-  mode: "assess"
-```
-
-If validation fails, show the errors to the user and suggest fixes. Do
-not modify the JSON without explicit user approval. After user confirms,
-apply the fix and re-validate.
+Remind the user to open a fresh session for the next artifact.
 
 ---
 
-### Step 8 — Generate Markdown from JSON
+## Troubleshooting
 
-After lint passes, regenerate the Markdown from the JSON to ensure zero
-drift between formats. The JSON is the single source of truth; Markdown
-is derived.
-
-```
-tool: generate_artifact_markdown
-args:
-  artifactType: <goal|glossary|design|arch|data|api|test|plan|issue>
-  jsonPath: artifacts/<ArtifactType>.json
-```
-
-This overwrites `artifacts/<ArtifactType>.md` with content derived from
-the JSON. The Markdown is now guaranteed to match the JSON exactly.
-
----
-
-### Step 9 — Handoff
-
-Call the `handoff` tool to produce a handoff table:
-
-```
-tool: handoff
-args: {}
-```
-
-The tool checks all artifacts' dependencies against the DEPS constant,
-reads frontmatter for accurate status, and returns a formatted table
-of available next steps.
-
-Display the tool's output to the user. Do not modify the table — the
-tool produces the authoritative list of available next steps.
-
----
-
-## Session Hygiene
-
-Each artifact interview should be conducted in its own dedicated session.
-
-After handoff completes, remind the user:
-
-> "Open a fresh session for the next artifact and run the corresponding
-> command — the skill orients itself automatically from `artifacts/`."
-
----
-
-## Troubleshooting Common Lint Failures
-
-The linter checks three layers: **schema validation** (JSON Schema),
-**semantic rules** (cross-field consistency), and **completeness gates**
-(declarative readiness criteria). Here are common failures and fixes:
-
-### Schema errors
-
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `type_undefined` | Field references an ID not in the glossary or referenced spec | Add the ID to the correct spec or use a valid primitive type |
-| `schema_additional_properties` | Field not allowed by schema | Check the proto-schema `fields` list; add field if legitimate |
-| `id_format` | ID doesn't match pattern (e.g. `REQ-000-Name`) | Use `PREFIX-NNN-Name` format from `refs.yaml` |
-| `id_gap` | Non-sequential ID numbers | IDs must be sequential from 0; fill gaps or renumber |
-
-### Semantic rule errors
-
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `version_drift` | `archspec.goalSpecVersion` ≠ `goalspec.version` | Sync the version reference (strip/add `v` prefix as needed) |
-| `rel_from_missing` / `rel_to_missing` | Relationship references non-existent entity ID | Use valid entity IDs from `entities[].id` |
-| `fr_uncovered` | FR not referenced by any component in archspec | Add FR ID to a component's `reqRefs` |
-| `nfr_uncovered` | NFR not referenced by any component | Add NFR ID to a component's `nfrRefs` |
-| `us_uncovered` | User story not in any designspec user journey | Add US ID to a journey's `usRefs` |
-| `component_unassigned` | Component not in any subsystem | Add component ID to a subsystem's `componentRefs` |
-| `component_not_in_flow` | Component not in any data flow step | Add step referencing the component |
-
-### Completeness gate warnings
-
-| Warning | Cause | Fix |
-|---------|-------|-----|
-| `nfr_single_level` | NFR only has `must`, missing `plan`/`wish` | Add all three levels |
-| `missing_expected_output` | Test lacks `expectedOutput` | Add output (skip for error-path tests) |
-| `error_path_missing_code` | Error-path test lacks `errorCode` | Add error code |
-| `*_gate` (future) | Gate required at higher lifecycle status | Will block when status advances; fix proactively |
-
-### Gate levels
-
-Gates have `required_at` status: `draft` → `review` → `confirmed`.
-- Gates required at current status = **errors** (block)
-- Gates required at future status = **warnings** (advisory)
-
-To advance an artifact's status, all gates for that level must pass.
-
-**When to run:** After ALL other specs (GoalSpec, DesignSpec, ArchitectureSpec,
-DataSpec, ApiSpec, TestSpec, TaskPlan) are complete and linted.
-
-**Purpose:** Ensure the glossary is the single source of truth — every term
-used in any spec has a glossary entry, and every spec has glossaryRefs for
-terms it references.
-
-### Process
-
-1. **Scan all specs for glossary terms** — Extract all terms referenced in
-   spec text (requirements, descriptions, function names, entity names,
-   screen names, etc.).
-
-2. **Compare against glossary** — For each term found:
-   - If it exists in the glossary: verify it has a `glossaryRefs` entry in
-     the spec where it appears.
-   - If it does NOT exist in the glossary: **offer to add it**.
-
-3. **Add missing terms** — For each term not in the glossary:
-   - Present the term and its context to the user.
-   - Propose a definition (based on how it's used in the spec).
-   - Propose a category (domain, technical, security, ui).
-   - Propose related terms.
-   - On approval: add to glossary, re-generate Glossary.md.
-
-4. **Fix missing glossaryRefs** — For each spec that references a glossary
-   term without a `glossaryRefs` entry:
-   - Add the term's GL-NNN ID to the appropriate level (top-level,
-     section-level, or item-level).
-   - Re-run lint to confirm.
-
-5. **Check for near-duplicates** — Run the linter's near-duplicate check.
-   If two terms are >70% lexically similar, present them to the user and
-   suggest consolidation.
-
-6. **Final lint** — Run `lint()` across all artifacts. All errors must be
-   resolved. Warnings about intentional ID gaps (from removed terms) are
-   acceptable.
-
-### Integration with Other Specs
-
-When creating any spec (DesignSpec, ArchitectureSpec, DataSpec, ApiSpec,
-TestSpec, TaskPlan):
-
-- **During the interview:** When a term is identified that might need a
-  glossary entry, note it for the alignment pass. Do NOT add terms directly
-  to the glossary during spec creation.
-- **After the spec is written:** Note any new terms for the alignment pass.
-- **The glossary is updated in bulk** during the alignment pass, not incrementally.
-
-This keeps spec creation focused and prevents glossary churn during iterative
-development.
+See `TROUBLESHOOTING.md` for common lint failures and fixes.
