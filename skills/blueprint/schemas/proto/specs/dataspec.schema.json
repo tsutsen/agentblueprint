@@ -383,8 +383,8 @@
                   "description": "Longer description of this FUNC."
                 },
                 "apiRef": {
-                  "$ref": "#/definitions/endpId",
-                  "description": "Endpoint"
+                  "$ref": "#/definitions/funcId",
+                  "description": "Internal function"
                 }
               },
               "required": [

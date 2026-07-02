@@ -70,7 +70,7 @@ fields:
             fields:
               - name: apiRef
                 type: string
-                ref: endp
+                ref: func
         - name: visibility
           type: enum
           enum: [public, internal]
