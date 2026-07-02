@@ -138,10 +138,10 @@
       "description": "Entity method identifier.",
       "x_idPattern": "FUNC"
     },
-    "fnId": {
+    "endpId": {
       "type": "string",
-      "description": "Function identifier.",
-      "x_idPattern": "fn"
+      "description": "Endpoint identifier.",
+      "x_idPattern": "endp"
     },
     "tstId": {
       "type": "string",
@@ -250,8 +250,8 @@
             "description": "Longer description of this fc."
           },
           "fnRef": {
-            "$ref": "#/definitions/fnId",
-            "description": "Function"
+            "$ref": "#/definitions/endpId",
+            "description": "Endpoint"
           },
           "happyPathCount": {
             "type": "integer",
@@ -314,8 +314,8 @@
             "description": "Longer description of this tst."
           },
           "fnRef": {
-            "$ref": "#/definitions/fnId",
-            "description": "Function"
+            "$ref": "#/definitions/endpId",
+            "description": "Endpoint"
           },
           "category": {
             "type": "string",

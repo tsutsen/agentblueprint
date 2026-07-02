@@ -138,14 +138,9 @@
       "description": "Entity method identifier.",
       "x_idPattern": "FUNC"
     },
-    "fnId": {
-      "type": "string",
-      "description": "Function (internal) identifier.",
-      "x_idPattern": "fn"
-    },
     "endpId": {
       "type": "string",
-      "description": "Endpoint (API) identifier.",
+      "description": "Endpoint identifier.",
       "x_idPattern": "endp"
     },
     "tstId": {
