@@ -52,6 +52,7 @@
       "name": "Submit first query",
       "personaRef": "PRS-000-PowerDeveloper",
       "usRefs": [
+        "US-000-Login",
         "US-001-Register"
       ],
       "startingState": "Gateway is running. Developer has an OpenAI-compatible client configured to point at the gateway.",

@@ -93,9 +93,11 @@
       "name": "Scalability",
       "description": "The system should handle routing to multiple backends efficiently.",
       "category": "Performance",
-      "must": "The system handles 100 concurrent queries",
+      "must": "Handle 10 concurrent queries without degradation",
       "meter": "Queries per second",
-      "scale": "100 concurrent"
+      "scale": "100 concurrent",
+      "plan": "Handle 50 concurrent queries within 2x baseline latency",
+      "wish": "Handle 200+ concurrent queries with auto-scaling"
     }
   ],
   "userStories": [
@@ -149,7 +151,7 @@
       "id": "US-004-Settings",
       "name": "Settings",
       "description": "A developer can configure backend routing settings through the CLI.",
-      "actor": "A developer",
+      "actor": "developer",
       "capability": "configure backend routing settings",
       "outcome": "to optimize query performance",
       "reqRefs": [

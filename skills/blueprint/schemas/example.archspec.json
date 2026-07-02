@@ -11,7 +11,7 @@
         "name": "Ingress",
         "purpose": "Accepts incoming queries and normalises them to an internal format.",
         "componentRefs": [
-          "COMP-000-APIServer"
+          "COMP-000-Server"
         ]
       },
       {
@@ -64,7 +64,8 @@
         "COMP-006-QueryLog"
       ],
       "reqRefs": [
-        "REQ-001-Login"
+        "REQ-001-Login",
+        "REQ-000-CreateAccount"
       ],
       "visibility": "external",
       "description": "Component: API Server"
@@ -110,7 +111,8 @@
       ],
       "nfrRefs": [
         "NFR-001-Availability",
-        "NFR-002-Security"
+        "NFR-002-Security",
+        "NFR-000-ResponseTime"
       ],
       "visibility": "internal",
       "description": "Routes queries using Route Decision logic. Selects backends by Priority Order with Fallback support. Adds minimal Routing Overhead."
@@ -278,6 +280,11 @@
           "componentRef": "COMP-003-BackendPool",
           "action": "Marks failing backend as unavailable and returns next candidate.",
           "dataRef": "Backend"
+        },
+        {
+          "componentRef": "COMP-005-CloudAdapter",
+          "action": "Selects available cloud backend from pool.",
+          "dataRef": "Query"
         },
         {
           "componentRef": "COMP-002-Router",
