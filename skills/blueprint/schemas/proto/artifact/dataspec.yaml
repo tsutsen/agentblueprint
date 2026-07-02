@@ -100,7 +100,7 @@ fields:
           type: string
         - name: type
           type: enum
-          enum: [association, composition, aggregation, dependency, realization]
+          enum: [association, composition, aggregation, dependency, inheritance]
         - name: cardinality
           type: object
           fields:

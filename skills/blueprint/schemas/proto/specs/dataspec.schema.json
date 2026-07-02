@@ -471,7 +471,7 @@
               "composition",
               "aggregation",
               "dependency",
-              "realization"
+              "inheritance"
             ]
           },
           "cardinality": {
