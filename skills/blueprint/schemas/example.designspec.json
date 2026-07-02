@@ -273,12 +273,12 @@
         {
           "trigger": "Developer runs `gateway status`",
           "response": "Gateway prints the status view to stdout and exits.",
-          "patternRef": "PAT-001-CommandOutput"
+          "patternRef": "PAT-000-CommandOutput"
         },
         {
           "trigger": "Developer runs `gateway status --watch`",
           "response": "Gateway refreshes the status view in-place every 2 seconds until interrupted.",
-          "patternRef": "PAT-002-WatchMode"
+          "patternRef": "PAT-001-WatchMode"
         }
       ],
       "id": "SPC-000-StatusView",
@@ -295,8 +295,8 @@
           "purpose": "Shows a paginated list of past queries with routing metadata.",
           "designSystemRef": "DataTable",
           "patternRefs": [
-            "PAT-003-Pagination",
-            "PAT-004-KeyboardNavigation"
+            "PAT-002-Pagination",
+            "PAT-003-KeyboardNavigation"
           ]
         },
         {
@@ -323,12 +323,12 @@
         {
           "trigger": "Developer presses n",
           "response": "Log advances to the next page.",
-          "patternRef": "PAT-003-Pagination"
+          "patternRef": "PAT-002-Pagination"
         },
         {
           "trigger": "Developer runs `gateway log --backend local/qwen3-27b`",
           "response": "Log view pre-filtered to the specified backend.",
-          "patternRef": "PAT-001-CommandOutput"
+          "patternRef": "PAT-000-CommandOutput"
         }
       ],
       "id": "SPC-001-LogView",
@@ -365,7 +365,7 @@
         {
           "trigger": "Developer runs `gateway config`",
           "response": "Config view printed to stdout.",
-          "patternRef": "PAT-001-CommandOutput"
+          "patternRef": "PAT-000-CommandOutput"
         }
       ],
       "id": "SPC-002-ConfigView",
@@ -375,7 +375,7 @@
   ],
   "interactionPatterns": [
     {
-      "id": "PAT-001-CommandOutput",
+      "id": "PAT-000-CommandOutput",
       "name": "Command Output",
       "description": "A command runs, prints its output to stdout, and exits with code 0 on success or non-zero on failure. Output is human-readable by default and machine-parseable with --json flag.",
       "examples": [
@@ -385,7 +385,7 @@
       ]
     },
     {
-      "id": "PAT-000-KeyboardNavigation",
+      "id": "PAT-001-WatchMode",
       "name": "Watch Mode",
       "description": "A command runs continuously, refreshing its output in-place at a fixed interval. Interrupted by Ctrl+C. Exit code 0 on clean interrupt.",
       "examples": [
@@ -399,7 +399,7 @@
       ]
     },
     {
-      "id": "PAT-001-Pagination",
+      "id": "PAT-002-Pagination",
       "name": "Pagination",
       "description": "Long output is split into pages. User navigates with keyboard. Current page and total shown in footer.",
       "examples": [
@@ -421,7 +421,7 @@
       ]
     },
     {
-      "id": "PAT-002-AutoComplete",
+      "id": "PAT-003-KeyboardNavigation",
       "name": "Keyboard Navigation",
       "description": "All interactive views are fully operable without a mouse. Every action has a keyboard binding.",
       "examples": [

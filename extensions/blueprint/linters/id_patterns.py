@@ -62,7 +62,6 @@ SECTION_ID_PATTERNS = {
     "dataFlow": "flw",
     "constraints": "con",
     # DataSpec
-    "primitives": "prim",
     "enums": "num",
     "entities": "ent",
     "relationships": "rel",

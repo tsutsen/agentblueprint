@@ -228,7 +228,7 @@
       ],
       "steps": [
         {
-          "componentRef": "COMP-000-APIServer",
+          "componentRef": "COMP-000-Server",
           "action": "Receives HTTP request and parses it into a Query object.",
           "dataRef": "Query"
         },
@@ -254,7 +254,7 @@
           "dataRef": "LogEntry"
         },
         {
-          "componentRef": "COMP-000-APIServer",
+          "componentRef": "COMP-000-Server",
           "action": "Returns response to the caller in OpenAI-compatible format.",
           "dataRef": "Query"
         }

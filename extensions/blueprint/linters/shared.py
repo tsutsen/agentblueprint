@@ -82,10 +82,7 @@ def build_valid_types(
 
     Handles both string lists and dict lists for primitives.
     """
-    if isinstance(primitives, list) and primitives and isinstance(primitives[0], dict):
-        prim_set = {p.get("id", "") for p in primitives}
-    else:
-        prim_set = {str(p) for p in primitives}
+    prim_set = {str(p) for p in primitives}
     return entity_names | enum_names | prim_set
 
 

@@ -30,14 +30,8 @@
       },
       "errors": [
         {
-          "code": "NO_BACKENDS_AVAILABLE",
-          "condition": "No backends are currently available.",
-          "returnType": "ServiceUnavailableError"
-        },
-        {
-          "code": "INVALID_OVERRIDE",
-          "condition": "The overrideBackendId does not match any configured backend.",
-          "returnType": "ValidationError"
+          "code": "INVALID_CREDENTIALS",
+          "condition": "Authentication failed"
         }
       ],
       "pure": false,
@@ -63,14 +57,8 @@
       },
       "errors": [
         {
-          "code": "NOT_FOUND",
-          "condition": "No query exists with this ID.",
-          "returnType": "NotFoundError"
-        },
-        {
-          "code": "ALREADY_COMPLETED",
-          "condition": "The query has already completed or been cancelled.",
-          "returnType": "ConflictError"
+          "code": "DUPLICATE_USER",
+          "condition": "User already exists"
         }
       ],
       "pure": false,
@@ -96,9 +84,8 @@
       },
       "errors": [
         {
-          "code": "NOT_FOUND",
-          "condition": "No backend exists with this ID.",
-          "returnType": "NotFoundError"
+          "code": "USER_NOT_FOUND",
+          "condition": "User not found"
         }
       ],
       "pure": true,
@@ -114,7 +101,12 @@
         "type": "Backend[]",
         "description": "All configured backends sorted by priority."
       },
-      "errors": [],
+      "errors": [
+        {
+          "code": "NO_BACKENDS_AVAILABLE",
+          "condition": "No backends available"
+        }
+      ],
       "pure": true,
       "visibility": "public"
     },
@@ -143,7 +135,12 @@
         "type": "LogEntry[]",
         "description": "Past query log entries sorted by most recent first."
       },
-      "errors": [],
+      "errors": [
+        {
+          "code": "INVALID_OVERRIDE",
+          "condition": "Invalid override parameter"
+        }
+      ],
       "pure": true,
       "visibility": "public"
     },
@@ -167,9 +164,8 @@
       },
       "errors": [
         {
-          "code": "NOT_FOUND",
-          "condition": "No query exists with this ID.",
-          "returnType": "NotFoundError"
+          "code": "USER_NOT_FOUND",
+          "condition": "User not found"
         }
       ],
       "pure": true,

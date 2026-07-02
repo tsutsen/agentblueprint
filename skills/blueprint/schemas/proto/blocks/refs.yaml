@@ -29,7 +29,6 @@ flw:  { pattern: "^FLW-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Data flow" }
 # DataSpec
 ent:  { pattern: "^ENT-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Entity" }
 num:  { pattern: "^NUM-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Enum" }
-prim: { pattern: "^PRIM-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Primitive" }
 rel:  { pattern: "^REL-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Relationship" }
 fld:  { pattern: "^FLD-\\d{3}-[a-z][A-Za-z0-9]*$", title: "Entity field" }
 func: { pattern: "^FUNC-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Function" }
@@ -38,7 +37,7 @@ func: { pattern: "^FUNC-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Function" }
 endp: { pattern: "^ENDP-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Endpoint" }
 
 # TestSpec
-tst:  { pattern: "^TST-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Test case" }
+tst:  { pattern: "^TST-\\d{3}-[A-Z][a-zA-Z0-9]*(-\\d{3})?$", title: "Test case" }
 fc:   { pattern: "^FC-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Function coverage" }
 
 # TaskPlan / Issues

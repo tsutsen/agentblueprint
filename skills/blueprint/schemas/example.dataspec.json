@@ -1,14 +1,6 @@
 {
   "version": "1.0.0",
   "schemaVersion": "1.0.0",
-  "module": "LLMGateway",
-  "description": "Data entities for the LLM Gateway \u2014 manages queries, backends, and log entries.",
-  "primitives": [
-    "string",
-    "number",
-    "boolean",
-    "null"
-  ],
   "enums": [
     {
       "name": "QueryStatus",
@@ -29,7 +21,9 @@
           "name": "FAILED",
           "description": "Query processing failed."
         }
-      ]
+      ],
+      "id": "NUM-000-QueryStatus",
+      "description": "Enum for QueryStatus"
     },
     {
       "name": "BackendStatus",
@@ -42,7 +36,9 @@
           "name": "UNAVAILABLE",
           "description": "Backend is not accepting new queries."
         }
-      ]
+      ],
+      "id": "NUM-001-BackendStatus",
+      "description": "Enum for BackendStatus"
     },
     {
       "name": "LogSeverity",
@@ -59,7 +55,9 @@
           "name": "ERROR",
           "description": "Error log entry."
         }
-      ]
+      ],
+      "id": "NUM-002-LogSeverity",
+      "description": "Enum for LogSeverity"
     }
   ],
   "entities": [
@@ -71,60 +69,64 @@
           "name": "id",
           "type": "string",
           "required": true,
-          "primaryKey": true,
           "description": "Unique identifier for the query.",
-          "example": "qry_def456"
+          "id": "FLD-000-id"
         },
         {
           "name": "content",
           "type": "string",
           "required": true,
           "description": "The query text submitted by the user.",
-          "example": "Translate this to French"
+          "id": "FLD-000-content"
         },
         {
           "name": "status",
           "type": "QueryStatus",
           "required": true,
           "description": "Current processing status of the query.",
-          "example": "ROUTED"
+          "id": "FLD-000-status"
         },
         {
           "name": "assignedBackendId",
           "type": "string",
           "required": false,
           "description": "ID of the backend this query is assigned to.",
-          "example": "bck_xyz789"
+          "id": "FLD-000-assignedBackendId"
         },
         {
           "name": "createdAt",
           "type": "string",
           "required": true,
           "description": "ISO 8601 timestamp when the query was created.",
-          "example": "2024-01-15T10:30:00Z"
+          "id": "FLD-000-createdAt"
         },
         {
           "name": "completedAt",
           "type": "string",
           "required": false,
-          "description": "ISO 8601 timestamp when the query completed or failed."
+          "description": "ISO 8601 timestamp when the query completed or failed.",
+          "id": "FLD-000-completedAt"
         }
       ],
-      "methods": [
+      "id": "ENT-000-Query",
+      "functions": [
         {
           "name": "cancel",
-          "apiRef": "FN-cancelQuery",
-          "description": "Cancels an in-flight query."
+          "apiRef": "ENDP-000-Authenticate",
+          "description": "Cancels an in-flight query.",
+          "id": "FUNC-000-Cancel"
         },
         {
           "name": "getHistory",
-          "apiRef": "FN-getQueryHistory",
-          "description": "Retrieves past query log entries."
+          "apiRef": "ENDP-001-CreateUser",
+          "description": "Retrieves past query log entries.",
+          "id": "FUNC-001-Gethistory"
         },
         {
           "name": "get",
-          "apiRef": "FN-getQuery",
-          "description": "Fetches a query by ID."
+          "apiRef": "ENDP-002-GetUser",
+          "description": "Fetches a query by ID.",
+          "id": "FUNC-002-Get"
         }
       ]
     },
@@ -136,48 +138,51 @@
           "name": "id",
           "type": "string",
           "required": true,
-          "primaryKey": true,
           "description": "Unique identifier for the backend.",
-          "example": "bck_xyz789"
+          "id": "FLD-001-id"
         },
         {
           "name": "name",
           "type": "string",
           "required": true,
           "description": "Human-readable name of the backend.",
-          "example": "OpenAI GPT-4"
+          "id": "FLD-001-name"
         },
         {
           "name": "status",
           "type": "BackendStatus",
           "required": true,
           "description": "Current availability status.",
-          "example": "AVAILABLE"
+          "id": "FLD-001-status"
         },
         {
           "name": "priority",
           "type": "number",
           "required": true,
           "description": "Routing priority (lower number = higher priority).",
-          "example": 1
+          "id": "FLD-001-priority"
         },
         {
           "name": "config",
           "type": "string",
           "required": false,
-          "description": "Configuration details for connecting to this backend."
+          "description": "Configuration details for connecting to this backend.",
+          "id": "FLD-001-config"
         }
       ],
-      "methods": [
+      "id": "ENT-001-Backend",
+      "functions": [
         {
           "name": "get",
-          "apiRef": "FN-getBackend",
-          "description": "Fetches a backend by ID."
+          "apiRef": "ENDP-003-ListUsers",
+          "description": "Fetches a backend by ID.",
+          "id": "FUNC-003-Get"
         },
         {
           "name": "list",
-          "apiRef": "FN-listBackends",
-          "description": "Lists all configured backends."
+          "apiRef": "ENDP-004-UpdateUser",
+          "description": "Lists all configured backends.",
+          "id": "FUNC-004-List"
         }
       ]
     },
@@ -189,81 +194,85 @@
           "name": "id",
           "type": "string",
           "required": true,
-          "primaryKey": true,
           "description": "Unique identifier for the log entry.",
-          "example": "log_abc123"
+          "id": "FLD-002-id"
         },
         {
           "name": "queryId",
           "type": "string",
           "required": true,
           "description": "ID of the associated query.",
-          "example": "qry_def456"
+          "id": "FLD-002-queryId"
         },
         {
           "name": "backendId",
           "type": "string",
           "required": false,
           "description": "ID of the backend involved in this event.",
-          "example": "bck_xyz789"
+          "id": "FLD-002-backendId"
         },
         {
           "name": "severity",
           "type": "LogSeverity",
           "required": true,
           "description": "Severity level of the log entry.",
-          "example": "INFO"
+          "id": "FLD-002-severity"
         },
         {
           "name": "message",
           "type": "string",
           "required": true,
           "description": "Human-readable log message.",
-          "example": "Query routed to backend"
+          "id": "FLD-002-message"
         },
         {
           "name": "timestamp",
           "type": "string",
           "required": true,
           "description": "ISO 8601 timestamp of the event.",
-          "example": "2024-01-15T10:30:01Z"
+          "id": "FLD-002-timestamp"
         }
-      ]
+      ],
+      "id": "ENT-002-LogEntry"
     }
   ],
   "relationships": [
     {
-      "from": "Query",
-      "to": "Backend",
+      "from": "ENT-000-Query",
+      "to": "ENT-001-Backend",
       "type": "association",
       "cardinality": {
         "fromLabel": "0..1",
         "toLabel": "1"
       },
-      "label": "routed to",
-      "description": "A query is assigned to at most one backend during processing."
+      "description": "A query is assigned to at most one backend during processing.",
+      "id": "REL-000-Routedto",
+      "name": "routed to"
     },
     {
-      "from": "LogEntry",
-      "to": "Query",
+      "from": "ENT-002-LogEntry",
+      "to": "ENT-000-Query",
       "type": "association",
       "cardinality": {
         "fromLabel": "1",
         "toLabel": "1"
       },
-      "label": "records",
-      "description": "Each log entry is associated with exactly one query."
+      "description": "Each log entry is associated with exactly one query.",
+      "id": "REL-001-Records",
+      "name": "records"
     },
     {
-      "from": "LogEntry",
-      "to": "Backend",
-      "type": "dependency",
+      "from": "ENT-002-LogEntry",
+      "to": "ENT-001-Backend",
+      "type": "association",
       "cardinality": {
         "fromLabel": "0..1",
         "toLabel": "1"
       },
-      "label": "involves",
-      "description": "A log entry may reference a backend that handled the query."
+      "description": "A log entry may reference a backend that handled the query.",
+      "id": "REL-002-Involves",
+      "name": "involves"
     }
-  ]
+  ],
+  "project": "LLMGateway"
 }

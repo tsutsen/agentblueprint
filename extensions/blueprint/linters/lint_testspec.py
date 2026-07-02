@@ -66,11 +66,11 @@ def has_placeholder(value, _depth: int = 0) -> bool:
 
 
 def expected_test_prefix(fn_id: str) -> str:
-    """FN-001-createUser → TST-001-createUser, or FN-createUser → TST-createUser"""
-    match = re.match(r"^FN-(\d{3})-(.+)$", fn_id)
+    """ENDP-001-CreateUser → TST-001-CreateUser, or FN-001-createUser → TST-001-createUser"""
+    match = re.match(r"^(?:ENDP|FN)-(\d{3})-(.+)$", fn_id)
     if match:
         return f"TST-{match.group(1)}-{match.group(2)}"
-    return f"TST-{fn_id[3:]}" if fn_id.startswith("FN-") else f"TST-{fn_id}"
+    return f"TST-{fn_id.split('-', 1)[1]}" if '-' in fn_id else f"TST-{fn_id}"
 
 
 # ── Checks ────────────────────────────────────────────────────────────────────

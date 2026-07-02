@@ -87,6 +87,15 @@
       "wish": "TBD \u2014 Windows support under evaluation",
       "name": "Portability",
       "description": "Portability requirement: Linux x86_64"
+    },
+    {
+      "id": "NFR-003-Scalability",
+      "name": "Scalability",
+      "description": "The system should handle routing to multiple backends efficiently.",
+      "category": "Performance",
+      "must": "The system handles 100 concurrent queries",
+      "meter": "Queries per second",
+      "scale": "100 concurrent"
     }
   ],
   "userStories": [
@@ -134,6 +143,17 @@
       ],
       "description": "As a developer, I want to force a specific backend for a single query so that I can test a backend directly without changing my configuration",
       "name": "View Profile"
+    },
+    {
+      "id": "US-004-Settings",
+      "name": "Settings",
+      "description": "A developer can configure backend routing settings through the CLI.",
+      "actor": "A developer",
+      "capability": "configure backend routing settings",
+      "outcome": "to optimize query performance",
+      "reqRefs": [
+        "REQ-005-ProfileManagement"
+      ]
     }
   ],
   "successCriteria": [

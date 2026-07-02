@@ -48,7 +48,7 @@ ARTIFACT_REQUIRED = {
     "designspec": ["designGoals", "personas", "userJourneys", "screenInventory",
                    "screenSpecs", "uxAcceptanceCriteria"],
     "archspec": ["overview", "components", "dataFlow", "constraints"],
-    "dataspec": ["primitives", "enums", "entities", "relationships"],
+    "dataspec": ["enums", "entities", "relationships"],
     "apispec": ["module", "functions"],
     "testspec": ["functionCoverage", "tests"],
     "taskplan": ["milestones", "epics"],

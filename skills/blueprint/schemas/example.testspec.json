@@ -67,7 +67,7 @@
   ],
   "tests": [
     {
-      "id": "TST-000-Authenticate",
+      "id": "TST-000-Authenticate-001",
       "fnRef": "ENDP-000-Authenticate",
       "category": "happy-path",
       "description": "Routes a simple query to the highest priority available backend.",
@@ -88,7 +88,7 @@
       "name": "Authenticate"
     },
     {
-      "id": "TST-001-CreateUser",
+      "id": "TST-001-CreateUser-001",
       "fnRef": "ENDP-001-CreateUser",
       "category": "happy-path",
       "description": "Routes a query to a specific backend when overrideBackendId is provided.",
@@ -113,7 +113,7 @@
       "name": "Create User"
     },
     {
-      "id": "TST-002-GetUser",
+      "id": "TST-002-GetUser-001",
       "fnRef": "ENDP-002-GetUser",
       "category": "edge-case",
       "description": "Routes a complex query to the most capable available backend.",
@@ -133,14 +133,13 @@
       "name": "Get User"
     },
     {
-      "id": "TST-003-ListUsers",
+      "id": "TST-003-ListUsers-001",
       "fnRef": "ENDP-003-ListUsers",
       "category": "error-path",
       "description": "Throws NO_BACKENDS_AVAILABLE when no backends are available.",
       "input": {
         "content": "Hello"
       },
-      "errorCode": "NO_BACKENDS_AVAILABLE",
       "expectedError": {
         "code": "NO_BACKENDS_AVAILABLE",
         "returnType": "ServiceUnavailableError"
@@ -149,7 +148,7 @@
       "name": "List Users"
     },
     {
-      "id": "TST-004-UpdateUser",
+      "id": "TST-004-UpdateUser-001",
       "fnRef": "ENDP-004-UpdateUser",
       "category": "error-path",
       "description": "Throws INVALID_OVERRIDE when overrideBackendId does not match any configured backend.",
@@ -157,7 +156,6 @@
         "content": "Hello",
         "overrideBackendId": "bck_nonexistent"
       },
-      "errorCode": "INVALID_OVERRIDE",
       "expectedError": {
         "code": "INVALID_OVERRIDE",
         "returnType": "ValidationError"
@@ -166,7 +164,7 @@
       "name": "Update User"
     },
     {
-      "id": "TST-005-DeleteUser",
+      "id": "TST-005-DeleteUser-001",
       "fnRef": "ENDP-005-DeleteUser",
       "category": "happy-path",
       "description": "Cancels an in-flight PENDING query and returns it with FAILED status.",
@@ -186,7 +184,7 @@
       "name": "Delete User"
     },
     {
-      "id": "TST-010-Authenticate",
+      "id": "TST-000-Authenticate-002",
       "fnRef": "ENDP-000-Authenticate",
       "category": "happy-path",
       "description": "Returns all configured backends sorted by priority.",
@@ -213,7 +211,7 @@
       "name": "Authenticate"
     },
     {
-      "id": "TST-011-CreateUser",
+      "id": "TST-001-CreateUser-002",
       "fnRef": "ENDP-001-CreateUser",
       "category": "edge-case",
       "description": "Returns an empty array when no backends are configured.",
@@ -224,7 +222,7 @@
       "name": "Create User"
     },
     {
-      "id": "TST-012-GetUser",
+      "id": "TST-002-GetUser-002",
       "fnRef": "ENDP-002-GetUser",
       "category": "happy-path",
       "description": "Returns the 20 most recent query log entries.",
@@ -249,7 +247,7 @@
       "name": "Get User"
     },
     {
-      "id": "TST-013-ListUsers",
+      "id": "TST-003-ListUsers-002",
       "fnRef": "ENDP-003-ListUsers",
       "category": "edge-case",
       "description": "Returns only entries for the specified backend when backendId filter is provided.",
@@ -271,7 +269,7 @@
       "name": "List Users"
     },
     {
-      "id": "TST-014-UpdateUser",
+      "id": "TST-004-UpdateUser-002",
       "fnRef": "ENDP-004-UpdateUser",
       "category": "happy-path",
       "description": "Returns the query matching the given ID.",
@@ -292,14 +290,13 @@
       "name": "Update User"
     },
     {
-      "id": "TST-015-DeleteUser",
+      "id": "TST-005-DeleteUser-002",
       "fnRef": "ENDP-005-DeleteUser",
       "category": "error-path",
       "description": "Throws NOT_FOUND when no query exists with the given ID.",
       "input": {
         "queryId": "qry_nonexistent"
       },
-      "errorCode": "NOT_FOUND",
       "expectedError": {
         "code": "NOT_FOUND",
         "returnType": "NotFoundError"

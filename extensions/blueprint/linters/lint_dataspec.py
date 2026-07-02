@@ -195,21 +195,7 @@ def _check_pk_naming(spec: dict, result: LayerResult, extra_specs: dict = None) 
                      "for consistency with diagram generators and DBML output.")
 
 
-def _check_primitives(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
-    """Validate that primitives list is non-empty and contains valid names."""
-    raw_primitives = spec.get("primitives", [])
-    # Handle both string list and dict list for primitives
-    primitives = {p if isinstance(p, str) else p.get("id", "") for p in raw_primitives}
-    expected_primitives = {'string', 'number', 'boolean', 'null', 'void'}
-    missing = expected_primitives - primitives
-    if missing:
-        result.add("error", "primitives_missing",
-            f"DataSpec missing expected primitives: {sorted(missing)}",
-            hint="Add missing primitives to the primitives list.")
-    if "any" in primitives:
-        result.add("warning", "primitives_any",
-            "'any' is in the primitives list — this disables type checking.",
-            hint="Consider removing 'any' to enforce stricter type discipline.")
+
 
 
 def _check_entity_visibility(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
@@ -289,7 +275,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     {
         "target": "relationships.from",
         "check": "exists",
-        "inside": "entities.name",
+        "inside": "entities.id",
         "target_label": "Relationship",
         "ref_label": "Entity",
         "category": "rel_from_missing",
@@ -299,7 +285,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     {
         "target": "relationships.to",
         "check": "exists",
-        "inside": "entities.name",
+        "inside": "entities.id",
         "target_label": "Relationship",
         "ref_label": "Entity",
         "category": "rel_to_missing",
@@ -319,7 +305,6 @@ SEMANTIC_RULES: list[SemanticRule] = [
 # ── Misc Checks ───────────────────────────────────────────────────────────────
 
 MISC_CHECKS = [
-    _check_primitives,
     _check_pk_naming,
     _check_duplicate_fields,
     _check_enum_entity_conflict,
