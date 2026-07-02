@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "schemaVersion": "4.0.0",
   "project": "LLMGateway",
-  "goalSpecVersion": "1.0.0",
+  "goalSpecVersion": "v1.0.0",
   "status": "draft",
   "designGoals": [
     {

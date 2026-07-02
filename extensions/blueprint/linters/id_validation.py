@@ -121,13 +121,17 @@ def validate_project_and_version(
             hint=f"Both specs must have identical 'project' values.",
         )
     pinned = spec.get("goalSpecVersion")
-    if pinned and pinned != goal.get("version"):
-        result.add(
-            "error",
-            "version_drift",
-            f"{spec_name}.goalSpecVersion='{pinned}' does not match goalspec.version='{goal.get('version')}'.",
-            hint=f"Update goalSpecVersion after reviewing {spec_name} against the updated GoalSpec.",
-        )
+    if pinned:
+        # Normalize: strip leading 'v' so both sides compare as plain semver
+        pinned_clean = pinned.lstrip("v")
+        goal_version = goal.get("version", "").lstrip("v")
+        if pinned_clean != goal_version:
+            result.add(
+                "error",
+                "version_drift",
+                f"{spec_name}.goalSpecVersion='{pinned}' does not match goalspec.version='{goal.get('version')}'.",
+                hint=f"Update goalSpecVersion after reviewing {spec_name} against the updated GoalSpec.",
+            )
 
 
 def _validate_all_ids(spec: dict, result: LayerResult) -> None:
