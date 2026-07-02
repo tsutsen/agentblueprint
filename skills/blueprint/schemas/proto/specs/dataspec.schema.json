@@ -316,7 +316,9 @@
             "default": false
           },
           "extends": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[A-Z][A-Za-z0-9]*$",
+            "description": "Name of the parent entity this one inherits from. Must match an entity name in this spec."
           },
           "fields": {
             "type": "array",

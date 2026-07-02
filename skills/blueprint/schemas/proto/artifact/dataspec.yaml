@@ -43,6 +43,8 @@ fields:
           default: false
         - name: extends
           type: string
+          pattern: "^[A-Z][A-Za-z0-9]*$"
+          desc: "Name of the parent entity this one inherits from. Must match an entity name in this spec."
         - name: fields
           type: array
           minItems: 1
