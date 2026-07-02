@@ -1,0 +1,22 @@
+# Shared base fields injected into every artifact schema
+
+version:
+  type: string
+  description: "Semver version of this spec document instance."
+  pattern: "^\\d+\\.\\d+\\.\\d+$"
+
+project:
+  type: string
+  description: "Project name. Must match across all specs."
+  minLength: 1
+
+status:
+  type: string
+  description: "Lifecycle status of this spec."
+  enum: [draft, review, confirmed, superseded]
+  default: draft
+
+goalSpecVersion:
+  type: string
+  description: "Version of the GoalSpec this spec was reviewed against."
+  pattern: "^v\\d+\\.\\d+\\.\\d+$"

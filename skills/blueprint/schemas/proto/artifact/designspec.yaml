@@ -1,0 +1,392 @@
+artifact: designspec
+title: DesignSpec
+schemaVersion: "4.0.0"
+description: "User experience, interaction model, and visual design requirements"
+
+namedTypes:
+  - name: iaNode
+    desc: "A node in the information architecture tree."
+    required: [name]
+    fields:
+      - name: name
+        type: string
+        minLength: 1
+        desc: "Label as it appears in navigation."
+      - name: screenRef
+        type: string
+        ref: scr
+        desc: "Screen ID this node navigates to. Required for leaf nodes."
+      - name: children
+        type: array
+        desc: "Child nodes. If present, this is a grouping node."
+        of: { $ref: "iaNode" }
+
+fields:
+  - name: designGoals
+    type: array
+    minItems: 1
+    of:
+      type: object
+      ref: dg
+      required: [goal]
+      fields:
+        - name: goal
+          type: string
+          minLength: 5
+        - name: description
+          type: string
+        - name: rationale
+          type: string
+        - name: reqRefs
+          type: array
+          ref: req
+        - name: glossaryRefs
+          type: array
+          ref: gl
+
+  - name: personas
+    type: array
+    minItems: 1
+    of:
+      type: object
+      ref: prs
+      required: [role, goals, painPoints, technicalSkillLevel]
+      fields:
+        - name: name
+          type: string
+          minLength: 1
+        - name: description
+          type: string
+        - name: role
+          type: string
+          minLength: 1
+        - name: goals
+          type: array
+          minItems: 1
+          of: { type: string, minLength: 3 }
+        - name: painPoints
+          type: array
+          minItems: 1
+          of: { type: string, minLength: 3 }
+        - name: technicalSkillLevel
+          type: enum
+          enum: [non-technical, basic, intermediate, advanced, expert]
+        - name: glossaryRefs
+          type: array
+          ref: gl
+
+  - name: userJourneys
+    type: array
+    minItems: 1
+    of:
+      type: object
+      ref: uj
+      required: [name, personaRef, usRefs, startingState, steps, desiredOutcome]
+      fields:
+        - name: name
+          type: string
+          minLength: 1
+        - name: personaRef
+          type: string
+          ref: prs
+        - name: usRefs
+          type: array
+          ref: us
+        - name: reqRefs
+          type: array
+          ref: req
+        - name: startingState
+          type: string
+          minLength: 5
+        - name: steps
+          type: array
+          minItems: 2
+          of:
+            type: object
+            required: [actor, action]
+            fields:
+              - name: actor
+                type: enum
+                enum: [user, system]
+              - name: action
+                type: string
+                minLength: 3
+              - name: screenRef
+                type: string
+                ref: scr
+              - name: glossaryRefs
+                type: array
+                ref: gl
+        - name: desiredOutcome
+          type: string
+          minLength: 5
+        - name: glossaryRefs
+          type: array
+          ref: gl
+
+  - name: informationArchitecture
+    type: object
+    required: [root]
+    desc: "Navigation structure of the application. Leaf nodes must reference screen IDs."
+    fields:
+      - name: root
+        type: array
+        minItems: 1
+        desc: "Top-level navigation nodes."
+        of: { $ref: "iaNode" }
+      - name: notes
+        type: string
+        desc: "Optional clarifying context for the information architecture."
+      - name: glossaryRefs
+        type: array
+        ref: gl
+      - name: reqRefs
+        type: array
+        ref: req
+      - name: usRefs
+        type: array
+        ref: us
+
+  - name: screenInventory
+    type: array
+    minItems: 1
+    of:
+      type: object
+      ref: scr
+      required: [name, purpose, primaryActions]
+      fields:
+        - name: name
+          type: string
+          minLength: 1
+        - name: description
+          type: string
+        - name: purpose
+          type: string
+          minLength: 10
+        - name: primaryActions
+          type: array
+          minItems: 1
+          of: { type: string, minLength: 2 }
+        - name: inputs
+          type: array
+          of: { type: string }
+        - name: outputs
+          type: array
+          of: { type: string }
+        - name: usRefs
+          type: array
+          ref: us
+        - name: reqRefs
+          type: array
+          ref: req
+        - name: glossaryRefs
+          type: array
+          ref: gl
+
+  - name: screenSpecs
+    type: array
+    minItems: 1
+    of:
+      type: object
+      ref: spc
+      required: [screenRef, layout, components, states]
+      fields:
+        - name: screenRef
+          type: string
+          ref: scr
+        - name: layout
+          type: string
+          minLength: 10
+        - name: wireframe
+          type: string
+        - name: components
+          type: array
+          minItems: 1
+          of:
+            type: object
+            required: [name, purpose]
+            fields:
+              - name: name
+                type: string
+                minLength: 1
+              - name: purpose
+                type: string
+                minLength: 5
+              - name: designSystemRef
+                type: string
+              - name: patternRefs
+                type: array
+                ref: pat
+              - name: glossaryRefs
+                type: array
+                ref: gl
+        - name: states
+          type: array
+          minItems: 1
+          of:
+            type: object
+            required: [name, description]
+            fields:
+              - name: name
+                type: string
+                minLength: 1
+              - name: description
+                type: string
+                minLength: 5
+        - name: interactions
+          type: array
+          of:
+            type: object
+            required: [trigger, response]
+            fields:
+              - name: trigger
+                type: string
+                minLength: 3
+              - name: response
+                type: string
+                minLength: 3
+              - name: patternRef
+                type: string
+                ref: pat
+        - name: glossaryRefs
+          type: array
+          ref: gl
+        - name: componentRefs
+          type: array
+          ref: comp
+
+  - name: interactionPatterns
+    type: array
+    of:
+      type: object
+      ref: pat
+      required: [name, description]
+      fields:
+        - name: name
+          type: string
+          minLength: 1
+        - name: description
+          type: string
+          minLength: 10
+        - name: examples
+          type: array
+          of: { type: string }
+        - name: keyboardShortcuts
+          type: array
+          of:
+            type: object
+            required: [keys, action]
+            fields:
+              - name: keys
+                type: string
+              - name: action
+                type: string
+        - name: usageNotes
+          type: string
+
+  - name: visualDesignRequirements
+    type: array
+    minItems: 1
+    of:
+      type: object
+      ref: vdr
+      required: [description]
+      fields:
+        - name: description
+          type: string
+          minLength: 10
+        - name: rationale
+          type: string
+        - name: reqRefs
+          type: array
+          ref: req
+
+  - name: designSystem
+    type: object
+    required: [components]
+    fields:
+      - name: baseStyle
+        type: string
+      - name: components
+        type: array
+        minItems: 1
+        of:
+          type: object
+          required: [name, purpose]
+          fields:
+            - name: name
+              type: string
+              minLength: 1
+            - name: purpose
+              type: string
+              minLength: 5
+            - name: variants
+              type: array
+              of: { type: string }
+            - name: usageNotes
+              type: string
+
+  - name: accessibilityRequirements
+    type: array
+    minItems: 1
+    of:
+      type: object
+      ref: ar
+      required: [description]
+      fields:
+        - name: description
+          type: string
+          minLength: 10
+        - name: rationale
+          type: string
+        - name: reqRefs
+          type: array
+          ref: req
+
+  - name: uxAcceptanceCriteria
+    type: array
+    minItems: 1
+    of:
+      type: object
+      ref: uxac
+      required: [description]
+      fields:
+        - name: name
+          type: string
+          minLength: 1
+        - name: description
+          type: string
+          minLength: 10
+        - name: refs
+          type: object
+          fields:
+            - name: usRefs
+              type: array
+              ref: us
+            - name: reqRefs
+              type: array
+              ref: req
+        - name: verificationMethod
+          type: string
+
+  - name: designTokens
+    type: array
+    of:
+      type: object
+      ref: dt
+      required: [name, category, value]
+      fields:
+        - name: name
+          type: string
+          minLength: 1
+        - name: category
+          type: enum
+          enum: [color, typography, spacing, border-radius, shadow, opacity, z-index]
+        - name: value
+          type: string
+        - name: description
+          type: string
+          minLength: 10
+        - name: glossaryRefs
+          type: array
+          ref: gl

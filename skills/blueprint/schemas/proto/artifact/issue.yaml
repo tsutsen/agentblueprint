@@ -1,0 +1,74 @@
+artifact: issue
+title: Issue
+schemaVersion: "1.0.0"
+description: "A single vertical slice decomposed from an Epic"
+
+namedTypes:
+  - name: scopeItem
+    desc: "An in-scope or out-of-scope item."
+    required: [description]
+    fields:
+      - name: description
+        type: string
+        minLength: 1
+      - name: glossaryRefs
+        type: array
+        ref: gl
+  - name: acceptanceCriterion
+    desc: "An acceptance criterion for the issue."
+    required: [description]
+    fields:
+      - name: description
+        type: string
+        minLength: 1
+      - name: glossaryRefs
+        type: array
+        ref: gl
+
+fields:
+  - name: id
+    type: string
+    ref: is
+    desc: "Unique issue identifier. Auto-injected for ref'd objects."
+    autoInject: true
+
+  - name: title
+    type: string
+    minLength: 5
+    maxLength: 120
+    desc: "Concise title for this issue."
+
+  - name: type
+    type: enum
+    enum: [AFK, HITL]
+    desc: "Agent-First-Knowledge (AFK) or Human-In-The-Loop (HITL)."
+
+  - name: status
+    type: enum
+    enum: [not_started, in_progress, needs_review, complete]
+    default: not_started
+
+  - name: epic
+    type: string
+    ref: ep
+    desc: "Parent epic ID."
+
+  - name: blocked_by
+    type: array
+    ref: is
+
+  - name: milestone
+    type: string
+    ref: mil
+
+  - name: inScope
+    type: array
+    of: { $ref: "scopeItem" }
+
+  - name: outOfScope
+    type: array
+    of: { $ref: "scopeItem" }
+
+  - name: acceptanceCriteria
+    type: array
+    of: { $ref: "acceptanceCriterion" }

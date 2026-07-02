@@ -1,0 +1,532 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "archspec.schema.json",
+  "title": "ArchitectureSpec",
+  "description": "Structural specification of the system: components, responsibilities, data flow, and constraints. Version 2.0.0.",
+  "type": "object",
+  "required": [
+    "components",
+    "constraints",
+    "dataFlow",
+    "overview",
+    "project",
+    "schemaVersion",
+    "version"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier.",
+      "x_idPattern": "gl"
+    },
+    "reqId": {
+      "type": "string",
+      "description": "Functional requirement identifier.",
+      "x_idPattern": "req"
+    },
+    "nfrId": {
+      "type": "string",
+      "description": "Non-functional requirement identifier.",
+      "x_idPattern": "nfr"
+    },
+    "scId": {
+      "type": "string",
+      "description": "Success criterion identifier.",
+      "x_idPattern": "sc"
+    },
+    "usId": {
+      "type": "string",
+      "description": "User story identifier.",
+      "x_idPattern": "us"
+    },
+    "ngId": {
+      "type": "string",
+      "description": "Non-goal identifier.",
+      "x_idPattern": "ng"
+    },
+    "dgId": {
+      "type": "string",
+      "description": "Design goal identifier.",
+      "x_idPattern": "dg"
+    },
+    "prsId": {
+      "type": "string",
+      "description": "Persona identifier.",
+      "x_idPattern": "prs"
+    },
+    "ujId": {
+      "type": "string",
+      "description": "User journey identifier.",
+      "x_idPattern": "uj"
+    },
+    "scrId": {
+      "type": "string",
+      "description": "Screen identifier.",
+      "x_idPattern": "scr"
+    },
+    "spcId": {
+      "type": "string",
+      "description": "Screen spec identifier.",
+      "x_idPattern": "spc"
+    },
+    "patId": {
+      "type": "string",
+      "description": "Interaction pattern identifier.",
+      "x_idPattern": "pat"
+    },
+    "vdrId": {
+      "type": "string",
+      "description": "Visual design requirement identifier.",
+      "x_idPattern": "vdr"
+    },
+    "uxacId": {
+      "type": "string",
+      "description": "UX acceptance criterion identifier.",
+      "x_idPattern": "uxac"
+    },
+    "dtId": {
+      "type": "string",
+      "description": "Design token identifier.",
+      "x_idPattern": "dt"
+    },
+    "compId": {
+      "type": "string",
+      "description": "Component identifier.",
+      "x_idPattern": "comp"
+    },
+    "conId": {
+      "type": "string",
+      "description": "Constraint identifier.",
+      "x_idPattern": "con"
+    },
+    "flwId": {
+      "type": "string",
+      "description": "Data flow identifier.",
+      "x_idPattern": "flw"
+    },
+    "entId": {
+      "type": "string",
+      "description": "Entity identifier.",
+      "x_idPattern": "ent"
+    },
+    "numId": {
+      "type": "string",
+      "description": "Enum identifier.",
+      "x_idPattern": "num"
+    },
+    "primId": {
+      "type": "string",
+      "description": "Primitive identifier.",
+      "x_idPattern": "prim"
+    },
+    "relId": {
+      "type": "string",
+      "description": "Relationship identifier.",
+      "x_idPattern": "rel"
+    },
+    "FLDId": {
+      "type": "string",
+      "description": "Entity field identifier.",
+      "x_idPattern": "FLD"
+    },
+    "FUNCId": {
+      "type": "string",
+      "description": "Entity method identifier.",
+      "x_idPattern": "FUNC"
+    },
+    "fnId": {
+      "type": "string",
+      "description": "Function identifier.",
+      "x_idPattern": "fn"
+    },
+    "tstId": {
+      "type": "string",
+      "description": "Test case identifier.",
+      "x_idPattern": "tst"
+    },
+    "fcId": {
+      "type": "string",
+      "description": "Function coverage identifier.",
+      "x_idPattern": "fc"
+    },
+    "epId": {
+      "type": "string",
+      "description": "Epic identifier.",
+      "x_idPattern": "ep"
+    },
+    "isId": {
+      "type": "string",
+      "description": "Issue identifier.",
+      "x_idPattern": "is"
+    },
+    "siId": {
+      "type": "string",
+      "description": "Sub-issue identifier.",
+      "x_idPattern": "si"
+    },
+    "milId": {
+      "type": "string",
+      "description": "Milestone identifier.",
+      "x_idPattern": "mil"
+    }
+  },
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Semver version of this spec document instance.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "project": {
+      "type": "string",
+      "description": "Project name. Must match across all specs.",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "description": "Lifecycle status of this spec.",
+      "enum": [
+        "draft",
+        "review",
+        "confirmed",
+        "superseded"
+      ],
+      "default": "draft"
+    },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the ArchitectureSpec schema this document conforms to. Must be '2.0.0'.",
+      "const": "2.0.0"
+    },
+    "overview": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 30
+        },
+        "subsystems": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "purpose": {
+                "type": "string",
+                "minLength": 5
+              },
+              "componentRefs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/compId"
+                },
+                "description": "Component IDs."
+              }
+            },
+            "required": [
+              "name",
+              "purpose"
+            ]
+          }
+        },
+        "glossaryRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/glId"
+          },
+          "description": "Glossary term IDs.",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "subsystems",
+        "summary"
+      ]
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/compId",
+            "description": "Unique identifier for this comp.",
+            "x_idPattern": "comp"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable comp name."
+          },
+          "description": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 10
+          },
+          "responsibilities": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 5
+            }
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/compId"
+            },
+            "description": "Component IDs."
+          },
+          "reqRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            },
+            "description": "Functional requirement IDs."
+          },
+          "nfrRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/nfrId"
+            },
+            "description": "Non-functional requirement IDs."
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "external",
+              "internal"
+            ],
+            "default": "internal"
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/glId"
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
+          },
+          "notes": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "review",
+              "confirmed",
+              "implemented",
+              "deprecated"
+            ]
+          },
+          "constraintRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/conId"
+            },
+            "description": "Constraint IDs."
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "name",
+          "purpose",
+          "responsibilities"
+        ]
+      }
+    },
+    "dataModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dataSpecRef": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "dataSpecRef"
+      ]
+    },
+    "apiContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "apiSpecRef": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authStrategy": {
+          "type": "string",
+          "minLength": 10
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": []
+    },
+    "dataFlow": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/flwId",
+            "description": "Unique identifier for this flw.",
+            "x_idPattern": "flw"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable flw name."
+          },
+          "description": {
+            "type": "string"
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/glId"
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
+          },
+          "reqRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            },
+            "description": "Functional requirement IDs."
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "componentRef": {
+                  "$ref": "#/definitions/compId",
+                  "description": "Component"
+                },
+                "action": {
+                  "type": "string",
+                  "minLength": 5
+                },
+                "dataRef": {
+                  "type": "string"
+                },
+                "notes": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action",
+                "componentRef"
+              ]
+            }
+          },
+          "nfrRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/nfrId"
+            },
+            "description": "Non-functional requirement IDs."
+          },
+          "componentRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/compId"
+            },
+            "description": "Component IDs."
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "name",
+          "steps"
+        ]
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/conId",
+            "description": "Unique identifier for this con.",
+            "x_idPattern": "con"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable con name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this con.",
+            "minLength": 10
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/glId"
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
+          },
+          "nfrRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/nfrId"
+            },
+            "description": "Non-functional requirement IDs."
+          },
+          "reqRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            },
+            "description": "Functional requirement IDs."
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "name"
+        ]
+      }
+    }
+  }
+}

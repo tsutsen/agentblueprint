@@ -1,0 +1,512 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "dataspec.schema.json",
+  "title": "DataSpec",
+  "description": "Structural specification of all entities, types, and relationships. Version 1.0.0.",
+  "type": "object",
+  "required": [
+    "entities",
+    "enums",
+    "primitives",
+    "project",
+    "relationships",
+    "schemaVersion",
+    "version"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier.",
+      "x_idPattern": "gl"
+    },
+    "reqId": {
+      "type": "string",
+      "description": "Functional requirement identifier.",
+      "x_idPattern": "req"
+    },
+    "nfrId": {
+      "type": "string",
+      "description": "Non-functional requirement identifier.",
+      "x_idPattern": "nfr"
+    },
+    "scId": {
+      "type": "string",
+      "description": "Success criterion identifier.",
+      "x_idPattern": "sc"
+    },
+    "usId": {
+      "type": "string",
+      "description": "User story identifier.",
+      "x_idPattern": "us"
+    },
+    "ngId": {
+      "type": "string",
+      "description": "Non-goal identifier.",
+      "x_idPattern": "ng"
+    },
+    "dgId": {
+      "type": "string",
+      "description": "Design goal identifier.",
+      "x_idPattern": "dg"
+    },
+    "prsId": {
+      "type": "string",
+      "description": "Persona identifier.",
+      "x_idPattern": "prs"
+    },
+    "ujId": {
+      "type": "string",
+      "description": "User journey identifier.",
+      "x_idPattern": "uj"
+    },
+    "scrId": {
+      "type": "string",
+      "description": "Screen identifier.",
+      "x_idPattern": "scr"
+    },
+    "spcId": {
+      "type": "string",
+      "description": "Screen spec identifier.",
+      "x_idPattern": "spc"
+    },
+    "patId": {
+      "type": "string",
+      "description": "Interaction pattern identifier.",
+      "x_idPattern": "pat"
+    },
+    "vdrId": {
+      "type": "string",
+      "description": "Visual design requirement identifier.",
+      "x_idPattern": "vdr"
+    },
+    "uxacId": {
+      "type": "string",
+      "description": "UX acceptance criterion identifier.",
+      "x_idPattern": "uxac"
+    },
+    "dtId": {
+      "type": "string",
+      "description": "Design token identifier.",
+      "x_idPattern": "dt"
+    },
+    "compId": {
+      "type": "string",
+      "description": "Component identifier.",
+      "x_idPattern": "comp"
+    },
+    "conId": {
+      "type": "string",
+      "description": "Constraint identifier.",
+      "x_idPattern": "con"
+    },
+    "flwId": {
+      "type": "string",
+      "description": "Data flow identifier.",
+      "x_idPattern": "flw"
+    },
+    "entId": {
+      "type": "string",
+      "description": "Entity identifier.",
+      "x_idPattern": "ent"
+    },
+    "numId": {
+      "type": "string",
+      "description": "Enum identifier.",
+      "x_idPattern": "num"
+    },
+    "primId": {
+      "type": "string",
+      "description": "Primitive identifier.",
+      "x_idPattern": "prim"
+    },
+    "relId": {
+      "type": "string",
+      "description": "Relationship identifier.",
+      "x_idPattern": "rel"
+    },
+    "FLDId": {
+      "type": "string",
+      "description": "Entity field identifier.",
+      "x_idPattern": "FLD"
+    },
+    "FUNCId": {
+      "type": "string",
+      "description": "Entity method identifier.",
+      "x_idPattern": "FUNC"
+    },
+    "fnId": {
+      "type": "string",
+      "description": "Function identifier.",
+      "x_idPattern": "fn"
+    },
+    "tstId": {
+      "type": "string",
+      "description": "Test case identifier.",
+      "x_idPattern": "tst"
+    },
+    "fcId": {
+      "type": "string",
+      "description": "Function coverage identifier.",
+      "x_idPattern": "fc"
+    },
+    "epId": {
+      "type": "string",
+      "description": "Epic identifier.",
+      "x_idPattern": "ep"
+    },
+    "isId": {
+      "type": "string",
+      "description": "Issue identifier.",
+      "x_idPattern": "is"
+    },
+    "siId": {
+      "type": "string",
+      "description": "Sub-issue identifier.",
+      "x_idPattern": "si"
+    },
+    "milId": {
+      "type": "string",
+      "description": "Milestone identifier.",
+      "x_idPattern": "mil"
+    }
+  },
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Semver version of this spec document instance.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "project": {
+      "type": "string",
+      "description": "Project name. Must match across all specs.",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "description": "Lifecycle status of this spec.",
+      "enum": [
+        "draft",
+        "review",
+        "confirmed",
+        "superseded"
+      ],
+      "default": "draft"
+    },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the DataSpec schema this document conforms to. Must be '1.0.0'.",
+      "const": "1.0.0"
+    },
+    "primitives": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/primId",
+            "description": "Unique identifier for this prim.",
+            "x_idPattern": "prim"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable prim name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this prim."
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "name"
+        ]
+      }
+    },
+    "enums": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/numId",
+            "description": "Unique identifier for this num.",
+            "x_idPattern": "num"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable num name."
+          },
+          "description": {
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "name",
+          "values"
+        ]
+      }
+    },
+    "entities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/entId",
+            "description": "Unique identifier for this ent.",
+            "x_idPattern": "ent"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable ent name."
+          },
+          "description": {
+            "type": "string"
+          },
+          "abstract": {
+            "type": "boolean",
+            "default": false
+          },
+          "extends": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "$ref": "#/definitions/FLDId",
+                  "description": "Unique identifier for this FLD.",
+                  "x_idPattern": "FLD"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Human-readable FLD name."
+                },
+                "description": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "example": {
+                  "description": "Any value."
+                },
+                "primaryKey": {
+                  "type": "boolean",
+                  "default": false
+                }
+              },
+              "required": [
+                "description",
+                "id",
+                "name",
+                "type"
+              ]
+            }
+          },
+          "methods": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "$ref": "#/definitions/FUNCId",
+                  "description": "Unique identifier for this FUNC.",
+                  "x_idPattern": "FUNC"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "apiRef": {
+                  "$ref": "#/definitions/fnId",
+                  "description": "Function"
+                }
+              },
+              "required": [
+                "apiRef",
+                "description",
+                "id",
+                "name"
+              ]
+            }
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "public",
+              "internal"
+            ],
+            "default": "public"
+          },
+          "componentRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/compId"
+            },
+            "description": "Component IDs."
+          },
+          "reqRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            },
+            "description": "Functional requirement IDs."
+          },
+          "nfrRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/nfrId"
+            },
+            "description": "Non-functional requirement IDs."
+          },
+          "constraintRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/conId"
+            },
+            "description": "Constraint IDs."
+          }
+        },
+        "required": [
+          "description",
+          "fields",
+          "id",
+          "name"
+        ]
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/relId",
+            "description": "Unique identifier for this rel.",
+            "x_idPattern": "rel"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable rel name."
+          },
+          "description": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "association",
+              "composition",
+              "aggregation",
+              "dependency",
+              "realization"
+            ]
+          },
+          "cardinality": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "fromLabel": {
+                "type": "string",
+                "enum": [
+                  "1",
+                  "0..1",
+                  "1..*",
+                  "*",
+                  "0..*"
+                ]
+              },
+              "toLabel": {
+                "type": "string",
+                "enum": [
+                  "1",
+                  "0..1",
+                  "1..*",
+                  "*",
+                  "0..*"
+                ]
+              }
+            },
+            "required": []
+          },
+          "label": {
+            "type": "string"
+          },
+          "reqRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            },
+            "description": "Functional requirement IDs."
+          }
+        },
+        "required": [
+          "description",
+          "from",
+          "id",
+          "name",
+          "to",
+          "type"
+        ]
+      }
+    }
+  }
+}

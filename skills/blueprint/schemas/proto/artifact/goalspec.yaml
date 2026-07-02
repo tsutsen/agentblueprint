@@ -1,0 +1,212 @@
+artifact: goalspec
+title: GoalSpec
+schemaVersion: "4.0.0"
+description: "Root artifact capturing the why and what of a project"
+
+customDefinitions:
+  - name: planguageLevel
+    type: string
+    minLength: 1
+    desc: "A Planguage threshold value or TBD marker. Use 'TBD' prefix when value is not yet known."
+
+fields:
+  - name: objective
+    type: object
+    required: [statement, for, problem]
+    fields:
+      - name: statement
+        type: string
+        minLength: 20
+        desc: "One or two sentences describing the system."
+      - name: for
+        type: string
+        minLength: 1
+        desc: "Primary intended user or user group."
+      - name: problem
+        type: string
+        minLength: 10
+        desc: "The specific problem this solves."
+      - name: confirmedAfterCompletion
+        type: boolean
+        default: false
+        desc: "True when the objective has been re-read and confirmed after all other sections were completed."
+      - name: glossaryRefs
+        type: array
+        ref: gl
+
+  - name: functionalRequirements
+    type: array
+    minItems: 1
+    desc: "Observable capabilities the system must provide."
+    of:
+      type: object
+      ref: req
+      required: [description, actor]
+      fields:
+        - name: name
+          type: string
+          minLength: 1
+          desc: "Short descriptive name summarizing this requirement."
+        - name: description
+          type: string
+          minLength: 10
+          desc: "Observable behaviour in plain language."
+        - name: actor
+          type: string
+          minLength: 1
+          desc: "The specific role that owns this requirement."
+        - name: status
+          type: enum
+          enum: [draft, review, confirmed, implemented, deprecated]
+          default: draft
+        - name: priority
+          type: enum
+          enum: [P0, P1, P2, P3]
+          default: P2
+        - name: notes
+          type: string
+          desc: "Optional clarifying context."
+        - name: scRefs
+          type: array
+          ref: sc
+        - name: glossaryRefs
+          type: array
+          ref: gl
+        - name: reqRefs
+          type: array
+          ref: req
+        - name: nfrRefs
+          type: array
+          ref: nfr
+
+  - name: nonFunctionalRequirements
+    type: array
+    desc: "Quality attributes in Planguage format."
+    of:
+      type: object
+      ref: nfr
+      required: [category, scale, meter, must]
+      fields:
+        - name: name
+          type: string
+          minLength: 1
+        - name: description
+          type: string
+        - name: category
+          type: enum
+          enum: [Performance, Reliability, Security, Scalability, Maintainability, Portability]
+        - name: scale
+          type: string
+          minLength: 5
+          desc: "What is measured and in what unit."
+        - name: meter
+          type: string
+          minLength: 5
+          desc: "How it will be measured."
+        - name: must
+          $ref: "planguageLevel"
+          desc: "Minimum acceptable threshold. Below this the system fails."
+        - name: plan
+          $ref: "planguageLevel"
+          desc: "Realistic target the team is aiming for. Use 'TBD' if unknown."
+        - name: wish
+          $ref: "planguageLevel"
+          desc: "Ideal outcome if conditions allow. Use 'TBD' if unknown."
+        - name: notes
+          type: string
+        - name: glossaryRefs
+          type: array
+          ref: gl
+
+  - name: userStories
+    type: array
+    minItems: 1
+    desc: "Desired outcomes from user perspectives."
+    of:
+      type: object
+      ref: us
+      required: [actor, capability, outcome, reqRefs]
+      fields:
+        - name: name
+          type: string
+          minLength: 1
+        - name: actor
+          type: string
+          minLength: 1
+        - name: capability
+          type: string
+          minLength: 5
+        - name: outcome
+          type: string
+          minLength: 5
+        - name: description
+          type: string
+          desc: "Plain-language description. May restate capability+outcome."
+        - name: reqRefs
+          type: array
+          ref: req
+        - name: notes
+          type: string
+        - name: glossaryRefs
+          type: array
+          ref: gl
+
+  - name: successCriteria
+    type: array
+    minItems: 1
+    desc: "Binary, independently verifiable conditions."
+    of:
+      type: object
+      ref: sc
+      required: [description, refs]
+      fields:
+        - name: name
+          type: string
+          minLength: 1
+        - name: description
+          type: string
+          minLength: 10
+        - name: refs
+          type: object
+          fields:
+            - name: reqRefs
+              type: array
+              ref: req
+            - name: nfrRefs
+              type: array
+              ref: nfr
+        - name: verificationMethod
+          type: string
+          desc: "How this criterion will be verified."
+        - name: notes
+          type: string
+        - name: glossaryRefs
+          type: array
+          ref: gl
+
+  - name: nonGoals
+    type: array
+    minItems: 1
+    desc: "Explicit capabilities this project will NOT attempt to solve."
+    of:
+      type: object
+      ref: ng
+      required: [capability, reason]
+      fields:
+        - name: capability
+          type: string
+          minLength: 5
+        - name: reason
+          type: string
+          minLength: 5
+        - name: name
+          type: string
+          minLength: 1
+          desc: "Short descriptive name summarizing this non-goal."
+        - name: description
+          type: string
+          minLength: 10
+          desc: "Plain-language description of why this capability is excluded."
+        - name: glossaryRefs
+          type: array
+          ref: gl

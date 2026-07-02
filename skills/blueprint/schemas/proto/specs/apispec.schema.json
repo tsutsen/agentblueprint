@@ -1,0 +1,414 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "apispec.schema.json",
+  "title": "ApiSpec",
+  "description": "Interface specification for all functions exposed by a module. Version 2.0.0.",
+  "type": "object",
+  "required": [
+    "functions",
+    "module",
+    "project",
+    "schemaVersion",
+    "version"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier.",
+      "x_idPattern": "gl"
+    },
+    "reqId": {
+      "type": "string",
+      "description": "Functional requirement identifier.",
+      "x_idPattern": "req"
+    },
+    "nfrId": {
+      "type": "string",
+      "description": "Non-functional requirement identifier.",
+      "x_idPattern": "nfr"
+    },
+    "scId": {
+      "type": "string",
+      "description": "Success criterion identifier.",
+      "x_idPattern": "sc"
+    },
+    "usId": {
+      "type": "string",
+      "description": "User story identifier.",
+      "x_idPattern": "us"
+    },
+    "ngId": {
+      "type": "string",
+      "description": "Non-goal identifier.",
+      "x_idPattern": "ng"
+    },
+    "dgId": {
+      "type": "string",
+      "description": "Design goal identifier.",
+      "x_idPattern": "dg"
+    },
+    "prsId": {
+      "type": "string",
+      "description": "Persona identifier.",
+      "x_idPattern": "prs"
+    },
+    "ujId": {
+      "type": "string",
+      "description": "User journey identifier.",
+      "x_idPattern": "uj"
+    },
+    "scrId": {
+      "type": "string",
+      "description": "Screen identifier.",
+      "x_idPattern": "scr"
+    },
+    "spcId": {
+      "type": "string",
+      "description": "Screen spec identifier.",
+      "x_idPattern": "spc"
+    },
+    "patId": {
+      "type": "string",
+      "description": "Interaction pattern identifier.",
+      "x_idPattern": "pat"
+    },
+    "vdrId": {
+      "type": "string",
+      "description": "Visual design requirement identifier.",
+      "x_idPattern": "vdr"
+    },
+    "uxacId": {
+      "type": "string",
+      "description": "UX acceptance criterion identifier.",
+      "x_idPattern": "uxac"
+    },
+    "dtId": {
+      "type": "string",
+      "description": "Design token identifier.",
+      "x_idPattern": "dt"
+    },
+    "compId": {
+      "type": "string",
+      "description": "Component identifier.",
+      "x_idPattern": "comp"
+    },
+    "conId": {
+      "type": "string",
+      "description": "Constraint identifier.",
+      "x_idPattern": "con"
+    },
+    "flwId": {
+      "type": "string",
+      "description": "Data flow identifier.",
+      "x_idPattern": "flw"
+    },
+    "entId": {
+      "type": "string",
+      "description": "Entity identifier.",
+      "x_idPattern": "ent"
+    },
+    "numId": {
+      "type": "string",
+      "description": "Enum identifier.",
+      "x_idPattern": "num"
+    },
+    "primId": {
+      "type": "string",
+      "description": "Primitive identifier.",
+      "x_idPattern": "prim"
+    },
+    "relId": {
+      "type": "string",
+      "description": "Relationship identifier.",
+      "x_idPattern": "rel"
+    },
+    "FLDId": {
+      "type": "string",
+      "description": "Entity field identifier.",
+      "x_idPattern": "FLD"
+    },
+    "FUNCId": {
+      "type": "string",
+      "description": "Entity method identifier.",
+      "x_idPattern": "FUNC"
+    },
+    "fnId": {
+      "type": "string",
+      "description": "Function identifier.",
+      "x_idPattern": "fn"
+    },
+    "tstId": {
+      "type": "string",
+      "description": "Test case identifier.",
+      "x_idPattern": "tst"
+    },
+    "fcId": {
+      "type": "string",
+      "description": "Function coverage identifier.",
+      "x_idPattern": "fc"
+    },
+    "epId": {
+      "type": "string",
+      "description": "Epic identifier.",
+      "x_idPattern": "ep"
+    },
+    "isId": {
+      "type": "string",
+      "description": "Issue identifier.",
+      "x_idPattern": "is"
+    },
+    "siId": {
+      "type": "string",
+      "description": "Sub-issue identifier.",
+      "x_idPattern": "si"
+    },
+    "milId": {
+      "type": "string",
+      "description": "Milestone identifier.",
+      "x_idPattern": "mil"
+    },
+    "typeRef": {
+      "type": "string",
+      "description": "A type name: primitive, entity name, enum name, or array thereof (e.g. 'string', 'User', 'OrderStatus', 'OrderItem[]'). Use 'void' for functions that return nothing."
+    },
+    "parameterObject": {
+      "type": "object",
+      "description": "An input parameter definition.",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$",
+          "description": "camelCase parameter name."
+        },
+        "type": {
+          "$ref": "#/definitions/typeRef",
+          "description": "The type of this parameter. Must resolve to a primitive, entity, or enum in DataSpec."
+        },
+        "required": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this parameter is required. Default: true."
+        },
+        "description": {
+          "type": "string"
+        },
+        "example": {
+          "description": "Any value."
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ]
+    },
+    "errorCondition": {
+      "type": "object",
+      "description": "An error condition definition.",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "description": "Machine-readable error code, e.g. 'NOT_FOUND', 'UNAUTHORIZED'."
+        },
+        "condition": {
+          "type": "string",
+          "description": "Human-readable description of when this error is thrown."
+        },
+        "returnType": {
+          "type": "string",
+          "description": "What the caller receives: exception class name, HTTP status, or error shape."
+        }
+      },
+      "required": [
+        "code",
+        "condition"
+      ]
+    }
+  },
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Semver version of this spec document instance.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "project": {
+      "type": "string",
+      "description": "Project name. Must match across all specs.",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "description": "Lifecycle status of this spec.",
+      "enum": [
+        "draft",
+        "review",
+        "confirmed",
+        "superseded"
+      ],
+      "default": "draft"
+    },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the ApiSpec schema this document conforms to. Must be '2.0.0'.",
+      "const": "2.0.0"
+    },
+    "module": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The module this API spec belongs to."
+    },
+    "functions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/fnId",
+            "description": "Unique identifier for this fn.",
+            "x_idPattern": "fn"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "entity": {
+            "type": "string"
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/parameterObject"
+            }
+          },
+          "output": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "example": {
+                "description": "Any value."
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/errorCondition"
+            }
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "public",
+              "internal"
+            ],
+            "default": "public"
+          },
+          "pure": {
+            "type": "boolean",
+            "default": false
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "review",
+              "confirmed",
+              "implemented",
+              "deprecated"
+            ],
+            "default": "draft"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "P0",
+              "P1",
+              "P2",
+              "P3"
+            ],
+            "default": "P2"
+          },
+          "reqRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            },
+            "description": "Functional requirement IDs."
+          },
+          "nfrRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/nfrId"
+            },
+            "description": "Non-functional requirement IDs."
+          },
+          "screenRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/scrId"
+            },
+            "description": "Screen IDs."
+          },
+          "ujRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/ujId"
+            },
+            "description": "User journey IDs."
+          },
+          "componentRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/compId"
+            },
+            "description": "Component IDs."
+          },
+          "constraintRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/conId"
+            },
+            "description": "Constraint IDs."
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "inputs",
+          "name",
+          "output"
+        ]
+      }
+    }
+  }
+}

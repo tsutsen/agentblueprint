@@ -1,0 +1,119 @@
+artifact: apispec
+title: ApiSpec
+schemaVersion: "2.0.0"
+description: "Interface specification for all functions exposed by a module"
+
+customDefinitions:
+  - name: typeRef
+    type: string
+    desc: "A type name: primitive, entity name, enum name, or array thereof (e.g. 'string', 'User', 'OrderStatus', 'OrderItem[]'). Use 'void' for functions that return nothing."
+
+namedTypes:
+  - name: parameterObject
+    desc: "An input parameter definition."
+    required: [name, type]
+    fields:
+      - name: name
+        type: string
+        pattern: "^[a-z][A-Za-z0-9]*$"
+        desc: "camelCase parameter name."
+      - name: type
+        $ref: "typeRef"
+        desc: "The type of this parameter. Must resolve to a primitive, entity, or enum in DataSpec."
+      - name: required
+        type: boolean
+        default: true
+        desc: "Whether this parameter is required. Default: true."
+      - name: description
+        type: string
+      - name: example
+        type: any
+  - name: errorCondition
+    desc: "An error condition definition."
+    required: [code, condition]
+    fields:
+      - name: code
+        type: string
+        pattern: "^[A-Z][A-Z0-9_]*$"
+        desc: "Machine-readable error code, e.g. 'NOT_FOUND', 'UNAUTHORIZED'."
+      - name: condition
+        type: string
+        desc: "Human-readable description of when this error is thrown."
+      - name: returnType
+        type: string
+        desc: "What the caller receives: exception class name, HTTP status, or error shape."
+
+fields:
+  - name: module
+    type: string
+    desc: "The module this API spec belongs to."
+    minLength: 1
+
+  - name: functions
+    type: array
+    minItems: 1
+    of:
+      type: object
+      ref: fn
+      required: [name, inputs, output]
+      fields:
+        - name: name
+          type: string
+        - name: description
+          type: string
+        - name: entity
+          type: string
+        - name: inputs
+          type: array
+          of: { $ref: "parameterObject" }
+        - name: output
+          type: object
+          required: [type]
+          fields:
+            - name: type
+              type: string
+            - name: description
+              type: string
+            - name: example
+              type: any
+            - name: name
+              type: string
+        - name: errors
+          type: array
+          of: { $ref: "errorCondition" }
+        - name: visibility
+          type: enum
+          enum: [public, internal]
+          default: public
+        - name: pure
+          type: boolean
+          default: false
+        - name: tags
+          type: array
+          of: { type: string }
+        - name: status
+          type: enum
+          enum: [draft, review, confirmed, implemented, deprecated]
+          default: draft
+        - name: priority
+          type: enum
+          enum: [P0, P1, P2, P3]
+          default: P2
+        - name: reqRefs
+          type: array
+          ref: req
+        - name: nfrRefs
+          type: array
+          ref: nfr
+        - name: screenRefs
+          type: array
+          ref: scr
+        - name: ujRefs
+          type: array
+          ref: uj
+        - name: componentRefs
+          type: array
+          ref: comp
+        - name: constraintRefs
+          type: array
+          ref: con

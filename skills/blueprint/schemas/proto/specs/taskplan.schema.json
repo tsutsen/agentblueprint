@@ -1,0 +1,374 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "taskplan.schema.json",
+  "title": "TaskPlan",
+  "description": "Sequenced set of epics and milestones. Version 1.0.0.",
+  "type": "object",
+  "required": [
+    "epics",
+    "milestones",
+    "project",
+    "schemaVersion",
+    "version"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier.",
+      "x_idPattern": "gl"
+    },
+    "reqId": {
+      "type": "string",
+      "description": "Functional requirement identifier.",
+      "x_idPattern": "req"
+    },
+    "nfrId": {
+      "type": "string",
+      "description": "Non-functional requirement identifier.",
+      "x_idPattern": "nfr"
+    },
+    "scId": {
+      "type": "string",
+      "description": "Success criterion identifier.",
+      "x_idPattern": "sc"
+    },
+    "usId": {
+      "type": "string",
+      "description": "User story identifier.",
+      "x_idPattern": "us"
+    },
+    "ngId": {
+      "type": "string",
+      "description": "Non-goal identifier.",
+      "x_idPattern": "ng"
+    },
+    "dgId": {
+      "type": "string",
+      "description": "Design goal identifier.",
+      "x_idPattern": "dg"
+    },
+    "prsId": {
+      "type": "string",
+      "description": "Persona identifier.",
+      "x_idPattern": "prs"
+    },
+    "ujId": {
+      "type": "string",
+      "description": "User journey identifier.",
+      "x_idPattern": "uj"
+    },
+    "scrId": {
+      "type": "string",
+      "description": "Screen identifier.",
+      "x_idPattern": "scr"
+    },
+    "spcId": {
+      "type": "string",
+      "description": "Screen spec identifier.",
+      "x_idPattern": "spc"
+    },
+    "patId": {
+      "type": "string",
+      "description": "Interaction pattern identifier.",
+      "x_idPattern": "pat"
+    },
+    "vdrId": {
+      "type": "string",
+      "description": "Visual design requirement identifier.",
+      "x_idPattern": "vdr"
+    },
+    "uxacId": {
+      "type": "string",
+      "description": "UX acceptance criterion identifier.",
+      "x_idPattern": "uxac"
+    },
+    "dtId": {
+      "type": "string",
+      "description": "Design token identifier.",
+      "x_idPattern": "dt"
+    },
+    "compId": {
+      "type": "string",
+      "description": "Component identifier.",
+      "x_idPattern": "comp"
+    },
+    "conId": {
+      "type": "string",
+      "description": "Constraint identifier.",
+      "x_idPattern": "con"
+    },
+    "flwId": {
+      "type": "string",
+      "description": "Data flow identifier.",
+      "x_idPattern": "flw"
+    },
+    "entId": {
+      "type": "string",
+      "description": "Entity identifier.",
+      "x_idPattern": "ent"
+    },
+    "numId": {
+      "type": "string",
+      "description": "Enum identifier.",
+      "x_idPattern": "num"
+    },
+    "primId": {
+      "type": "string",
+      "description": "Primitive identifier.",
+      "x_idPattern": "prim"
+    },
+    "relId": {
+      "type": "string",
+      "description": "Relationship identifier.",
+      "x_idPattern": "rel"
+    },
+    "FLDId": {
+      "type": "string",
+      "description": "Entity field identifier.",
+      "x_idPattern": "FLD"
+    },
+    "FUNCId": {
+      "type": "string",
+      "description": "Entity method identifier.",
+      "x_idPattern": "FUNC"
+    },
+    "fnId": {
+      "type": "string",
+      "description": "Function identifier.",
+      "x_idPattern": "fn"
+    },
+    "tstId": {
+      "type": "string",
+      "description": "Test case identifier.",
+      "x_idPattern": "tst"
+    },
+    "fcId": {
+      "type": "string",
+      "description": "Function coverage identifier.",
+      "x_idPattern": "fc"
+    },
+    "epId": {
+      "type": "string",
+      "description": "Epic identifier.",
+      "x_idPattern": "ep"
+    },
+    "isId": {
+      "type": "string",
+      "description": "Issue identifier.",
+      "x_idPattern": "is"
+    },
+    "siId": {
+      "type": "string",
+      "description": "Sub-issue identifier.",
+      "x_idPattern": "si"
+    },
+    "milId": {
+      "type": "string",
+      "description": "Milestone identifier.",
+      "x_idPattern": "mil"
+    }
+  },
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Semver version of this spec document instance.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "project": {
+      "type": "string",
+      "description": "Project name. Must match across all specs.",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "description": "Lifecycle status of this spec.",
+      "enum": [
+        "draft",
+        "review",
+        "confirmed",
+        "superseded"
+      ],
+      "default": "draft"
+    },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the TaskPlan schema this document conforms to. Must be '1.0.0'.",
+      "const": "1.0.0"
+    },
+    "milestones": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/milId",
+            "description": "Unique identifier for this mil.",
+            "x_idPattern": "mil"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 5,
+            "description": "Human-readable mil name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this mil."
+          },
+          "outcome": {
+            "type": "string",
+            "minLength": 10
+          },
+          "epics": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/definitions/epId"
+            },
+            "description": "Epic IDs."
+          }
+        },
+        "required": [
+          "description",
+          "epics",
+          "id",
+          "name",
+          "outcome"
+        ]
+      }
+    },
+    "epics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/epId",
+            "description": "Unique identifier for this ep.",
+            "x_idPattern": "ep"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable ep name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this ep."
+          },
+          "title": {
+            "type": "string",
+            "minLength": 5
+          },
+          "milestone": {
+            "$ref": "#/definitions/milId",
+            "description": "Milestone"
+          },
+          "requirements": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/definitions/reqId"
+            },
+            "description": "Functional requirement IDs."
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 10
+          },
+          "objective": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "inScope": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 5
+                }
+              },
+              "outOfScope": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 5
+                }
+              }
+            },
+            "required": []
+          },
+          "acceptanceCriteria": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 10
+            }
+          },
+          "specDependencies": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "blockedBy": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/epId"
+                },
+                "description": "Epic IDs."
+              },
+              "blocks": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/epId"
+                },
+                "description": "Epic IDs."
+              }
+            },
+            "required": []
+          },
+          "notes": {
+            "type": "string"
+          },
+          "filePath": {
+            "type": "string"
+          },
+          "designRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "archRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "milestone",
+          "name",
+          "requirements",
+          "summary",
+          "title"
+        ]
+      }
+    }
+  }
+}

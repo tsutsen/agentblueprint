@@ -1,0 +1,1015 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "designspec.schema.json",
+  "title": "DesignSpec",
+  "description": "User experience, interaction model, and visual design requirements. Version 4.0.0.",
+  "type": "object",
+  "required": [
+    "designGoals",
+    "personas",
+    "project",
+    "schemaVersion",
+    "screenInventory",
+    "screenSpecs",
+    "userJourneys",
+    "uxAcceptanceCriteria",
+    "version"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier.",
+      "x_idPattern": "gl"
+    },
+    "reqId": {
+      "type": "string",
+      "description": "Functional requirement identifier.",
+      "x_idPattern": "req"
+    },
+    "nfrId": {
+      "type": "string",
+      "description": "Non-functional requirement identifier.",
+      "x_idPattern": "nfr"
+    },
+    "scId": {
+      "type": "string",
+      "description": "Success criterion identifier.",
+      "x_idPattern": "sc"
+    },
+    "usId": {
+      "type": "string",
+      "description": "User story identifier.",
+      "x_idPattern": "us"
+    },
+    "ngId": {
+      "type": "string",
+      "description": "Non-goal identifier.",
+      "x_idPattern": "ng"
+    },
+    "dgId": {
+      "type": "string",
+      "description": "Design goal identifier.",
+      "x_idPattern": "dg"
+    },
+    "prsId": {
+      "type": "string",
+      "description": "Persona identifier.",
+      "x_idPattern": "prs"
+    },
+    "ujId": {
+      "type": "string",
+      "description": "User journey identifier.",
+      "x_idPattern": "uj"
+    },
+    "scrId": {
+      "type": "string",
+      "description": "Screen identifier.",
+      "x_idPattern": "scr"
+    },
+    "spcId": {
+      "type": "string",
+      "description": "Screen spec identifier.",
+      "x_idPattern": "spc"
+    },
+    "patId": {
+      "type": "string",
+      "description": "Interaction pattern identifier.",
+      "x_idPattern": "pat"
+    },
+    "vdrId": {
+      "type": "string",
+      "description": "Visual design requirement identifier.",
+      "x_idPattern": "vdr"
+    },
+    "uxacId": {
+      "type": "string",
+      "description": "UX acceptance criterion identifier.",
+      "x_idPattern": "uxac"
+    },
+    "dtId": {
+      "type": "string",
+      "description": "Design token identifier.",
+      "x_idPattern": "dt"
+    },
+    "compId": {
+      "type": "string",
+      "description": "Component identifier.",
+      "x_idPattern": "comp"
+    },
+    "conId": {
+      "type": "string",
+      "description": "Constraint identifier.",
+      "x_idPattern": "con"
+    },
+    "flwId": {
+      "type": "string",
+      "description": "Data flow identifier.",
+      "x_idPattern": "flw"
+    },
+    "entId": {
+      "type": "string",
+      "description": "Entity identifier.",
+      "x_idPattern": "ent"
+    },
+    "numId": {
+      "type": "string",
+      "description": "Enum identifier.",
+      "x_idPattern": "num"
+    },
+    "primId": {
+      "type": "string",
+      "description": "Primitive identifier.",
+      "x_idPattern": "prim"
+    },
+    "relId": {
+      "type": "string",
+      "description": "Relationship identifier.",
+      "x_idPattern": "rel"
+    },
+    "FLDId": {
+      "type": "string",
+      "description": "Entity field identifier.",
+      "x_idPattern": "FLD"
+    },
+    "FUNCId": {
+      "type": "string",
+      "description": "Entity method identifier.",
+      "x_idPattern": "FUNC"
+    },
+    "fnId": {
+      "type": "string",
+      "description": "Function identifier.",
+      "x_idPattern": "fn"
+    },
+    "tstId": {
+      "type": "string",
+      "description": "Test case identifier.",
+      "x_idPattern": "tst"
+    },
+    "fcId": {
+      "type": "string",
+      "description": "Function coverage identifier.",
+      "x_idPattern": "fc"
+    },
+    "epId": {
+      "type": "string",
+      "description": "Epic identifier.",
+      "x_idPattern": "ep"
+    },
+    "isId": {
+      "type": "string",
+      "description": "Issue identifier.",
+      "x_idPattern": "is"
+    },
+    "siId": {
+      "type": "string",
+      "description": "Sub-issue identifier.",
+      "x_idPattern": "si"
+    },
+    "milId": {
+      "type": "string",
+      "description": "Milestone identifier.",
+      "x_idPattern": "mil"
+    },
+    "iaNode": {
+      "type": "object",
+      "description": "A node in the information architecture tree.",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Label as it appears in navigation."
+        },
+        "screenRef": {
+          "$ref": "#/definitions/scrId",
+          "description": "Screen ID this node navigates to. Required for leaf nodes."
+        },
+        "children": {
+          "type": "array",
+          "description": "Child nodes. If present, this is a grouping node.",
+          "items": {
+            "$ref": "#/definitions/iaNode"
+          }
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  },
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Semver version of this spec document instance.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "project": {
+      "type": "string",
+      "description": "Project name. Must match across all specs.",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "description": "Lifecycle status of this spec.",
+      "enum": [
+        "draft",
+        "review",
+        "confirmed",
+        "superseded"
+      ],
+      "default": "draft"
+    },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the DesignSpec schema this document conforms to. Must be '4.0.0'.",
+      "const": "4.0.0"
+    },
+    "designGoals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/dgId",
+            "description": "Unique identifier for this dg.",
+            "x_idPattern": "dg"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable dg name."
+          },
+          "description": {
+            "type": "string"
+          },
+          "goal": {
+            "type": "string",
+            "minLength": 5
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "reqRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            },
+            "description": "Functional requirement IDs."
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/glId"
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "description",
+          "goal",
+          "id",
+          "name"
+        ]
+      }
+    },
+    "personas": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/prsId",
+            "description": "Unique identifier for this prs.",
+            "x_idPattern": "prs"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable prs name."
+          },
+          "description": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "goals": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            }
+          },
+          "painPoints": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            }
+          },
+          "technicalSkillLevel": {
+            "type": "string",
+            "enum": [
+              "non-technical",
+              "basic",
+              "intermediate",
+              "advanced",
+              "expert"
+            ]
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/glId"
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "description",
+          "goals",
+          "id",
+          "name",
+          "painPoints",
+          "role",
+          "technicalSkillLevel"
+        ]
+      }
+    },
+    "userJourneys": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/ujId",
+            "description": "Unique identifier for this uj.",
+            "x_idPattern": "uj"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable uj name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this uj."
+          },
+          "personaRef": {
+            "$ref": "#/definitions/prsId",
+            "description": "Persona"
+          },
+          "usRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/usId"
+            },
+            "description": "User story IDs."
+          },
+          "reqRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            },
+            "description": "Functional requirement IDs."
+          },
+          "startingState": {
+            "type": "string",
+            "minLength": 5
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "actor": {
+                  "type": "string",
+                  "enum": [
+                    "user",
+                    "system"
+                  ]
+                },
+                "action": {
+                  "type": "string",
+                  "minLength": 3
+                },
+                "screenRef": {
+                  "$ref": "#/definitions/scrId",
+                  "description": "Screen"
+                },
+                "glossaryRefs": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/glId"
+                  },
+                  "description": "Glossary term IDs.",
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "action",
+                "actor"
+              ]
+            }
+          },
+          "desiredOutcome": {
+            "type": "string",
+            "minLength": 5
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/glId"
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "description",
+          "desiredOutcome",
+          "id",
+          "name",
+          "personaRef",
+          "startingState",
+          "steps",
+          "usRefs"
+        ]
+      }
+    },
+    "informationArchitecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Top-level navigation nodes.",
+          "items": {
+            "$ref": "#/definitions/iaNode"
+          }
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional clarifying context for the information architecture."
+        },
+        "glossaryRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/glId"
+          },
+          "description": "Glossary term IDs.",
+          "uniqueItems": true
+        },
+        "reqRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/reqId"
+          },
+          "description": "Functional requirement IDs."
+        },
+        "usRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/usId"
+          },
+          "description": "User story IDs."
+        }
+      },
+      "required": [
+        "root"
+      ],
+      "description": "Navigation structure of the application. Leaf nodes must reference screen IDs."
+    },
+    "screenInventory": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/scrId",
+            "description": "Unique identifier for this scr.",
+            "x_idPattern": "scr"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable scr name."
+          },
+          "description": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 10
+          },
+          "primaryActions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 2
+            }
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "usRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/usId"
+            },
+            "description": "User story IDs."
+          },
+          "reqRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            },
+            "description": "Functional requirement IDs."
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/glId"
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "name",
+          "primaryActions",
+          "purpose"
+        ]
+      }
+    },
+    "screenSpecs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/spcId",
+            "description": "Unique identifier for this spc.",
+            "x_idPattern": "spc"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable spc name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this spc."
+          },
+          "screenRef": {
+            "$ref": "#/definitions/scrId",
+            "description": "Screen"
+          },
+          "layout": {
+            "type": "string",
+            "minLength": 10
+          },
+          "wireframe": {
+            "type": "string"
+          },
+          "components": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "purpose": {
+                  "type": "string",
+                  "minLength": 5
+                },
+                "designSystemRef": {
+                  "type": "string"
+                },
+                "patternRefs": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/patId"
+                  },
+                  "description": "Interaction pattern IDs."
+                },
+                "glossaryRefs": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/glId"
+                  },
+                  "description": "Glossary term IDs.",
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "name",
+                "purpose"
+              ]
+            }
+          },
+          "states": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 5
+                }
+              },
+              "required": [
+                "description",
+                "name"
+              ]
+            }
+          },
+          "interactions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "trigger": {
+                  "type": "string",
+                  "minLength": 3
+                },
+                "response": {
+                  "type": "string",
+                  "minLength": 3
+                },
+                "patternRef": {
+                  "$ref": "#/definitions/patId",
+                  "description": "Interaction pattern"
+                }
+              },
+              "required": [
+                "response",
+                "trigger"
+              ]
+            }
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/glId"
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
+          },
+          "componentRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/compId"
+            },
+            "description": "Component IDs."
+          }
+        },
+        "required": [
+          "components",
+          "description",
+          "id",
+          "layout",
+          "name",
+          "screenRef",
+          "states"
+        ]
+      }
+    },
+    "interactionPatterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/patId",
+            "description": "Unique identifier for this pat.",
+            "x_idPattern": "pat"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable pat name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this pat.",
+            "minLength": 10
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "keyboardShortcuts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "keys": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action",
+                "keys"
+              ]
+            }
+          },
+          "usageNotes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "name"
+        ]
+      }
+    },
+    "visualDesignRequirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/vdrId",
+            "description": "Unique identifier for this vdr.",
+            "x_idPattern": "vdr"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable vdr name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this vdr.",
+            "minLength": 10
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "reqRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            },
+            "description": "Functional requirement IDs."
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "name"
+        ]
+      }
+    },
+    "designSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baseStyle": {
+          "type": "string"
+        },
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "purpose": {
+                "type": "string",
+                "minLength": 5
+              },
+              "variants": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "usageNotes": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "purpose"
+            ]
+          }
+        }
+      },
+      "required": [
+        "components"
+      ]
+    },
+    "accessibilityRequirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/arId",
+            "description": "Unique identifier for this ar.",
+            "x_idPattern": "ar"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable ar name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this ar.",
+            "minLength": 10
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "reqRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/reqId"
+            },
+            "description": "Functional requirement IDs."
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "name"
+        ]
+      }
+    },
+    "uxAcceptanceCriteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/uxacId",
+            "description": "Unique identifier for this uxac.",
+            "x_idPattern": "uxac"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable uxac name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this uxac.",
+            "minLength": 10
+          },
+          "refs": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "usRefs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/usId"
+                },
+                "description": "User story IDs."
+              },
+              "reqRefs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/reqId"
+                },
+                "description": "Functional requirement IDs."
+              }
+            },
+            "required": []
+          },
+          "verificationMethod": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "name"
+        ]
+      }
+    },
+    "designTokens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/dtId",
+            "description": "Unique identifier for this dt.",
+            "x_idPattern": "dt"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable dt name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this dt.",
+            "minLength": 10
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "color",
+              "typography",
+              "spacing",
+              "border-radius",
+              "shadow",
+              "opacity",
+              "z-index"
+            ]
+          },
+          "value": {
+            "type": "string"
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/glId"
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "category",
+          "description",
+          "id",
+          "name",
+          "value"
+        ]
+      }
+    }
+  }
+}

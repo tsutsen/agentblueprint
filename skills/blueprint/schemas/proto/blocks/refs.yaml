@@ -1,0 +1,47 @@
+# Canonical ID reference types (single source of truth)
+# Each key maps to a JSON Schema definition at #/definitions/{Key}Id
+# Patterns align with extensions/blueprint/linters/id_patterns.py
+
+gl:  { pattern: "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Glossary term" }
+req: { pattern: "^REQ-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Functional requirement" }
+nfr: { pattern: "^NFR-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Non-functional requirement" }
+sc:  { pattern: "^SC-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Success criterion" }
+us:  { pattern: "^US-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "User story" }
+ng:  { pattern: "^NG-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Non-goal" }
+
+# DesignSpec
+dg:   { pattern: "^DG-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Design goal" }
+prs:  { pattern: "^PRS-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Persona" }
+uj:   { pattern: "^UJ-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "User journey" }
+scr:  { pattern: "^SCR-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Screen" }
+spc:  { pattern: "^SPC-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Screen spec" }
+pat:  { pattern: "^PAT-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Interaction pattern" }
+vdr:  { pattern: "^VDR-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Visual design requirement" }
+uxac: { pattern: "^UXAC-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "UX acceptance criterion" }
+dt:   { pattern: "^DT-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Design token" }
+
+# ArchitectureSpec
+comp: { pattern: "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Component" }
+con:  { pattern: "^CON-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Constraint" }
+flw:  { pattern: "^FLW-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Data flow" }
+
+# DataSpec
+ent:  { pattern: "^ENT-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Entity" }
+num:  { pattern: "^NUM-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Enum" }
+prim: { pattern: "^PRIM-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Primitive" }
+rel:  { pattern: "^REL-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Relationship" }
+FLD:  { pattern: "^FLD-\\d{3}-[a-z][A-Za-z0-9]*$", title: "Entity field" }
+FUNC: { pattern: "^FUNC-\\d{3}-[a-z][A-Za-z0-9]*$", title: "Entity method" }
+
+# ApiSpec
+fn:   { pattern: "^FN-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Function" }
+
+# TestSpec
+tst:  { pattern: "^TST-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Test case" }
+fc:   { pattern: "^FC-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Function coverage" }
+
+# TaskPlan / Issues
+ep:   { pattern: "^EP-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Epic" }
+is:   { pattern: "^IS-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Issue" }
+si:   { pattern: "^SI-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Sub-issue" }
+mil:  { pattern: "^MIL-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Milestone" }

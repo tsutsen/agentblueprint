@@ -1,0 +1,312 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "issue.schema.json",
+  "title": "Issue",
+  "description": "A single vertical slice decomposed from an Epic. Version 1.0.0.",
+  "type": "object",
+  "required": [
+    "epic",
+    "id",
+    "project",
+    "schemaVersion",
+    "status",
+    "title",
+    "type",
+    "version"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier.",
+      "x_idPattern": "gl"
+    },
+    "reqId": {
+      "type": "string",
+      "description": "Functional requirement identifier.",
+      "x_idPattern": "req"
+    },
+    "nfrId": {
+      "type": "string",
+      "description": "Non-functional requirement identifier.",
+      "x_idPattern": "nfr"
+    },
+    "scId": {
+      "type": "string",
+      "description": "Success criterion identifier.",
+      "x_idPattern": "sc"
+    },
+    "usId": {
+      "type": "string",
+      "description": "User story identifier.",
+      "x_idPattern": "us"
+    },
+    "ngId": {
+      "type": "string",
+      "description": "Non-goal identifier.",
+      "x_idPattern": "ng"
+    },
+    "dgId": {
+      "type": "string",
+      "description": "Design goal identifier.",
+      "x_idPattern": "dg"
+    },
+    "prsId": {
+      "type": "string",
+      "description": "Persona identifier.",
+      "x_idPattern": "prs"
+    },
+    "ujId": {
+      "type": "string",
+      "description": "User journey identifier.",
+      "x_idPattern": "uj"
+    },
+    "scrId": {
+      "type": "string",
+      "description": "Screen identifier.",
+      "x_idPattern": "scr"
+    },
+    "spcId": {
+      "type": "string",
+      "description": "Screen spec identifier.",
+      "x_idPattern": "spc"
+    },
+    "patId": {
+      "type": "string",
+      "description": "Interaction pattern identifier.",
+      "x_idPattern": "pat"
+    },
+    "vdrId": {
+      "type": "string",
+      "description": "Visual design requirement identifier.",
+      "x_idPattern": "vdr"
+    },
+    "uxacId": {
+      "type": "string",
+      "description": "UX acceptance criterion identifier.",
+      "x_idPattern": "uxac"
+    },
+    "dtId": {
+      "type": "string",
+      "description": "Design token identifier.",
+      "x_idPattern": "dt"
+    },
+    "compId": {
+      "type": "string",
+      "description": "Component identifier.",
+      "x_idPattern": "comp"
+    },
+    "conId": {
+      "type": "string",
+      "description": "Constraint identifier.",
+      "x_idPattern": "con"
+    },
+    "flwId": {
+      "type": "string",
+      "description": "Data flow identifier.",
+      "x_idPattern": "flw"
+    },
+    "entId": {
+      "type": "string",
+      "description": "Entity identifier.",
+      "x_idPattern": "ent"
+    },
+    "numId": {
+      "type": "string",
+      "description": "Enum identifier.",
+      "x_idPattern": "num"
+    },
+    "primId": {
+      "type": "string",
+      "description": "Primitive identifier.",
+      "x_idPattern": "prim"
+    },
+    "relId": {
+      "type": "string",
+      "description": "Relationship identifier.",
+      "x_idPattern": "rel"
+    },
+    "FLDId": {
+      "type": "string",
+      "description": "Entity field identifier.",
+      "x_idPattern": "FLD"
+    },
+    "FUNCId": {
+      "type": "string",
+      "description": "Entity method identifier.",
+      "x_idPattern": "FUNC"
+    },
+    "fnId": {
+      "type": "string",
+      "description": "Function identifier.",
+      "x_idPattern": "fn"
+    },
+    "tstId": {
+      "type": "string",
+      "description": "Test case identifier.",
+      "x_idPattern": "tst"
+    },
+    "fcId": {
+      "type": "string",
+      "description": "Function coverage identifier.",
+      "x_idPattern": "fc"
+    },
+    "epId": {
+      "type": "string",
+      "description": "Epic identifier.",
+      "x_idPattern": "ep"
+    },
+    "isId": {
+      "type": "string",
+      "description": "Issue identifier.",
+      "x_idPattern": "is"
+    },
+    "siId": {
+      "type": "string",
+      "description": "Sub-issue identifier.",
+      "x_idPattern": "si"
+    },
+    "milId": {
+      "type": "string",
+      "description": "Milestone identifier.",
+      "x_idPattern": "mil"
+    },
+    "scopeItem": {
+      "type": "object",
+      "description": "An in-scope or out-of-scope item.",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "glossaryRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/glId"
+          },
+          "description": "Glossary term IDs.",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "description"
+      ]
+    },
+    "acceptanceCriterion": {
+      "type": "object",
+      "description": "An acceptance criterion for the issue.",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "glossaryRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/glId"
+          },
+          "description": "Glossary term IDs.",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "description"
+      ]
+    }
+  },
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Semver version of this spec document instance.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "project": {
+      "type": "string",
+      "description": "Project name. Must match across all specs.",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "needs_review",
+        "complete"
+      ],
+      "default": "not_started"
+    },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the Issue schema this document conforms to. Must be '1.0.0'.",
+      "const": "1.0.0"
+    },
+    "id": {
+      "$ref": "#/definitions/isId",
+      "description": "Unique identifier for this is.",
+      "x_idPattern": "is"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable is name."
+    },
+    "description": {
+      "type": "string",
+      "description": "Longer description of this is."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 120,
+      "description": "Concise title for this issue."
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "AFK",
+        "HITL"
+      ],
+      "description": "Agent-First-Knowledge (AFK) or Human-In-The-Loop (HITL)."
+    },
+    "epic": {
+      "$ref": "#/definitions/epId",
+      "description": "Parent epic ID."
+    },
+    "blocked_by": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/isId"
+      },
+      "description": "Issue IDs."
+    },
+    "milestone": {
+      "$ref": "#/definitions/milId",
+      "description": "Milestone"
+    },
+    "inScope": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/scopeItem"
+      }
+    },
+    "outOfScope": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/scopeItem"
+      }
+    },
+    "acceptanceCriteria": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/acceptanceCriterion"
+      }
+    }
+  }
+}

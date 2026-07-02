@@ -1,0 +1,162 @@
+artifact: archspec
+title: ArchitectureSpec
+schemaVersion: "2.0.0"
+description: "Structural specification of the system: components, responsibilities, data flow, and constraints"
+
+fields:
+  - name: overview
+    type: object
+    required: [summary, subsystems]
+    fields:
+      - name: summary
+        type: string
+        minLength: 30
+      - name: subsystems
+        type: array
+        minItems: 1
+        of:
+          type: object
+          required: [name, purpose]
+          fields:
+            - name: name
+              type: string
+              minLength: 1
+            - name: purpose
+              type: string
+              minLength: 5
+            - name: componentRefs
+              type: array
+              ref: comp
+      - name: glossaryRefs
+        type: array
+        ref: gl
+
+  - name: components
+    type: array
+    minItems: 1
+    of:
+      type: object
+      ref: comp
+      required: [purpose, responsibilities]
+      fields:
+        - name: purpose
+          type: string
+          minLength: 10
+        - name: description
+          type: string
+        - name: responsibilities
+          type: array
+          minItems: 1
+          of: { type: string, minLength: 5 }
+        - name: dependencies
+          type: array
+          ref: comp
+        - name: reqRefs
+          type: array
+          ref: req
+        - name: nfrRefs
+          type: array
+          ref: nfr
+        - name: visibility
+          type: enum
+          enum: [external, internal]
+          default: internal
+        - name: glossaryRefs
+          type: array
+          ref: gl
+        - name: notes
+          type: string
+        - name: status
+          type: enum
+          enum: [draft, review, confirmed, implemented, deprecated]
+        - name: constraintRefs
+          type: array
+          ref: con
+
+  - name: dataModel
+    type: object
+    required: [dataSpecRef]
+    fields:
+      - name: dataSpecRef
+        type: string
+        minLength: 1
+      - name: notes
+        type: string
+
+  - name: apiContract
+    type: object
+    fields:
+      - name: apiSpecRef
+        type: string
+        minLength: 1
+      - name: authStrategy
+        type: string
+        minLength: 10
+      - name: notes
+        type: string
+
+  - name: dataFlow
+    type: array
+    minItems: 1
+    of:
+      type: object
+      ref: flw
+      required: [name, steps]
+      fields:
+        - name: name
+          type: string
+          minLength: 1
+        - name: description
+          type: string
+        - name: glossaryRefs
+          type: array
+          ref: gl
+        - name: reqRefs
+          type: array
+          ref: req
+        - name: steps
+          type: array
+          minItems: 2
+          of:
+            type: object
+            required: [componentRef, action]
+            fields:
+              - name: componentRef
+                type: string
+                ref: comp
+              - name: action
+                type: string
+                minLength: 5
+              - name: dataRef
+                type: string
+              - name: notes
+                type: string
+        - name: nfrRefs
+          type: array
+          ref: nfr
+        - name: componentRefs
+          type: array
+          ref: comp
+
+  - name: constraints
+    type: array
+    minItems: 1
+    of:
+      type: object
+      ref: con
+      required: [description]
+      fields:
+        - name: description
+          type: string
+          minLength: 10
+        - name: rationale
+          type: string
+        - name: glossaryRefs
+          type: array
+          ref: gl
+        - name: nfrRefs
+          type: array
+          ref: nfr
+        - name: reqRefs
+          type: array
+          ref: req
