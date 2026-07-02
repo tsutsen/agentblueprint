@@ -87,12 +87,6 @@ project/
 │   │   │       ├── IS-001.md + .json
 │   │   └── EP-002/
 │   └── reviews/
-└── diagrams/               ← generated from DataSpec
-    ├── plantuml_data_diagram.puml
-    ├── mermaid_data_diagram.md
-    ├── drawio_data_diagram.drawio
-    ├── dbml_data_diagram.dbml
-    └── d2_data_diagram.d2
 ```
 
 ## Tool Signatures
@@ -130,24 +124,22 @@ All IDs follow the format `PREFIX-NNN-suffix` where NNN is a 3-digit zero-padded
 | | `UJ-NNN-PascalCase` | **UJ** — User Journey | `UJ-001-FindProduct` |
 | | `UXAC-NNN-PascalCase` | **UXAC** — UX Acceptance Criterion | `UXAC-001-TouchTarget` |
 | | `VDR-NNN-PascalCase` | **VDR** — Visual Design Requirement | `VDR-001-ContrastRatio` |
+| | `AR-NNN-PascalCase` | **AR** — Accessibility Requirement | `AR-001-ScreenReaderSupport` |
 | ArchitectureSpec | `COMP-NNN-PascalCase` | **COMP** — Component | `COMP-001-AuthService` |
 | | `CON-NNN-PascalCase` | **CON** — Constraint | `CON-001-AuthenticationRequired` |
 | | `FLW-NNN-PascalCase` | **FLW** — Data Flow | `FLW-001-SessionCreation` |
 | DataSpec | `ENT-NNN-PascalCase` | **ENT** — Entity | `ENT-001-User` |
 | | `NUM-NNN-PascalCase` | **NUM** — Enum | `NUM-001-Status` |
-| | `PRIM-NNN-PascalCase` | **PRIM** — Primitive | `PRIM-001-UserId` |
 | | `REL-NNN-PascalCase` | **REL** — Relationship | `REL-001-UserOrders` |
-| ApiSpec | `FN-NNN-PascalCase` | **FN** — Function | `FN-001-Authenticate` |
+| | `FLD-NNN-PascalCase` | **FLD** — Entity Field | `FLD-001-createdAt` |
+| | `FUNC-NNN-PascalCase` | **FUNC** — Function | `FUNC-001-Authenticate` |
+| ApiSpec | `ENDP-NNN-PascalCase` | **ENDP** — Endpoint | `ENDP-001-Authenticate` |
 | TestSpec | `TST-NNN-PascalCase` | **TST** — Test Case | `TST-001-ExportReportAsPDF` |
 | | `FC-NNN-PascalCase` | **FC** — Failure Case | `FC-001-Authenticate` |
 | TaskPlan | `EP-NNN-PascalCase` | **EP** — Epic | `EP-001-UserOnboarding` |
 | | `MIL-NNN-PascalCase` | **MIL** — Milestone | `MIL-001-Setup` |
 | Issues | `IS-NNN-PascalCase` | **IS** — Implementation Story | `IS-001-ImplementLogin` |
 | | `SI-NNN-PascalCase` | **SI** — Sub-Issue | `SI-001-CreateLoginSchema` |
-
-**Suffix rules:**
-- `PascalCase`: starts uppercase, e.g. `Authentication`, `CreateAccount`, `MinimizeCognitiveLoad`
-- No suffix: just `PREFIX-NNN` (3-digit zero-padded), e.g. `VDR-001`
 
 ## Design Principles
 
