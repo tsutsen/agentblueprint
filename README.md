@@ -92,7 +92,6 @@ AgentBlueprint/
 | `blueprint` | Orchestrator — loads schemas, manages dependencies, runs linters, delegates |
 | `interview` | Conducts schema-driven interviews with structured questioning |
 | `lint` | Runs the full SDLC lint suite — validates artifacts, checks completeness gates, detects drift |
-| `spec-upgrade` | Migrates artifact files from old schema format to new format |
 
 ### Schemas
 

@@ -8,7 +8,6 @@ import { registerHandoff } from "./tools/handoff";
 import { registerGenerateTests } from "./tools/generate-tests";
 import { registerGenerateDiagrams } from "./tools/generate-diagrams";
 import { registerGenerateArtifactMarkdown } from "./tools/generate-artifact-markdown";
-import { registerSpecUpgrade } from "./tools/spec-upgrade";
 import { registerGraphTools } from "./tools/graph";
 import { registerGithubIssues } from "./tools/github-issues";
 
@@ -23,7 +22,6 @@ export default function (pi: ExtensionAPI) {
   registerGenerateTests(pi, extDir);
   registerGenerateDiagrams(pi, extDir);
   registerGenerateArtifactMarkdown(pi, extDir);
-  registerSpecUpgrade(pi, extDir);
   registerGraphTools(pi, extDir);
   registerGithubIssues(pi);
 }
