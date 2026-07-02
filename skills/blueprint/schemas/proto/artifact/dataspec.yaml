@@ -47,7 +47,7 @@ fields:
           of:
             type: object
             ref: FLD
-            required: [name, type]
+            required: [type]
             fields:
               - name: type
                 type: string
