@@ -437,8 +437,7 @@
               "additionalProperties": false,
               "properties": {
                 "componentRef": {
-                  "$ref": "#/definitions/compId",
-                  "description": "Component"
+                  "$ref": "#/definitions/compId"
                 },
                 "action": {
                   "type": "string",

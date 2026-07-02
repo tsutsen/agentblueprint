@@ -115,7 +115,6 @@ fields:
             required: [componentRef, action]
             fields:
               - name: componentRef
-                type: string
                 ref: comp
               - name: action
                 type: string

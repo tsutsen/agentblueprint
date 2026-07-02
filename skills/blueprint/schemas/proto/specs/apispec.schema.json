@@ -327,7 +327,7 @@
             "type": "string",
             "enum": [
               "public",
-              "internal"
+              "private"
             ],
             "default": "public"
           },

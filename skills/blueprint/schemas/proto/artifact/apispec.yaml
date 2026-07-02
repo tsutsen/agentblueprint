@@ -74,7 +74,7 @@ fields:
           of: { $ref: "errorCondition" }
         - name: visibility
           type: enum
-          enum: [public, internal]
+          enum: [public, private]
           default: public
         - name: pure
           type: boolean

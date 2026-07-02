@@ -375,8 +375,7 @@
                   "description": "Longer description of this func."
                 },
                 "apiRef": {
-                  "$ref": "#/definitions/endpId",
-                  "description": "Endpoint"
+                  "$ref": "#/definitions/endpId"
                 }
               },
               "required": [

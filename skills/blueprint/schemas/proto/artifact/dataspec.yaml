@@ -67,7 +67,6 @@ fields:
             required: [apiRef]
             fields:
               - name: apiRef
-                type: string
                 ref: endp
         - name: visibility
           type: enum

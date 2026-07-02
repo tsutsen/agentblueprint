@@ -13,7 +13,6 @@ namedTypes:
         minLength: 1
         desc: "Label as it appears in navigation."
       - name: screenRef
-        type: string
         ref: scr
         desc: "Screen ID this node navigates to. Required for leaf nodes."
       - name: children
@@ -78,7 +77,6 @@ fields:
       required: [personaRef, usRefs, startingState, steps, desiredOutcome]
       fields:
         - name: personaRef
-          type: string
           ref: prs
         - name: usRefs
           type: array
@@ -103,7 +101,6 @@ fields:
                 type: string
                 minLength: 3
               - name: screenRef
-                type: string
                 ref: scr
               - name: glossaryRefs
                 type: array
@@ -178,7 +175,6 @@ fields:
       required: [screenRef, layout, components, states]
       fields:
         - name: screenRef
-          type: string
           ref: scr
         - name: layout
           type: string
@@ -232,7 +228,6 @@ fields:
                 type: string
                 minLength: 3
               - name: patternRef
-                type: string
                 ref: pat
         - name: glossaryRefs
           type: array

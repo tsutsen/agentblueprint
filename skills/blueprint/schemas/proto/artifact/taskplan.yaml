@@ -37,7 +37,6 @@ fields:
           default: not_started
           desc: "Lifecycle status of this epic."
         - name: milestone
-          type: string
           ref: mil
         - name: requirements
           type: array

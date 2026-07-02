@@ -188,8 +188,7 @@
           "description": "Label as it appears in navigation."
         },
         "screenRef": {
-          "$ref": "#/definitions/scrId",
-          "description": "Screen ID this node navigates to. Required for leaf nodes."
+          "$ref": "#/definitions/scrId"
         },
         "children": {
           "type": "array",
@@ -381,8 +380,7 @@
             "description": "Longer description of this uj."
           },
           "personaRef": {
-            "$ref": "#/definitions/prsId",
-            "description": "Persona"
+            "$ref": "#/definitions/prsId"
           },
           "usRefs": {
             "type": "array",
@@ -421,8 +419,7 @@
                   "minLength": 3
                 },
                 "screenRef": {
-                  "$ref": "#/definitions/scrId",
-                  "description": "Screen"
+                  "$ref": "#/definitions/scrId"
                 },
                 "glossaryRefs": {
                   "type": "array",
@@ -607,8 +604,7 @@
             "description": "Longer description of this spc."
           },
           "screenRef": {
-            "$ref": "#/definitions/scrId",
-            "description": "Screen"
+            "$ref": "#/definitions/scrId"
           },
           "layout": {
             "type": "string",
@@ -694,8 +690,7 @@
                   "minLength": 3
                 },
                 "patternRef": {
-                  "$ref": "#/definitions/patId",
-                  "description": "Interaction pattern"
+                  "$ref": "#/definitions/patId"
                 }
               },
               "required": [

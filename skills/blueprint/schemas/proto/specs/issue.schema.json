@@ -281,8 +281,7 @@
       "description": "Agent-First-Knowledge (AFK) or Human-In-The-Loop (HITL)."
     },
     "epic": {
-      "$ref": "#/definitions/epId",
-      "description": "Parent epic ID."
+      "$ref": "#/definitions/epId"
     },
     "blocked_by": {
       "type": "array",
@@ -292,8 +291,7 @@
       "description": "Issue IDs."
     },
     "milestone": {
-      "$ref": "#/definitions/milId",
-      "description": "Milestone"
+      "$ref": "#/definitions/milId"
     },
     "inScope": {
       "type": "array",

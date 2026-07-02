@@ -285,8 +285,7 @@
             "description": "Lifecycle status of this epic."
           },
           "milestone": {
-            "$ref": "#/definitions/milId",
-            "description": "Milestone"
+            "$ref": "#/definitions/milId"
           },
           "requirements": {
             "type": "array",

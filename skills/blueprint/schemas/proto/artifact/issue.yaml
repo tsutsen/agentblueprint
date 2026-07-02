@@ -27,7 +27,6 @@ namedTypes:
 
 fields:
   - name: id
-    type: string
     ref: is
     desc: "Unique issue identifier. Auto-injected for ref'd objects."
     autoInject: true
@@ -49,7 +48,6 @@ fields:
     default: not_started
 
   - name: epic
-    type: string
     ref: ep
     desc: "Parent epic ID."
 
@@ -58,7 +56,6 @@ fields:
     ref: is
 
   - name: milestone
-    type: string
     ref: mil
 
   - name: inScope

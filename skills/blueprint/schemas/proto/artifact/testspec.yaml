@@ -25,7 +25,6 @@ fields:
       required: [fnRef, happyPathCount, edgeCaseCount, errorPathCount, outOfScope]
       fields:
         - name: fnRef
-          type: string
           ref: func
         - name: happyPathCount
           type: integer
@@ -53,7 +52,6 @@ fields:
       required: [fnRef, category, input, contractClause]
       fields:
         - name: fnRef
-          type: string
           ref: func
         - name: category
           type: enum

@@ -250,8 +250,7 @@
             "description": "Longer description of this fc."
           },
           "fnRef": {
-            "$ref": "#/definitions/funcId",
-            "description": "Function"
+            "$ref": "#/definitions/funcId"
           },
           "happyPathCount": {
             "type": "integer",
@@ -314,8 +313,7 @@
             "description": "Longer description of this tst."
           },
           "fnRef": {
-            "$ref": "#/definitions/funcId",
-            "description": "Function"
+            "$ref": "#/definitions/funcId"
           },
           "category": {
             "type": "string",
