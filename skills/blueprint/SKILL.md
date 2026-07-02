@@ -68,7 +68,9 @@ Run `generate_schema.py` after any of:
 
 ```bash
 cd skills/blueprint/schemas/proto
-python3 generate_schema.py
+python3 generate_schema.py --all    # regenerate all 9 schemas
+# or
+python3 generate_schema.py goalspec  # regenerate one schema
 ```
 
 This overwrites `proto/specs/*.schema.json` and copies them to
