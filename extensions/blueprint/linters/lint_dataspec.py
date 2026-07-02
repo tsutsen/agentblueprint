@@ -233,7 +233,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Method names must be camelCase
     {
-        "target": "entities.methods.name",
+        "target": "entities.functions.name",
         "check": "contains_patterns",
         "patterns": [r"^[a-z][A-Za-z0-9]*$"],
         "negate": True,

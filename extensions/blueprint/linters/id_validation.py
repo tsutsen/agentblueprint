@@ -86,12 +86,14 @@ def validate_sequential(ids: list[str], label: str, result: LayerResult) -> None
         except ValueError:
             return -1
 
-    nums = sorted([_extract_num(i) for i in ids])
+    nums = sorted(set(_extract_num(i) for i in ids))  # deduplicate
     nums = [n for n in nums if n >= 0]
     if not nums:
         return
+    # Support both 0-based and 1-based: anchor to first number
+    base = nums[0]
     for i, n in enumerate(nums):
-        expected = i + 1
+        expected = base + i
         if n != expected:
             result.add(
                 "warning",

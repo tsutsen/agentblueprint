@@ -99,6 +99,10 @@ def _check_category_rules(spec: dict, result: LayerResult, extra_specs: dict = N
                 result.add("warning", "error_path_missing_expected",
                     f"Test '{tid}' (error-path): missing expectedError.",
                     hint="Declare what the caller receives: code, returnType, messageContains.")
+            if not t.get("errorCode"):
+                result.add("warning", "error_path_missing_code",
+                    f"Test '{tid}' (error-path): missing errorCode.",
+                    hint="Declare the errorCode this test exercises.")
             if t.get("expectedOutput") is not None:
                 result.add("warning", "error_path_has_output",
                     f"Test '{tid}' (error-path): has expectedOutput — error-path tests should not assert normal output.",
@@ -334,14 +338,6 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "target_label": "Test",
         "category": "function_untested",
         "hint": "Add at least one test with fnRef set to this function.",
-    },
-    # Error-path tests must have errorCode
-    {
-        "target": "tests.errorCode",
-        "check": "non_empty",
-        "target_label": "Test",
-        "category": "error_path_missing_code",
-        "hint": "Every error-path test must declare the errorCode it exercises.",
     },
     # Happy-path/edge-case tests must have expectedOutput
     {

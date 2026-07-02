@@ -432,19 +432,19 @@
   ],
   "visualDesignRequirements": [
     {
-      "id": "VDR-001-ContrastRatio",
+      "id": "VDR-000-Alloutputmustrenderc",
       "description": "All output must render correctly in a standard 80-column terminal without line wrapping.",
       "rationale": "Developers use split-pane terminals and small windows.",
       "name": "All output must render correctly in a standard 80-..."
     },
     {
-      "id": "VDR-000-ContrastRatio",
+      "id": "VDR-001-Statusindicatorsmust",
       "description": "Status indicators must use both colour and symbol so they are readable in monochrome terminals and by colour-blind users.",
       "rationale": "Accessibility and compatibility. \u25cf for available, \u25cb for offline.",
       "name": "Status indicators must use both colour and symbol..."
     },
     {
-      "id": "VDR-001-ColorPalette",
+      "id": "VDR-002-Allviewsmustrenderco",
       "description": "All views must render correctly in both light and dark terminal themes.",
       "rationale": "Developers use varied terminal colour schemes.",
       "name": "All views must render correctly in both light and..."
