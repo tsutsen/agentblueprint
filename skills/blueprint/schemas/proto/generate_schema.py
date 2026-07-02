@@ -254,7 +254,7 @@ def convert_object(field, refs, parent_ref=None, named_types=None):
         named_types = []
     prop = {
         "type": "object",
-        "additionalProperties": False,
+        "additionalProperties": field.get("additionalProperties", False),
         "properties": {},
         "required": [],
     }

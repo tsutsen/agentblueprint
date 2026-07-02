@@ -2,112 +2,73 @@
   "version": "1.0.0",
   "schemaVersion": "3.0.0",
   "project": "LLMGateway",
-  "apiSpecVersion": "1.0.0",
-  "dataSpecVersion": "1.0.0",
   "status": "draft",
-  "verificationStatus": "pending",
   "functionCoverage": [
     {
-      "fnRef": "FN-routeQuery",
+      "id": "FC-000-AuthenticateCoverage",
+      "name": "Coverage for Authenticate",
+      "description": "Test coverage for ENDP-000-Authenticate",
+      "fnRef": "ENDP-000-Authenticate",
       "happyPathCount": 2,
-      "edgeCaseCount": 1,
-      "errorPathCount": 2,
-      "outOfScope": [
-        {
-          "description": "Backend health check polling interval \u2014 implementation detail.",
-          "glossaryRefs": []
-        },
-        {
-          "description": "Classifier model loading \u2014 not part of the routing contract.",
-          "glossaryRefs": []
-        }
-      ]
-    },
-    {
-      "fnRef": "FN-cancelQuery",
-      "happyPathCount": 1,
       "edgeCaseCount": 0,
-      "errorPathCount": 2,
-      "outOfScope": [
-        {
-          "description": "Graceful shutdown of in-flight backend request \u2014 implementation detail.",
-          "glossaryRefs": []
-        },
-        {
-          "description": "Notification to caller that query was cancelled \u2014 not part of the function contract.",
-          "glossaryRefs": []
-        }
-      ]
+      "errorPathCount": 0,
+      "outOfScope": []
     },
     {
-      "fnRef": "FN-getBackend",
-      "happyPathCount": 1,
-      "edgeCaseCount": 0,
-      "errorPathCount": 1,
-      "outOfScope": [
-        {
-          "description": "Caching behaviour \u2014 not part of the contract.",
-          "glossaryRefs": []
-        },
-        {
-          "description": "Backend availability refresh \u2014 handled by backend-pool.",
-          "glossaryRefs": []
-        }
-      ]
-    },
-    {
-      "fnRef": "FN-listBackends",
+      "id": "FC-001-CreateUserCoverage",
+      "name": "Coverage for CreateUser",
+      "description": "Test coverage for ENDP-001-CreateUser",
+      "fnRef": "ENDP-001-CreateUser",
       "happyPathCount": 1,
       "edgeCaseCount": 1,
       "errorPathCount": 0,
-      "outOfScope": [
-        {
-          "description": "Sorting algorithm for priority ordering \u2014 implementation detail.",
-          "glossaryRefs": []
-        },
-        {
-          "description": "Pagination for large backend lists \u2014 not in scope.",
-          "glossaryRefs": []
-        }
-      ]
+      "outOfScope": []
     },
     {
-      "fnRef": "FN-getQueryHistory",
+      "id": "FC-002-GetUserCoverage",
+      "name": "Coverage for GetUser",
+      "description": "Test coverage for ENDP-002-GetUser",
+      "fnRef": "ENDP-002-GetUser",
       "happyPathCount": 1,
       "edgeCaseCount": 1,
       "errorPathCount": 0,
-      "outOfScope": [
-        {
-          "description": "Log retention policy \u2014 handled by config-loader.",
-          "glossaryRefs": []
-        },
-        {
-          "description": "Full-text search on log entries \u2014 deferred to future version.",
-          "glossaryRefs": []
-        }
-      ]
+      "outOfScope": []
     },
     {
-      "fnRef": "FN-getQuery",
+      "id": "FC-003-ListUsersCoverage",
+      "name": "Coverage for ListUsers",
+      "description": "Test coverage for ENDP-003-ListUsers",
+      "fnRef": "ENDP-003-ListUsers",
+      "happyPathCount": 0,
+      "edgeCaseCount": 1,
+      "errorPathCount": 1,
+      "outOfScope": []
+    },
+    {
+      "id": "FC-004-UpdateUserCoverage",
+      "name": "Coverage for UpdateUser",
+      "description": "Test coverage for ENDP-004-UpdateUser",
+      "fnRef": "ENDP-004-UpdateUser",
       "happyPathCount": 1,
       "edgeCaseCount": 0,
       "errorPathCount": 1,
-      "outOfScope": [
-        {
-          "description": "Caching behaviour \u2014 not part of the contract.",
-          "glossaryRefs": []
-        },
-        {
-          "description": "Soft-deleted query visibility \u2014 not documented in ApiSpec.",
-          "glossaryRefs": []
-        }
-      ]
+      "outOfScope": []
+    },
+    {
+      "id": "FC-005-DeleteUserCoverage",
+      "name": "Coverage for DeleteUser",
+      "description": "Test coverage for ENDP-005-DeleteUser",
+      "fnRef": "ENDP-005-DeleteUser",
+      "happyPathCount": 1,
+      "edgeCaseCount": 0,
+      "errorPathCount": 1,
+      "outOfScope": []
     }
   ],
   "tests": [
     {
       "id": "TST-000-Authenticate",
-      "fnRef": "FN-routeQuery",
+      "fnRef": "ENDP-000-Authenticate",
       "category": "happy-path",
       "description": "Routes a simple query to the highest priority available backend.",
       "input": {
@@ -128,7 +89,7 @@
     },
     {
       "id": "TST-001-CreateUser",
-      "fnRef": "FN-routeQuery",
+      "fnRef": "ENDP-001-CreateUser",
       "category": "happy-path",
       "description": "Routes a query to a specific backend when overrideBackendId is provided.",
       "input": {
@@ -153,7 +114,7 @@
     },
     {
       "id": "TST-002-GetUser",
-      "fnRef": "FN-routeQuery",
+      "fnRef": "ENDP-002-GetUser",
       "category": "edge-case",
       "description": "Routes a complex query to the most capable available backend.",
       "input": {
@@ -173,7 +134,7 @@
     },
     {
       "id": "TST-003-ListUsers",
-      "fnRef": "FN-routeQuery",
+      "fnRef": "ENDP-003-ListUsers",
       "category": "error-path",
       "description": "Throws NO_BACKENDS_AVAILABLE when no backends are available.",
       "input": {
@@ -189,7 +150,7 @@
     },
     {
       "id": "TST-004-UpdateUser",
-      "fnRef": "FN-routeQuery",
+      "fnRef": "ENDP-004-UpdateUser",
       "category": "error-path",
       "description": "Throws INVALID_OVERRIDE when overrideBackendId does not match any configured backend.",
       "input": {
@@ -206,7 +167,7 @@
     },
     {
       "id": "TST-005-DeleteUser",
-      "fnRef": "FN-cancelQuery",
+      "fnRef": "ENDP-005-DeleteUser",
       "category": "happy-path",
       "description": "Cancels an in-flight PENDING query and returns it with FAILED status.",
       "input": {
@@ -225,77 +186,8 @@
       "name": "Delete User"
     },
     {
-      "id": "TST-006-SearchUsers",
-      "fnRef": "FN-cancelQuery",
-      "category": "error-path",
-      "description": "Throws NOT_FOUND when the query ID does not exist.",
-      "input": {
-        "queryId": "qry_nonexistent"
-      },
-      "errorCode": "NOT_FOUND",
-      "expectedError": {
-        "code": "NOT_FOUND",
-        "returnType": "NotFoundError"
-      },
-      "contractClause": "Throws NOT_FOUND when no query exists with this ID.",
-      "name": "Search Users"
-    },
-    {
-      "id": "TST-007-VerifyToken",
-      "fnRef": "FN-cancelQuery",
-      "category": "error-path",
-      "description": "Throws ALREADY_COMPLETED when the query has already finished.",
-      "input": {
-        "queryId": "qry_completed"
-      },
-      "errorCode": "ALREADY_COMPLETED",
-      "expectedError": {
-        "code": "ALREADY_COMPLETED",
-        "returnType": "ConflictError"
-      },
-      "contractClause": "Throws ALREADY_COMPLETED when the query has already completed or been cancelled.",
-      "name": "Verify Token"
-    },
-    {
-      "id": "TST-008-RefreshToken",
-      "fnRef": "FN-getBackend",
-      "category": "happy-path",
-      "description": "Returns the backend matching the given ID.",
-      "input": {
-        "backendId": "bck_001"
-      },
-      "expectedOutput": {
-        "id": "bck_001",
-        "name": "Ollama Local",
-        "type": "LOCAL",
-        "isActive": true
-      },
-      "expectedOutputType": "Backend",
-      "contractClause": "Fetches a backend by ID and returns the matching Backend.",
-      "reqRefs": [
-        "REQ-002-Logout"
-      ],
-      "name": "Refresh Token"
-    },
-    {
-      "id": "TST-009-RevokeToken",
-      "fnRef": "FN-getBackend",
-      "category": "error-path",
-      "description": "Throws NOT_FOUND when no backend exists with the given ID.",
-      "input": {
-        "backendId": "bck_nonexistent"
-      },
-      "errorCode": "NOT_FOUND",
-      "expectedError": {
-        "code": "NOT_FOUND",
-        "returnType": "NotFoundError"
-      },
-      "contractClause": "Throws NOT_FOUND when no backend exists with this ID.",
-      "name": "Revoke Token"
-    },
-    {
       "id": "TST-010-Authenticate",
-      "fnRef": "FN-listBackends",
+      "fnRef": "ENDP-000-Authenticate",
       "category": "happy-path",
       "description": "Returns all configured backends sorted by priority.",
       "input": {},
@@ -322,7 +214,7 @@
     },
     {
       "id": "TST-011-CreateUser",
-      "fnRef": "FN-listBackends",
+      "fnRef": "ENDP-001-CreateUser",
       "category": "edge-case",
       "description": "Returns an empty array when no backends are configured.",
       "input": {},
@@ -333,7 +225,7 @@
     },
     {
       "id": "TST-012-GetUser",
-      "fnRef": "FN-getQueryHistory",
+      "fnRef": "ENDP-002-GetUser",
       "category": "happy-path",
       "description": "Returns the 20 most recent query log entries.",
       "input": {
@@ -358,7 +250,7 @@
     },
     {
       "id": "TST-013-ListUsers",
-      "fnRef": "FN-getQueryHistory",
+      "fnRef": "ENDP-003-ListUsers",
       "category": "edge-case",
       "description": "Returns only entries for the specified backend when backendId filter is provided.",
       "input": {
@@ -380,7 +272,7 @@
     },
     {
       "id": "TST-014-UpdateUser",
-      "fnRef": "FN-getQuery",
+      "fnRef": "ENDP-004-UpdateUser",
       "category": "happy-path",
       "description": "Returns the query matching the given ID.",
       "input": {
@@ -401,7 +293,7 @@
     },
     {
       "id": "TST-015-DeleteUser",
-      "fnRef": "FN-getQuery",
+      "fnRef": "ENDP-005-DeleteUser",
       "category": "error-path",
       "description": "Throws NOT_FOUND when no query exists with the given ID.",
       "input": {

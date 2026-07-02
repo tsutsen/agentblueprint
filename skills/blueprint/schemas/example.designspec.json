@@ -492,7 +492,7 @@
   },
   "accessibilityRequirements": [
     {
-      "id": "AR-001",
+      "id": "AR-000-TouchTarget",
       "description": "Every interactive action must be triggerable via keyboard with no mouse required.",
       "reqRefs": [
         "REQ-001-Login"
@@ -500,13 +500,13 @@
       "name": "Every interactive action must be triggerable via k..."
     },
     {
-      "id": "AR-002",
+      "id": "AR-001-ColorContrast",
       "description": "Status indicators must not rely on colour alone to convey meaning.",
       "rationale": "Required for colour-blind users and monochrome terminals.",
       "name": "Status indicators must not rely on colour alone to..."
     },
     {
-      "id": "AR-003",
+      "id": "AR-002-KeyboardFocus",
       "description": "All output must be parseable by screen readers when --json flag is used.",
       "rationale": "Machine-readable output doubles as accessible output for screen reader users piping to assistive tools.",
       "name": "All output must be parseable by screen readers whe..."

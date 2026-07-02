@@ -1,81 +1,46 @@
 #!/usr/bin/env python3
 """
-id_patterns.py — Canonical ID patterns (single source of truth).
+id_patterns.py — Canonical ID patterns (derived from proto-schema refs.yaml).
 
-All ID format patterns are defined here using composable parts.
-If a part changes, update it below and all patterns update automatically.
+Imports pattern definitions from the proto-schema single source of truth
+and builds the ID_PATTERNS dict used by linters.
 
-Usage:
-    from id_patterns import ID_PATTERNS
-
-    # Validate an ID
-    pattern = ID_PATTERNS["req"]["pattern"]
-    hint = ID_PATTERNS["req"]["hint"]
+Also provides SECTION_ID_PATTERNS mapping JSON paths to ID types,
+which is structural metadata not encoded in refs.yaml.
 """
 
-# ── Composable pattern parts ─────────────────────────────────────────────────
-# Change these to update every ID pattern at once.
+from pathlib import Path
+import yaml
 
-SEP = "-"                # separator between parts
-ENUM = r"\d{3}"            # 3-digit number
-SLUG = r"[A-Z][a-zA-Z0-9]*"  # PascalCase name
+# ── Load patterns from proto-schema refs.yaml (single source of truth) ──────
 
-# ── ID definitions ───────────────────────────────────────────────────────────
-# Each entry: (key, enumeration, slug)
-# prefix = key.upper() automatically.
+_REFS_PATH = Path(__file__).resolve().parent.parent.parent.parent / "skills" / "blueprint" / "schemas" / "proto" / "blocks" / "refs.yaml"
 
-_ID_DEFS = [
-    # GoalSpec
-    ("req",    ENUM, SLUG),
-    ("nfr",    ENUM, SLUG),
-    ("us",     ENUM, SLUG),
-    ("sc",     ENUM, SLUG),
-    ("ng",     ENUM, SLUG),
-    # Glossary
-    ("gl",     ENUM, SLUG),
-    ("dg",     ENUM, SLUG),
-    ("scr",    ENUM, SLUG),
-    ("dt",     ENUM, SLUG),
-    ("pat",    ENUM, SLUG),
-    ("prs",    ENUM, SLUG),
-    ("spc",    ENUM, SLUG),
-    ("uj",     ENUM, SLUG),
-    ("uxac",   ENUM, SLUG),
-    ("vdr",    ENUM, SLUG),
-    # ArchitectureSpec
-    ("comp",   ENUM, SLUG),
-    ("con",    ENUM, SLUG),
-    ("flw",    ENUM, SLUG),
-    # DataSpec
-    ("ent",    ENUM, SLUG),
-    ("num",    ENUM, SLUG),
-    ("prim",   ENUM, SLUG),
-    ("rel",    ENUM, SLUG),
-    # ApiSpec
-    ("fn",     ENUM, SLUG),
-    # TestSpec
-    ("tst",    ENUM, SLUG),
-    ("fc",     ENUM, SLUG),
-    # TaskPlan / Issues
-    ("ep",     ENUM, SLUG),
-    ("is",     ENUM, SLUG),
-    ("si",     ENUM, SLUG),
-    # Milestones
-    ("mil",    ENUM, SLUG),
-]
+def _load_refs():
+    """Load ID patterns from refs.yaml."""
+    if _REFS_PATH.exists():
+        with open(_REFS_PATH) as f:
+            refs = yaml.safe_load(f) or {}
+    else:
+        refs = {}
 
-# ── Build ID_PATTERNS from definitions ───────────────────────────────────────
-ID_PATTERNS = {}
-for key, enumeration, slug in _ID_DEFS:
-    prefix = key.upper()
-    pattern = rf"^{prefix}-{enumeration}-{slug}$"
-    ID_PATTERNS[key] = {
-        "pattern": pattern,
-        "example": f"{prefix}-001-Example",
-        "hint": f"Format: {prefix}-NNN-PascalCase",
-    }
+    # Build ID_PATTERNS from refs.yaml
+    patterns = {}
+    for key, info in refs.items():
+        patterns[key] = {
+            "pattern": info["pattern"],
+            "example": f"{key.upper()}-001-Example",
+            "hint": f"Format: {key.upper()}-NNN-PascalCase",
+        }
+    return patterns
 
-# Section path → ID pattern type mapping (single source of truth for ID validation)
+
+ID_PATTERNS = _load_refs()
+
+# ── Section path → ID pattern type mapping ──────────────────────────────────
+# Structural metadata: maps JSON artifact paths to the ID type they contain.
+# Not derivable from refs.yaml — lives here as linter configuration.
+
 SECTION_ID_PATTERNS = {
     # GoalSpec
     "functionalRequirements": "req",
@@ -102,7 +67,7 @@ SECTION_ID_PATTERNS = {
     "entities": "ent",
     "relationships": "rel",
     # ApiSpec
-    "functions": "fn",
+    "functions": "endp",
     # TestSpec
     "tests": "tst",
     "functionCoverage": "fc",
