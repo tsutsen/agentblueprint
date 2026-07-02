@@ -279,10 +279,13 @@
             "x_idPattern": "fn"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable fn name."
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Longer description of this fn."
           },
           "entity": {
             "type": "string"

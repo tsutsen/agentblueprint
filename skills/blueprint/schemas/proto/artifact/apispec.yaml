@@ -50,12 +50,8 @@ fields:
     of:
       type: object
       ref: fn
-      required: [name, inputs, output]
+      required: [inputs, output]
       fields:
-        - name: name
-          type: string
-        - name: description
-          type: string
         - name: entity
           type: string
         - name: inputs
