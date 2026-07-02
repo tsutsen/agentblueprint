@@ -172,28 +172,6 @@
       "type": "string",
       "description": "Milestone identifier.",
       "x_idPattern": "mil"
-    },
-    "glossaryRefItem": {
-      "type": "object",
-      "description": "A text item with inline glossary references.",
-      "additionalProperties": false,
-      "properties": {
-        "description": {
-          "type": "string",
-          "minLength": 1
-        },
-        "glossaryRefs": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/glId"
-          },
-          "description": "Glossary term IDs.",
-          "uniqueItems": true
-        }
-      },
-      "required": [
-        "description"
-      ]
     }
   },
   "properties": {
@@ -268,7 +246,25 @@
             "type": "array",
             "minItems": 1,
             "items": {
-              "$ref": "#/definitions/glossaryRefItem"
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "glossaryRefs": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/glId"
+                  },
+                  "description": "Glossary term IDs.",
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "description"
+              ]
             }
           },
           "reqRefs": {
