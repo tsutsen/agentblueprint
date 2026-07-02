@@ -85,7 +85,7 @@
         "NFR-001-Availability"
       ],
       "visibility": "internal",
-      "description": "Component: Query Classifier"
+      "description": "Analyzes query content to assign a Complexity Tier (simple or complex) for routing decisions."
     },
     {
       "id": "COMP-002-Router",
@@ -112,7 +112,7 @@
         "NFR-002-Security"
       ],
       "visibility": "internal",
-      "description": "Component: Router"
+      "description": "Routes queries using Route Decision logic. Selects backends by Priority Order with Fallback support. Adds minimal Routing Overhead."
     },
     {
       "id": "COMP-003-BackendPool",
@@ -132,7 +132,7 @@
         "REQ-005-ProfileManagement"
       ],
       "visibility": "internal",
-      "description": "Component: Backend Pool"
+      "description": "Manages the Backend Pool of Local Backend and Cloud Backend endpoints, including OpenAI-compatible APIs."
     },
     {
       "id": "COMP-004-LocalAdapter",
@@ -153,7 +153,7 @@
         "NFR-003-Scalability"
       ],
       "visibility": "internal",
-      "description": "Component: Local Backend Adapter"
+      "description": "Communicates with Local Backend instances. Supports Override for manual routing."
     },
     {
       "id": "COMP-005-CloudAdapter",
@@ -172,7 +172,7 @@
         "REQ-001-Login"
       ],
       "visibility": "internal",
-      "description": "Component: Cloud Backend Adapter"
+      "description": "Communicates with Cloud Backend instances via HTTP."
     },
     {
       "id": "COMP-006-QueryLog",

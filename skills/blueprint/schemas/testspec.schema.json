@@ -118,11 +118,6 @@
       "description": "Enum identifier.",
       "x_idPattern": "num"
     },
-    "primId": {
-      "type": "string",
-      "description": "Primitive identifier.",
-      "x_idPattern": "prim"
-    },
     "relId": {
       "type": "string",
       "description": "Relationship identifier.",
@@ -408,6 +403,14 @@
               "$ref": "#/definitions/scrId"
             },
             "description": "Screen IDs."
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/glId"
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
           }
         },
         "required": [

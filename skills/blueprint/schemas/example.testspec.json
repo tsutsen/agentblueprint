@@ -85,7 +85,11 @@
       "reqRefs": [
         "REQ-001-Login"
       ],
-      "name": "Authenticate"
+      "name": "Authenticate",
+      "glossaryRefs": [
+        "GL-000-Backend",
+        "GL-002-Query"
+      ]
     },
     {
       "id": "TST-001-CreateUser-001",
@@ -110,7 +114,11 @@
       "nfrRefs": [
         "NFR-002-Security"
       ],
-      "name": "Create User"
+      "name": "Create User",
+      "glossaryRefs": [
+        "GL-000-Backend",
+        "GL-002-Query"
+      ]
     },
     {
       "id": "TST-002-GetUser-001",
@@ -130,7 +138,11 @@
       "reqRefs": [
         "REQ-013-Search"
       ],
-      "name": "Get User"
+      "name": "Get User",
+      "glossaryRefs": [
+        "GL-000-Backend",
+        "GL-002-Query"
+      ]
     },
     {
       "id": "TST-003-ListUsers-001",
@@ -145,7 +157,10 @@
         "returnType": "ServiceUnavailableError"
       },
       "contractClause": "Throws NO_BACKENDS_AVAILABLE when no backends are currently available.",
-      "name": "List Users"
+      "name": "List Users",
+      "glossaryRefs": [
+        "GL-000-Backend"
+      ]
     },
     {
       "id": "TST-004-UpdateUser-001",
@@ -161,7 +176,10 @@
         "returnType": "ValidationError"
       },
       "contractClause": "Throws INVALID_OVERRIDE when the overrideBackendId does not match any configured backend.",
-      "name": "Update User"
+      "name": "Update User",
+      "glossaryRefs": [
+        "GL-000-Backend"
+      ]
     },
     {
       "id": "TST-005-DeleteUser-001",
@@ -181,7 +199,10 @@
       "reqRefs": [
         "REQ-001-Login"
       ],
-      "name": "Delete User"
+      "name": "Delete User",
+      "glossaryRefs": [
+        "GL-002-Query"
+      ]
     },
     {
       "id": "TST-000-Authenticate-002",
@@ -208,7 +229,10 @@
       "reqRefs": [
         "REQ-002-Logout"
       ],
-      "name": "Authenticate"
+      "name": "Authenticate",
+      "glossaryRefs": [
+        "GL-000-Backend"
+      ]
     },
     {
       "id": "TST-001-CreateUser-002",
@@ -219,7 +243,10 @@
       "expectedOutput": [],
       "expectedOutputType": "Backend[]",
       "contractClause": "Returns an empty array when no backends are configured.",
-      "name": "Create User"
+      "name": "Create User",
+      "glossaryRefs": [
+        "GL-000-Backend"
+      ]
     },
     {
       "id": "TST-002-GetUser-002",
@@ -244,7 +271,11 @@
       "reqRefs": [
         "REQ-003-ResetPassword"
       ],
-      "name": "Get User"
+      "name": "Get User",
+      "glossaryRefs": [
+        "GL-002-Query",
+        "GL-007-QueryLog"
+      ]
     },
     {
       "id": "TST-003-ListUsers-002",
@@ -266,7 +297,10 @@
       ],
       "expectedOutputType": "LogEntry[]",
       "contractClause": "Entries are filtered by backendId when provided.",
-      "name": "List Users"
+      "name": "List Users",
+      "glossaryRefs": [
+        "GL-000-Backend"
+      ]
     },
     {
       "id": "TST-004-UpdateUser-002",
@@ -287,7 +321,10 @@
       "reqRefs": [
         "REQ-003-ResetPassword"
       ],
-      "name": "Update User"
+      "name": "Update User",
+      "glossaryRefs": [
+        "GL-002-Query"
+      ]
     },
     {
       "id": "TST-005-DeleteUser-002",
@@ -302,7 +339,10 @@
         "returnType": "NotFoundError"
       },
       "contractClause": "Throws NOT_FOUND when no query exists with this ID.",
-      "name": "Delete User"
+      "name": "Delete User",
+      "glossaryRefs": [
+        "GL-002-Query"
+      ]
     }
   ]
 }

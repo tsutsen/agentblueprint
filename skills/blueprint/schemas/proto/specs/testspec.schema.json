@@ -403,6 +403,14 @@
               "$ref": "#/definitions/scrId"
             },
             "description": "Screen IDs."
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/glId"
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
           }
         },
         "required": [

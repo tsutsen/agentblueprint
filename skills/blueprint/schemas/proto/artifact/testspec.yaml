@@ -98,3 +98,6 @@ fields:
         - name: screenRefs
           type: array
           ref: scr
+        - name: glossaryRefs
+          type: array
+          ref: gl

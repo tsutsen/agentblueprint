@@ -4,202 +4,276 @@
   "project": "LLMGateway",
   "terms": [
     {
-      "id": "GL-000-Authentication",
-      "examples": [
-        "llama.cpp server on localhost:8080",
-        "Anthropic API"
-      ],
-      "relatedTerms": [
-        "GL-002-Session",
-        "GL-011-Hashing",
-        "GL-012-Salt"
-      ],
-      "category": "domain",
+      "id": "GL-000-Backend",
       "name": "Backend",
-      "description": "A configured LLM service endpoint the gateway can route queries to. May be local (running on the same machine) or cloud (remote API).",
-      "definition": "A configured LLM service endpoint the gateway can route queries to. May be local (running on the same machine) or cloud (remote API)."
+      "definition": "An AI model endpoint that processes queries.",
+      "synonyms": [
+        "model",
+        "AI backend"
+      ],
+      "relatedTerms": [
+        "GL-001-BackendPool",
+        "GL-009-LocalBackendAdapter",
+        "GL-010-CloudBackendAdapter"
+      ],
+      "examples": [],
+      "category": "technical",
+      "description": "An AI model endpoint that processes queries."
     },
     {
-      "id": "GL-001-Authorization",
-      "relatedTerms": [
-        "GL-001-Authorization",
-        "GL-007-Privacy"
-      ],
-      "category": "domain",
+      "id": "GL-001-BackendPool",
       "name": "Backend Pool",
-      "description": "The in-memory registry of all configured backends and their current availability state, maintained at runtime by the backend-pool component.",
-      "definition": "The in-memory registry of all configured backends and their current availability state, maintained at runtime by the backend-pool component."
-    },
-    {
-      "id": "GL-002-Session",
-      "examples": [
-        "A code completion request",
-        "A natural language question"
+      "definition": "The set of configured backends available for routing.",
+      "synonyms": [
+        "pool"
       ],
       "relatedTerms": [
-        "GL-004-Role",
-        "GL-006-Credential",
-        "GL-010-Encryption"
+        "GL-000-Backend",
+        "GL-004-Router"
       ],
-      "category": "domain",
+      "examples": [],
+      "category": "technical",
+      "description": "The set of configured backends available for routing."
+    },
+    {
+      "id": "GL-002-Query",
       "name": "Query",
-      "description": "A single request from a developer submitted to the gateway for routing and processing by a backend.",
-      "definition": "A single request from a developer submitted to the gateway for routing and processing by a backend."
+      "definition": "An incoming request to be routed to a backend.",
+      "synonyms": [
+        "request"
+      ],
+      "relatedTerms": [
+        "GL-004-Router",
+        "GL-005-LogEntry",
+        "GL-011-QueryStatus"
+      ],
+      "examples": [],
+      "category": "domain",
+      "description": "An incoming request to be routed to a backend."
     },
     {
-      "id": "GL-003-Token",
-      "relatedTerms": [
-        "GL-003-Token",
-        "GL-005-Permission",
-        "GL-007-Privacy"
-      ],
-      "category": "domain",
-      "name": "Route Decision",
-      "description": "The output of the routing step: which backend was selected for a given query and the reason for selection, including the assigned complexity tier.",
-      "definition": "The output of the routing step: which backend was selected for a given query and the reason for selection, including the assigned complexity tier."
-    },
-    {
-      "id": "GL-004-Role",
-      "relatedTerms": [
-        "GL-007-Privacy",
-        "GL-003-Token"
-      ],
-      "category": "domain",
+      "id": "GL-003-Classifier",
       "name": "Classifier",
-      "description": "The component that analyses a query and assigns it a complexity tier (simple, moderate, or complex) to inform routing decisions.",
-      "definition": "The component that analyses a query and assigns it a complexity tier (simple, moderate, or complex) to inform routing decisions."
+      "definition": "Component that analyzes query content to determine complexity.",
+      "synonyms": [
+        "Query Classifier",
+        "query classifier"
+      ],
+      "relatedTerms": [
+        "GL-002-Query",
+        "GL-004-Router"
+      ],
+      "examples": [],
+      "category": "technical",
+      "description": "Component that analyzes query content to determine complexity."
     },
     {
-      "id": "GL-005-Permission",
-      "relatedTerms": [
-        "GL-005-Permission",
-        "GL-002-Session",
-        "GL-004-Role"
-      ],
-      "category": "domain",
+      "id": "GL-004-Router",
       "name": "Router",
-      "description": "The component that selects a backend for a query based on its complexity tier, configured priority order, and backend availability.",
-      "definition": "The component that selects a backend for a query based on its complexity tier, configured priority order, and backend availability."
-    },
-    {
-      "id": "GL-006-Credential",
-      "examples": [
-        "simple",
-        "moderate",
-        "complex"
+      "definition": "Component that routes queries to backends based on classification.",
+      "synonyms": [
+        "query router"
       ],
       "relatedTerms": [
-        "GL-005-Permission",
-        "GL-006-Credential"
+        "GL-002-Query",
+        "GL-003-Classifier",
+        "GL-001-BackendPool"
       ],
-      "category": "domain",
-      "name": "Complexity Tier",
-      "description": "A categorical label assigned to a query by the Classifier indicating how capable a backend needs to be to handle it. Values are simple, moderate, or complex.",
-      "definition": "A categorical label assigned to a query by the Classifier indicating how capable a backend needs to be to handle it. Values are simple, moderate, or complex."
+      "examples": [],
+      "category": "technical",
+      "description": "Component that routes queries to backends based on classification."
     },
     {
-      "id": "GL-007-Privacy",
-      "relatedTerms": [
-        "GL-002-Session",
-        "GL-006-Credential"
-      ],
-      "category": "domain",
-      "name": "Fallback",
-      "description": "The automatic selection of the next available backend when the preferred backend is unavailable or returns an error, triggered by the Router.",
-      "definition": "The automatic selection of the next available backend when the preferred backend is unavailable or returns an error, triggered by the Router."
-    },
-    {
-      "id": "GL-008-Compliance",
-      "relatedTerms": [
-        "GL-003-Token",
-        "GL-004-Role"
-      ],
-      "category": "domain",
+      "id": "GL-005-LogEntry",
       "name": "Log Entry",
-      "description": "A persisted record of a single processed query including the backend used, routing decision, response latency, and outcome.",
-      "definition": "A persisted record of a single processed query including the backend used, routing decision, response latency, and outcome."
-    },
-    {
-      "id": "GL-009-AuditLog",
-      "relatedTerms": [
-        "GL-005-Permission",
-        "GL-006-Credential"
-      ],
-      "category": "technical",
-      "name": "Routing Overhead",
-      "description": "The latency added by the gateway's classification and routing logic on top of the backend's own response time, measured in milliseconds.",
-      "definition": "The latency added by the gateway's classification and routing logic on top of the backend's own response time, measured in milliseconds."
-    },
-    {
-      "id": "GL-010-Encryption",
-      "examples": [
-        "llama.cpp",
-        "LM Studio",
-        "Ollama"
-      ],
+      "definition": "A record of a query's routing and execution metadata.",
       "synonyms": [
-        "local model"
+        "log",
+        "entry",
+        "LogEntry",
+        "log entry"
       ],
       "relatedTerms": [
-        "GL-001-Authorization",
-        "GL-012-Salt"
+        "GL-002-Query",
+        "GL-007-QueryLog",
+        "GL-013-LogSeverity"
       ],
+      "examples": [],
       "category": "domain",
-      "name": "Local Backend",
-      "description": "A backend running as a process on the same machine as the gateway, accessed via localhost. Examples include llama.cpp, LM Studio, and Ollama.",
-      "definition": "A backend running as a process on the same machine as the gateway, accessed via localhost. Examples include llama.cpp, LM Studio, and Ollama."
+      "description": "A record of a query's routing and execution metadata."
     },
     {
-      "id": "GL-011-Hashing",
-      "examples": [
-        "Anthropic API",
-        "OpenRouter"
-      ],
+      "id": "GL-006-APIServer",
+      "name": "API Server",
+      "definition": "The entry point that receives incoming queries.",
       "synonyms": [
-        "cloud model",
-        "remote backend"
+        "server"
       ],
       "relatedTerms": [
-        "GL-001-Authorization",
-        "GL-011-Hashing"
+        "GL-002-Query",
+        "GL-004-Router"
       ],
-      "category": "domain",
-      "name": "Cloud Backend",
-      "description": "A backend accessed via a remote HTTP API, typically requiring an API key for authentication. Examples include Anthropic API and OpenRouter.",
-      "definition": "A backend accessed via a remote HTTP API, typically requiring an API key for authentication. Examples include Anthropic API and OpenRouter."
-    },
-    {
-      "id": "GL-012-Salt",
-      "relatedTerms": [
-        "GL-001-Authorization",
-        "GL-003-Token"
-      ],
+      "examples": [],
       "category": "technical",
-      "name": "OpenAI-compatible",
-      "description": "Conforming to the request and response format of the OpenAI Chat Completions API, allowing clients built for OpenAI to work without modification.",
-      "definition": "Conforming to the request and response format of the OpenAI Chat Completions API, allowing clients built for OpenAI to work without modification."
+      "description": "The entry point that receives incoming queries."
     },
     {
-      "id": "GL-013-Nonce",
-      "relatedTerms": [
-        "GL-006-Credential",
-        "GL-002-Session"
+      "id": "GL-007-QueryLog",
+      "name": "Query Log",
+      "definition": "Persistent store of query history.",
+      "synonyms": [
+        "log store"
       ],
+      "relatedTerms": [
+        "GL-005-LogEntry",
+        "GL-013-LogSeverity"
+      ],
+      "examples": [],
       "category": "domain",
-      "name": "Priority Order",
-      "description": "The user-configured ranked list of backends the Router consults in sequence when selecting a backend for a query.",
-      "definition": "The user-configured ranked list of backends the Router consults in sequence when selecting a backend for a query."
+      "description": "Persistent store of query history."
     },
     {
-      "id": "GL-014-Certificate",
-      "relatedTerms": [
-        "GL-006-Credential",
-        "GL-004-Role"
+      "id": "GL-008-ConfigLoader",
+      "name": "Config Loader",
+      "definition": "Component that reads and validates configuration files.",
+      "synonyms": [
+        "loader"
       ],
+      "relatedTerms": [
+        "GL-001-BackendPool"
+      ],
+      "examples": [],
+      "category": "technical",
+      "description": "Component that reads and validates configuration files."
+    },
+    {
+      "id": "GL-009-LocalBackendAdapter",
+      "name": "Local Backend Adapter",
+      "definition": "Adapter for communicating with local backends.",
+      "synonyms": [
+        "local adapter"
+      ],
+      "relatedTerms": [
+        "GL-000-Backend",
+        "GL-004-Router"
+      ],
+      "examples": [],
+      "category": "technical",
+      "description": "Adapter for communicating with local backends."
+    },
+    {
+      "id": "GL-010-CloudBackendAdapter",
+      "name": "Cloud Backend Adapter",
+      "definition": "Adapter for communicating with cloud backends.",
+      "synonyms": [
+        "cloud adapter"
+      ],
+      "relatedTerms": [
+        "GL-000-Backend",
+        "GL-004-Router"
+      ],
+      "examples": [],
+      "category": "technical",
+      "description": "Adapter for communicating with cloud backends."
+    },
+    {
+      "id": "GL-011-QueryStatus",
+      "name": "Query Status",
+      "definition": "Current state of a query (pending, routed, completed, failed).",
+      "synonyms": [
+        "status",
+        "QueryStatus",
+        "query status"
+      ],
+      "relatedTerms": [
+        "GL-002-Query",
+        "GL-005-LogEntry"
+      ],
+      "examples": [],
       "category": "domain",
-      "name": "Override",
-      "description": "An explicit instruction from the developer to route a query to a specific backend, bypassing classification and priority logic.",
-      "definition": "An explicit instruction from the developer to route a query to a specific backend, bypassing classification and priority logic."
+      "description": "Current state of a query (pending, routed, completed, failed)."
+    },
+    {
+      "id": "GL-012-BackendStatus",
+      "name": "Backend Status",
+      "definition": "Current availability of a backend (online, offline).",
+      "synonyms": [
+        "availability",
+        "BackendStatus",
+        "backend status"
+      ],
+      "relatedTerms": [
+        "GL-000-Backend",
+        "GL-001-BackendPool"
+      ],
+      "examples": [],
+      "category": "domain",
+      "description": "Current availability of a backend (online, offline)."
+    },
+    {
+      "id": "GL-013-LogSeverity",
+      "name": "Log Severity",
+      "definition": "Severity level of a log entry (info, warn, error).",
+      "synonyms": [
+        "severity",
+        "level",
+        "LogSeverity",
+        "log severity"
+      ],
+      "relatedTerms": [
+        "GL-005-LogEntry",
+        "GL-007-QueryLog"
+      ],
+      "examples": [],
+      "category": "domain",
+      "description": "Severity level of a log entry (info, warn, error)."
+    },
+    {
+      "id": "GL-014-Developer",
+      "name": "Developer",
+      "definition": "Primary user who operates the CLI tool.",
+      "synonyms": [
+        "user",
+        "operator",
+        "A developer",
+        "developer"
+      ],
+      "relatedTerms": [
+        "GL-015-Gateway"
+      ],
+      "examples": [],
+      "category": "domain",
+      "description": "Primary user who operates the CLI tool."
+    },
+    {
+      "id": "GL-015-Gateway",
+      "name": "Gateway",
+      "definition": "The CLI tool itself (gateway command).",
+      "synonyms": [
+        "CLI",
+        "tool"
+      ],
+      "relatedTerms": [
+        "GL-014-Developer",
+        "GL-006-APIServer"
+      ],
+      "examples": [],
+      "category": "technical",
+      "description": "The CLI tool itself (gateway command)."
+    },
+    {
+      "id": "GL-016-User",
+      "name": "User",
+      "definition": "An authenticated user account in the system.",
+      "synonyms": [
+        "account"
+      ],
+      "relatedTerms": [
+        "GL-014-Developer"
+      ],
+      "examples": [],
+      "category": "domain",
+      "description": "An authenticated user account in the system."
     }
   ]
 }
