@@ -254,7 +254,8 @@
             "description": "Human-readable dg name."
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Longer description of this dg."
           },
           "goal": {
             "type": "string",
@@ -305,7 +306,8 @@
             "description": "Human-readable prs name."
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Longer description of this prs."
           },
           "role": {
             "type": "string",
@@ -524,7 +526,8 @@
             "description": "Human-readable scr name."
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Longer description of this scr."
           },
           "purpose": {
             "type": "string",
@@ -746,8 +749,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Longer description of this pat.",
-            "minLength": 10
+            "description": "Longer description of this pat."
           },
           "examples": {
             "type": "array",
@@ -804,8 +806,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Longer description of this vdr.",
-            "minLength": 10
+            "description": "Longer description of this vdr."
           },
           "rationale": {
             "type": "string"
@@ -887,8 +888,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Longer description of this ar.",
-            "minLength": 10
+            "description": "Longer description of this ar."
           },
           "rationale": {
             "type": "string"
@@ -927,8 +927,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Longer description of this uxac.",
-            "minLength": 10
+            "description": "Longer description of this uxac."
           },
           "refs": {
             "type": "object",
@@ -980,8 +979,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Longer description of this dt.",
-            "minLength": 10
+            "description": "Longer description of this dt."
           },
           "category": {
             "type": "string",

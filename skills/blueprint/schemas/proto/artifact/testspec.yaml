@@ -50,20 +50,14 @@ fields:
     of:
       type: object
       ref: tst
-      required: [fnRef, category, description, input, contractClause]
+      required: [fnRef, category, input, contractClause]
       fields:
-        - name: name
-          type: string
-          minLength: 1
         - name: fnRef
           type: string
           ref: fn
         - name: category
           type: enum
           enum: [happy-path, edge-case, error-path]
-        - name: description
-          type: string
-          minLength: 5
         - name: input
           type: object
         - name: expectedOutput

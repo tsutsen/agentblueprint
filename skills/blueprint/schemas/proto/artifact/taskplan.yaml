@@ -10,11 +10,8 @@ fields:
     of:
       type: object
       ref: mil
-      required: [name, outcome, epics]
+      required: [outcome, epics]
       fields:
-        - name: name
-          type: string
-          minLength: 5
         - name: outcome
           type: string
           minLength: 10

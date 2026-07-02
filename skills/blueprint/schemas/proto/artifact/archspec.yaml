@@ -42,8 +42,6 @@ fields:
         - name: purpose
           type: string
           minLength: 10
-        - name: description
-          type: string
         - name: responsibilities
           type: array
           minItems: 1
@@ -101,13 +99,8 @@ fields:
     of:
       type: object
       ref: flw
-      required: [name, steps]
+      required: [steps]
       fields:
-        - name: name
-          type: string
-          minLength: 1
-        - name: description
-          type: string
         - name: glossaryRefs
           type: array
           ref: gl
@@ -144,11 +137,8 @@ fields:
     of:
       type: object
       ref: con
-      required: [description]
+      required: []
       fields:
-        - name: description
-          type: string
-          minLength: 10
         - name: rationale
           type: string
         - name: glossaryRefs

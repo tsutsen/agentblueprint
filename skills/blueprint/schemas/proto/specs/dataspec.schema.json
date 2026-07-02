@@ -254,7 +254,8 @@
             "description": "Human-readable num name."
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Longer description of this num."
           },
           "values": {
             "type": "array",
@@ -302,7 +303,8 @@
             "description": "Human-readable ent name."
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Longer description of this ent."
           },
           "abstract": {
             "type": "boolean",
@@ -329,7 +331,8 @@
                   "description": "Human-readable FLD name."
                 },
                 "description": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Longer description of this FLD."
                 },
                 "type": {
                   "type": "string"
@@ -366,10 +369,13 @@
                   "x_idPattern": "FUNC"
                 },
                 "name": {
-                  "type": "string"
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Human-readable FUNC name."
                 },
                 "description": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Longer description of this FUNC."
                 },
                 "apiRef": {
                   "$ref": "#/definitions/fnId",
@@ -447,7 +453,8 @@
             "description": "Human-readable rel name."
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Longer description of this rel."
           },
           "from": {
             "type": "string"

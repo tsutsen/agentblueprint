@@ -34,8 +34,6 @@ fields:
         - name: goal
           type: string
           minLength: 5
-        - name: description
-          type: string
         - name: rationale
           type: string
         - name: reqRefs
@@ -53,11 +51,6 @@ fields:
       ref: prs
       required: [role, goals, painPoints, technicalSkillLevel]
       fields:
-        - name: name
-          type: string
-          minLength: 1
-        - name: description
-          type: string
         - name: role
           type: string
           minLength: 1
@@ -82,11 +75,8 @@ fields:
     of:
       type: object
       ref: uj
-      required: [name, personaRef, usRefs, startingState, steps, desiredOutcome]
+      required: [personaRef, usRefs, startingState, steps, desiredOutcome]
       fields:
-        - name: name
-          type: string
-          minLength: 1
         - name: personaRef
           type: string
           ref: prs
@@ -154,13 +144,8 @@ fields:
     of:
       type: object
       ref: scr
-      required: [name, purpose, primaryActions]
+      required: [purpose, primaryActions]
       fields:
-        - name: name
-          type: string
-          minLength: 1
-        - name: description
-          type: string
         - name: purpose
           type: string
           minLength: 10
@@ -261,14 +246,8 @@ fields:
     of:
       type: object
       ref: pat
-      required: [name, description]
+      required: []
       fields:
-        - name: name
-          type: string
-          minLength: 1
-        - name: description
-          type: string
-          minLength: 10
         - name: examples
           type: array
           of: { type: string }
@@ -291,11 +270,8 @@ fields:
     of:
       type: object
       ref: vdr
-      required: [description]
+      required: []
       fields:
-        - name: description
-          type: string
-          minLength: 10
         - name: rationale
           type: string
         - name: reqRefs
@@ -333,11 +309,8 @@ fields:
     of:
       type: object
       ref: ar
-      required: [description]
+      required: []
       fields:
-        - name: description
-          type: string
-          minLength: 10
         - name: rationale
           type: string
         - name: reqRefs
@@ -350,14 +323,8 @@ fields:
     of:
       type: object
       ref: uxac
-      required: [description]
+      required: []
       fields:
-        - name: name
-          type: string
-          minLength: 1
-        - name: description
-          type: string
-          minLength: 10
         - name: refs
           type: object
           fields:
@@ -375,19 +342,13 @@ fields:
     of:
       type: object
       ref: dt
-      required: [name, category, value]
+      required: [category, value]
       fields:
-        - name: name
-          type: string
-          minLength: 1
         - name: category
           type: enum
           enum: [color, typography, spacing, border-radius, shadow, opacity, z-index]
         - name: value
           type: string
-        - name: description
-          type: string
-          minLength: 10
         - name: glossaryRefs
           type: array
           ref: gl

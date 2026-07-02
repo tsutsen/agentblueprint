@@ -265,12 +265,11 @@
           "name": {
             "type": "string",
             "minLength": 1,
-            "description": "Short descriptive name summarizing this requirement."
+            "description": "Human-readable req name."
           },
           "description": {
             "type": "string",
-            "description": "Observable behaviour in plain language.",
-            "minLength": 10
+            "description": "Longer description of this req."
           },
           "actor": {
             "type": "string",
@@ -358,7 +357,8 @@
             "description": "Human-readable nfr name."
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Longer description of this nfr."
           },
           "category": {
             "type": "string",
@@ -439,7 +439,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Plain-language description. May restate capability+outcome."
+            "description": "Longer description of this us."
           },
           "actor": {
             "type": "string",
@@ -503,8 +503,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Longer description of this sc.",
-            "minLength": 10
+            "description": "Longer description of this sc."
           },
           "refs": {
             "type": "object",
@@ -567,12 +566,11 @@
           "name": {
             "type": "string",
             "minLength": 1,
-            "description": "Short descriptive name summarizing this non-goal."
+            "description": "Human-readable ng name."
           },
           "description": {
             "type": "string",
-            "description": "Plain-language description of why this capability is excluded.",
-            "minLength": 10
+            "description": "Longer description of this ng."
           },
           "capability": {
             "type": "string",

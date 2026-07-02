@@ -311,8 +311,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Longer description of this tst.",
-            "minLength": 5
+            "description": "Longer description of this tst."
           },
           "fnRef": {
             "$ref": "#/definitions/fnId",

@@ -35,16 +35,8 @@ fields:
     of:
       type: object
       ref: req
-      required: [description, actor]
+      required: [actor]
       fields:
-        - name: name
-          type: string
-          minLength: 1
-          desc: "Short descriptive name summarizing this requirement."
-        - name: description
-          type: string
-          minLength: 10
-          desc: "Observable behaviour in plain language."
         - name: actor
           type: string
           minLength: 1
@@ -81,11 +73,6 @@ fields:
       ref: nfr
       required: [category, scale, meter, must]
       fields:
-        - name: name
-          type: string
-          minLength: 1
-        - name: description
-          type: string
         - name: category
           type: enum
           enum: [Performance, Reliability, Security, Scalability, Maintainability, Portability]
@@ -124,9 +111,6 @@ fields:
       ref: us
       required: [actor, capability, outcome, reqRefs]
       fields:
-        - name: name
-          type: string
-          minLength: 1
         - name: actor
           type: string
           minLength: 1
@@ -136,9 +120,6 @@ fields:
         - name: outcome
           type: string
           minLength: 5
-        - name: description
-          type: string
-          desc: "Plain-language description. May restate capability+outcome."
         - name: reqRefs
           type: array
           ref: req
@@ -155,14 +136,8 @@ fields:
     of:
       type: object
       ref: sc
-      required: [description, refs]
+      required: [refs]
       fields:
-        - name: name
-          type: string
-          minLength: 1
-        - name: description
-          type: string
-          minLength: 10
         - name: refs
           type: object
           fields:
@@ -196,14 +171,6 @@ fields:
         - name: reason
           type: string
           minLength: 5
-        - name: name
-          type: string
-          minLength: 1
-          desc: "Short descriptive name summarizing this non-goal."
-        - name: description
-          type: string
-          minLength: 10
-          desc: "Plain-language description of why this capability is excluded."
         - name: glossaryRefs
           type: array
           ref: gl

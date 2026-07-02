@@ -15,9 +15,6 @@ fields:
         - name: definition
           type: string
           minLength: 10
-        - name: description
-          type: string
-          minLength: 10
         - name: examples
           type: array
           of: { type: string, minLength: 1 }

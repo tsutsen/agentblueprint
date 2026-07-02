@@ -277,7 +277,8 @@
             "description": "Human-readable comp name."
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Longer description of this comp."
           },
           "purpose": {
             "type": "string",
@@ -410,7 +411,8 @@
             "description": "Human-readable flw name."
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Longer description of this flw."
           },
           "glossaryRefs": {
             "type": "array",
@@ -497,8 +499,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Longer description of this con.",
-            "minLength": 10
+            "description": "Longer description of this con."
           },
           "rationale": {
             "type": "string"
