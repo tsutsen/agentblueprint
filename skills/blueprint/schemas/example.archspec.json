@@ -60,7 +60,8 @@
         "Enforce request size limits."
       ],
       "dependencies": [
-        "COMP-002-Router"
+        "COMP-002-Router",
+        "COMP-006-QueryLog"
       ],
       "reqRefs": [
         "REQ-001-Login"
@@ -342,5 +343,7 @@
       "rationale": "Enforces component boundaries and makes the system testable in isolation.",
       "name": "Input Validation"
     }
-  ]
+  ],
+  "dataSpecVersion": "v1.0.0",
+  "apiSpecVersion": "v1.0.0"
 }

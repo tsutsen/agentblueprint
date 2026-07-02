@@ -4,6 +4,14 @@ schemaVersion: "2.0.0"
 description: "Structural specification of the system: components, responsibilities, data flow, and constraints"
 
 fields:
+  - name: dataSpecVersion
+    type: string
+    desc: "Version of the DataSpec this architecture targets."
+
+  - name: apiSpecVersion
+    type: string
+    desc: "Version of the ApiSpec this architecture targets."
+
   - name: overview
     type: object
     required: [summary, subsystems]

@@ -120,11 +120,6 @@
       "description": "Enum identifier.",
       "x_idPattern": "num"
     },
-    "primId": {
-      "type": "string",
-      "description": "Primitive identifier.",
-      "x_idPattern": "prim"
-    },
     "relId": {
       "type": "string",
       "description": "Relationship identifier.",
@@ -207,6 +202,14 @@
       "type": "string",
       "description": "Version of the ArchitectureSpec schema this document conforms to. Must be '2.0.0'.",
       "const": "2.0.0"
+    },
+    "dataSpecVersion": {
+      "type": "string",
+      "description": "Version of the DataSpec this architecture targets."
+    },
+    "apiSpecVersion": {
+      "type": "string",
+      "description": "Version of the ApiSpec this architecture targets."
     },
     "overview": {
       "type": "object",

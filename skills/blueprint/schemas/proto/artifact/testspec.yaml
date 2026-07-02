@@ -4,6 +4,15 @@ schemaVersion: "3.0.0"
 description: "Test specification for all API functions"
 
 fields:
+  - name: apiSpecVersion
+    type: string
+    desc: "Version of the ApiSpec these tests cover."
+
+  - name: verificationStatus
+    type: string
+    desc: "Independent verification status."
+    default: "pending"
+
   - name: functionCoverage
     type: array
     minItems: 1

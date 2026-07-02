@@ -365,7 +365,7 @@ def _gate_no_orphan_entities(spec: dict, extra_specs: dict) -> CompletenessGate:
     for r in relationships:
         rel_participants.add(r.get("from"))
         rel_participants.add(r.get("to"))
-    orphans = {e["name"] for e in entities} - rel_participants
+    orphans = {e["id"] for e in entities} - rel_participants
     return CompletenessGate(
         description="No orphan entities",
         passed=len(orphans) == 0 or len(entities) <= 1, required_at="review",
@@ -381,7 +381,7 @@ def _gate_orphan_threshold(spec: dict, extra_specs: dict) -> CompletenessGate:
     for r in relationships:
         rel_participants.add(r.get("from"))
         rel_participants.add(r.get("to"))
-    orphans = {e["name"] for e in entities} - rel_participants
+    orphans = {e["id"] for e in entities} - rel_participants
     orphan_pct = (len(orphans) / len(entities) * 100) if entities else 0
     return CompletenessGate(
         description="Orphan entities < 20%",

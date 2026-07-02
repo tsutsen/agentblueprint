@@ -118,11 +118,6 @@
       "description": "Enum identifier.",
       "x_idPattern": "num"
     },
-    "primId": {
-      "type": "string",
-      "description": "Primitive identifier.",
-      "x_idPattern": "prim"
-    },
     "relId": {
       "type": "string",
       "description": "Relationship identifier.",
@@ -265,6 +260,10 @@
       "type": "string",
       "minLength": 1,
       "description": "The module this API spec belongs to."
+    },
+    "dataSpecVersion": {
+      "type": "string",
+      "description": "Version of the DataSpec this API spec targets."
     },
     "functions": {
       "type": "array",

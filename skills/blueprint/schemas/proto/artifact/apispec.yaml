@@ -44,6 +44,10 @@ fields:
     desc: "The module this API spec belongs to."
     minLength: 1
 
+  - name: dataSpecVersion
+    type: string
+    desc: "Version of the DataSpec this API spec targets."
+
   - name: functions
     type: array
     minItems: 1

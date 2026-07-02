@@ -339,14 +339,6 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "category": "function_untested",
         "hint": "Add at least one test with fnRef set to this function.",
     },
-    # Happy-path/edge-case tests must have expectedOutput
-    {
-        "target": "tests.expectedOutput",
-        "check": "non_empty",
-        "target_label": "Test",
-        "category": "missing_expected_output",
-        "hint": "Every happy-path and edge-case test must assert a concrete expected output.",
-    },
 ]
 
 
@@ -411,6 +403,18 @@ COMPLETENESS_GATES: list = [
 
 
 # ── Misc Completeness Gates ───────────────────────────────────────────────────
+
+def _gate_expected_output(spec: dict, extra_specs: dict) -> CompletenessGate:
+    """Happy-path/edge-case tests have expectedOutput (error-path excluded)."""
+    tests = spec.get("tests", [])
+    non_error = [t for t in tests if t.get("category") in ("happy-path", "edge-case")]
+    missing = [t["id"] for t in non_error if not t.get("expectedOutput")]
+    return CompletenessGate(
+        description="All non-error-path tests have expectedOutput",
+        passed=len(missing) == 0, required_at="review",
+        detail=f"Missing expectedOutput: {missing}" if missing else "",
+    )
+
 
 def _gate_error_path_tests(spec: dict, extra_specs: dict) -> CompletenessGate:
     """Has error-path tests."""
@@ -478,6 +482,7 @@ class TestSpecLinter(BaseLinter):
     SEMANTIC_RULES = SEMANTIC_RULES
     COMPLETENESS_GATES = COMPLETENESS_GATES
     MISC_GATES = [
+        _gate_expected_output,
         _gate_error_path_tests,
         _gate_api_function_coverage,
         _gate_out_of_scope_declarations,

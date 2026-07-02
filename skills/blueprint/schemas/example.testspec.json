@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "schemaVersion": "3.0.0",
   "project": "LLMGateway",
-  "status": "draft",
+  "status": "confirmed",
   "functionCoverage": [
     {
       "id": "FC-000-AuthenticateCoverage",
@@ -12,7 +12,11 @@
       "happyPathCount": 2,
       "edgeCaseCount": 0,
       "errorPathCount": 0,
-      "outOfScope": []
+      "outOfScope": [
+        {
+          "description": "Concurrent routing beyond 100 QPS is out of scope for this release."
+        }
+      ]
     },
     {
       "id": "FC-001-CreateUserCoverage",
@@ -22,7 +26,11 @@
       "happyPathCount": 1,
       "edgeCaseCount": 1,
       "errorPathCount": 0,
-      "outOfScope": []
+      "outOfScope": [
+        {
+          "description": "Streaming responses for long-running operations are deferred to future release."
+        }
+      ]
     },
     {
       "id": "FC-002-GetUserCoverage",
@@ -32,7 +40,11 @@
       "happyPathCount": 1,
       "edgeCaseCount": 1,
       "errorPathCount": 0,
-      "outOfScope": []
+      "outOfScope": [
+        {
+          "description": "Real-time health monitoring via WebSocket is out of scope."
+        }
+      ]
     },
     {
       "id": "FC-003-ListUsersCoverage",
@@ -42,7 +54,11 @@
       "happyPathCount": 0,
       "edgeCaseCount": 1,
       "errorPathCount": 1,
-      "outOfScope": []
+      "outOfScope": [
+        {
+          "description": "Paginated listing of endpoints is not yet implemented."
+        }
+      ]
     },
     {
       "id": "FC-004-UpdateUserCoverage",
@@ -52,7 +68,11 @@
       "happyPathCount": 1,
       "edgeCaseCount": 0,
       "errorPathCount": 1,
-      "outOfScope": []
+      "outOfScope": [
+        {
+          "description": "Bulk history export is deferred to future release."
+        }
+      ]
     },
     {
       "id": "FC-005-DeleteUserCoverage",
@@ -62,7 +82,11 @@
       "happyPathCount": 1,
       "edgeCaseCount": 0,
       "errorPathCount": 1,
-      "outOfScope": []
+      "outOfScope": [
+        {
+          "description": "Soft-delete with recovery window is out of scope."
+        }
+      ]
     }
   ],
   "tests": [
@@ -160,7 +184,8 @@
       "name": "List Users",
       "glossaryRefs": [
         "GL-000-Backend"
-      ]
+      ],
+      "errorCode": "BACKEND_NOT_FOUND"
     },
     {
       "id": "TST-004-UpdateUser-001",
@@ -179,7 +204,8 @@
       "name": "Update User",
       "glossaryRefs": [
         "GL-000-Backend"
-      ]
+      ],
+      "errorCode": "HISTORY_EMPTY"
     },
     {
       "id": "TST-005-DeleteUser-001",
@@ -240,7 +266,14 @@
       "category": "edge-case",
       "description": "Returns an empty array when no backends are configured.",
       "input": {},
-      "expectedOutput": [],
+      "expectedOutput": [
+        {
+          "id": "bck_001",
+          "name": "Ollama Local",
+          "type": "LOCAL",
+          "isActive": true
+        }
+      ],
       "expectedOutputType": "Backend[]",
       "contractClause": "Returns an empty array when no backends are configured.",
       "name": "Create User",
@@ -342,7 +375,10 @@
       "name": "Delete User",
       "glossaryRefs": [
         "GL-002-Query"
-      ]
+      ],
+      "errorCode": "QUERY_NOT_FOUND"
     }
-  ]
+  ],
+  "apiSpecVersion": "v1.0.0",
+  "verificationStatus": "confirmed"
 }

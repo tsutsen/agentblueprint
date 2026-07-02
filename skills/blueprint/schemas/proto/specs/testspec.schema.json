@@ -201,6 +201,15 @@
       "description": "Version of the TestSpec schema this document conforms to. Must be '3.0.0'.",
       "const": "3.0.0"
     },
+    "apiSpecVersion": {
+      "type": "string",
+      "description": "Version of the ApiSpec these tests cover."
+    },
+    "verificationStatus": {
+      "type": "string",
+      "default": "pending",
+      "description": "Independent verification status."
+    },
     "functionCoverage": {
       "type": "array",
       "minItems": 1,

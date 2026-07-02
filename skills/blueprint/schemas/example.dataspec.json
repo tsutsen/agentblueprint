@@ -70,7 +70,8 @@
           "type": "string",
           "required": true,
           "description": "Unique identifier for the query.",
-          "id": "FLD-000-id"
+          "id": "FLD-000-id",
+          "example": "qry_001"
         },
         {
           "name": "content",
@@ -139,7 +140,8 @@
           "type": "string",
           "required": true,
           "description": "Unique identifier for the backend.",
-          "id": "FLD-001-id"
+          "id": "FLD-001-id",
+          "example": "bck_001"
         },
         {
           "name": "name",
@@ -195,7 +197,8 @@
           "type": "string",
           "required": true,
           "description": "Unique identifier for the log entry.",
-          "id": "FLD-002-id"
+          "id": "FLD-002-id",
+          "example": "log_001"
         },
         {
           "name": "queryId",
@@ -238,40 +241,40 @@
   ],
   "relationships": [
     {
+      "id": "REL-000-QueryUsesBackend",
+      "name": "Query Uses Backend",
+      "description": "A Query is routed to one Backend.",
       "from": "ENT-000-Query",
       "to": "ENT-001-Backend",
       "type": "association",
       "cardinality": {
-        "fromLabel": "0..1",
+        "fromLabel": "*",
         "toLabel": "1"
-      },
-      "description": "A query is assigned to at most one backend during processing.",
-      "id": "REL-000-Routedto",
-      "name": "routed to"
+      }
     },
     {
+      "id": "REL-001-LogEntryTracksQuery",
+      "name": "Log Entry Tracks Query",
+      "description": "A LogEntry records one Query's execution.",
       "from": "ENT-002-LogEntry",
       "to": "ENT-000-Query",
       "type": "association",
       "cardinality": {
-        "fromLabel": "1",
+        "fromLabel": "*",
         "toLabel": "1"
-      },
-      "description": "Each log entry is associated with exactly one query.",
-      "id": "REL-001-Records",
-      "name": "records"
+      }
     },
     {
+      "id": "REL-002-LogEntryTracksBackend",
+      "name": "Log Entry Tracks Backend",
+      "description": "A LogEntry records which Backend handled the Query.",
       "from": "ENT-002-LogEntry",
       "to": "ENT-001-Backend",
       "type": "association",
       "cardinality": {
-        "fromLabel": "0..1",
+        "fromLabel": "*",
         "toLabel": "1"
-      },
-      "description": "A log entry may reference a backend that handled the query.",
-      "id": "REL-002-Involves",
-      "name": "involves"
+      }
     }
   ],
   "project": "LLMGateway"

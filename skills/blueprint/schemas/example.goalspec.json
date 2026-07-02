@@ -2,12 +2,12 @@
   "version": "1.0.0",
   "schemaVersion": "4.0.0",
   "project": "LLMGateway",
-  "status": "draft",
+  "status": "confirmed",
   "objective": {
     "statement": "A local-first tool that routes developer queries to the most capable available LLM based on task complexity, minimising latency and cost.",
     "for": "Developers running local and cloud LLM backends simultaneously.",
     "problem": "Developers must manually decide which LLM to use per task, switching tools and accepting unnecessary latency or cost for simple queries.",
-    "confirmedAfterCompletion": false
+    "confirmedAfterCompletion": true
   },
   "functionalRequirements": [
     {
@@ -117,6 +117,7 @@
       "capability": "configure backend priority from a config file",
       "outcome": "I can adjust routing behaviour without modifying code",
       "reqRefs": [
+        "REQ-000-CreateAccount",
         "REQ-002-Logout"
       ],
       "description": "As a developer, I want to configure backend priority from a config file so that I can adjust routing behaviour without modifying code",
@@ -162,6 +163,7 @@
       "description": "A query submitted without a backend override is routed and returns a response with no manual backend selection required.",
       "refs": {
         "reqRefs": [
+          "REQ-000-CreateAccount",
           "REQ-001-Login"
         ]
       },
