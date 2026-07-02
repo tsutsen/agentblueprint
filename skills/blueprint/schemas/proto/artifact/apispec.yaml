@@ -49,7 +49,7 @@ fields:
     minItems: 1
     of:
       type: object
-      ref: fn
+      ref: endp
       required: [inputs, output]
       fields:
         - name: entity

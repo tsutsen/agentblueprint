@@ -140,8 +140,13 @@
     },
     "fnId": {
       "type": "string",
-      "description": "Function identifier.",
+      "description": "Function (internal) identifier.",
       "x_idPattern": "fn"
+    },
+    "endpId": {
+      "type": "string",
+      "description": "Endpoint (API) identifier.",
+      "x_idPattern": "endp"
     },
     "tstId": {
       "type": "string",
@@ -274,18 +279,18 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/fnId",
-            "description": "Unique identifier for this fn.",
-            "x_idPattern": "fn"
+            "$ref": "#/definitions/endpId",
+            "description": "Unique identifier for this endp.",
+            "x_idPattern": "endp"
           },
           "name": {
             "type": "string",
             "minLength": 1,
-            "description": "Human-readable fn name."
+            "description": "Human-readable endp name."
           },
           "description": {
             "type": "string",
-            "description": "Longer description of this fn."
+            "description": "Longer description of this endp."
           },
           "entity": {
             "type": "string"
