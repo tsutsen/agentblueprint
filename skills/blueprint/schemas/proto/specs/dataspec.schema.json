@@ -465,7 +465,6 @@
               "association",
               "composition",
               "aggregation",
-              "dependency",
               "inheritance"
             ]
           },

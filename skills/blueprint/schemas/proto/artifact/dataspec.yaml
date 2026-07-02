@@ -100,7 +100,7 @@ fields:
           ref: ent
         - name: type
           type: enum
-          enum: [association, composition, aggregation, dependency, inheritance]
+          enum: [association, composition, aggregation, inheritance]
         - name: cardinality
           type: object
           fields:
