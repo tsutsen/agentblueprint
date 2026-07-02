@@ -17,20 +17,8 @@ for every artifact.
 
 ---
 
-## Responsibilities
-
-Blueprint is responsible for:
-
-1. Determining which artifact is being created.
-2. Loading the artifact schema (JSON Schema, generated from proto YAML).
-3. Loading dependency artifacts.
-4. Running structural lint on existing artifacts and surfacing findings.
-5. Conducting schema-driven interviews (one question at a time).
-6. Writing sections via the `write_spec_fields` tool.
-7. Producing JSON and Markdown output for every completed artifact.
-8. Producing handoff recommendations.
-
-`instructions/*.md` explain section semantics for the interview. `schemas/*.schema.json` enforce structure for validation.
+`instructions/*.md` explain spec semantics for the interview.
+`schemas/*.schema.json` enforce structure. `schemas/example.*.json` show reference payloads.
 
 ---
 
@@ -38,38 +26,30 @@ Blueprint is responsible for:
 
 When conducting an interview, follow these rules strictly:
 
-1. **Relentless Inquiry:** Do not stop until every section has a complete,
-   unambiguous shared understanding.
-2. **Section Sequencing:** Follow the section order from the schema exactly.
+1. **Section Sequencing:** Follow the section order from the schema exactly.
    Complete one section fully before moving to the next.
-3. **Single Questioning:** Ask one question at a time. Wait for the user's
+2. **Single Questioning:** Ask one question at a time. Wait for the user's
    answer before proceeding.
-4. **Recommended Answers:** For every question, provide your own recommended
+3. **Recommended Answers:** For every question, provide your own recommended
    answer based on best practices and loaded context. Label it clearly as a
    recommendation, not a conclusion.
-5. **Loaded Context Validation:** If a question can be answered from the
+4. **Loaded Context Validation:** If a question can be answered from the
    loaded context (dependencies, schema, prior artifacts), use that context
    rather than asking the user.
-6. **Contradiction Detection:** If the user's answer conflicts with loaded
+5. **Contradiction Detection:** If the user's answer conflicts with loaded
    context, surface it immediately. Example: "Your code cancels entire Orders,
    but you just said partial cancellation is possible — which is right?"
-7. **Term Clarification:** If the user uses a vague or overloaded term,
+6. **Term Clarification:** If the user uses a vague or overloaded term,
    propose a precise canonical term before continuing.
-8. **Glossary Enforcement:** If a glossary was loaded as context, check
+7. **Glossary Enforcement:** If a glossary was loaded as context, check
    every new term against it. Flag conflicts immediately.
-9. **Schema Compliance:** Each section must conform strictly to the schema.
+8. **Schema Compliance:** Each section must conform strictly to the schema.
    If the schema specifies a format (e.g., Planguage for NFRs), enforce it.
    Do not accept free-form content where a structured format is required.
    Prompt the user to restate in the required format if needed.
-10. **Inferences vs Facts:** Maintain a clear distinction between Facts
-    (verifiable, sourced) and Inferences (derived by reasoning, uncertain).
-    Never treat an inference as a fact without explicit user confirmation.
-11. **No hallucination:** Only record what the user has explicitly stated
-    or what can be verified from loaded context. If uncertain about a detail,
-    ask. Do not fill gaps with assumptions.
-12. **Resume Handling:** If resuming, skip all prior sections and start at
-    the specified section. Do not re-interview sections that were already
-    completed.
+9. **Resume Handling:** If resuming, skip all prior sections and start at
+   the specified section. Do not re-interview sections that were already
+   completed.
 
 ---
 
@@ -78,34 +58,34 @@ When conducting an interview, follow these rules strictly:
 Run the steps below at the start of every session, unless resuming a partial
 interview (in which case skip to the first unanswered question).
 
-**Epic → Issue → SubIssue flow:**
-- TaskPlan (`plan`) produces epics in `tasks/epics/`.
-- Each epic decomposes into issues (`IS-NNN`) via the `issues` command.
-- Issues decompose further into sub-issues (`SI-NNN`) via `issues` on the issue.
-
-For the issues process, follow `instructions/Issue.md`.
-
 ---
 
 ### Artifact Table
 
-| # | Command        | Artifact         | Guide (instructions)                            | JSON Schema (generated)                   | Dependencies                                                                                              | Output (Markdown + JSON)                                          |
-|---|----------------|------------------|-------------------------------------------------|-------------------------------------------|-----------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
-| 0 | `goal`         | GoalSpec         | `instructions/GoalSpec.md`              | `goalspec.schema.json`             | (none)                                                                                                  | `artifacts/GoalSpec.md` + `artifacts/GoalSpec.json`              |
-| 1 | `glossary`     | Glossary         | `instructions/Glossary.md`              | `glossary.schema.json`               | `artifacts/GoalSpec.json`                                                                                 | `artifacts/Glossary.md` + `artifacts/Glossary.json`              |
-| 2 | `design`       | DesignSpec       | `instructions/DesignSpec.md`            | `designspec.schema.json`             | `artifacts/GoalSpec.json`, `artifacts/Glossary.json`                                                      | `artifacts/DesignSpec.md` + `artifacts/DesignSpec.json`          |
-| 3 | `architecture` | ArchitectureSpec | `instructions/ArchitectureSpec.md`      | `archspec.schema.json`               | `artifacts/GoalSpec.json`, `artifacts/Glossary.json`                                                      | `artifacts/ArchitectureSpec.md` + `artifacts/ArchitectureSpec.json` |
-| 4 | `data`         | DataSpec         | `instructions/DataSpec.md`          | `dataspec.schema.json`       | `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`                                              | `artifacts/DataSpec.md` + `artifacts/DataSpec.json`              |
-| 5 | `api`          | ApiSpec          | `instructions/ApiSpec.md`         | `apispec.schema.json`        | `artifacts/GoalSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json`               | `artifacts/ApiSpec.md` + `artifacts/ApiSpec.json`   |
-| 6 | `test`         | TestSpec         | `instructions/TestSpec.md`        | `testspec.schema.json`       | `artifacts/GoalSpec.json`, `artifacts/ApiSpec.json`, `artifacts/DataSpec.json`                        | `artifacts/TestSpec.md` + `artifacts/TestSpec.json` |
-| 7 | `plan`         | TaskPlan         | `instructions/TaskPlan.md`              | `taskplan.schema.json`             | `artifacts/GoalSpec.json`, `artifacts/DesignSpec.json`, `artifacts/ArchitectureSpec.json`, `artifacts/DataSpec.json`, `artifacts/ApiSpec.json`, `artifacts/TestSpec.json` | `tasks/PLAN.md` + `tasks/epics/` |
-| 8 | `issues <epic-id>` | Issue | `instructions/Issue.md` | `issue.schema.json` | `tasks/PLAN.md`, `tasks/epics/EP-NNN/` | `tasks/epics/EP-NNN/IS-NNN/` (md + json) |
+| # | Command                | Artifact         | Dependencies                                                                                              | Output                                          |
+|---|------------------------|------------------|-----------------------------------------------------------------------------------------------------------|-------------------------------------------------|
+| 0 | `goal`                 | GoalSpec         | (none)                                                                                                  | `artifacts/GoalSpec.md` + `.json`              |
+| 1 | `glossary`             | Glossary         | `GoalSpec.json`                                                                                           | `artifacts/Glossary.md` + `.json`              |
+| 2 | `design`               | DesignSpec       | `GoalSpec.json`, `Glossary.json`                                                                          | `artifacts/DesignSpec.md` + `.json`            |
+| 3 | `architecture`         | ArchitectureSpec | `GoalSpec.json`, `Glossary.json`                                                                          | `artifacts/ArchitectureSpec.md` + `.json`      |
+| 4 | `data`                 | DataSpec         | `GoalSpec.json`, `ArchitectureSpec.json`                                                                  | `artifacts/DataSpec.md` + `.json`              |
+| 5 | `api`                  | ApiSpec          | `GoalSpec.json`, `ArchitectureSpec.json`, `DataSpec.json`                                                | `artifacts/ApiSpec.md` + `.json`               |
+| 6 | `test`                 | TestSpec         | `GoalSpec.json`, `ApiSpec.json`, `DataSpec.json`                                                         | `artifacts/TestSpec.md` + `.json`              |
+| 7 | `plan`                 | TaskPlan         | `GoalSpec`, `DesignSpec`, `ArchitectureSpec`, `DataSpec`, `ApiSpec`, `TestSpec`                          | `tasks/PLAN.md` + `tasks/epics/`               |
+| 8 | `gh_create_issue`      | Issue            | `tasks/PLAN.md`, `tasks/epics/EP-NNN/`                                                                    | `tasks/epics/EP-NNN/IS-NNN/` (md + json)       |
 
-All paths under `instructions/` and `.schema.json` are relative to `skills/blueprint/`.
+All artifact paths under `artifacts/` are relative to project root.
+`instructions/*.md` and `schemas/*.schema.json` are relative to `skills/blueprint/`.
 
 `plan` produces multiple files. All behaviour is defined in `instructions/TaskPlan.md`.
-`issues` decomposes an epic into independently-grabbable issues, each with acceptance
-criteria traceable to the epic. Sub-issues (`SI-NNN`) can further decompose an issue.
+`gh_create_issue` decomposes an epic into independently-grabbable issues, each with acceptance
+criteria traceable to the epic. Sub-issues (`SI-NNN`) are created via `gh_create_sub_issue`.
+
+**Epic → Issue → SubIssue flow:**
+- TaskPlan (`plan`) produces epics in `tasks/epics/`.
+- Each epic decomposes into issues (`IS-NNN`) via `gh_create_issue`.
+- Issues decompose further into sub-issues (`SI-NNN`) via `gh_create_sub_issue`.
+- For the issues process, follow `instructions/Issue.md`.
 
 **Dependency note:** Prefer `.json` over `.md` when loading dependencies.
 
@@ -185,31 +165,21 @@ the interview. Help the user resolve the underlying issue and retry the write.
 If the JSON file becomes corrupted, load the last known good state from disk
 before retrying.
 
-**Cross-spec version sync:** When creating ArchitectureSpec, DataSpec, ApiSpec,
-or TestSpec, ensure the version reference field matches the referenced spec:
-- `archspec.goalSpecVersion` must match `goalspec.version` (with optional `v` prefix)
-- `dataspec.goalSpecVersion` must match `goalspec.version`
-- `apispec.dataSpecVersion` must match `dataspec.version`
-- `testspec.apiSpecVersion` must match `apispec.version`
+Version drift between specs is caught by the linter (`version_drift` rule);
+no manual sync is needed.
 
 After the last section is written, proceed to Step 6.
 
 ---
 
-### Step 6 — Confirmation gate
+### Step 6 — Confirmation
 
-Present the completed artifact to the user for review. Do not proceed until
-the user explicitly confirms.
+Ask the user to review and confirm before finalizing.
 
 ### Step 7 — Finalize
 
-Run `lint(mode: "assess")` on the artifact type. If it fails, show errors
-and fix only with user approval, then re-validate. On success:
-
-1. `generate_artifact_markdown` — regenerate Markdown from JSON (JSON is the single source of truth)
-2. `handoff` — display available next steps
-
-Remind the user to open a fresh session for the next artifact.
+Run `lint(mode: "assess")`. On success, run `generate_artifact_markdown`
+then `handoff` to display next steps.
 
 ---
 
