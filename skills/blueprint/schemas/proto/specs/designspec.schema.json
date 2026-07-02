@@ -147,6 +147,11 @@
       "description": "Endpoint identifier.",
       "x_idPattern": "endp"
     },
+    "funcId": {
+      "type": "string",
+      "description": "Internal function identifier.",
+      "x_idPattern": "func"
+    },
     "tstId": {
       "type": "string",
       "description": "Test case identifier.",

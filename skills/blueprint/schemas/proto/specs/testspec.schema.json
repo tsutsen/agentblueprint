@@ -143,6 +143,11 @@
       "description": "Endpoint identifier.",
       "x_idPattern": "endp"
     },
+    "funcId": {
+      "type": "string",
+      "description": "Internal function identifier.",
+      "x_idPattern": "func"
+    },
     "tstId": {
       "type": "string",
       "description": "Test case identifier.",
@@ -250,8 +255,8 @@
             "description": "Longer description of this fc."
           },
           "fnRef": {
-            "$ref": "#/definitions/endpId",
-            "description": "Endpoint"
+            "$ref": "#/definitions/funcId",
+            "description": "Internal function"
           },
           "happyPathCount": {
             "type": "integer",
@@ -314,8 +319,8 @@
             "description": "Longer description of this tst."
           },
           "fnRef": {
-            "$ref": "#/definitions/endpId",
-            "description": "Endpoint"
+            "$ref": "#/definitions/funcId",
+            "description": "Internal function"
           },
           "category": {
             "type": "string",

@@ -36,6 +36,7 @@ FUNC: { pattern: "^FUNC-\\d{3}-[a-z][A-Za-z0-9]*$", title: "Entity method" }
 
 # ApiSpec
 endp: { pattern: "^ENDP-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Endpoint" }
+func: { pattern: "^FUNC-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Internal function" }
 
 # TestSpec
 tst:  { pattern: "^TST-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Test case" }
