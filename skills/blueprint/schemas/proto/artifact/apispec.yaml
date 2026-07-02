@@ -3,11 +3,6 @@ title: ApiSpec
 schemaVersion: "2.0.0"
 description: "Interface specification for all functions exposed by a module"
 
-customDefinitions:
-  - name: typeRef
-    type: string
-    desc: "A type name: primitive, entity name, enum name, or array thereof (e.g. 'string', 'User', 'OrderStatus', 'OrderItem[]'). Use 'void' for functions that return nothing."
-
 namedTypes:
   - name: parameterObject
     desc: "An input parameter definition."
@@ -18,7 +13,7 @@ namedTypes:
         pattern: "^[a-z][A-Za-z0-9]*$"
         desc: "camelCase parameter name."
       - name: type
-        $ref: "typeRef"
+        type: string
         desc: "The type of this parameter. Must resolve to a primitive, entity, or enum in DataSpec."
       - name: required
         type: boolean

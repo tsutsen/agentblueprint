@@ -173,10 +173,6 @@
       "description": "Milestone identifier.",
       "x_idPattern": "mil"
     },
-    "typeRef": {
-      "type": "string",
-      "description": "A type name: primitive, entity name, enum name, or array thereof (e.g. 'string', 'User', 'OrderStatus', 'OrderItem[]'). Use 'void' for functions that return nothing."
-    },
     "parameterObject": {
       "type": "object",
       "description": "An input parameter definition.",
@@ -188,7 +184,7 @@
           "description": "camelCase parameter name."
         },
         "type": {
-          "$ref": "#/definitions/typeRef",
+          "type": "string",
           "description": "The type of this parameter. Must resolve to a primitive, entity, or enum in DataSpec."
         },
         "required": {
