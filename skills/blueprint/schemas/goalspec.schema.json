@@ -2,21 +2,26 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "goalspec.schema.json",
   "title": "GoalSpec",
-  "description": "Root artifact capturing the why and what of a project. Source of truth for all downstream specs. Version 4.0.0.",
+  "description": "Root artifact capturing the why and what of a project. Version 4.0.0.",
   "type": "object",
   "required": [
-    "version",
-    "schemaVersion",
-    "project",
-    "objective",
     "functionalRequirements",
     "nonFunctionalRequirements",
-    "userStories",
+    "nonGoals",
+    "objective",
+    "project",
+    "schemaVersion",
     "successCriteria",
-    "nonGoals"
+    "userStories",
+    "version"
   ],
   "additionalProperties": false,
   "definitions": {
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier.",
+      "x_idPattern": "gl"
+    },
     "reqId": {
       "type": "string",
       "description": "Functional requirement identifier.",
@@ -32,41 +37,156 @@
       "description": "Success criterion identifier.",
       "x_idPattern": "sc"
     },
-    "planguageLevel": {
-      "type": "string",
-      "minLength": 1,
-      "description": "A Planguage threshold value or TBD marker. Use 'TBD' prefix when value is not yet known."
-    },
-    "glId": {
-      "type": "string",
-      "description": "Glossary term identifier, format GL-NNN-PascalCase.",
-      "x_idPattern": "gl"
-    },
     "usId": {
       "type": "string",
-      "description": "User story identifier, format US-NNN (3-digit zero-padded).",
+      "description": "User story identifier.",
       "x_idPattern": "us"
     },
     "ngId": {
       "type": "string",
-      "description": "Non-goal identifier, format NG-NNN (3-digit zero-padded).",
+      "description": "Non-goal identifier.",
       "x_idPattern": "ng"
+    },
+    "dgId": {
+      "type": "string",
+      "description": "Design goal identifier.",
+      "x_idPattern": "dg"
+    },
+    "prsId": {
+      "type": "string",
+      "description": "Persona identifier.",
+      "x_idPattern": "prs"
+    },
+    "ujId": {
+      "type": "string",
+      "description": "User journey identifier.",
+      "x_idPattern": "uj"
+    },
+    "scrId": {
+      "type": "string",
+      "description": "Screen identifier.",
+      "x_idPattern": "scr"
+    },
+    "spcId": {
+      "type": "string",
+      "description": "Screen spec identifier.",
+      "x_idPattern": "spc"
+    },
+    "patId": {
+      "type": "string",
+      "description": "Interaction pattern identifier.",
+      "x_idPattern": "pat"
+    },
+    "vdrId": {
+      "type": "string",
+      "description": "Visual design requirement identifier.",
+      "x_idPattern": "vdr"
+    },
+    "uxacId": {
+      "type": "string",
+      "description": "UX acceptance criterion identifier.",
+      "x_idPattern": "uxac"
+    },
+    "dtId": {
+      "type": "string",
+      "description": "Design token identifier.",
+      "x_idPattern": "dt"
+    },
+    "arId": {
+      "type": "string",
+      "description": "Accessibility requirement identifier.",
+      "x_idPattern": "ar"
+    },
+    "compId": {
+      "type": "string",
+      "description": "Component identifier.",
+      "x_idPattern": "comp"
+    },
+    "conId": {
+      "type": "string",
+      "description": "Constraint identifier.",
+      "x_idPattern": "con"
+    },
+    "flwId": {
+      "type": "string",
+      "description": "Data flow identifier.",
+      "x_idPattern": "flw"
+    },
+    "entId": {
+      "type": "string",
+      "description": "Entity identifier.",
+      "x_idPattern": "ent"
+    },
+    "numId": {
+      "type": "string",
+      "description": "Enum identifier.",
+      "x_idPattern": "num"
+    },
+    "primId": {
+      "type": "string",
+      "description": "Primitive identifier.",
+      "x_idPattern": "prim"
+    },
+    "relId": {
+      "type": "string",
+      "description": "Relationship identifier.",
+      "x_idPattern": "rel"
+    },
+    "fldId": {
+      "type": "string",
+      "description": "Entity field identifier.",
+      "x_idPattern": "fld"
+    },
+    "funcId": {
+      "type": "string",
+      "description": "Function identifier.",
+      "x_idPattern": "func"
+    },
+    "endpId": {
+      "type": "string",
+      "description": "Endpoint identifier.",
+      "x_idPattern": "endp"
+    },
+    "tstId": {
+      "type": "string",
+      "description": "Test case identifier.",
+      "x_idPattern": "tst"
+    },
+    "fcId": {
+      "type": "string",
+      "description": "Function coverage identifier.",
+      "x_idPattern": "fc"
+    },
+    "epId": {
+      "type": "string",
+      "description": "Epic identifier.",
+      "x_idPattern": "ep"
+    },
+    "isId": {
+      "type": "string",
+      "description": "Issue identifier.",
+      "x_idPattern": "is"
+    },
+    "siId": {
+      "type": "string",
+      "description": "Sub-issue identifier.",
+      "x_idPattern": "si"
+    },
+    "milId": {
+      "type": "string",
+      "description": "Milestone identifier.",
+      "x_idPattern": "mil"
     }
   },
   "properties": {
     "version": {
       "type": "string",
-      "description": "Semver version of this goalspec document instance.",
+      "description": "Semver version of this spec document instance.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
-    },
-    "schemaVersion": {
-      "type": "string",
-      "description": "Version of the GoalSpec schema this document conforms to. Must be '4.0.0'.",
-      "const": "4.0.0"
     },
     "project": {
       "type": "string",
-      "description": "Short human-readable project name. Used as a key across all downstream specs.",
+      "description": "Project name. Must match across all specs.",
       "minLength": 1
     },
     "status": {
@@ -80,81 +200,84 @@
       ],
       "default": "draft"
     },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec schema this document conforms to. Must be '4.0.0'.",
+      "const": "4.0.0"
+    },
     "objective": {
       "type": "object",
-      "description": "Concise description of what is being built, for whom, and why.",
-      "required": [
-        "statement",
-        "for",
-        "problem"
-      ],
       "additionalProperties": false,
       "properties": {
         "statement": {
           "type": "string",
-          "description": "One or two sentences describing the system. Must NOT mention implementation, technology, or architecture.",
-          "minLength": 20
+          "minLength": 20,
+          "description": "One or two sentences describing the system."
         },
         "for": {
           "type": "string",
-          "description": "Primary intended user or user group.",
-          "minLength": 1
+          "minLength": 1,
+          "description": "Primary intended user or user group."
         },
         "problem": {
           "type": "string",
-          "description": "The specific problem this solves that is not solved today.",
-          "minLength": 10
+          "minLength": 10,
+          "description": "The specific problem this solves."
         },
         "confirmedAfterCompletion": {
           "type": "boolean",
-          "description": "True when the objective has been re-read and confirmed after all other sections were completed.",
-          "default": false
+          "default": false,
+          "description": "True when the objective has been re-read and confirmed after all other sections were completed."
         },
         "glossaryRefs": {
           "type": "array",
-          "description": "Glossary term IDs (GL-NNN) that this objective's key concepts map to. Use for cross-spec traceability.",
           "items": {
             "$ref": "#/definitions/glId"
-          }
+          },
+          "description": "Glossary term IDs.",
+          "uniqueItems": true
         }
-      }
+      },
+      "required": [
+        "for",
+        "problem",
+        "statement"
+      ]
     },
     "functionalRequirements": {
       "type": "array",
-      "description": "Observable capabilities the system must provide. Each must be independently testable and owned by one actor.",
       "minItems": 1,
+      "description": "Observable capabilities the system must provide.",
       "items": {
         "type": "object",
-        "required": [
-          "id",
-          "description",
-          "actor"
-        ],
         "additionalProperties": false,
         "properties": {
           "id": {
             "$ref": "#/definitions/reqId",
-            "description": "Unique identifier for this requirement.",
+            "description": "Unique identifier for this req.",
             "x_idPattern": "req"
           },
           "name": {
             "type": "string",
-            "description": "Short descriptive name summarizing this requirement (e.g. 'Paper Import').",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Human-readable req name."
           },
           "description": {
             "type": "string",
-            "description": "Observable behaviour in plain language. Must not describe implementation or contain measurable thresholds.",
-            "minLength": 10
+            "description": "Longer description of this req."
           },
           "actor": {
             "type": "string",
-            "description": "The specific role that owns this requirement. Avoid generic 'user' if a more specific actor exists.",
-            "minLength": 1
+            "minLength": 1,
+            "description": "The specific role that owns this requirement."
           },
           "status": {
             "type": "string",
-            "description": "Lifecycle status of this requirement.",
             "enum": [
               "draft",
               "review",
@@ -166,7 +289,6 @@
           },
           "priority": {
             "type": "string",
-            "description": "Implementation priority. P0 = must have, P1 = should have, P2 = could have, P3 = won't have now.",
             "enum": [
               "P0",
               "P1",
@@ -177,70 +299,69 @@
           },
           "notes": {
             "type": "string",
-            "description": "Optional clarifying context. Must not contain implementation details."
+            "description": "Optional clarifying context."
           },
           "scRefs": {
             "type": "array",
-            "description": "SC-IDs from this GoalSpec that measure this requirement. Populated when success criteria are written. At least one must be present.",
             "items": {
               "$ref": "#/definitions/scId"
-            }
+            },
+            "description": "Success criterion IDs."
           },
           "glossaryRefs": {
             "type": "array",
-            "description": "Glossary term IDs (GL-NNN) referenced by this requirement's description.",
             "items": {
               "$ref": "#/definitions/glId"
-            }
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
           },
           "reqRefs": {
             "type": "array",
-            "description": "REQ-NNN IDs from GoalSpec that this requirement implements. Use for REQ\u2192REQ traceability.",
             "items": {
               "$ref": "#/definitions/reqId"
-            }
+            },
+            "description": "Functional requirement IDs."
           },
           "nfrRefs": {
             "type": "array",
-            "description": "NFR-NNN IDs from GoalSpec that this requirement is related to. Use for REQ\u2192NFR traceability.",
             "items": {
               "$ref": "#/definitions/nfrId"
-            }
+            },
+            "description": "Non-functional requirement IDs."
           }
-        }
+        },
+        "required": [
+          "actor",
+          "description",
+          "id",
+          "name"
+        ]
       }
     },
     "nonFunctionalRequirements": {
       "type": "array",
-      "description": "Quality attributes in Planguage format. Every NFR must have Scale and Meter defined or explicitly marked TBD.",
+      "description": "Quality attributes in Planguage format.",
       "items": {
         "type": "object",
-        "required": [
-          "id",
-          "category",
-          "scale",
-          "meter",
-          "must"
-        ],
         "additionalProperties": false,
         "properties": {
           "id": {
             "$ref": "#/definitions/nfrId",
-            "description": "Unique identifier for this NFR.",
+            "description": "Unique identifier for this nfr.",
             "x_idPattern": "nfr"
           },
           "name": {
             "type": "string",
-            "description": "Short descriptive name for this NFR (e.g. 'Response Time', 'Error Recovery').",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Human-readable nfr name."
           },
           "description": {
             "type": "string",
-            "description": "Plain-language description of the quality requirement. Should explain what is being measured and why."
+            "description": "Longer description of this nfr."
           },
           "category": {
             "type": "string",
-            "description": "Quality attribute category.",
             "enum": [
               "Performance",
               "Reliability",
@@ -252,232 +373,230 @@
           },
           "scale": {
             "type": "string",
-            "description": "What is measured and in what unit. If unknown, prefix with 'TBD'.",
-            "minLength": 5
+            "minLength": 5,
+            "description": "What is measured and in what unit."
           },
           "meter": {
             "type": "string",
-            "description": "How it will be measured \u2014 tool, condition, methodology. If unknown, prefix with 'TBD'.",
-            "minLength": 5
+            "minLength": 5,
+            "description": "How it will be measured."
           },
           "must": {
-            "$ref": "#/definitions/planguageLevel",
+            "type": "string",
+            "minLength": 1,
             "description": "Minimum acceptable threshold. Below this the system fails."
           },
           "plan": {
-            "$ref": "#/definitions/planguageLevel",
+            "type": "string",
+            "minLength": 1,
             "description": "Realistic target the team is aiming for. Use 'TBD' if unknown."
           },
           "wish": {
-            "$ref": "#/definitions/planguageLevel",
+            "type": "string",
+            "minLength": 1,
             "description": "Ideal outcome if conditions allow. Use 'TBD' if unknown."
           },
           "notes": {
-            "type": "string",
-            "description": "Optional clarifying context for this NFR."
+            "type": "string"
           },
           "glossaryRefs": {
             "type": "array",
-            "description": "Glossary term IDs (GL-NNN) referenced in the NFR's scale/meter descriptions. Optional \u2014 NFRs are measurement-focused.",
             "items": {
               "$ref": "#/definitions/glId"
-            }
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
           }
-        }
+        },
+        "required": [
+          "category",
+          "description",
+          "id",
+          "meter",
+          "must",
+          "name",
+          "scale"
+        ]
       }
     },
     "userStories": {
       "type": "array",
-      "description": "Desired outcomes from user perspectives. Every story must link to at least one functional requirement.",
       "minItems": 1,
+      "description": "Desired outcomes from user perspectives.",
       "items": {
         "type": "object",
-        "required": [
-          "id",
-          "actor",
-          "capability",
-          "outcome",
-          "reqRefs"
-        ],
         "additionalProperties": false,
         "properties": {
           "id": {
             "$ref": "#/definitions/usId",
-            "description": "Unique identifier for this user story.",
+            "description": "Unique identifier for this us.",
             "x_idPattern": "us"
           },
           "name": {
             "type": "string",
-            "description": "Short descriptive name summarizing this user story (e.g. 'Start Research Session').",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Human-readable us name."
           },
           "description": {
             "type": "string",
-            "description": "Plain-language description of the user story. May restate capability+outcome in a single sentence for graph visualization. If omitted, capability+outcome are used as fallback."
+            "description": "Longer description of this us."
           },
           "actor": {
             "type": "string",
-            "description": "Specific role. Must match or be consistent with actors named in functional requirements.",
             "minLength": 1
           },
           "capability": {
             "type": "string",
-            "description": "What the actor wants to do. Must express a goal, not a feature or implementation detail.",
             "minLength": 5
           },
           "outcome": {
             "type": "string",
-            "description": "Why the actor wants this \u2014 the benefit they receive.",
             "minLength": 5
           },
           "reqRefs": {
             "type": "array",
-            "description": "REQ-NNN-slug IDs from GoalSpec functional requirements this user story motivates.",
-            "minItems": 1,
             "items": {
               "$ref": "#/definitions/reqId"
-            }
+            },
+            "description": "Functional requirement IDs."
           },
           "notes": {
-            "type": "string",
-            "description": "Optional clarifying context for this user story."
+            "type": "string"
           },
           "glossaryRefs": {
             "type": "array",
-            "description": "Glossary term IDs (GL-NNN) referenced by this story's capability or outcome descriptions.",
             "items": {
               "$ref": "#/definitions/glId"
-            }
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
           }
-        }
+        },
+        "required": [
+          "actor",
+          "capability",
+          "description",
+          "id",
+          "name",
+          "outcome",
+          "reqRefs"
+        ]
       }
     },
     "successCriteria": {
       "type": "array",
-      "description": "Binary, independently verifiable conditions that determine the project is complete.",
       "minItems": 1,
+      "description": "Binary, independently verifiable conditions.",
       "items": {
         "type": "object",
-        "required": [
-          "id",
-          "description",
-          "refs"
-        ],
         "additionalProperties": false,
         "properties": {
           "id": {
             "$ref": "#/definitions/scId",
-            "description": "Unique identifier for this success criterion.",
+            "description": "Unique identifier for this sc.",
             "x_idPattern": "sc"
           },
           "name": {
             "type": "string",
-            "description": "Short descriptive name summarizing this success criterion (e.g. 'Report Addresses Question').",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Human-readable sc name."
           },
           "description": {
             "type": "string",
-            "description": "A concrete, binary pass/fail condition. Must not be subjective.",
-            "minLength": 10
+            "description": "Longer description of this sc."
           },
           "refs": {
             "type": "object",
-            "description": "References to the FR(s) or NFR(s) this criterion gates. At least one must be present.",
             "additionalProperties": false,
             "properties": {
               "reqRefs": {
                 "type": "array",
-                "description": "REQ-NNN IDs from GoalSpec functional requirements this success criterion verifies.",
                 "items": {
                   "$ref": "#/definitions/reqId"
-                }
+                },
+                "description": "Functional requirement IDs."
               },
               "nfrRefs": {
                 "type": "array",
-                "description": "NFR-NNN IDs from GoalSpec non-functional requirements this success criterion measures.",
                 "items": {
                   "$ref": "#/definitions/nfrId"
-                }
+                },
+                "description": "Non-functional requirement IDs."
               }
-            }
+            },
+            "required": []
           },
           "verificationMethod": {
             "type": "string",
-            "description": "How this criterion will be verified \u2014 automated test, manual check, load test, etc."
+            "description": "How this criterion will be verified."
           },
           "notes": {
-            "type": "string",
-            "description": "Optional clarifying context for this success criterion."
+            "type": "string"
           },
           "glossaryRefs": {
             "type": "array",
-            "description": "Glossary term IDs (GL-NNN) referenced by this success criterion's description.",
             "items": {
               "$ref": "#/definitions/glId"
-            }
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
           }
-        }
+        },
+        "required": [
+          "description",
+          "id",
+          "name",
+          "refs"
+        ]
       }
     },
     "nonGoals": {
       "type": "array",
-      "description": "Explicit capabilities this project will NOT attempt to solve.",
       "minItems": 1,
+      "description": "Explicit capabilities this project will NOT attempt to solve.",
       "items": {
         "type": "object",
-        "required": [
-          "capability",
-          "reason",
-          "id",
-          "name",
-          "description"
-        ],
         "additionalProperties": false,
         "properties": {
-          "capability": {
-            "type": "string",
-            "description": "Specific named capability being excluded. Must not be vague.",
-            "minLength": 5
-          },
-          "reason": {
-            "type": "string",
-            "description": "Why it is excluded: deferred, out of scope, handled elsewhere, etc.",
-            "minLength": 5
-          },
-          "glossaryRefs": {
-            "type": "array",
-            "description": "Glossary term IDs (GL-NNN) for the excluded capability. Use for cross-spec traceability.",
-            "items": {
-              "$ref": "#/definitions/glId"
-            }
-          },
           "id": {
             "$ref": "#/definitions/ngId",
-            "description": "Unique identifier for this non-goal.",
+            "description": "Unique identifier for this ng.",
             "x_idPattern": "ng"
           },
           "name": {
             "type": "string",
-            "description": "Short descriptive name summarizing this non-goal.",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Human-readable ng name."
           },
           "description": {
             "type": "string",
-            "description": "Plain-language description of why this capability is excluded.",
-            "minLength": 10
+            "description": "Longer description of this ng."
+          },
+          "capability": {
+            "type": "string",
+            "minLength": 5
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 5
+          },
+          "glossaryRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/glId"
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
           }
-        }
+        },
+        "required": [
+          "capability",
+          "description",
+          "id",
+          "name",
+          "reason"
+        ]
       }
-    },
-    "goalSpecVersion": {
-      "type": "string",
-      "description": "Version of the GoalSpec this spec was reviewed against.",
-      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
     }
-  },
-  "outputFiles": [
-    "artifacts/GoalSpec.md",
-    "artifacts/GoalSpec.json"
-  ],
-  "specDependencies": {}
+  }
 }

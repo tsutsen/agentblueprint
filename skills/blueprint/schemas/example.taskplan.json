@@ -9,9 +9,9 @@
       "name": "Core routing engine",
       "outcome": "A developer can submit a query and receive a response routed to a backend without any configuration.",
       "epics": [
-        "EP-001",
-        "EP-002",
-        "EP-003"
+        "EP-001-CoreFeatures",
+        "EP-002-AdvancedFeatures",
+        "EP-003-Integration"
       ]
     },
     {
@@ -19,8 +19,8 @@
       "name": "Backend management and configuration",
       "outcome": "A developer can configure, inspect, and override backends via CLI.",
       "epics": [
-        "EP-004",
-        "EP-005"
+        "EP-004-Deployment",
+        "EP-005-Security"
       ]
     },
     {
@@ -28,7 +28,7 @@
       "name": "Observability and log inspection",
       "outcome": "A developer can inspect query history and routing decisions from the terminal.",
       "epics": [
-        "EP-006",
+        "EP-006-Performance",
         "EP-007"
       ]
     }
@@ -40,7 +40,7 @@
       "status": "not_started",
       "milestone": "M1",
       "requirements": [
-        "REQ-001"
+        "REQ-001-Login"
       ],
       "summary": "Analyse query content and assign a complexity tier to inform routing decisions.",
       "objective": "Enable the gateway to classify queries into simple, moderate, and complex tiers.",
@@ -64,11 +64,12 @@
       "dependencies": {
         "blockedBy": [],
         "blocks": [
-          "EP-002",
-          "EP-003"
+          "EP-002-AdvancedFeatures",
+          "EP-003-Integration"
         ]
       },
-      "notes": ""
+      "notes": "",
+      "name": "User Onboarding"
     },
     {
       "id": "EP-001-CoreFeatures",
@@ -76,8 +77,8 @@
       "status": "not_started",
       "milestone": "M1",
       "requirements": [
-        "REQ-001",
-        "REQ-005"
+        "REQ-001-Login",
+        "REQ-005-ProfileManagement"
       ],
       "summary": "Select the appropriate backend for a query based on classification, availability, and configured priority.",
       "objective": "Route queries to the best available backend with automatic fallback.",
@@ -99,13 +100,14 @@
       ],
       "dependencies": {
         "blockedBy": [
-          "EP-001"
+          "EP-001-CoreFeatures"
         ],
         "blocks": [
-          "EP-003"
+          "EP-003-Integration"
         ]
       },
-      "notes": ""
+      "notes": "",
+      "name": "Core Features"
     },
     {
       "id": "EP-002-AdvancedFeatures",
@@ -113,7 +115,7 @@
       "status": "not_started",
       "milestone": "M1",
       "requirements": [
-        "REQ-001"
+        "REQ-001-Login"
       ],
       "summary": "Expose an HTTP interface compatible with OpenAI Chat Completions API.",
       "objective": "Allow existing developer tools to connect to the gateway without modification.",
@@ -135,11 +137,12 @@
       ],
       "dependencies": {
         "blockedBy": [
-          "EP-002"
+          "EP-002-AdvancedFeatures"
         ],
         "blocks": []
       },
-      "notes": ""
+      "notes": "",
+      "name": "Advanced Features"
     },
     {
       "id": "EP-003-Integration",
@@ -147,7 +150,7 @@
       "status": "not_started",
       "milestone": "M2",
       "requirements": [
-        "REQ-002"
+        "REQ-002-Logout"
       ],
       "summary": "Load, validate, and hot-reload backend configuration from a TOML file.",
       "objective": "Allow developers to configure backends without code changes.",
@@ -171,10 +174,11 @@
       "dependencies": {
         "blockedBy": [],
         "blocks": [
-          "EP-005"
+          "EP-005-Security"
         ]
       },
-      "notes": ""
+      "notes": "",
+      "name": "Integration"
     },
     {
       "id": "EP-004-Deployment",
@@ -182,7 +186,7 @@
       "status": "not_started",
       "milestone": "M2",
       "requirements": [
-        "REQ-004"
+        "REQ-004-UpdateProfile"
       ],
       "summary": "Allow developers to force a specific backend for a single query via an override flag.",
       "objective": "Enable direct testing of specific backends without changing configuration.",
@@ -204,11 +208,12 @@
       ],
       "dependencies": {
         "blockedBy": [
-          "EP-004"
+          "EP-004-Deployment"
         ],
         "blocks": []
       },
-      "notes": ""
+      "notes": "",
+      "name": "Deployment"
     },
     {
       "id": "EP-005-Security",
@@ -216,7 +221,7 @@
       "status": "not_started",
       "milestone": "M3",
       "requirements": [
-        "REQ-003"
+        "REQ-003-ResetPassword"
       ],
       "summary": "Persist query history including routing decisions, backend used, and response latency.",
       "objective": "Provide a durable record of all queries for inspection and debugging.",
@@ -239,13 +244,14 @@
       ],
       "dependencies": {
         "blockedBy": [
-          "EP-003"
+          "EP-003-Integration"
         ],
         "blocks": [
           "EP-007"
         ]
       },
-      "notes": ""
+      "notes": "",
+      "name": "Security"
     },
     {
       "id": "EP-006-Performance",
@@ -253,7 +259,7 @@
       "status": "not_started",
       "milestone": "M3",
       "requirements": [
-        "REQ-003"
+        "REQ-003-ResetPassword"
       ],
       "summary": "Browse and filter query history from the terminal.",
       "objective": "Allow developers to understand routing decisions and tune configuration.",
@@ -275,11 +281,12 @@
       ],
       "dependencies": {
         "blockedBy": [
-          "EP-006"
+          "EP-006-Performance"
         ],
         "blocks": []
       },
-      "notes": ""
+      "notes": "",
+      "name": "Performance"
     }
   ]
 }

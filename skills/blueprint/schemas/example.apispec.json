@@ -3,7 +3,6 @@
   "schemaVersion": "2.0.0",
   "module": "LLMGateway",
   "description": "API functions for the LLM Gateway \u2014 query routing, backend management, and log inspection.",
-  "dataSpecVersion": "1.0.0",
   "functions": [
     {
       "id": "FN-000-Authenticate",
@@ -177,5 +176,6 @@
       "pure": true,
       "visibility": "public"
     }
-  ]
+  ],
+  "project": "Blueprint Query System"
 }

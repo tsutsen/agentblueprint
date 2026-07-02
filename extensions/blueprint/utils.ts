@@ -133,7 +133,7 @@ export const DEPS = loadDepsFromSchemas();
 
 export function resolveSchemaPath(extDir: string, schemaName: string): string {
   const packageRoot = path.join(extDir, '..', '..');
-  return path.join(packageRoot, 'skills', 'blueprint', 'schemas', 'json', `${schemaName}.schema.json`);
+  return path.join(packageRoot, 'skills', 'blueprint', 'schemas', `${schemaName}.schema.json`);
 }
 
 export function resolvePkgResource(extDir: string, relPath: string): string {

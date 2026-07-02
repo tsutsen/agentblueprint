@@ -2,55 +2,187 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "taskplan.schema.json",
   "title": "TaskPlan",
-  "description": "Sequenced set of epics and milestones derived from GoalSpec, DesignSpec, and ArchitectureSpec. Version 1.0.0.",
+  "description": "Sequenced set of epics and milestones. Version 1.0.0.",
   "type": "object",
   "required": [
-    "version",
-    "schemaVersion",
-    "project",
+    "epics",
     "milestones",
-    "epics"
+    "project",
+    "schemaVersion",
+    "version"
   ],
   "additionalProperties": false,
   "definitions": {
-    "epicId": {
-      "type": "string",
-      "description": "Epic identifier, format EP-NNN-PascalCase.",
-      "x_idPattern": "ep"
-    },
-    "milestoneId": {
-      "type": "string",
-      "description": "Milestone identifier, sequential."
-    },
-    "epicStatus": {
-      "type": "string",
-      "description": "Lifecycle status of an epic.",
-      "enum": [
-        "not_started",
-        "in_progress",
-        "complete"
-      ]
-    },
     "glId": {
       "type": "string",
-      "description": "Glossary term identifier, format GL-NNN-PascalCase.",
+      "description": "Glossary term identifier.",
       "x_idPattern": "gl"
+    },
+    "reqId": {
+      "type": "string",
+      "description": "Functional requirement identifier.",
+      "x_idPattern": "req"
+    },
+    "nfrId": {
+      "type": "string",
+      "description": "Non-functional requirement identifier.",
+      "x_idPattern": "nfr"
+    },
+    "scId": {
+      "type": "string",
+      "description": "Success criterion identifier.",
+      "x_idPattern": "sc"
+    },
+    "usId": {
+      "type": "string",
+      "description": "User story identifier.",
+      "x_idPattern": "us"
+    },
+    "ngId": {
+      "type": "string",
+      "description": "Non-goal identifier.",
+      "x_idPattern": "ng"
+    },
+    "dgId": {
+      "type": "string",
+      "description": "Design goal identifier.",
+      "x_idPattern": "dg"
+    },
+    "prsId": {
+      "type": "string",
+      "description": "Persona identifier.",
+      "x_idPattern": "prs"
+    },
+    "ujId": {
+      "type": "string",
+      "description": "User journey identifier.",
+      "x_idPattern": "uj"
+    },
+    "scrId": {
+      "type": "string",
+      "description": "Screen identifier.",
+      "x_idPattern": "scr"
+    },
+    "spcId": {
+      "type": "string",
+      "description": "Screen spec identifier.",
+      "x_idPattern": "spc"
+    },
+    "patId": {
+      "type": "string",
+      "description": "Interaction pattern identifier.",
+      "x_idPattern": "pat"
+    },
+    "vdrId": {
+      "type": "string",
+      "description": "Visual design requirement identifier.",
+      "x_idPattern": "vdr"
+    },
+    "uxacId": {
+      "type": "string",
+      "description": "UX acceptance criterion identifier.",
+      "x_idPattern": "uxac"
+    },
+    "dtId": {
+      "type": "string",
+      "description": "Design token identifier.",
+      "x_idPattern": "dt"
+    },
+    "arId": {
+      "type": "string",
+      "description": "Accessibility requirement identifier.",
+      "x_idPattern": "ar"
+    },
+    "compId": {
+      "type": "string",
+      "description": "Component identifier.",
+      "x_idPattern": "comp"
+    },
+    "conId": {
+      "type": "string",
+      "description": "Constraint identifier.",
+      "x_idPattern": "con"
+    },
+    "flwId": {
+      "type": "string",
+      "description": "Data flow identifier.",
+      "x_idPattern": "flw"
+    },
+    "entId": {
+      "type": "string",
+      "description": "Entity identifier.",
+      "x_idPattern": "ent"
+    },
+    "numId": {
+      "type": "string",
+      "description": "Enum identifier.",
+      "x_idPattern": "num"
+    },
+    "primId": {
+      "type": "string",
+      "description": "Primitive identifier.",
+      "x_idPattern": "prim"
+    },
+    "relId": {
+      "type": "string",
+      "description": "Relationship identifier.",
+      "x_idPattern": "rel"
+    },
+    "fldId": {
+      "type": "string",
+      "description": "Entity field identifier.",
+      "x_idPattern": "fld"
+    },
+    "funcId": {
+      "type": "string",
+      "description": "Function identifier.",
+      "x_idPattern": "func"
+    },
+    "endpId": {
+      "type": "string",
+      "description": "Endpoint identifier.",
+      "x_idPattern": "endp"
+    },
+    "tstId": {
+      "type": "string",
+      "description": "Test case identifier.",
+      "x_idPattern": "tst"
+    },
+    "fcId": {
+      "type": "string",
+      "description": "Function coverage identifier.",
+      "x_idPattern": "fc"
+    },
+    "epId": {
+      "type": "string",
+      "description": "Epic identifier.",
+      "x_idPattern": "ep"
+    },
+    "isId": {
+      "type": "string",
+      "description": "Issue identifier.",
+      "x_idPattern": "is"
+    },
+    "siId": {
+      "type": "string",
+      "description": "Sub-issue identifier.",
+      "x_idPattern": "si"
+    },
+    "milId": {
+      "type": "string",
+      "description": "Milestone identifier.",
+      "x_idPattern": "mil"
     }
   },
   "properties": {
     "version": {
       "type": "string",
-      "description": "Semver version of this taskplan document instance.",
+      "description": "Semver version of this spec document instance.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
-    },
-    "schemaVersion": {
-      "type": "string",
-      "description": "Version of the TaskPlan schema this document conforms to. Must be '1.0.0'.",
-      "const": "1.0.0"
     },
     "project": {
       "type": "string",
-      "description": "Project name. Must match GoalSpec.project.",
+      "description": "Project name. Must match across all specs.",
       "minLength": 1
     },
     "status": {
@@ -64,145 +196,137 @@
       ],
       "default": "draft"
     },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the TaskPlan schema this document conforms to. Must be '1.0.0'.",
+      "const": "1.0.0"
+    },
     "milestones": {
       "type": "array",
-      "description": "Major checkpoints. Each must produce a demonstrable project outcome. Every epic listed here must also have this milestone as its 'milestone' field.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": [
-          "id",
-          "name",
-          "outcome",
-          "epics"
-        ],
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/milestoneId",
+            "$ref": "#/definitions/milId",
+            "description": "Unique identifier for this mil.",
             "x_idPattern": "mil"
           },
           "name": {
             "type": "string",
-            "description": "Short, outcome-oriented name. Not a sprint number.",
-            "minLength": 5
+            "minLength": 1,
+            "description": "Human-readable mil name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this mil."
           },
           "outcome": {
             "type": "string",
-            "description": "One sentence describing what can be demonstrated at this milestone.",
             "minLength": 10
           },
           "epics": {
             "type": "array",
-            "description": "EP-NNN IDs that must be complete for this milestone.",
             "minItems": 1,
             "items": {
-              "$ref": "#/definitions/epicId"
-            }
+              "$ref": "#/definitions/epId"
+            },
+            "description": "Epic IDs."
           }
-        }
+        },
+        "required": [
+          "description",
+          "epics",
+          "id",
+          "name",
+          "outcome"
+        ]
       }
     },
     "epics": {
       "type": "array",
-      "description": "Sequenced set of epics. Each epic covers at least one requirement and has a file in tasks/epics/.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": [
-          "id",
-          "title",
-          "milestone",
-          "requirements",
-          "summary"
-        ],
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/epicId",
+            "$ref": "#/definitions/epId",
+            "description": "Unique identifier for this ep.",
             "x_idPattern": "ep"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable ep name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description of this ep."
           },
           "title": {
             "type": "string",
-            "description": "Action-oriented title describing a capability, not a technical layer. Example: 'Implement document ingestion pipeline' not 'Write database migrations'.",
             "minLength": 5
           },
-          "glossaryRefs": {
-            "type": "array",
-            "description": "Glossary term IDs (GL-NNN) that this epic's title and objective reference. Links domain concepts from the glossary to implementation planning.",
-            "items": {
-              "$ref": "#/definitions/glId"
-            }
-          },
           "status": {
-            "$ref": "#/definitions/epicStatus",
-            "description": "Lifecycle status of this epic.",
-            "default": "not_started"
+            "type": "string",
+            "enum": [
+              "not_started",
+              "in_progress",
+              "complete"
+            ],
+            "default": "not_started",
+            "description": "Lifecycle status of this epic."
           },
           "milestone": {
-            "$ref": "#/definitions/milestoneId",
-            "description": "The milestone this epic belongs to."
+            "$ref": "#/definitions/milId"
           },
           "requirements": {
             "type": "array",
-            "description": "REQ-IDs from GoalSpec covered by this epic. Must not be empty.",
             "minItems": 1,
             "items": {
-              "$ref": "#/definitions/reqId",
-              "x_idPattern": "req"
-            }
+              "$ref": "#/definitions/reqId"
+            },
+            "description": "Functional requirement IDs."
           },
           "summary": {
             "type": "string",
-            "description": "One line describing what this epic delivers.",
             "minLength": 10
           },
           "objective": {
-            "type": "string",
-            "description": "What this epic delivers and why. Must answer what capability it produces and which requirements it addresses."
+            "type": "string"
           },
           "scope": {
             "type": "object",
-            "description": "Explicit boundary of this epic.",
             "additionalProperties": false,
             "properties": {
               "inScope": {
                 "type": "array",
-                "description": "Capabilities and behaviours included.",
                 "minItems": 1,
                 "items": {
                   "type": "string",
                   "minLength": 5
                 }
               },
-              "inScopeGlossaryRefs": {
-                "type": "array",
-                "description": "Glossary term IDs (GL-NNN) referenced in inScope items.",
-                "items": {
-                  "$ref": "#/definitions/glId"
-                }
-              },
               "outOfScope": {
                 "type": "array",
-                "description": "Related work intentionally deferred or excluded. Must be specific, not vague.",
+                "minItems": 1,
                 "items": {
                   "type": "string",
                   "minLength": 5
-                },
-                "minItems": 1
-              },
-              "outOfScopeGlossaryRefs": {
-                "type": "array",
-                "description": "Glossary term IDs (GL-NNN) referenced in outOfScope items.",
-                "items": {
-                  "$ref": "#/definitions/glId"
                 }
               }
-            }
+            },
+            "required": []
           },
           "acceptanceCriteria": {
             "type": "array",
-            "description": "Objective conditions that mark this epic complete. Each must be independently verifiable and binary (pass/fail) where possible. Describe observable behaviour, not implementation details.",
             "minItems": 1,
             "items": {
               "type": "string",
@@ -211,79 +335,54 @@
           },
           "specDependencies": {
             "type": "object",
-            "description": "Blocking relationships between epics.",
             "additionalProperties": false,
             "properties": {
               "blockedBy": {
                 "type": "array",
-                "description": "EP-NNN IDs that must complete before this one can start.",
                 "items": {
-                  "$ref": "#/definitions/epicId"
-                }
+                  "$ref": "#/definitions/epId"
+                },
+                "description": "Epic IDs."
               },
               "blocks": {
                 "type": "array",
-                "description": "EP-NNN IDs that cannot start until this one is complete.",
                 "items": {
-                  "$ref": "#/definitions/epicId"
-                }
+                  "$ref": "#/definitions/epId"
+                },
+                "description": "Epic IDs."
               }
-            }
+            },
+            "required": []
           },
           "notes": {
-            "type": "string",
-            "description": "Open questions, risks, or context for whoever implements this epic."
+            "type": "string"
           },
           "filePath": {
-            "type": "string",
-            "description": "Path to the epic markdown file relative to project root. Must match tasks/epics/EP-<NNN>/EP-<NNN>-<slug>.md.",
-            "pattern": "^tasks/epics/EP-\\d{3}/.*\\.md$"
+            "type": "string"
           },
           "designRefs": {
             "type": "array",
-            "description": "DG-IDs and SCR-IDs from DesignSpec design goals and screens this epic implements.",
             "items": {
               "type": "string"
             }
           },
           "archRefs": {
             "type": "array",
-            "description": "COMP-IDs and CON-IDs from ArchitectureSpec components and constraints this epic implements.",
             "items": {
               "type": "string"
             }
           }
-        }
+        },
+        "required": [
+          "description",
+          "id",
+          "milestone",
+          "name",
+          "requirements",
+          "summary",
+          "title"
+        ]
       }
-    },
-    "goalSpecVersion": {
-      "type": "string",
-      "description": "Version of the GoalSpec this spec was reviewed against.",
-      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
-    }
-  },
-  "outputFiles": [
-    "tasks/PLAN.md",
-    "tasks/epics/"
-  ],
-  "specDependencies": {
-    "goalSpec": {
-      "required": true
-    },
-    "designSpec": {
-      "required": true
-    },
-    "architectureSpec": {
-      "required": true
-    },
-    "dataSpec": {
-      "required": true
-    },
-    "apiSpec": {
-      "required": true
-    },
-    "testSpec": {
-      "required": true
     }
   }
 }

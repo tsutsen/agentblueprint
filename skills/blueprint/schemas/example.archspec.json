@@ -3,9 +3,7 @@
   "schemaVersion": "2.0.0",
   "project": "LLMGateway",
   "status": "draft",
-  "goalSpecVersion": "1.0.0",
-  "dataSpecVersion": "1.0.0",
-  "apiSpecVersion": "1.0.0",
+  "goalSpecVersion": "v1.0.0",
   "overview": {
     "summary": "LLMGateway is a single-process local service that intercepts developer queries, classifies their complexity, routes them to the most appropriate backend, and returns the response. It exposes an OpenAI-compatible HTTP interface so existing tooling requires no changes. All state is local; no cloud dependency is required for operation.",
     "subsystems": [
@@ -13,38 +11,38 @@
         "name": "Ingress",
         "purpose": "Accepts incoming queries and normalises them to an internal format.",
         "componentRefs": [
-          "api-server"
+          "COMP-000-APIServer"
         ]
       },
       {
         "name": "Routing",
         "purpose": "Classifies queries and selects the appropriate backend.",
         "componentRefs": [
-          "classifier",
-          "router"
+          "COMP-001-Classifier",
+          "COMP-002-Router"
         ]
       },
       {
         "name": "Backend Execution",
         "purpose": "Dispatches queries to configured backends and collects responses.",
         "componentRefs": [
-          "backend-pool",
-          "local-adapter",
-          "cloud-adapter"
+          "COMP-003-BackendPool",
+          "COMP-004-LocalAdapter",
+          "COMP-005-CloudAdapter"
         ]
       },
       {
         "name": "Observability",
         "purpose": "Records query history and routing decisions for developer inspection.",
         "componentRefs": [
-          "query-log"
+          "COMP-006-QueryLog"
         ]
       },
       {
         "name": "Configuration",
         "purpose": "Loads and validates user-supplied backend configuration at startup.",
         "componentRefs": [
-          "config-loader"
+          "COMP-007-ConfigLoader"
         ]
       }
     ]
@@ -62,12 +60,13 @@
         "Enforce request size limits."
       ],
       "dependencies": [
-        "router"
+        "COMP-002-Router"
       ],
       "reqRefs": [
-        "REQ-001"
+        "REQ-001-Login"
       ],
-      "visibility": "external"
+      "visibility": "external",
+      "description": "Component: API Server"
     },
     {
       "id": "COMP-001-Classifier",
@@ -80,12 +79,13 @@
       ],
       "dependencies": [],
       "reqRefs": [
-        "REQ-001"
+        "REQ-001-Login"
       ],
       "nfrRefs": [
-        "NFR-001"
+        "NFR-001-Availability"
       ],
-      "visibility": "internal"
+      "visibility": "internal",
+      "description": "Component: Query Classifier"
     },
     {
       "id": "COMP-002-Router",
@@ -98,20 +98,21 @@
         "Pass explicit backend overrides through without reclassification."
       ],
       "dependencies": [
-        "classifier",
-        "backend-pool",
-        "config-loader"
+        "COMP-001-Classifier",
+        "COMP-003-BackendPool",
+        "COMP-007-ConfigLoader"
       ],
       "reqRefs": [
-        "REQ-001",
-        "REQ-004",
-        "REQ-005"
+        "REQ-001-Login",
+        "REQ-004-UpdateProfile",
+        "REQ-005-ProfileManagement"
       ],
       "nfrRefs": [
-        "NFR-001",
-        "NFR-002"
+        "NFR-001-Availability",
+        "NFR-002-Security"
       ],
-      "visibility": "internal"
+      "visibility": "internal",
+      "description": "Component: Router"
     },
     {
       "id": "COMP-003-BackendPool",
@@ -124,13 +125,14 @@
         "Perform periodic health checks on configured backends."
       ],
       "dependencies": [
-        "config-loader"
+        "COMP-007-ConfigLoader"
       ],
       "reqRefs": [
-        "REQ-002",
-        "REQ-005"
+        "REQ-002-Logout",
+        "REQ-005-ProfileManagement"
       ],
-      "visibility": "internal"
+      "visibility": "internal",
+      "description": "Component: Backend Pool"
     },
     {
       "id": "COMP-004-LocalAdapter",
@@ -142,15 +144,16 @@
         "Report backend errors to the Router for fallback handling."
       ],
       "dependencies": [
-        "backend-pool"
+        "COMP-003-BackendPool"
       ],
       "reqRefs": [
-        "REQ-001"
+        "REQ-001-Login"
       ],
       "nfrRefs": [
-        "NFR-003"
+        "NFR-003-Scalability"
       ],
-      "visibility": "internal"
+      "visibility": "internal",
+      "description": "Component: Local Backend Adapter"
     },
     {
       "id": "COMP-005-CloudAdapter",
@@ -163,12 +166,13 @@
         "Report backend errors to the Router for fallback handling."
       ],
       "dependencies": [
-        "backend-pool"
+        "COMP-003-BackendPool"
       ],
       "reqRefs": [
-        "REQ-001"
+        "REQ-001-Login"
       ],
-      "visibility": "internal"
+      "visibility": "internal",
+      "description": "Component: Cloud Backend Adapter"
     },
     {
       "id": "COMP-006-QueryLog",
@@ -181,9 +185,10 @@
       ],
       "dependencies": [],
       "reqRefs": [
-        "REQ-003"
+        "REQ-003-ResetPassword"
       ],
-      "visibility": "internal"
+      "visibility": "internal",
+      "description": "Component: Query Log"
     },
     {
       "id": "COMP-007-ConfigLoader",
@@ -197,9 +202,10 @@
       ],
       "dependencies": [],
       "reqRefs": [
-        "REQ-002"
+        "REQ-002-Logout"
       ],
-      "visibility": "internal"
+      "visibility": "internal",
+      "description": "Component: Config Loader"
     }
   ],
   "dataModel": {
@@ -217,38 +223,38 @@
       "name": "Query Routing Flow",
       "description": "The primary path a developer query takes from ingress to response.",
       "reqRefs": [
-        "REQ-001",
-        "REQ-005"
+        "REQ-001-Login",
+        "REQ-005-ProfileManagement"
       ],
       "steps": [
         {
-          "componentRef": "api-server",
+          "componentRef": "COMP-000-APIServer",
           "action": "Receives HTTP request and parses it into a Query object.",
           "dataRef": "Query"
         },
         {
-          "componentRef": "classifier",
+          "componentRef": "COMP-001-Classifier",
           "action": "Assigns a complexity tier to the Query.",
           "dataRef": "Query"
         },
         {
-          "componentRef": "router",
+          "componentRef": "COMP-002-Router",
           "action": "Selects the appropriate backend based on tier and availability.",
           "dataRef": "RouteDecision"
         },
         {
-          "componentRef": "local-adapter",
+          "componentRef": "COMP-004-LocalAdapter",
           "action": "Dispatches Query to the selected local backend and awaits response.",
           "dataRef": "Query",
           "notes": "If selected backend is cloud, cloud-adapter handles this step instead."
         },
         {
-          "componentRef": "query-log",
+          "componentRef": "COMP-006-QueryLog",
           "action": "Writes a log entry with backend used, latency, and outcome.",
           "dataRef": "LogEntry"
         },
         {
-          "componentRef": "api-server",
+          "componentRef": "COMP-000-APIServer",
           "action": "Returns response to the caller in OpenAI-compatible format.",
           "dataRef": "Query"
         }
@@ -259,21 +265,21 @@
       "name": "Backend Fallback Flow",
       "description": "How the system recovers when the preferred backend is unavailable.",
       "reqRefs": [
-        "REQ-005"
+        "REQ-005-ProfileManagement"
       ],
       "steps": [
         {
-          "componentRef": "router",
+          "componentRef": "COMP-002-Router",
           "action": "Detects backend failure response from adapter.",
           "dataRef": "RouteDecision"
         },
         {
-          "componentRef": "backend-pool",
+          "componentRef": "COMP-003-BackendPool",
           "action": "Marks failing backend as unavailable and returns next candidate.",
           "dataRef": "Backend"
         },
         {
-          "componentRef": "router",
+          "componentRef": "COMP-002-Router",
           "action": "Retries routing with next available backend.",
           "dataRef": "RouteDecision"
         }
@@ -284,21 +290,21 @@
       "name": "Configuration Load Flow",
       "description": "How backend configuration reaches the components that need it.",
       "reqRefs": [
-        "REQ-002"
+        "REQ-002-Logout"
       ],
       "steps": [
         {
-          "componentRef": "config-loader",
+          "componentRef": "COMP-007-ConfigLoader",
           "action": "Reads and validates configuration file from disk at startup.",
           "dataRef": "Backend"
         },
         {
-          "componentRef": "backend-pool",
+          "componentRef": "COMP-003-BackendPool",
           "action": "Receives validated backend list and initialises availability state.",
           "dataRef": "Backend"
         },
         {
-          "componentRef": "router",
+          "componentRef": "COMP-002-Router",
           "action": "Reads backend priority order from backend-pool.",
           "dataRef": "Backend"
         }
@@ -311,26 +317,30 @@
       "description": "The gateway must run as a single process on a single machine with no external service dependencies required for local-only operation.",
       "rationale": "Developer tooling must work offline and in air-gapped environments.",
       "nfrRefs": [
-        "NFR-003"
-      ]
+        "NFR-003-Scalability"
+      ],
+      "name": "Authentication Required"
     },
     {
       "id": "CON-001-RateLimiting",
       "description": "The external API interface must be OpenAI-compatible so that existing developer tools require no reconfiguration.",
-      "rationale": "Adoption requires zero friction for developers already using OpenAI-compatible clients."
+      "rationale": "Adoption requires zero friction for developers already using OpenAI-compatible clients.",
+      "name": "Rate Limiting"
     },
     {
       "id": "CON-002-DataEncryption",
       "description": "All routing logic must complete within the NFR-001 overhead budget and must not block the response path with I/O.",
       "rationale": "Routing overhead must be imperceptible to the developer.",
       "nfrRefs": [
-        "NFR-001"
-      ]
+        "NFR-001-Availability"
+      ],
+      "name": "Data Encryption"
     },
     {
       "id": "CON-003-InputValidation",
       "description": "No component may directly access another component's internal state \u2014 all interaction is through defined interfaces.",
-      "rationale": "Enforces component boundaries and makes the system testable in isolation."
+      "rationale": "Enforces component boundaries and makes the system testable in isolation.",
+      "name": "Input Validation"
     }
   ]
 }

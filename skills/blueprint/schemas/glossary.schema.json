@@ -2,60 +2,236 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "glossary.schema.json",
   "title": "Glossary",
-  "description": "Project vocabulary. Defines all domain terms used across specs. Version 2.0.0.",
+  "description": "Project vocabulary. Version 2.0.0.",
   "type": "object",
   "required": [
-    "version",
-    "schemaVersion",
     "project",
-    "terms"
+    "schemaVersion",
+    "terms",
+    "version"
   ],
   "additionalProperties": false,
+  "definitions": {
+    "glId": {
+      "type": "string",
+      "description": "Glossary term identifier.",
+      "x_idPattern": "gl"
+    },
+    "reqId": {
+      "type": "string",
+      "description": "Functional requirement identifier.",
+      "x_idPattern": "req"
+    },
+    "nfrId": {
+      "type": "string",
+      "description": "Non-functional requirement identifier.",
+      "x_idPattern": "nfr"
+    },
+    "scId": {
+      "type": "string",
+      "description": "Success criterion identifier.",
+      "x_idPattern": "sc"
+    },
+    "usId": {
+      "type": "string",
+      "description": "User story identifier.",
+      "x_idPattern": "us"
+    },
+    "ngId": {
+      "type": "string",
+      "description": "Non-goal identifier.",
+      "x_idPattern": "ng"
+    },
+    "dgId": {
+      "type": "string",
+      "description": "Design goal identifier.",
+      "x_idPattern": "dg"
+    },
+    "prsId": {
+      "type": "string",
+      "description": "Persona identifier.",
+      "x_idPattern": "prs"
+    },
+    "ujId": {
+      "type": "string",
+      "description": "User journey identifier.",
+      "x_idPattern": "uj"
+    },
+    "scrId": {
+      "type": "string",
+      "description": "Screen identifier.",
+      "x_idPattern": "scr"
+    },
+    "spcId": {
+      "type": "string",
+      "description": "Screen spec identifier.",
+      "x_idPattern": "spc"
+    },
+    "patId": {
+      "type": "string",
+      "description": "Interaction pattern identifier.",
+      "x_idPattern": "pat"
+    },
+    "vdrId": {
+      "type": "string",
+      "description": "Visual design requirement identifier.",
+      "x_idPattern": "vdr"
+    },
+    "uxacId": {
+      "type": "string",
+      "description": "UX acceptance criterion identifier.",
+      "x_idPattern": "uxac"
+    },
+    "dtId": {
+      "type": "string",
+      "description": "Design token identifier.",
+      "x_idPattern": "dt"
+    },
+    "arId": {
+      "type": "string",
+      "description": "Accessibility requirement identifier.",
+      "x_idPattern": "ar"
+    },
+    "compId": {
+      "type": "string",
+      "description": "Component identifier.",
+      "x_idPattern": "comp"
+    },
+    "conId": {
+      "type": "string",
+      "description": "Constraint identifier.",
+      "x_idPattern": "con"
+    },
+    "flwId": {
+      "type": "string",
+      "description": "Data flow identifier.",
+      "x_idPattern": "flw"
+    },
+    "entId": {
+      "type": "string",
+      "description": "Entity identifier.",
+      "x_idPattern": "ent"
+    },
+    "numId": {
+      "type": "string",
+      "description": "Enum identifier.",
+      "x_idPattern": "num"
+    },
+    "primId": {
+      "type": "string",
+      "description": "Primitive identifier.",
+      "x_idPattern": "prim"
+    },
+    "relId": {
+      "type": "string",
+      "description": "Relationship identifier.",
+      "x_idPattern": "rel"
+    },
+    "fldId": {
+      "type": "string",
+      "description": "Entity field identifier.",
+      "x_idPattern": "fld"
+    },
+    "funcId": {
+      "type": "string",
+      "description": "Function identifier.",
+      "x_idPattern": "func"
+    },
+    "endpId": {
+      "type": "string",
+      "description": "Endpoint identifier.",
+      "x_idPattern": "endp"
+    },
+    "tstId": {
+      "type": "string",
+      "description": "Test case identifier.",
+      "x_idPattern": "tst"
+    },
+    "fcId": {
+      "type": "string",
+      "description": "Function coverage identifier.",
+      "x_idPattern": "fc"
+    },
+    "epId": {
+      "type": "string",
+      "description": "Epic identifier.",
+      "x_idPattern": "ep"
+    },
+    "isId": {
+      "type": "string",
+      "description": "Issue identifier.",
+      "x_idPattern": "is"
+    },
+    "siId": {
+      "type": "string",
+      "description": "Sub-issue identifier.",
+      "x_idPattern": "si"
+    },
+    "milId": {
+      "type": "string",
+      "description": "Milestone identifier.",
+      "x_idPattern": "mil"
+    }
+  },
   "properties": {
     "version": {
       "type": "string",
+      "description": "Semver version of this spec document instance.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
-    },
-    "schemaVersion": {
-      "type": "string",
-      "const": "2.0.0"
     },
     "project": {
       "type": "string",
-      "description": "Must match project name across all other specs.",
+      "description": "Project name. Must match across all specs.",
       "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "description": "Lifecycle status of this spec.",
+      "enum": [
+        "draft",
+        "review",
+        "confirmed",
+        "superseded"
+      ],
+      "default": "draft"
+    },
+    "goalSpecVersion": {
+      "type": "string",
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the Glossary schema this document conforms to. Must be '2.0.0'.",
+      "const": "2.0.0"
     },
     "terms": {
       "type": "array",
-      "description": "All domain terms. Each must be independently understandable.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": [
-          "id",
-          "name",
-          "definition"
-        ],
         "additionalProperties": false,
         "properties": {
-          "definition": {
-            "type": "string",
-            "description": "Definition of this glossary term. Required.",
-            "minLength": 10
+          "id": {
+            "$ref": "#/definitions/glId",
+            "description": "Unique identifier for this gl.",
+            "x_idPattern": "gl"
           },
           "name": {
             "type": "string",
-            "description": "Name of this glossary term. Required.",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Human-readable gl name."
           },
           "description": {
             "type": "string",
-            "description": "Description of this glossary term. Synonym for 'definition' \u2014 use for graph visualization consistency. If omitted, falls back to 'definition'.",
+            "description": "Longer description of this gl."
+          },
+          "definition": {
+            "type": "string",
             "minLength": 10
           },
           "examples": {
             "type": "array",
-            "description": "Optional concrete examples that clarify the definition.",
             "items": {
               "type": "string",
               "minLength": 1
@@ -63,7 +239,6 @@
           },
           "synonyms": {
             "type": "array",
-            "description": "Other names for this term used in the project. Synonyms should not have their own entry.",
             "items": {
               "type": "string",
               "minLength": 1
@@ -71,52 +246,30 @@
           },
           "relatedTerms": {
             "type": "array",
-            "description": "GL-NNN identifiers of other terms in this glossary that are closely related.",
             "items": {
-              "$ref": "#/definitions/glId",
-              "x_idPattern": "gl"
-            }
+              "$ref": "#/definitions/glId"
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
           },
           "category": {
             "type": "string",
-            "description": "Required. Grouping tag for the term.",
             "enum": [
               "domain",
               "technical",
               "security",
               "ui"
             ]
-          },
-          "id": {
-            "$ref": "#/definitions/glId",
-            "description": "Unique glossary term identifier. Format: GL-NNN (3-digit zero-padded, sequential).",
-            "x_idPattern": "gl"
           }
         },
-        "pattern": "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
-      },
-      "uniqueItems": true
-    },
-    "goalSpecVersion": {
-      "type": "string",
-      "description": "Version of the GoalSpec this spec was reviewed against.",
-      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
-    }
-  },
-  "definitions": {
-    "glId": {
-      "type": "string",
-      "description": "Glossary term identifier, format GL-NNN-PascalCase.",
-      "x_idPattern": "gl"
-    }
-  },
-  "outputFiles": [
-    "artifacts/Glossary.md",
-    "artifacts/Glossary.json"
-  ],
-  "specDependencies": {
-    "goalSpec": {
-      "required": true
+        "required": [
+          "category",
+          "definition",
+          "description",
+          "id",
+          "name"
+        ]
+      }
     }
   }
 }

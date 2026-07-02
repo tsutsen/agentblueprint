@@ -43,7 +43,6 @@
         "Configuration scattered across multiple tools."
       ],
       "technicalSkillLevel": "expert",
-      "notes": "Primary persona. Comfortable with CLI, config files, and log inspection.",
       "description": "developer who wants to Submit queries without thinking about which model to use., Understand why a query was routed to a specific backend., Override routing quickly when testing a specific model. and is frustrated by Manually switching between tools for different query types., No visibility into which model handled a request or how long it took., Configuration scattered across multiple tools.."
     }
   ],
@@ -51,16 +50,16 @@
     {
       "id": "UJ-000-FindProduct",
       "name": "Submit first query",
-      "personaRef": "power-developer",
+      "personaRef": "PRS-000-PowerDeveloper",
       "usRefs": [
-        "US-001"
+        "US-001-Register"
       ],
       "startingState": "Gateway is running. Developer has an OpenAI-compatible client configured to point at the gateway.",
       "steps": [
         {
           "actor": "user",
           "action": "Sends a query via their existing client tool.",
-          "screenRef": "status-view"
+          "screenRef": "SCR-000-StatusView"
         },
         {
           "actor": "system",
@@ -81,16 +80,16 @@
     {
       "id": "UJ-001-AddToCart",
       "name": "Inspect routing history",
-      "personaRef": "power-developer",
+      "personaRef": "PRS-000-PowerDeveloper",
       "usRefs": [
-        "US-003"
+        "US-003-ViewProfile"
       ],
       "startingState": "Several queries have been processed. Developer wants to understand routing decisions.",
       "steps": [
         {
           "actor": "user",
           "action": "Runs the log inspection command.",
-          "screenRef": "log-view"
+          "screenRef": "SCR-001-LogView"
         },
         {
           "actor": "system",
@@ -111,9 +110,9 @@
     {
       "id": "UJ-002-Checkout",
       "name": "Force a specific backend",
-      "personaRef": "power-developer",
+      "personaRef": "PRS-000-PowerDeveloper",
       "usRefs": [
-        "US-004"
+        "US-004-Settings"
       ],
       "startingState": "Developer wants to test a specific backend directly.",
       "steps": [
@@ -136,16 +135,16 @@
     {
       "id": "UJ-003-ViewOrder",
       "name": "Configure backends",
-      "personaRef": "power-developer",
+      "personaRef": "PRS-000-PowerDeveloper",
       "usRefs": [
-        "US-002"
+        "US-002-Search"
       ],
       "startingState": "Developer wants to add or reprioritise backends.",
       "steps": [
         {
           "actor": "user",
           "action": "Edits the configuration file in their editor.",
-          "screenRef": "config-view"
+          "screenRef": "SCR-002-ConfigView"
         },
         {
           "actor": "system",
@@ -164,15 +163,15 @@
     "root": [
       {
         "name": "Status",
-        "screenRef": "status-view"
+        "screenRef": "SCR-000-StatusView"
       },
       {
         "name": "Log",
-        "screenRef": "log-view"
+        "screenRef": "SCR-001-LogView"
       },
       {
         "name": "Config",
-        "screenRef": "config-view"
+        "screenRef": "SCR-002-ConfigView"
       }
     ],
     "notes": "All views are CLI surfaces, not graphical screens. Navigation is via subcommands, not menus."
@@ -193,7 +192,7 @@
         "Uptime and query count"
       ],
       "usRefs": [
-        "US-001"
+        "US-001-Register"
       ],
       "description": "Show the developer the current state of the gateway and all configured backends at a glance."
     },
@@ -210,7 +209,7 @@
         "Query log table with backend, latency, status"
       ],
       "usRefs": [
-        "US-003"
+        "US-003-ViewProfile"
       ],
       "description": "Browse and filter the history of queries processed by the gateway."
     },
@@ -229,14 +228,14 @@
         "Last reload timestamp"
       ],
       "usRefs": [
-        "US-002"
+        "US-002-Search"
       ],
       "description": "Inspect the currently loaded backend configuration."
     }
   ],
   "screenSpecs": [
     {
-      "screenRef": "status-view",
+      "screenRef": "SCR-000-StatusView",
       "layout": "Single-column terminal output. Header line shows gateway version and uptime. Body shows backend table. Footer shows query count and last activity.",
       "wireframe": "LLMGateway v1.0.0 \u2014 uptime 2h14m\n\nBACKENDS\n  \u25cf local/qwen3-27b      [available]  priority 1\n  \u25cf cloud/anthropic      [available]  priority 2\n  \u25cb local/llama-3-8b     [offline]    priority 3\n\nQueries processed: 47  |  Last query: 12s ago",
       "components": [
@@ -279,12 +278,15 @@
         {
           "trigger": "Developer runs `gateway status --watch`",
           "response": "Gateway refreshes the status view in-place every 2 seconds until interrupted.",
-          "patternRef": "PAT-002-watchMode"
+          "patternRef": "PAT-002-WatchMode"
         }
-      ]
+      ],
+      "id": "SPC-000-StatusView",
+      "name": "Screen Spec 0",
+      "description": "Specification for screen SCR-000-StatusView"
     },
     {
-      "screenRef": "log-view",
+      "screenRef": "SCR-001-LogView",
       "layout": "Paginated table output. Each row is one query. Columns: timestamp, backend, latency, status, query preview.",
       "wireframe": "QUERY LOG  (showing 20 of 47)\n\nTIME         BACKEND           LATENCY  STATUS  QUERY\n2m ago       local/qwen3-27b   1.2s     ok      Refactor this function to...\n5m ago       cloud/anthropic   0.8s     ok      What is the capital of...\n12m ago      local/qwen3-27b   2.1s     ok      Write a test for...\n\n[n] next page  [p] prev page  [q] quit",
       "components": [
@@ -293,8 +295,8 @@
           "purpose": "Shows a paginated list of past queries with routing metadata.",
           "designSystemRef": "DataTable",
           "patternRefs": [
-            "PAT-003-pagination",
-            "PAT-004-keyboardNavigation"
+            "PAT-003-Pagination",
+            "PAT-004-KeyboardNavigation"
           ]
         },
         {
@@ -321,17 +323,20 @@
         {
           "trigger": "Developer presses n",
           "response": "Log advances to the next page.",
-          "patternRef": "PAT-003-pagination"
+          "patternRef": "PAT-003-Pagination"
         },
         {
           "trigger": "Developer runs `gateway log --backend local/qwen3-27b`",
           "response": "Log view pre-filtered to the specified backend.",
           "patternRef": "PAT-001-CommandOutput"
         }
-      ]
+      ],
+      "id": "SPC-001-LogView",
+      "name": "Screen Spec 1",
+      "description": "Specification for screen SCR-001-LogView"
     },
     {
-      "screenRef": "config-view",
+      "screenRef": "SCR-002-ConfigView",
       "layout": "Single-column output showing active backends in priority order, config file path, and last reload timestamp.",
       "wireframe": "ACTIVE CONFIG  (/home/leon/.config/llmgateway/config.toml)\nLast reloaded: 14 minutes ago\n\nBACKENDS (priority order)\n  1. local/qwen3-27b    http://localhost:8080\n  2. cloud/anthropic    https://api.anthropic.com\n  3. local/llama-3-8b   http://localhost:8081",
       "components": [
@@ -362,7 +367,10 @@
           "response": "Config view printed to stdout.",
           "patternRef": "PAT-001-CommandOutput"
         }
-      ]
+      ],
+      "id": "SPC-002-ConfigView",
+      "name": "Screen Spec 2",
+      "description": "Specification for screen SCR-002-ConfigView"
     }
   ],
   "interactionPatterns": [
@@ -487,7 +495,7 @@
       "id": "AR-001",
       "description": "Every interactive action must be triggerable via keyboard with no mouse required.",
       "reqRefs": [
-        "REQ-001"
+        "REQ-001-Login"
       ],
       "name": "Every interactive action must be triggerable via k..."
     },
@@ -510,40 +518,44 @@
       "description": "A developer can submit a first query within 2 minutes of installation with no backend manually specified.",
       "refs": {
         "usRefs": [
-          "US-001"
+          "US-001-Register"
         ]
       },
-      "verificationMethod": "Timed manual walkthrough from fresh install."
+      "verificationMethod": "Timed manual walkthrough from fresh install.",
+      "name": "Touch Target"
     },
     {
       "id": "UXAC-001-ColorContrast",
       "description": "The log view shows backend, latency, and status for every past query with no additional commands.",
       "refs": {
         "usRefs": [
-          "US-003"
+          "US-003-ViewProfile"
         ]
       },
-      "verificationMethod": "Manual inspection after processing 5 test queries."
+      "verificationMethod": "Manual inspection after processing 5 test queries.",
+      "name": "Color Contrast"
     },
     {
       "id": "UXAC-002-KeyboardFocus",
       "description": "All views are fully navigable using only keyboard input.",
       "refs": {
         "reqRefs": [
-          "REQ-001"
+          "REQ-001-Login"
         ]
       },
-      "verificationMethod": "Manual walkthrough of all views without touching the mouse."
+      "verificationMethod": "Manual walkthrough of all views without touching the mouse.",
+      "name": "Keyboard Focus"
     },
     {
       "id": "UXAC-003-ScreenReader",
       "description": "A backend override flag routes the query to the specified backend without modifying the config file.",
       "refs": {
         "usRefs": [
-          "US-004"
+          "US-004-Settings"
         ]
       },
-      "verificationMethod": "Manual test: override flag used, log inspected to confirm correct backend."
+      "verificationMethod": "Manual test: override flag used, log inspected to confirm correct backend.",
+      "name": "Screen Reader"
     }
   ]
 }

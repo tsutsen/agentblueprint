@@ -5,186 +5,287 @@
   "description": "Structural specification of the system: components, responsibilities, data flow, and constraints. Version 2.0.0.",
   "type": "object",
   "required": [
-    "version",
-    "schemaVersion",
-    "project",
-    "goalSpecVersion",
-    "overview",
     "components",
+    "constraints",
     "dataFlow",
-    "constraints"
+    "overview",
+    "project",
+    "schemaVersion",
+    "version"
   ],
   "additionalProperties": false,
   "definitions": {
-    "componentId": {
+    "glId": {
       "type": "string",
-      "description": "Component identifier, format COMP-NNN-PascalCase.",
-      "x_idPattern": "comp"
+      "description": "Glossary term identifier.",
+      "x_idPattern": "gl"
     },
     "reqId": {
       "type": "string",
-      "description": "Functional requirement identifier, format REQ-NNN (3-digit zero-padded).",
+      "description": "Functional requirement identifier.",
       "x_idPattern": "req"
     },
     "nfrId": {
       "type": "string",
-      "description": "Non-functional requirement identifier, format NFR-NNN (3-digit zero-padded).",
+      "description": "Non-functional requirement identifier.",
       "x_idPattern": "nfr"
     },
-    "glId": {
+    "scId": {
       "type": "string",
-      "description": "Glossary term identifier, format GL-NNN-PascalCase.",
-      "x_idPattern": "gl"
+      "description": "Success criterion identifier.",
+      "x_idPattern": "sc"
+    },
+    "usId": {
+      "type": "string",
+      "description": "User story identifier.",
+      "x_idPattern": "us"
+    },
+    "ngId": {
+      "type": "string",
+      "description": "Non-goal identifier.",
+      "x_idPattern": "ng"
+    },
+    "dgId": {
+      "type": "string",
+      "description": "Design goal identifier.",
+      "x_idPattern": "dg"
+    },
+    "prsId": {
+      "type": "string",
+      "description": "Persona identifier.",
+      "x_idPattern": "prs"
+    },
+    "ujId": {
+      "type": "string",
+      "description": "User journey identifier.",
+      "x_idPattern": "uj"
+    },
+    "scrId": {
+      "type": "string",
+      "description": "Screen identifier.",
+      "x_idPattern": "scr"
+    },
+    "spcId": {
+      "type": "string",
+      "description": "Screen spec identifier.",
+      "x_idPattern": "spc"
+    },
+    "patId": {
+      "type": "string",
+      "description": "Interaction pattern identifier.",
+      "x_idPattern": "pat"
+    },
+    "vdrId": {
+      "type": "string",
+      "description": "Visual design requirement identifier.",
+      "x_idPattern": "vdr"
+    },
+    "uxacId": {
+      "type": "string",
+      "description": "UX acceptance criterion identifier.",
+      "x_idPattern": "uxac"
+    },
+    "dtId": {
+      "type": "string",
+      "description": "Design token identifier.",
+      "x_idPattern": "dt"
+    },
+    "arId": {
+      "type": "string",
+      "description": "Accessibility requirement identifier.",
+      "x_idPattern": "ar"
     },
     "compId": {
       "type": "string",
-      "description": "Component identifier, format COMP-NNN-componentName.",
+      "description": "Component identifier.",
       "x_idPattern": "comp"
-    },
-    "flowId": {
-      "type": "string",
-      "description": "Data flow identifier, format FLW-NNN-PascalCase.",
-      "x_idPattern": "flw"
     },
     "conId": {
       "type": "string",
-      "description": "Constraint identifier, format CON-NNN-name.",
+      "description": "Constraint identifier.",
       "x_idPattern": "con"
+    },
+    "flwId": {
+      "type": "string",
+      "description": "Data flow identifier.",
+      "x_idPattern": "flw"
+    },
+    "entId": {
+      "type": "string",
+      "description": "Entity identifier.",
+      "x_idPattern": "ent"
+    },
+    "numId": {
+      "type": "string",
+      "description": "Enum identifier.",
+      "x_idPattern": "num"
+    },
+    "primId": {
+      "type": "string",
+      "description": "Primitive identifier.",
+      "x_idPattern": "prim"
+    },
+    "relId": {
+      "type": "string",
+      "description": "Relationship identifier.",
+      "x_idPattern": "rel"
+    },
+    "fldId": {
+      "type": "string",
+      "description": "Entity field identifier.",
+      "x_idPattern": "fld"
+    },
+    "funcId": {
+      "type": "string",
+      "description": "Function identifier.",
+      "x_idPattern": "func"
+    },
+    "endpId": {
+      "type": "string",
+      "description": "Endpoint identifier.",
+      "x_idPattern": "endp"
+    },
+    "tstId": {
+      "type": "string",
+      "description": "Test case identifier.",
+      "x_idPattern": "tst"
+    },
+    "fcId": {
+      "type": "string",
+      "description": "Function coverage identifier.",
+      "x_idPattern": "fc"
+    },
+    "epId": {
+      "type": "string",
+      "description": "Epic identifier.",
+      "x_idPattern": "ep"
+    },
+    "isId": {
+      "type": "string",
+      "description": "Issue identifier.",
+      "x_idPattern": "is"
+    },
+    "siId": {
+      "type": "string",
+      "description": "Sub-issue identifier.",
+      "x_idPattern": "si"
+    },
+    "milId": {
+      "type": "string",
+      "description": "Milestone identifier.",
+      "x_idPattern": "mil"
     }
   },
   "properties": {
     "version": {
       "type": "string",
-      "description": "Semver version of this archspec document instance.",
+      "description": "Semver version of this spec document instance.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
-    },
-    "schemaVersion": {
-      "type": "string",
-      "description": "Version of the ArchSpec schema this document conforms to. Must be '2.0.0'.",
-      "const": "2.0.0"
     },
     "project": {
       "type": "string",
-      "description": "Must match the project name in the corresponding GoalSpec.",
+      "description": "Project name. Must match across all specs.",
       "minLength": 1
     },
     "status": {
       "type": "string",
+      "description": "Lifecycle status of this spec.",
       "enum": [
         "draft",
         "review",
         "confirmed",
         "superseded"
       ],
-      "default": "draft",
-      "description": "Lifecycle status of this component. One of: draft, confirmed, deprecated."
+      "default": "draft"
     },
     "goalSpecVersion": {
       "type": "string",
-      "description": "Version of the GoalSpec this architecture was designed against.",
-      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+      "description": "Version of the GoalSpec this spec was reviewed against.",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+$"
     },
-    "dataSpecVersion": {
+    "schemaVersion": {
       "type": "string",
-      "description": "Version of the DataSpec this architecture references. Optional if DataSpec not yet produced.",
-      "pattern": "^\\d+\\.\\d+\\.\\d+$"
-    },
-    "apiSpecVersion": {
-      "type": "string",
-      "description": "Version of the ApiSpec this architecture references. Optional if ApiSpec not yet produced.",
-      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+      "description": "Version of the ArchitectureSpec schema this document conforms to. Must be '2.0.0'.",
+      "const": "2.0.0"
     },
     "overview": {
       "type": "object",
-      "description": "High-level description of the system structure. Must be understandable without implementation knowledge.",
-      "required": [
-        "summary",
-        "subsystems"
-      ],
       "additionalProperties": false,
       "properties": {
         "summary": {
           "type": "string",
-          "description": "2\u20134 sentences describing the system structure, major subsystems, and how they interact.",
           "minLength": 30
         },
         "subsystems": {
           "type": "array",
-          "description": "Named major subsystems. Each must correspond to one or more components.",
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": [
-              "name",
-              "purpose"
-            ],
             "additionalProperties": false,
             "properties": {
               "name": {
                 "type": "string",
-                "description": "Human-readable subsystem name.",
                 "minLength": 1
               },
               "purpose": {
                 "type": "string",
-                "description": "One sentence describing what this subsystem does.",
                 "minLength": 5
               },
               "componentRefs": {
                 "type": "array",
-                "description": "Component IDs that belong to this subsystem.",
                 "items": {
-                  "$ref": "#/definitions/componentId"
-                }
+                  "$ref": "#/definitions/compId"
+                },
+                "description": "Component IDs."
               }
-            }
+            },
+            "required": [
+              "name",
+              "purpose"
+            ]
           }
         },
         "glossaryRefs": {
           "type": "array",
-          "description": "Glossary term IDs (GL-NNN) referenced in the overview.",
           "items": {
             "$ref": "#/definitions/glId"
-          }
+          },
+          "description": "Glossary term IDs.",
+          "uniqueItems": true
         }
-      }
+      },
+      "required": [
+        "subsystems",
+        "summary"
+      ]
     },
     "components": {
       "type": "array",
-      "description": "All major architectural units. Each component has exclusive ownership of its responsibilities.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": [
-          "id",
-          "name",
-          "purpose",
-          "responsibilities"
-        ],
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/componentId",
-            "description": "Unique kebab-case identifier for this component (e.g. 'search-service').",
+            "$ref": "#/definitions/compId",
+            "description": "Unique identifier for this comp.",
             "x_idPattern": "comp"
           },
           "name": {
             "type": "string",
-            "description": "Human-readable component name.",
-            "minLength": 1
-          },
-          "purpose": {
-            "type": "string",
-            "description": "One sentence: what this component exists to do.",
-            "minLength": 10
+            "minLength": 1,
+            "description": "Human-readable comp name."
           },
           "description": {
             "type": "string",
-            "description": "Longer description of the component's role and behavior. If omitted, 'purpose' is used as fallback."
+            "description": "Longer description of this comp."
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 10
           },
           "responsibilities": {
             "type": "array",
-            "description": "Exclusive behaviours owned by this component. No two components may share the same responsibility.",
             "minItems": 1,
             "items": {
               "type": "string",
@@ -193,28 +294,27 @@
           },
           "dependencies": {
             "type": "array",
-            "description": "Component IDs this component depends on. Must reference real component IDs in this spec.",
             "items": {
               "$ref": "#/definitions/compId"
-            }
+            },
+            "description": "Component IDs."
           },
           "reqRefs": {
             "type": "array",
-            "description": "REQ-IDs from the GoalSpec that this component helps satisfy.",
             "items": {
               "$ref": "#/definitions/reqId"
-            }
+            },
+            "description": "Functional requirement IDs."
           },
           "nfrRefs": {
             "type": "array",
-            "description": "NFR-IDs from the GoalSpec that this component is responsible for meeting.",
             "items": {
               "$ref": "#/definitions/nfrId"
-            }
+            },
+            "description": "Non-functional requirement IDs."
           },
           "visibility": {
             "type": "string",
-            "description": "Whether this component is exposed externally or internal only.",
             "enum": [
               "external",
               "internal"
@@ -223,18 +323,17 @@
           },
           "glossaryRefs": {
             "type": "array",
-            "description": "Glossary term IDs (GL-NNN) that this component's concepts map to. Use for cross-spec traceability.",
             "items": {
               "$ref": "#/definitions/glId"
-            }
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
           },
           "notes": {
-            "type": "string",
-            "description": "Optional clarifying context for this component that does not fit other fields."
+            "type": "string"
           },
           "status": {
             "type": "string",
-            "description": "Lifecycle status of this component.",
             "enum": [
               "draft",
               "review",
@@ -245,208 +344,194 @@
           },
           "constraintRefs": {
             "type": "array",
-            "description": "CON-NNN IDs from ArchitectureSpec constraints that apply to this component.",
             "items": {
               "$ref": "#/definitions/conId"
-            }
+            },
+            "description": "Constraint IDs."
           }
         },
-        "x_idPattern": "comp"
+        "required": [
+          "description",
+          "id",
+          "name",
+          "purpose",
+          "responsibilities"
+        ]
       }
     },
     "dataModel": {
       "type": "object",
-      "description": "Reference to the canonical DataSpec. If a DataSpec exists, all entity definitions live there \u2014 do not duplicate them here.",
       "additionalProperties": false,
       "properties": {
         "dataSpecRef": {
           "type": "string",
-          "description": "Filename or path of the authoritative dataspec JSON.",
           "minLength": 1
         },
         "notes": {
-          "type": "string",
-          "description": "Any architectural notes about the data model not captured in the DataSpec itself."
+          "type": "string"
         }
-      }
+      },
+      "required": [
+        "dataSpecRef"
+      ]
     },
     "apiContract": {
       "type": "object",
-      "description": "Reference to the canonical ApiSpec. If an ApiSpec exists, all interface definitions live there \u2014 do not duplicate them here.",
       "additionalProperties": false,
       "properties": {
         "apiSpecRef": {
           "type": "string",
-          "description": "Filename or path of the authoritative apispec JSON.",
           "minLength": 1
         },
         "authStrategy": {
           "type": "string",
-          "description": "How consumers authenticate with the system, e.g. 'API key in Authorization header', 'local Unix socket \u2014 no auth'.",
           "minLength": 10
         },
         "notes": {
-          "type": "string",
-          "description": "Any architectural notes about the API not captured in the ApiSpec itself."
+          "type": "string"
         }
-      }
+      },
+      "required": []
     },
     "dataFlow": {
       "type": "array",
-      "description": "Named flows describing how data moves through the system. Each flow names a source component, optional transforms, and a sink component.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": [
-          "id",
-          "name",
-          "steps"
-        ],
         "additionalProperties": false,
         "properties": {
           "id": {
-            "$ref": "#/definitions/flowId",
-            "description": "Stable flow identifier, format FLW-NNN-name.",
+            "$ref": "#/definitions/flwId",
+            "description": "Unique identifier for this flw.",
             "x_idPattern": "flw"
           },
           "name": {
             "type": "string",
-            "description": "Human-readable flow name.",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Human-readable flw name."
           },
           "description": {
             "type": "string",
-            "description": "Optional prose summary of this flow. Should not be empty \u2014 use to explain the flow's purpose in one sentence."
+            "description": "Longer description of this flw."
           },
           "glossaryRefs": {
             "type": "array",
-            "description": "Glossary term IDs (GL-NNN) that this flow's concepts map to.",
             "items": {
               "$ref": "#/definitions/glId"
-            }
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
           },
           "reqRefs": {
             "type": "array",
-            "description": "REQ-IDs this flow implements.",
             "items": {
               "$ref": "#/definitions/reqId"
-            }
+            },
+            "description": "Functional requirement IDs."
           },
           "steps": {
             "type": "array",
-            "description": "Ordered steps in this flow. Each step names the acting component and what happens.",
             "minItems": 2,
             "items": {
               "type": "object",
-              "required": [
-                "componentRef",
-                "action"
-              ],
               "additionalProperties": false,
               "properties": {
                 "componentRef": {
-                  "$ref": "#/definitions/componentId",
-                  "description": "The component performing this step."
+                  "$ref": "#/definitions/compId"
                 },
                 "action": {
                   "type": "string",
-                  "description": "What the component does at this step.",
                   "minLength": 5
                 },
                 "dataRef": {
-                  "type": "string",
-                  "description": "Optional: name of the entity or payload moving through this step."
+                  "type": "string"
                 },
                 "notes": {
-                  "type": "string",
-                  "description": "Optional clarifying context for this data flow step."
+                  "type": "string"
                 }
-              }
+              },
+              "required": [
+                "action",
+                "componentRef"
+              ]
             }
           },
           "nfrRefs": {
             "type": "array",
-            "description": "NFR-NNN IDs from GoalSpec non-functional requirements that apply to this data flow (e.g. latency, throughput).",
             "items": {
               "$ref": "#/definitions/nfrId"
-            }
+            },
+            "description": "Non-functional requirement IDs."
           },
           "componentRefs": {
             "type": "array",
-            "description": "COMP-NNN IDs from ArchitectureSpec components involved in this data flow.",
             "items": {
               "$ref": "#/definitions/compId"
-            }
+            },
+            "description": "Component IDs."
           }
-        }
+        },
+        "required": [
+          "description",
+          "id",
+          "name",
+          "steps"
+        ]
       }
     },
     "constraints": {
       "type": "array",
-      "description": "Architectural limitations and hard requirements. Each must be independently verifiable.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": [
-          "id",
-          "description"
-        ],
         "additionalProperties": false,
         "properties": {
           "id": {
             "$ref": "#/definitions/conId",
-            "description": "Stable constraint identifier, e.g. 'CON-001-AuthenticationRequired'.",
+            "description": "Unique identifier for this con.",
             "x_idPattern": "con"
           },
           "name": {
             "type": "string",
-            "description": "Short descriptive name summarizing this constraint (e.g. 'Dynamic Language Stack').",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Human-readable con name."
           },
           "description": {
             "type": "string",
-            "description": "The constraint in plain language.",
-            "minLength": 10
+            "description": "Longer description of this con."
           },
           "rationale": {
-            "type": "string",
-            "description": "Why this constraint exists."
+            "type": "string"
           },
           "glossaryRefs": {
             "type": "array",
-            "description": "Glossary term IDs (GL-NNN) that this constraint's concepts map to.",
             "items": {
               "$ref": "#/definitions/glId"
-            }
+            },
+            "description": "Glossary term IDs.",
+            "uniqueItems": true
           },
           "nfrRefs": {
             "type": "array",
-            "description": "NFR-IDs this constraint helps satisfy.",
             "items": {
               "$ref": "#/definitions/nfrId"
-            }
+            },
+            "description": "Non-functional requirement IDs."
           },
           "reqRefs": {
             "type": "array",
-            "description": "REQ-NNN IDs from GoalSpec functional requirements that drive this constraint.",
             "items": {
               "$ref": "#/definitions/reqId"
-            }
+            },
+            "description": "Functional requirement IDs."
           }
-        }
+        },
+        "required": [
+          "description",
+          "id",
+          "name"
+        ]
       }
-    }
-  },
-  "outputFiles": [
-    "artifacts/ArchitectureSpec.md",
-    "artifacts/ArchitectureSpec.json"
-  ],
-  "specDependencies": {
-    "goalSpec": {
-      "required": true
-    },
-    "glossary": {
-      "required": false
     }
   }
 }

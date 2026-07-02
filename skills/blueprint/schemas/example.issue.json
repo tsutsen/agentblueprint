@@ -3,12 +3,12 @@
   "id": "IS-000-ImplementLogin",
   "title": "Implement user authentication flow",
   "titleGlossaryRefs": [
-    "GL-001",
-    "GL-004"
+    "GL-001-Authorization",
+    "GL-004-Role"
   ],
   "type": "HITL",
   "status": "not_started",
-  "epic": "EP-001",
+  "epic": "EP-001-CoreFeatures",
   "blocked_by": [],
   "milestone": "M1",
   "created": "2025-01-01",
@@ -17,13 +17,13 @@
     {
       "description": "User login with email and password",
       "glossaryRefs": [
-        "GL-001"
+        "GL-001-Authorization"
       ]
     },
     {
       "description": "Password reset via email link",
       "glossaryRefs": [
-        "GL-002"
+        "GL-002-Session"
       ]
     }
   ],
@@ -36,17 +36,18 @@
     {
       "description": "User can log in with valid credentials",
       "glossaryRefs": [
-        "GL-001"
+        "GL-001-Authorization"
       ]
     },
     {
       "description": "Invalid credentials show appropriate error message",
       "glossaryRefs": [
-        "GL-003"
+        "GL-003-Token"
       ]
     },
     {
       "description": "Password reset link expires after 1 hour"
     }
-  ]
+  ],
+  "name": "Implement Login"
 }

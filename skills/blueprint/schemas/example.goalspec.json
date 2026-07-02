@@ -14,27 +14,44 @@
       "id": "REQ-000-CreateAccount",
       "actor": "developer",
       "description": "Developer can submit a query and receive a response routed to an appropriate backend.",
-      "notes": "Routing decision is invisible to the developer unless they opt into verbose mode."
+      "notes": "Routing decision is invisible to the developer unless they opt into verbose mode.",
+      "name": "Create Account"
     },
     {
       "id": "REQ-001-Login",
       "actor": "developer",
-      "description": "Developer can configure which backends are available and their priority order."
+      "description": "Developer can configure which backends are available and their priority order.",
+      "name": "Login"
     },
     {
       "id": "REQ-002-Logout",
       "actor": "developer",
-      "description": "Developer can view a log of past queries, which backend handled each, and response latency."
+      "description": "Developer can view a log of past queries, which backend handled each, and response latency.",
+      "name": "Logout"
     },
     {
       "id": "REQ-003-ResetPassword",
       "actor": "developer",
-      "description": "Developer can force a specific backend for a query by passing an explicit override flag."
+      "description": "Developer can force a specific backend for a query by passing an explicit override flag.",
+      "name": "Reset Password"
     },
     {
       "id": "REQ-004-UpdateProfile",
       "actor": "gateway",
-      "description": "Gateway falls back to the next available backend if the preferred backend is unavailable."
+      "description": "Gateway falls back to the next available backend if the preferred backend is unavailable.",
+      "name": "Update Profile"
+    },
+    {
+      "id": "REQ-005-ProfileManagement",
+      "name": "Profile Management",
+      "description": "The system shall allow users to manage their profile information including password, email, and display preferences.",
+      "actor": "User",
+      "scRefs": [
+        "SC-001-LoginSuccess"
+      ],
+      "reqRefs": [
+        "REQ-001-Login"
+      ]
     }
   ],
   "nonFunctionalRequirements": [
@@ -79,10 +96,11 @@
       "capability": "submit a query without specifying a backend",
       "outcome": "I can focus on my task instead of managing which model to use",
       "reqRefs": [
-        "REQ-001",
-        "REQ-005"
+        "REQ-001-Login",
+        "REQ-005-ProfileManagement"
       ],
-      "description": "As a developer, I want to submit a query without specifying a backend so that I can focus on my task instead of managing which model to use"
+      "description": "As a developer, I want to submit a query without specifying a backend so that I can focus on my task instead of managing which model to use",
+      "name": "Login"
     },
     {
       "id": "US-001-Register",
@@ -90,9 +108,10 @@
       "capability": "configure backend priority from a config file",
       "outcome": "I can adjust routing behaviour without modifying code",
       "reqRefs": [
-        "REQ-002"
+        "REQ-002-Logout"
       ],
-      "description": "As a developer, I want to configure backend priority from a config file so that I can adjust routing behaviour without modifying code"
+      "description": "As a developer, I want to configure backend priority from a config file so that I can adjust routing behaviour without modifying code",
+      "name": "Register"
     },
     {
       "id": "US-002-Search",
@@ -100,9 +119,10 @@
       "capability": "inspect which backend handled each of my past queries",
       "outcome": "I can understand routing decisions and tune my configuration",
       "reqRefs": [
-        "REQ-003"
+        "REQ-003-ResetPassword"
       ],
-      "description": "As a developer, I want to inspect which backend handled each of my past queries so that I can understand routing decisions and tune my configuration"
+      "description": "As a developer, I want to inspect which backend handled each of my past queries so that I can understand routing decisions and tune my configuration",
+      "name": "Search"
     },
     {
       "id": "US-003-ViewProfile",
@@ -110,9 +130,10 @@
       "capability": "force a specific backend for a single query",
       "outcome": "I can test a backend directly without changing my configuration",
       "reqRefs": [
-        "REQ-004"
+        "REQ-004-UpdateProfile"
       ],
-      "description": "As a developer, I want to force a specific backend for a single query so that I can test a backend directly without changing my configuration"
+      "description": "As a developer, I want to force a specific backend for a single query so that I can test a backend directly without changing my configuration",
+      "name": "View Profile"
     }
   ],
   "successCriteria": [
@@ -121,71 +142,75 @@
       "description": "A query submitted without a backend override is routed and returns a response with no manual backend selection required.",
       "refs": {
         "reqRefs": [
-          "REQ-001"
+          "REQ-001-Login"
         ]
       },
-      "verificationMethod": "Automated integration test with two configured backends."
+      "verificationMethod": "Automated integration test with two configured backends.",
+      "name": "Account Created"
     },
     {
       "id": "SC-001-LoginSuccess",
       "description": "When the preferred backend is down, the gateway routes to the next configured backend and the query succeeds.",
       "refs": {
         "reqRefs": [
-          "REQ-005"
+          "REQ-005-ProfileManagement"
         ]
       },
-      "verificationMethod": "Integration test with primary backend disabled."
+      "verificationMethod": "Integration test with primary backend disabled.",
+      "name": "Login Success"
     },
     {
       "id": "SC-002-LogoutComplete",
       "description": "Routing overhead does not exceed 50ms on the reference machine at 50 sequential queries.",
       "refs": {
         "nfrRefs": [
-          "NFR-001"
+          "NFR-001-Availability"
         ]
       },
-      "verificationMethod": "Latency benchmark with no-op backend."
+      "verificationMethod": "Latency benchmark with no-op backend.",
+      "name": "Logout Complete"
     },
     {
       "id": "SC-003-PasswordReset",
       "description": "All REQ-001 through REQ-005 pass their acceptance tests.",
       "refs": {
         "reqRefs": [
-          "REQ-001",
-          "REQ-002",
-          "REQ-003",
-          "REQ-004",
-          "REQ-005"
+          "REQ-001-Login",
+          "REQ-002-Logout",
+          "REQ-003-ResetPassword",
+          "REQ-004-UpdateProfile",
+          "REQ-005-ProfileManagement"
         ]
       },
-      "verificationMethod": "Full acceptance test suite."
+      "verificationMethod": "Full acceptance test suite.",
+      "name": "Password Reset"
     }
   ],
   "nonGoals": [
     {
       "id": "NG-000-MobileApp",
-      "name": "Multi-user access control",
+      "name": "Mobile App",
       "capability": "Multi-user access control",
       "description": "The system will not support multiple users or account management in this release.",
       "reason": "Deferred to a future version; single-developer use only for this release."
     },
     {
       "id": "NG-001-ThirdPartyIntegration",
-      "name": "Web-based management UI",
+      "name": "Third Party Integration",
       "capability": "Web-based management UI",
       "description": "No web interface will be provided; configuration is done via CLI and config files.",
       "reason": "Out of scope; CLI and config file are sufficient for the target user."
     },
     {
       "id": "NG-002-LegacyMigration",
-      "name": "Model fine-tuning or training",
+      "name": "Legacy Migration",
       "capability": "Fine-tuning or training of models",
       "description": "The gateway will not modify or train models; it only routes to existing backends.",
       "reason": "Out of scope; gateway routes to existing backends, does not modify them."
     },
     {
       "id": "NG-003-FeatureX",
-      "name": "Cross-provider billing and cost tracking",
+      "name": "Feature X",
       "capability": "Billing and cost tracking across cloud providers",
       "description": "Detailed cost tracking and billing integration is not included in this release.",
       "reason": "Deferred; cost visibility is a logging concern handled in a later version."
