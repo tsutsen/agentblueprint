@@ -101,7 +101,17 @@ project/
 | `generate_tests` | `apiSpecPath?, goalSpecPath?, testSpecPath?, reqMappingPath?` | Auto-generate TestSpec from ApiSpec (happy/edge/error paths, reqRefs) |
 | `generate_diagrams` | `dataSpecPath?, formats?, outputDir?` | Generate data model diagrams (puml, mermaid, drawio, dbml, d2) |
 | `generate_artifact_markdown` | `artifactType, jsonPath` | Convert JSON artifact to Markdown (derived, zero drift) |
-| `spec_upgrade` | `artifactType, filePath` | Migrate artifact from old schema format to new format |
+| `gh_create_epic` | `jsonPath` | Create GitHub Issue + EP branch from main |
+| `gh_create_issue` | `jsonPath, parentBranch` | Create GitHub Issue + IS branch from EP branch |
+| `gh_create_sub_issue` | `epId, issueId, data` | Create local SI-NNN.json + SI-NNN.md |
+| `gh_create_pr` | `siId, epBranch?, targetBranch?, jsonPath?` | Create PR from SI branch targeting IS branch |
+| `gh_merge_pr` | `prNumber, jsonPath?` | Merge PR and update local JSON |
+| `gh_update_issue` | `issueNumber, status?, labels?, comment?` | Update issue status/labels/comments |
+| `gh_get_issue` | `issueNumber` | Fetch GitHub issue state |
+| `gh_list_issues` | `labels?, state?` | List issues by label/milestone |
+| `gh_cleanup_branches` | `dryRun?` | Find and delete orphaned branches |
+| `gh_update_sub_issue` | `jsonPath, status?, files?` | Mark SI complete, populate files audit trail |
+| `gh_list_sub_issues` | `epId, issueId` | List sub-issues for an issue |
 
 ## ID Naming Conventions
 
