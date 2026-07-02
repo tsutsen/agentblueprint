@@ -354,7 +354,7 @@
               ]
             }
           },
-          "methods": {
+          "functions": {
             "type": "array",
             "items": {
               "type": "object",
@@ -375,8 +375,8 @@
                   "description": "Longer description of this func."
                 },
                 "apiRef": {
-                  "$ref": "#/definitions/funcId",
-                  "description": "Function"
+                  "$ref": "#/definitions/endpId",
+                  "description": "Endpoint"
                 }
               },
               "required": [
@@ -391,7 +391,7 @@
             "type": "string",
             "enum": [
               "public",
-              "internal"
+              "private"
             ],
             "default": "public"
           },
@@ -454,10 +454,10 @@
             "description": "Longer description of this rel."
           },
           "from": {
-            "type": "string"
+            "$ref": "#/definitions/entId"
           },
           "to": {
-            "type": "string"
+            "$ref": "#/definitions/entId"
           },
           "type": {
             "type": "string",

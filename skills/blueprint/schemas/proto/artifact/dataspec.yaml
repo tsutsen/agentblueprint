@@ -59,19 +59,19 @@ fields:
               - name: primaryKey
                 type: boolean
                 default: false
-        - name: methods
+        - name: functions
           type: array
           of:
             type: object
             ref: func
-            required: [name, apiRef]
+            required: [apiRef]
             fields:
               - name: apiRef
                 type: string
-                ref: func
+                ref: endp
         - name: visibility
           type: enum
-          enum: [public, internal]
+          enum: [public, private]
           default: public
         - name: componentRefs
           type: array
@@ -95,9 +95,9 @@ fields:
       required: [from, to, type]
       fields:
         - name: from
-          type: string
+          ref: ent
         - name: to
-          type: string
+          ref: ent
         - name: type
           type: enum
           enum: [association, composition, aggregation, dependency, inheritance]
