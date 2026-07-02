@@ -172,10 +172,6 @@
       "type": "string",
       "description": "Milestone identifier.",
       "x_idPattern": "mil"
-    },
-    "epicStatus": {
-      "type": "string",
-      "description": "Lifecycle status of an epic."
     }
   },
   "properties": {
@@ -277,6 +273,16 @@
           "title": {
             "type": "string",
             "minLength": 5
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "in_progress",
+              "complete"
+            ],
+            "default": "not_started",
+            "description": "Lifecycle status of this epic."
           },
           "milestone": {
             "$ref": "#/definitions/milId",
