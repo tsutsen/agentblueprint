@@ -73,42 +73,42 @@
     "fnId": {
       "type": "string",
       "description": "Function ID from ApiSpec. Format: FN-camelCase, e.g. 'FN-createUser'.",
-      "pattern": "^FN-\\d{3}-[a-z][A-Za-z0-9]*$"
+      "x_idPattern": "fn"
     },
     "glId": {
       "type": "string",
       "description": "Glossary term identifier, format GL-NNN-PascalCase.",
-      "pattern": "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "gl"
     },
     "scrId": {
       "type": "string",
       "description": "Screen identifier from DesignSpec, format SCR-NNN-PascalCase.",
-      "pattern": "^SCR-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "scr"
     },
     "ujId": {
       "type": "string",
       "description": "User journey identifier from DesignSpec, format UJ-NNN-lowerCamelCase.",
-      "pattern": "^UJ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "uj"
     },
     "compId": {
       "type": "string",
       "description": "Component identifier from ArchitectureSpec, format COMP-NNN-PascalCase.",
-      "pattern": "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "comp"
     },
     "reqId": {
       "type": "string",
       "description": "^REQ identifier.",
-      "pattern": "^REQ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "req"
     },
     "nfrId": {
       "type": "string",
       "description": "^NFR identifier.",
-      "pattern": "^NFR-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "nfr"
     },
     "conId": {
       "type": "string",
       "description": "Constraint identifier from ArchitectureSpec, format CON-NNN-Name.",
-      "pattern": "^CON-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "con"
     }
   },
   "properties": {
@@ -261,7 +261,6 @@
             "description": "REQ-IDs from GoalSpec that this function implements. Populated during architecture phase. Use for FN\u2192REQ traceability. At least one must be present once requirements are known.",
             "items": {
               "type": "string",
-              "pattern": "^REQ-\\d{3}$",
               "$ref": "#/definitions/reqId"
             }
           },
@@ -270,7 +269,6 @@
             "description": "NFR-IDs from GoalSpec that this function helps satisfy (e.g. performance, reliability).",
             "items": {
               "type": "string",
-              "pattern": "^NFR-\\d{3}$",
               "$ref": "#/definitions/nfrId"
             }
           },

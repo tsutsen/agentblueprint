@@ -27,33 +27,33 @@
   "definitions": {
     "screenId": {
       "type": "string",
-      "description": "Screen identifier, format SCR-NNN-name.",
-      "pattern": "^SCR-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "description": "Screen identifier, format SCR-NNN-PascalCase.",
+      "x_idPattern": "scr"
     },
     "personaId": {
       "type": "string",
       "description": "Persona identifier, format PRS-NNN-PascalCase.",
-      "pattern": "^PRS-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "prs"
     },
     "reqId": {
       "type": "string",
       "description": "Functional requirement identifier, format REQ-NNN (3-digit zero-padded).",
-      "pattern": "^REQ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "req"
     },
     "usId": {
       "type": "string",
       "description": "User story identifier, format US-NNN (3-digit zero-padded).",
-      "pattern": "^US-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "us"
     },
     "uxacId": {
       "type": "string",
       "description": "UX acceptance criterion identifier, format UXAC-NNN (3-digit zero-padded).",
-      "pattern": "^UXAC-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "uxac"
     },
     "vdrId": {
       "type": "string",
       "description": "Visual design requirement identifier, format VDR-NNN (3-digit zero-padded).",
-      "pattern": "^VDR-\\d{3}$"
+      "x_idPattern": "vdr"
     },
     "arId": {
       "type": "string",
@@ -124,42 +124,42 @@
     "glId": {
       "type": "string",
       "description": "Glossary term identifier, format GL-NNN-PascalCase.",
-      "pattern": "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "gl"
     },
     "dgId": {
       "type": "string",
       "description": "Design goal identifier, format DG-NNN (3-digit zero-padded).",
-      "pattern": "^DG-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "dg"
     },
     "spcId": {
       "type": "string",
       "description": "Screen spec identifier, format SPC-NNN (3-digit zero-padded).",
-      "pattern": "^SPC-\\d{3}$"
+      "x_idPattern": "spc"
     },
     "patId": {
       "type": "string",
-      "description": "Interaction pattern identifier, format PAT-NNN (3-digit zero-padded).",
-      "pattern": "^PAT-\\d{3}$"
+      "description": "Interaction pattern identifier, format PAT-NNN-camelCase (e.g. 'PAT-001-pipelineStatus').",
+      "x_idPattern": "pat"
     },
     "ujId": {
       "type": "string",
       "description": "^UJ identifier.",
-      "pattern": "^UJ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "uj"
     },
     "dtId": {
       "type": "string",
       "description": "^DT identifier.",
-      "pattern": "^DT-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "dt"
     },
     "nfrId": {
       "type": "string",
       "description": "Non-functional requirement identifier, format NFR-NNN-slug.",
-      "pattern": "^NFR-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "nfr"
     },
     "compId": {
       "type": "string",
       "description": "Component identifier, format COMP-NNN-Name.",
-      "pattern": "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "comp"
     }
   },
   "properties": {
@@ -325,8 +325,7 @@
             }
           }
         },
-        "x_idPattern": "prs",
-        "pattern": "^PRS-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+        "x_idPattern": "prs"
       }
     },
     "userJourneys": {
@@ -734,7 +733,7 @@
         "properties": {
           "id": {
             "$ref": "#/definitions/patId",
-            "description": "Unique kebab-case identifier for this interaction pattern (e.g. 'keyboard-navigation').",
+            "description": "Unique identifier for this interaction pattern, format PAT-NNN-camelCase (e.g. 'PAT-001-keyboardNavigation').",
             "x_idPattern": "pat"
           },
           "name": {
@@ -816,8 +815,7 @@
             }
           }
         ],
-        "x_idPattern": "vdr",
-        "pattern": "^VDR-\\d{3}$"
+        "x_idPattern": "vdr"
       }
     },
     "designSystem": {
@@ -1007,9 +1005,8 @@
             "type": "array",
             "description": "GL-NNN identifiers for related glossary terms.",
             "items": {
-              "type": "string",
-              "pattern": "^GL-\\d{3}$",
-              "$ref": "#/definitions/glId"
+              "$ref": "#/definitions/glId",
+              "x_idPattern": "gl"
             }
           }
         },

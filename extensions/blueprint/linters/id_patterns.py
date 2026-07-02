@@ -2,8 +2,8 @@
 """
 id_patterns.py — Canonical ID patterns (single source of truth).
 
-All ID format patterns are defined here. Linters and schema tools must use
-these instead of hardcoding patterns. If a pattern changes, update it here.
+All ID format patterns are defined here using composable parts.
+If a part changes, update it below and all patterns update automatically.
 
 Usage:
     from id_patterns import ID_PATTERNS
@@ -13,45 +13,67 @@ Usage:
     hint = ID_PATTERNS["req"]["hint"]
 """
 
-ID_PATTERNS = {
-    # ── GoalSpec ──────────────────────────────────────────────────────────────
-    "req": {"pattern": r"^REQ-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "REQ-001-createAccount", "hint": "Format: REQ-NNN-lowerCamelCase"},
-    "nfr": {"pattern": r"^NFR-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "NFR-001-responseTime", "hint": "Format: NFR-NNN-lowerCamelCase"},
-    "us": {"pattern": r"^US-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "US-001-login", "hint": "Format: US-NNN-lowerCamelCase"},
-    "sc": {"pattern": r"^SC-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "SC-001-dataIntegrity", "hint": "Format: SC-NNN-lowerCamelCase"},
-    "ng": {"pattern": r"^NG-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "NG-001-webSearch", "hint": "Format: NG-NNN-lowerCamelCase"},
-    # ── Glossary ──────────────────────────────────────────────────────────────
-    "gl": {"pattern": r"^GL-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "GL-001-Authentication", "hint": "Format: GL-NNN-PascalCase"},
-    "dg": {"pattern": r"^DG-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "DG-001-MinimizeCognitiveLoad", "hint": "Format: DG-NNN-PascalCase"},
-    "scr": {"pattern": r"^SCR-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "SCR-001-LandingPage", "hint": "Format: SCR-NNN-PascalCase"},
+# ── Composable pattern parts ─────────────────────────────────────────────────
+# Change these to update every ID pattern at once.
 
-    "dt": {"pattern": r"^DT-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "DT-001-PrimaryColor", "hint": "Format: DT-NNN-PascalCase"},
-    "pat": {"pattern": r"^PAT-\d{3}$", "example": "PAT-001", "hint": "Format: PAT-NNN (3-digit zero-padded)"},
-    "prs": {"pattern": r"^PRS-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "PRS-001-PowerDeveloper", "hint": "Format: PRS-NNN-PascalCase"},
-    "spc": {"pattern": r"^SPC-\d{3}$", "example": "SPC-001", "hint": "Format: SPC-NNN (3-digit zero-padded)"},
-    "uj": {"pattern": r"^UJ-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "UJ-001-findProduct", "hint": "Format: UJ-NNN-lowerCamelCase"},
-    "uxac": {"pattern": r"^UXAC-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "UXAC-001-touchTarget", "hint": "Format: UXAC-NNN-lowerCamelCase"},
-    "vdr": {"pattern": r"^VDR-\d{3}$", "example": "VDR-001", "hint": "Format: VDR-NNN (3-digit zero-padded)"},
-    # ── ArchitectureSpec ──────────────────────────────────────────────────────
-    "comp": {"pattern": r"^COMP-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "COMP-001-AuthService", "hint": "Format: COMP-NNN-PascalCase"},
-    "con": {"pattern": r"^CON-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "CON-001-AuthenticationRequired", "hint": "Format: CON-NNN-PascalCase"},
-    "flw": {"pattern": r"^FLW-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "FLW-001-SessionCreation", "hint": "Format: FLW-NNN-PascalCase"},
-    # ── DataSpec ──────────────────────────────────────────────────────────────
-    "ent": {"pattern": r"^ENT-\d{3}-[A-Z][A-Za-z0-9]*$", "example": "ENT-001-User", "hint": "Format: ENT-NNN-PascalCase"},
-    "num": {"pattern": r"^NUM-\d{3}-[A-Z][A-Za-z0-9]*$", "example": "NUM-001-Status", "hint": "Format: NUM-NNN-PascalCase"},
-    "prim": {"pattern": r"^PRIM-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "PRIM-001-UserId", "hint": "Format: PRIM-NNN-PascalCase"},
-    "rel": {"pattern": r"^REL-\d{3}-[A-Z][a-zA-Z0-9]*$", "example": "REL-001-UserOrders", "hint": "Format: REL-NNN-PascalCase"},
-    # ── ApiSpec ───────────────────────────────────────────────────────────────
-    "fn": {"pattern": r"^FN-\d{3}-[a-z][A-Za-z0-9]*$", "example": "FN-001-authenticate", "hint": "Format: FN-NNN-lowerCamelCase"},
-    # ── TestSpec ──────────────────────────────────────────────────────────────
-    "tst": {"pattern": r"^TST-\d{3}-[a-z][A-Za-z0-9]*$", "example": "TST-001-exportReportAsPDF", "hint": "Format: TST-NNN-lowerCamelCase"},
-    "fc": {"pattern": r"^FC-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "FC-001-authenticate", "hint": "Format: FC-NNN-lowerCamelCase"},
-    # ── TaskPlan / Issues ─────────────────────────────────────────────────────
-    "ep": {"pattern": r"^EP-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "EP-001-userOnboarding", "hint": "Format: EP-NNN-lowerCamelCase"},
-    "is": {"pattern": r"^IS-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "IS-001-implementLogin", "hint": "Format: IS-NNN-lowerCamelCase"},
-    "si": {"pattern": r"^SI-\d{3}-[a-z][a-zA-Z0-9]*$", "example": "SI-001-createLoginSchema", "hint": "Format: SI-NNN-lowerCamelCase"},
-    "milestone": {"pattern": r"^MIL-\d+-[A-Z][a-zA-Z]*$", "example": "MIL-001-Setup", "hint": "Format: MIL-NNN-NamePascalCase (e.g. MIL-001-Setup)"},
-}
+SEP = "-"                # separator between parts
+ENUM = r"\d{3}"            # 3-digit number
+SLUG = r"[A-Z][a-zA-Z0-9]*"  # PascalCase name
+
+# ── ID definitions ───────────────────────────────────────────────────────────
+# Each entry: (key, enumeration, slug)
+# prefix = key.upper() automatically.
+
+_ID_DEFS = [
+    # GoalSpec
+    ("req",    ENUM, SLUG),
+    ("nfr",    ENUM, SLUG),
+    ("us",     ENUM, SLUG),
+    ("sc",     ENUM, SLUG),
+    ("ng",     ENUM, SLUG),
+    # Glossary
+    ("gl",     ENUM, SLUG),
+    ("dg",     ENUM, SLUG),
+    ("scr",    ENUM, SLUG),
+    ("dt",     ENUM, SLUG),
+    ("pat",    ENUM, SLUG),
+    ("prs",    ENUM, SLUG),
+    ("spc",    ENUM, SLUG),
+    ("uj",     ENUM, SLUG),
+    ("uxac",   ENUM, SLUG),
+    ("vdr",    ENUM, SLUG),
+    # ArchitectureSpec
+    ("comp",   ENUM, SLUG),
+    ("con",    ENUM, SLUG),
+    ("flw",    ENUM, SLUG),
+    # DataSpec
+    ("ent",    ENUM, SLUG),
+    ("num",    ENUM, SLUG),
+    ("prim",   ENUM, SLUG),
+    ("rel",    ENUM, SLUG),
+    # ApiSpec
+    ("fn",     ENUM, SLUG),
+    # TestSpec
+    ("tst",    ENUM, SLUG),
+    ("fc",     ENUM, SLUG),
+    # TaskPlan / Issues
+    ("ep",     ENUM, SLUG),
+    ("is",     ENUM, SLUG),
+    ("si",     ENUM, SLUG),
+    # Milestones
+    ("mil",    ENUM, SLUG),
+]
+
+# ── Build ID_PATTERNS from definitions ───────────────────────────────────────
+ID_PATTERNS = {}
+for key, enumeration, slug in _ID_DEFS:
+    prefix = key.upper()
+    pattern = rf"^{prefix}-{enumeration}-{slug}$"
+    ID_PATTERNS[key] = {
+        "pattern": pattern,
+        "example": f"{prefix}-001-Example",
+        "hint": f"Format: {prefix}-NNN-PascalCase",
+    }
 
 # Section path → ID pattern type mapping (single source of truth for ID validation)
 SECTION_ID_PATTERNS = {
@@ -86,7 +108,7 @@ SECTION_ID_PATTERNS = {
     "functionCoverage": "fc",
     # TaskPlan
     "epics": "ep",
-    "milestones": "milestone",
+    "milestones": "mil",
     "issues": "is",
     "subIssues": "si",
     # Glossary

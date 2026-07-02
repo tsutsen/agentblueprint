@@ -73,8 +73,8 @@
             "type": "array",
             "description": "GL-NNN identifiers of other terms in this glossary that are closely related.",
             "items": {
-              "type": "string",
-              "pattern": "^GL-\\d{3}$"
+              "$ref": "#/definitions/glId",
+              "x_idPattern": "gl"
             }
           },
           "category": {
@@ -107,7 +107,7 @@
     "glId": {
       "type": "string",
       "description": "Glossary term identifier, format GL-NNN-PascalCase.",
-      "pattern": "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "gl"
     }
   },
   "outputFiles": [

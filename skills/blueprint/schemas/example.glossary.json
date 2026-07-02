@@ -4,7 +4,7 @@
   "project": "LLMGateway",
   "terms": [
     {
-      "id": "GL-001",
+      "id": "GL-000-Authentication",
       "examples": [
         "llama.cpp server on localhost:8080",
         "Anthropic API"
@@ -19,7 +19,7 @@
       "description": "A configured LLM service endpoint the gateway can route queries to. May be local (running on the same machine) or cloud (remote API)."
     },
     {
-      "id": "GL-002",
+      "id": "GL-001-Authorization",
       "relatedTerms": [
         "GL-001",
         "GL-007"
@@ -29,7 +29,7 @@
       "description": "The in-memory registry of all configured backends and their current availability state, maintained at runtime by the backend-pool component."
     },
     {
-      "id": "GL-003",
+      "id": "GL-002-Session",
       "examples": [
         "A code completion request",
         "A natural language question"
@@ -44,7 +44,7 @@
       "description": "A single request from a developer submitted to the gateway for routing and processing by a backend."
     },
     {
-      "id": "GL-004",
+      "id": "GL-003-Token",
       "relatedTerms": [
         "GL-003",
         "GL-005",
@@ -55,7 +55,7 @@
       "description": "The output of the routing step: which backend was selected for a given query and the reason for selection, including the assigned complexity tier."
     },
     {
-      "id": "GL-005",
+      "id": "GL-004-Role",
       "relatedTerms": [
         "GL-007",
         "GL-003"
@@ -65,7 +65,7 @@
       "description": "The component that analyses a query and assigns it a complexity tier (simple, moderate, or complex) to inform routing decisions."
     },
     {
-      "id": "GL-006",
+      "id": "GL-005-Permission",
       "relatedTerms": [
         "GL-005",
         "GL-002",
@@ -76,7 +76,7 @@
       "description": "The component that selects a backend for a query based on its complexity tier, configured priority order, and backend availability."
     },
     {
-      "id": "GL-007",
+      "id": "GL-006-Credential",
       "examples": [
         "simple",
         "moderate",
@@ -91,7 +91,7 @@
       "description": "A categorical label assigned to a query by the Classifier indicating how capable a backend needs to be to handle it. Values are simple, moderate, or complex."
     },
     {
-      "id": "GL-008",
+      "id": "GL-007-Privacy",
       "relatedTerms": [
         "GL-002",
         "GL-006"
@@ -101,7 +101,7 @@
       "description": "The automatic selection of the next available backend when the preferred backend is unavailable or returns an error, triggered by the Router."
     },
     {
-      "id": "GL-009",
+      "id": "GL-008-Compliance",
       "relatedTerms": [
         "GL-003",
         "GL-004"
@@ -111,7 +111,7 @@
       "description": "A persisted record of a single processed query including the backend used, routing decision, response latency, and outcome."
     },
     {
-      "id": "GL-010",
+      "id": "GL-009-AuditLog",
       "relatedTerms": [
         "GL-005",
         "GL-006"
@@ -121,7 +121,7 @@
       "description": "The latency added by the gateway's classification and routing logic on top of the backend's own response time, measured in milliseconds."
     },
     {
-      "id": "GL-011",
+      "id": "GL-010-Encryption",
       "examples": [
         "llama.cpp",
         "LM Studio",
@@ -139,7 +139,7 @@
       "description": "A backend running as a process on the same machine as the gateway, accessed via localhost. Examples include llama.cpp, LM Studio, and Ollama."
     },
     {
-      "id": "GL-012",
+      "id": "GL-011-Hashing",
       "examples": [
         "Anthropic API",
         "OpenRouter"
@@ -157,7 +157,7 @@
       "description": "A backend accessed via a remote HTTP API, typically requiring an API key for authentication. Examples include Anthropic API and OpenRouter."
     },
     {
-      "id": "GL-013",
+      "id": "GL-012-Salt",
       "relatedTerms": [
         "GL-001",
         "GL-003"
@@ -167,7 +167,7 @@
       "description": "Conforming to the request and response format of the OpenAI Chat Completions API, allowing clients built for OpenAI to work without modification."
     },
     {
-      "id": "GL-014",
+      "id": "GL-013-Nonce",
       "relatedTerms": [
         "GL-006",
         "GL-002"
@@ -177,7 +177,7 @@
       "description": "The user-configured ranked list of backends the Router consults in sequence when selecting a backend for a query."
     },
     {
-      "id": "GL-015",
+      "id": "GL-014-Certificate",
       "relatedTerms": [
         "GL-006",
         "GL-004"

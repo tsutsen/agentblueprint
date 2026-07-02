@@ -16,12 +16,12 @@
     "glId": {
       "type": "string",
       "description": "Glossary term identifier, format GL-NNN-PascalCase.",
-      "pattern": "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "gl"
     },
     "testId": {
       "type": "string",
-      "description": "Format: TST-<functionName>-<NNN>, e.g. TST-createUser-001",
-      "pattern": "^TST-\\d{3}-[a-z][A-Za-z0-9]*$"
+      "description": "Test identifier, format TST-NNN-PascalCase.",
+      "x_idPattern": "tst"
     },
     "fnRef": {
       "type": "string",
@@ -40,17 +40,17 @@
     "reqId": {
       "type": "string",
       "description": "Functional requirement identifier, format REQ-NNN. Must match an ID in GoalSpec.",
-      "pattern": "^REQ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "req"
     },
     "nfrId": {
       "type": "string",
       "description": "Non-functional requirement identifier, format NFR-NNN. Must match an ID in GoalSpec.",
-      "pattern": "^NFR-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "nfr"
     },
     "scId": {
       "type": "string",
       "description": "Success criterion identifier, format SC-NNN. Must match an ID in GoalSpec.",
-      "pattern": "^SC-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "sc"
     },
     "concreteValue": {
       "description": "A concrete example value \u2014 string, number, boolean, object, or array. Must NOT be a placeholder like 'a valid userId' or 'some string'."
@@ -80,32 +80,32 @@
     "fcId": {
       "type": "string",
       "description": "Function coverage entry identifier, format FC-NNN (3-digit zero-padded).",
-      "pattern": "^FC-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "fc"
     },
     "entId": {
       "type": "string",
       "description": "^ENT identifier.",
-      "pattern": "^ENT-\\d{3}-[A-Z][A-Za-z0-9]*$"
+      "x_idPattern": "ent"
     },
     "conId": {
       "type": "string",
       "description": "^CON identifier.",
-      "pattern": "^CON-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "con"
     },
     "usId": {
       "type": "string",
       "description": "User story identifier from GoalSpec, format US-NNN-slug.",
-      "pattern": "^US-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "us"
     },
     "ujId": {
       "type": "string",
       "description": "User journey identifier from DesignSpec, format UJ-NNN-slug.",
-      "pattern": "^UJ-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "x_idPattern": "uj"
     },
     "scrId": {
       "type": "string",
       "description": "Screen identifier from DesignSpec, format SCR-NNN-slug.",
-      "pattern": "^SCR-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "scr"
     }
   },
   "properties": {
@@ -363,7 +363,6 @@
             "description": "ENT-IDs from DataSpec entities used in this test. Used for data type validation.",
             "items": {
               "type": "string",
-              "pattern": "^ENT-\\d{3}$",
               "$ref": "#/definitions/entId"
             }
           },
@@ -372,7 +371,6 @@
             "description": "CON-IDs from ArchitectureSpec constraints tested by this test case (e.g. performance, reliability).",
             "items": {
               "type": "string",
-              "pattern": "^CON-\\d{3}$",
               "$ref": "#/definitions/conId"
             }
           },

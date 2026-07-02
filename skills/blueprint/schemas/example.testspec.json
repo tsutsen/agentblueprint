@@ -106,7 +106,7 @@
   ],
   "tests": [
     {
-      "id": "TST-routeQuery-001",
+      "id": "TST-000-Authenticate",
       "fnRef": "FN-routeQuery",
       "category": "happy-path",
       "description": "Routes a simple query to the highest priority available backend.",
@@ -125,7 +125,7 @@
       ]
     },
     {
-      "id": "TST-routeQuery-002",
+      "id": "TST-001-CreateUser",
       "fnRef": "FN-routeQuery",
       "category": "happy-path",
       "description": "Routes a query to a specific backend when overrideBackendId is provided.",
@@ -148,7 +148,7 @@
       ]
     },
     {
-      "id": "TST-routeQuery-003",
+      "id": "TST-002-GetUser",
       "fnRef": "FN-routeQuery",
       "category": "edge-case",
       "description": "Routes a complex query to the most capable available backend.",
@@ -166,7 +166,7 @@
       ]
     },
     {
-      "id": "TST-routeQuery-004",
+      "id": "TST-003-ListUsers",
       "fnRef": "FN-routeQuery",
       "category": "error-path",
       "description": "Throws NO_BACKENDS_AVAILABLE when no backends are available.",
@@ -181,7 +181,7 @@
       "contractClause": "Throws NO_BACKENDS_AVAILABLE when no backends are currently available."
     },
     {
-      "id": "TST-routeQuery-005",
+      "id": "TST-004-UpdateUser",
       "fnRef": "FN-routeQuery",
       "category": "error-path",
       "description": "Throws INVALID_OVERRIDE when overrideBackendId does not match any configured backend.",
@@ -197,7 +197,7 @@
       "contractClause": "Throws INVALID_OVERRIDE when the overrideBackendId does not match any configured backend."
     },
     {
-      "id": "TST-cancelQuery-001",
+      "id": "TST-005-DeleteUser",
       "fnRef": "FN-cancelQuery",
       "category": "happy-path",
       "description": "Cancels an in-flight PENDING query and returns it with FAILED status.",
@@ -215,7 +215,7 @@
       ]
     },
     {
-      "id": "TST-cancelQuery-002",
+      "id": "TST-006-SearchUsers",
       "fnRef": "FN-cancelQuery",
       "category": "error-path",
       "description": "Throws NOT_FOUND when the query ID does not exist.",
@@ -230,7 +230,7 @@
       "contractClause": "Throws NOT_FOUND when no query exists with this ID."
     },
     {
-      "id": "TST-cancelQuery-003",
+      "id": "TST-007-VerifyToken",
       "fnRef": "FN-cancelQuery",
       "category": "error-path",
       "description": "Throws ALREADY_COMPLETED when the query has already finished.",
@@ -245,7 +245,7 @@
       "contractClause": "Throws ALREADY_COMPLETED when the query has already completed or been cancelled."
     },
     {
-      "id": "TST-getBackend-001",
+      "id": "TST-008-RefreshToken",
       "fnRef": "FN-getBackend",
       "category": "happy-path",
       "description": "Returns the backend matching the given ID.",
@@ -265,7 +265,7 @@
       ]
     },
     {
-      "id": "TST-getBackend-002",
+      "id": "TST-009-RevokeToken",
       "fnRef": "FN-getBackend",
       "category": "error-path",
       "description": "Throws NOT_FOUND when no backend exists with the given ID.",
@@ -280,7 +280,7 @@
       "contractClause": "Throws NOT_FOUND when no backend exists with this ID."
     },
     {
-      "id": "TST-listBackends-001",
+      "id": "TST-010-Authenticate",
       "fnRef": "FN-listBackends",
       "category": "happy-path",
       "description": "Returns all configured backends sorted by priority.",
@@ -306,7 +306,7 @@
       ]
     },
     {
-      "id": "TST-listBackends-002",
+      "id": "TST-011-CreateUser",
       "fnRef": "FN-listBackends",
       "category": "edge-case",
       "description": "Returns an empty array when no backends are configured.",
@@ -316,7 +316,7 @@
       "contractClause": "Returns an empty array when no backends are configured."
     },
     {
-      "id": "TST-getQueryHistory-001",
+      "id": "TST-012-GetUser",
       "fnRef": "FN-getQueryHistory",
       "category": "happy-path",
       "description": "Returns the 20 most recent query log entries.",
@@ -339,7 +339,7 @@
       ]
     },
     {
-      "id": "TST-getQueryHistory-002",
+      "id": "TST-013-ListUsers",
       "fnRef": "FN-getQueryHistory",
       "category": "edge-case",
       "description": "Returns only entries for the specified backend when backendId filter is provided.",
@@ -359,7 +359,7 @@
       "contractClause": "Entries are filtered by backendId when provided."
     },
     {
-      "id": "TST-getQuery-001",
+      "id": "TST-014-UpdateUser",
       "fnRef": "FN-getQuery",
       "category": "happy-path",
       "description": "Returns the query matching the given ID.",
@@ -378,7 +378,7 @@
       ]
     },
     {
-      "id": "TST-getQuery-002",
+      "id": "TST-015-DeleteUser",
       "fnRef": "FN-getQuery",
       "category": "error-path",
       "description": "Throws NOT_FOUND when no query exists with the given ID.",

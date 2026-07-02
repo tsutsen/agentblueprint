@@ -43,7 +43,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     {
         "target": "dataFlow.steps.componentRef",
         "check": "exists",
-        "inside": "components",
+        "inside": "components.id",
         "target_label": "Flow step",
         "ref_label": "component",
         "category": "flow_component_ref",
@@ -237,7 +237,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     {
         "target": "components.glossaryRefs",
         "check": "exists",
-        "inside": "glossary.terms.id",
+        "inside": "glossary:terms.id",
         "target_label": "Component",
         "ref_label": "Glossary",
         "category": "glossary_ref_missing",
@@ -246,7 +246,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     {
         "target": "dataFlow.glossaryRefs",
         "check": "exists",
-        "inside": "glossary.terms.id",
+        "inside": "glossary:terms.id",
         "target_label": "Flow",
         "ref_label": "Glossary",
         "category": "glossary_ref_missing",
@@ -255,7 +255,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     {
         "target": "constraints.glossaryRefs",
         "check": "exists",
-        "inside": "glossary.terms.id",
+        "inside": "glossary:terms.id",
         "target_label": "Constraint",
         "ref_label": "Glossary",
         "category": "glossary_ref_missing",

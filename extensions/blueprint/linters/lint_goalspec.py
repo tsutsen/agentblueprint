@@ -183,7 +183,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     {
         "target": "functionalRequirements.glossaryRefs",
         "check": "exists",
-        "inside": "glossary.terms.id",
+        "inside": "glossary:terms.id",
         "target_label": "FR",
         "ref_label": "Glossary",
         "category": "glossary_ref_missing",
@@ -192,7 +192,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     {
         "target": "userStories.glossaryRefs",
         "check": "exists",
-        "inside": "glossary.terms.id",
+        "inside": "glossary:terms.id",
         "target_label": "US",
         "ref_label": "Glossary",
         "category": "glossary_ref_missing",
@@ -201,7 +201,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     {
         "target": "nonGoals.glossaryRefs",
         "check": "exists",
-        "inside": "glossary.terms.id",
+        "inside": "glossary:terms.id",
         "target_label": "Non-goal",
         "ref_label": "Glossary",
         "category": "glossary_ref_missing",
@@ -210,7 +210,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
     {
         "target": "nonFunctionalRequirements.glossaryRefs",
         "check": "exists",
-        "inside": "glossary.terms.id",
+        "inside": "glossary:terms.id",
         "target_label": "NFR",
         "ref_label": "Glossary",
         "category": "glossary_ref_missing",

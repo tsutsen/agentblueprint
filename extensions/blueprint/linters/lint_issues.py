@@ -36,12 +36,15 @@ class IssueFile:
 
 # ── Schema patterns ───────────────────────────────────────────────────────────
 
-EPIC_ID_RE = re.compile(r"^EP-\d{3}-[a-z][a-zA-Z0-9]*$")
-ISSUE_ID_RE = re.compile(r"^IS-\d{3}-[a-z][a-zA-Z0-9]*$")
-SUB_ISSUE_ID_RE = re.compile(r"^SI-\d{3}-[a-z][a-zA-Z0-9]*$")
-MILESTONE_RE = re.compile(r"^MIL-\d+-[A-Z][a-zA-Z]*$")
+# Compile patterns from the canonical registry
+from id_patterns import ID_PATTERNS
+
+EPIC_ID_RE = re.compile(ID_PATTERNS["ep"]["pattern"])
+ISSUE_ID_RE = re.compile(ID_PATTERNS["is"]["pattern"])
+SUB_ISSUE_ID_RE = re.compile(ID_PATTERNS["si"]["pattern"])
+MILESTONE_RE = re.compile(ID_PATTERNS["mil"]["pattern"])
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-GL_ID_RE = re.compile(r"^GL-\d{3}$")
+GL_ID_RE = re.compile(ID_PATTERNS["gl"]["pattern"])
 
 
 # ── Core linter ───────────────────────────────────────────────────────────────

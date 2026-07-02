@@ -6,21 +6,21 @@
   "status": "draft",
   "designGoals": [
     {
-      "id": "DG-001",
+      "id": "DG-000-MinimizeCognitiveLoad",
       "goal": "Zero configuration friction \u2014 a developer must be able to submit a first query within two minutes of installation.",
       "rationale": "Adoption fails if setup is complex. The gateway must feel invisible.",
       "name": "Zero configuration friction \u2014 a developer must be ",
       "description": "Zero configuration friction \u2014 a developer must be able to submit a first query within two minutes of installation."
     },
     {
-      "id": "DG-002",
+      "id": "DG-001-ConsistentLayout",
       "goal": "Routing decisions must be inspectable without leaving the terminal.",
       "rationale": "Developers distrust black boxes. Visibility builds confidence.",
       "name": "Routing decisions must be inspectable without leav",
       "description": "Routing decisions must be inspectable without leaving the terminal."
     },
     {
-      "id": "DG-003",
+      "id": "DG-002-KeyboardNavigation",
       "goal": "All interactions must be operable without a mouse.",
       "rationale": "Target users are developers who live in the terminal and keyboard-driven editors.",
       "name": "All interactions must be operable without a mouse.",
@@ -29,7 +29,7 @@
   ],
   "personas": [
     {
-      "id": "power-developer",
+      "id": "PRS-000-PowerDeveloper",
       "name": "Leon",
       "role": "developer",
       "goals": [
@@ -49,7 +49,7 @@
   ],
   "userJourneys": [
     {
-      "id": "UJ-001",
+      "id": "UJ-000-FindProduct",
       "name": "Submit first query",
       "personaRef": "power-developer",
       "usRefs": [
@@ -79,7 +79,7 @@
       "description": "End-to-end workflow: Gateway is running. Developer has an OpenAI-compatible client configured to point at the gateway.. Desired outcome: Developer receives a response without having selected a backend manually.."
     },
     {
-      "id": "UJ-002",
+      "id": "UJ-001-AddToCart",
       "name": "Inspect routing history",
       "personaRef": "power-developer",
       "usRefs": [
@@ -109,7 +109,7 @@
       "description": "End-to-end workflow: Several queries have been processed. Developer wants to understand routing decisions.. Desired outcome: Developer can see exactly which backend handled each query and how long it took.."
     },
     {
-      "id": "UJ-003",
+      "id": "UJ-002-Checkout",
       "name": "Force a specific backend",
       "personaRef": "power-developer",
       "usRefs": [
@@ -134,7 +134,7 @@
       "description": "End-to-end workflow: Developer wants to test a specific backend directly.. Desired outcome: Query is handled by the specified backend without changing global configuration.."
     },
     {
-      "id": "UJ-004",
+      "id": "UJ-003-ViewOrder",
       "name": "Configure backends",
       "personaRef": "power-developer",
       "usRefs": [
@@ -179,7 +179,7 @@
   },
   "screenInventory": [
     {
-      "id": "status-view",
+      "id": "SCR-000-StatusView",
       "name": "Status View",
       "purpose": "Show the developer the current state of the gateway and all configured backends at a glance.",
       "primaryActions": [
@@ -198,7 +198,7 @@
       "description": "Show the developer the current state of the gateway and all configured backends at a glance."
     },
     {
-      "id": "log-view",
+      "id": "SCR-001-LogView",
       "name": "Log View",
       "purpose": "Browse and filter the history of queries processed by the gateway.",
       "primaryActions": [
@@ -215,7 +215,7 @@
       "description": "Browse and filter the history of queries processed by the gateway."
     },
     {
-      "id": "config-view",
+      "id": "SCR-002-ConfigView",
       "name": "Config View",
       "purpose": "Inspect the currently loaded backend configuration.",
       "primaryActions": [
@@ -274,12 +274,12 @@
         {
           "trigger": "Developer runs `gateway status`",
           "response": "Gateway prints the status view to stdout and exits.",
-          "patternRef": "command-output"
+          "patternRef": "PAT-001-CommandOutput"
         },
         {
           "trigger": "Developer runs `gateway status --watch`",
           "response": "Gateway refreshes the status view in-place every 2 seconds until interrupted.",
-          "patternRef": "watch-mode"
+          "patternRef": "PAT-002-watchMode"
         }
       ]
     },
@@ -293,8 +293,8 @@
           "purpose": "Shows a paginated list of past queries with routing metadata.",
           "designSystemRef": "DataTable",
           "patternRefs": [
-            "pagination",
-            "keyboard-navigation"
+            "PAT-003-pagination",
+            "PAT-004-keyboardNavigation"
           ]
         },
         {
@@ -321,12 +321,12 @@
         {
           "trigger": "Developer presses n",
           "response": "Log advances to the next page.",
-          "patternRef": "pagination"
+          "patternRef": "PAT-003-pagination"
         },
         {
           "trigger": "Developer runs `gateway log --backend local/qwen3-27b`",
           "response": "Log view pre-filtered to the specified backend.",
-          "patternRef": "command-output"
+          "patternRef": "PAT-001-CommandOutput"
         }
       ]
     },
@@ -360,14 +360,14 @@
         {
           "trigger": "Developer runs `gateway config`",
           "response": "Config view printed to stdout.",
-          "patternRef": "command-output"
+          "patternRef": "PAT-001-CommandOutput"
         }
       ]
     }
   ],
   "interactionPatterns": [
     {
-      "id": "command-output",
+      "id": "PAT-001-CommandOutput",
       "name": "Command Output",
       "description": "A command runs, prints its output to stdout, and exits with code 0 on success or non-zero on failure. Output is human-readable by default and machine-parseable with --json flag.",
       "examples": [
@@ -377,7 +377,7 @@
       ]
     },
     {
-      "id": "watch-mode",
+      "id": "PAT-000-KeyboardNavigation",
       "name": "Watch Mode",
       "description": "A command runs continuously, refreshing its output in-place at a fixed interval. Interrupted by Ctrl+C. Exit code 0 on clean interrupt.",
       "examples": [
@@ -391,7 +391,7 @@
       ]
     },
     {
-      "id": "pagination",
+      "id": "PAT-001-Pagination",
       "name": "Pagination",
       "description": "Long output is split into pages. User navigates with keyboard. Current page and total shown in footer.",
       "examples": [
@@ -413,7 +413,7 @@
       ]
     },
     {
-      "id": "keyboard-navigation",
+      "id": "PAT-002-AutoComplete",
       "name": "Keyboard Navigation",
       "description": "All interactive views are fully operable without a mouse. Every action has a keyboard binding.",
       "examples": [
@@ -424,19 +424,19 @@
   ],
   "visualDesignRequirements": [
     {
-      "id": "VDR-001",
+      "id": "VDR-001-ContrastRatio",
       "description": "All output must render correctly in a standard 80-column terminal without line wrapping.",
       "rationale": "Developers use split-pane terminals and small windows.",
       "name": "All output must render correctly in a standard 80-..."
     },
     {
-      "id": "VDR-002",
+      "id": "VDR-000-ContrastRatio",
       "description": "Status indicators must use both colour and symbol so they are readable in monochrome terminals and by colour-blind users.",
       "rationale": "Accessibility and compatibility. \u25cf for available, \u25cb for offline.",
       "name": "Status indicators must use both colour and symbol..."
     },
     {
-      "id": "VDR-003",
+      "id": "VDR-001-ColorPalette",
       "description": "All views must render correctly in both light and dark terminal themes.",
       "rationale": "Developers use varied terminal colour schemes.",
       "name": "All views must render correctly in both light and..."
@@ -506,7 +506,7 @@
   ],
   "uxAcceptanceCriteria": [
     {
-      "id": "UXAC-001",
+      "id": "UXAC-000-TouchTarget",
       "description": "A developer can submit a first query within 2 minutes of installation with no backend manually specified.",
       "refs": {
         "usRefs": [
@@ -516,7 +516,7 @@
       "verificationMethod": "Timed manual walkthrough from fresh install."
     },
     {
-      "id": "UXAC-002",
+      "id": "UXAC-001-ColorContrast",
       "description": "The log view shows backend, latency, and status for every past query with no additional commands.",
       "refs": {
         "usRefs": [
@@ -526,7 +526,7 @@
       "verificationMethod": "Manual inspection after processing 5 test queries."
     },
     {
-      "id": "UXAC-003",
+      "id": "UXAC-002-KeyboardFocus",
       "description": "All views are fully navigable using only keyboard input.",
       "refs": {
         "reqRefs": [
@@ -536,7 +536,7 @@
       "verificationMethod": "Manual walkthrough of all views without touching the mouse."
     },
     {
-      "id": "UXAC-004",
+      "id": "UXAC-003-ScreenReader",
       "description": "A backend override flag routes the query to the specified backend without modifying the config file.",
       "refs": {
         "usRefs": [

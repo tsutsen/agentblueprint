@@ -15,13 +15,12 @@
   "definitions": {
     "epicId": {
       "type": "string",
-      "description": "Epic identifier, sequential and zero-padded.",
-      "pattern": "^EP-\\d{3}-[a-z][a-zA-Z0-9]*$"
+      "description": "Epic identifier, format EP-NNN-PascalCase.",
+      "x_idPattern": "ep"
     },
     "milestoneId": {
       "type": "string",
-      "description": "Milestone identifier, sequential.",
-      "pattern": "^MIL-\\d+-[A-Z][a-zA-Z]*$"
+      "description": "Milestone identifier, sequential."
     },
     "epicStatus": {
       "type": "string",
@@ -35,7 +34,7 @@
     "glId": {
       "type": "string",
       "description": "Glossary term identifier, format GL-NNN-PascalCase.",
-      "pattern": "^GL-\\d{3}-[A-Z][a-zA-Z0-9]*$"
+      "x_idPattern": "gl"
     }
   },
   "properties": {
@@ -81,7 +80,7 @@
         "properties": {
           "id": {
             "$ref": "#/definitions/milestoneId",
-            "x_idPattern": "milestone"
+            "x_idPattern": "mil"
           },
           "name": {
             "type": "string",
@@ -149,8 +148,8 @@
             "description": "REQ-IDs from GoalSpec covered by this epic. Must not be empty.",
             "minItems": 1,
             "items": {
-              "type": "string",
-              "pattern": "^REQ-\\d{3}$"
+              "$ref": "#/definitions/reqId",
+              "x_idPattern": "req"
             }
           },
           "summary": {

@@ -20,10 +20,36 @@ Usage:
 
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any, Optional
 
 from shared import Issue, LayerResult
+
+# ── Canonical ID patterns ────────────────────────────────────────────────────
+# Resolve from id_patterns at import time. The linters dir is on sys.path
+# via shared.py, so we can import from id_patterns directly.
+
+try:
+    from id_patterns import ID_PATTERNS
+except ImportError:
+    # Fallback: empty dict (schema validation will skip pattern checks
+    # if x_idPattern is used but patterns aren't available)
+    ID_PATTERNS = {}  # type: ignore[misc, assignment]
+
+
+def _resolve_pattern(schema: dict) -> str | None:
+    """Resolve a pattern from x_idPattern annotation or inline pattern.
+
+    Priority:
+    1. x_idPattern → canonical ID_PATTERNS["key"]
+    2. Inline "pattern" property (legacy)
+    3. None (no pattern constraint)
+    """
+    x_id = schema.get("x_idPattern")
+    if x_id and x_id in ID_PATTERNS:
+        return ID_PATTERNS[x_id]["pattern"]
+    return schema.get("pattern")
 
 
 # ── Constraint metadata ──────────────────────────────────────────────────────
@@ -76,7 +102,10 @@ def _human_type(expected: Any) -> str:
 
 
 class SchemaValidator:
-    """Validates a JSON document against a JSON Schema and returns Issues."""
+    """Validates a JSON document against a JSON Schema and returns Issues.
+
+    Supports $ref resolution and x_idPattern → canonical ID_PATTERNS resolution.
+    """
 
     def __init__(self, schema: dict | Path | str):
         """Initialize with a schema dict, file path, or JSON string."""
@@ -92,7 +121,7 @@ class SchemaValidator:
     def validate(self, document: dict) -> list[Issue]:
         """Validate a document against the schema and return Issues."""
         self._issues = []
-        self._validate_node(document, self.schema, [])
+        self._validate_node(document, self.schema, [], self.schema)
         return self._issues
 
     def validate_file(self, schema_path: str | Path, doc_path: str | Path) -> list[Issue]:
@@ -104,12 +133,38 @@ class SchemaValidator:
     def _validate_document(self, doc: dict, schema: dict) -> list[Issue]:
         """Validate a document against a schema, returning Issues."""
         self._issues = []
-        self._validate_node(doc, schema, [])
+        self._validate_node(doc, schema, [], self.schema)
         return self._issues
 
-    def _validate_node(self, node: Any, schema: dict, path: list[str]):
+    def _resolve_ref(self, ref: str) -> dict | None:
+        """Resolve a $ref path (e.g., '#/definitions/reqId') to the target schema."""
+        if not ref.startswith("#/"):
+            return None
+        parts = ref[2:].split("/")
+        obj = self.schema
+        for part in parts:
+            if isinstance(obj, dict):
+                obj = obj.get(part)
+            else:
+                return None
+        return obj if isinstance(obj, dict) else None
+
+    def _validate_node(self, node: Any, schema: dict, path: list[str], root: dict | None = None):
         """Recursively validate a node against its schema."""
-        # Skip if no schema for this node (e.g., $ref resolved to empty)
+        # Preserve x_idPattern before $ref resolution (it lives on the wrapper, not the ref target)
+        x_id_pattern = schema.get("x_idPattern")
+
+        # Resolve $ref if present
+        if "$ref" in schema:
+            ref_schema = self._resolve_ref(schema["$ref"])
+            if ref_schema:
+                schema = dict(ref_schema)  # shallow copy so we can add x_idPattern
+                if x_id_pattern:
+                    schema["x_idPattern"] = x_id_pattern
+            else:
+                return  # Can't resolve ref, skip
+
+        # Skip if no schema for this node
         if not schema:
             return
 
@@ -138,12 +193,15 @@ class SchemaValidator:
                 )
 
         # Pattern check (strings only)
-        if "pattern" in schema and isinstance(node, str):
-            if not re.search(schema["pattern"], node):
+        # Resolves x_idPattern → canonical ID_PATTERNS, or falls back to
+        # inline "pattern" property for legacy schemas.
+        if isinstance(node, str):
+            pattern = _resolve_pattern(schema)
+            if pattern and not re.search(pattern, node):
                 self._add_issue(
                     "error", "schema_pattern",
                     f"{_format_path(path)}: value '{node}' does not match pattern "
-                    f"'{schema['pattern']}'",
+                    f"'{pattern}'",
                     hint=CONSTRAINT_HINTS["pattern"]
                 )
 
@@ -209,7 +267,7 @@ class SchemaValidator:
             if "properties" in schema:
                 for prop, prop_schema in schema["properties"].items():
                     if prop in node:
-                        self._validate_node(node[prop], prop_schema, path + [prop])
+                        self._validate_node(node[prop], prop_schema, path + [prop], root)
 
         # Array constraints
         if isinstance(node, list):
@@ -231,7 +289,7 @@ class SchemaValidator:
             # Validate array items
             if "items" in schema:
                 for i, item in enumerate(node):
-                    self._validate_node(item, schema["items"], path + [str(i)])
+                    self._validate_node(item, schema["items"], path + [str(i)], root)
 
     def _check_type(self, node: Any, expected: Any, path: list[str]):
         """Check if a node matches the expected JSON Schema type."""

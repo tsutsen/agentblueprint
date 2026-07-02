@@ -739,17 +739,17 @@ function createGhCleanupBranches(): Tool {
       try {
         if (readdirSync(epicsDir, { withFileTypes: true })) {
           for (const entry of readdirSync(epicsDir, { withFileTypes: true })) {
-            if (entry.isDirectory() && /^EP-\d{3}-/.test(entry.name)) {
+            if (entry.isDirectory() && /^EP-\d{3}-[A-Z]/.test(entry.name)) {
               activeEpicBranches.add(entry.name);
               // Check for active issues within this epic
               const epicDir = `${epicsDir}/${entry.name}`;
               for (const issueEntry of readdirSync(epicDir, { withFileTypes: true })) {
-                if (issueEntry.isDirectory() && /^IS-\d{3}-/.test(issueEntry.name)) {
+                if (issueEntry.isDirectory() && /^IS-\d{3}-[A-Z]/.test(issueEntry.name)) {
                   activeIssueBranches.add(issueEntry.name);
                   // Check for active sub-issues
                   const issueDir = `${epicDir}/${issueEntry.name}`;
                   for (const siEntry of readdirSync(issueDir, { withFileTypes: true })) {
-                    if (siEntry.isDirectory() && /^SI-\d{3}-/.test(siEntry.name)) {
+                    if (siEntry.isDirectory() && /^SI-\d{3}-[A-Z]/.test(siEntry.name)) {
                       activeSubIssueBranches.add(siEntry.name);
                     }
                   }
@@ -773,7 +773,7 @@ function createGhCleanupBranches(): Tool {
       const orphaned: string[] = [];
       for (const branch of branches) {
         const name = branch.name as string;
-        if (/^(EP|IS|SI)-\d{3}-/.test(name) && !keepBranches.has(name)) {
+        if (/^(EP|IS|SI)-\d{3}-[A-Z]/.test(name) && !keepBranches.has(name)) {
           orphaned.push(name);
         }
       }
