@@ -176,10 +176,6 @@
       "type": "string",
       "description": "Milestone identifier.",
       "x_idPattern": "mil"
-    },
-    "planguageLevel": {
-      "type": "string",
-      "description": "A Planguage threshold value or TBD marker. Use 'TBD' prefix when value is not yet known."
     }
   },
   "properties": {
@@ -386,15 +382,18 @@
             "description": "How it will be measured."
           },
           "must": {
-            "$ref": "#/definitions/planguageLevel",
+            "type": "string",
+            "minLength": 1,
             "description": "Minimum acceptable threshold. Below this the system fails."
           },
           "plan": {
-            "$ref": "#/definitions/planguageLevel",
+            "type": "string",
+            "minLength": 1,
             "description": "Realistic target the team is aiming for. Use 'TBD' if unknown."
           },
           "wish": {
-            "$ref": "#/definitions/planguageLevel",
+            "type": "string",
+            "minLength": 1,
             "description": "Ideal outcome if conditions allow. Use 'TBD' if unknown."
           },
           "notes": {

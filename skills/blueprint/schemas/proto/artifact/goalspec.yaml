@@ -3,12 +3,6 @@ title: GoalSpec
 schemaVersion: "4.0.0"
 description: "Root artifact capturing the why and what of a project"
 
-customDefinitions:
-  - name: planguageLevel
-    type: string
-    minLength: 1
-    desc: "A Planguage threshold value or TBD marker. Use 'TBD' prefix when value is not yet known."
-
 fields:
   - name: objective
     type: object
@@ -104,13 +98,16 @@ fields:
           minLength: 5
           desc: "How it will be measured."
         - name: must
-          $ref: "planguageLevel"
+          type: string
+          minLength: 1
           desc: "Minimum acceptable threshold. Below this the system fails."
         - name: plan
-          $ref: "planguageLevel"
+          type: string
+          minLength: 1
           desc: "Realistic target the team is aiming for. Use 'TBD' if unknown."
         - name: wish
-          $ref: "planguageLevel"
+          type: string
+          minLength: 1
           desc: "Ideal outcome if conditions allow. Use 'TBD' if unknown."
         - name: notes
           type: string
