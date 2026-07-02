@@ -92,6 +92,11 @@
       "description": "Design token identifier.",
       "x_idPattern": "dt"
     },
+    "arId": {
+      "type": "string",
+      "description": "Accessibility requirement identifier.",
+      "x_idPattern": "ar"
+    },
     "compId": {
       "type": "string",
       "description": "Component identifier.",
@@ -196,6 +201,41 @@
       },
       "required": [
         "name"
+      ]
+    },
+    "namedRequirement": {
+      "type": "object",
+      "description": "A verifiable design requirement with a stable ID.",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identifier for this named requirement."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Short descriptive name summarizing this requirement."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "description": "The requirement in plain language. Must be verifiable."
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "reqRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/reqId"
+          },
+          "description": "Functional requirement IDs."
+        }
+      },
+      "required": [
+        "description"
       ]
     }
   },

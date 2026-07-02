@@ -92,6 +92,11 @@
       "description": "Design token identifier.",
       "x_idPattern": "dt"
     },
+    "arId": {
+      "type": "string",
+      "description": "Accessibility requirement identifier.",
+      "x_idPattern": "ar"
+    },
     "compId": {
       "type": "string",
       "description": "Component identifier.",

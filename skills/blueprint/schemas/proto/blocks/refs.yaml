@@ -19,6 +19,7 @@ pat:  { pattern: "^PAT-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Interaction pattern" 
 vdr:  { pattern: "^VDR-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Visual design requirement" }
 uxac: { pattern: "^UXAC-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "UX acceptance criterion" }
 dt:   { pattern: "^DT-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Design token" }
+ar:   { pattern: "^AR-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Accessibility requirement" }
 
 # ArchitectureSpec
 comp: { pattern: "^COMP-\\d{3}-[A-Z][a-zA-Z0-9]*$", title: "Component" }

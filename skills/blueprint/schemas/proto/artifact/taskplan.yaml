@@ -3,6 +3,12 @@ title: TaskPlan
 schemaVersion: "1.0.0"
 description: "Sequenced set of epics and milestones"
 
+customDefinitions:
+  - name: epicStatus
+    type: string
+    desc: "Lifecycle status of an epic."
+    enum: [not_started, in_progress, complete]
+
 fields:
   - name: milestones
     type: array

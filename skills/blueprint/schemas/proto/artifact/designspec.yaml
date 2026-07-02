@@ -20,6 +20,27 @@ namedTypes:
         type: array
         desc: "Child nodes. If present, this is a grouping node."
         of: { $ref: "iaNode" }
+  - name: namedRequirement
+    desc: "A verifiable design requirement with a stable ID."
+    required: [description]
+    fields:
+      - name: id
+        type: string
+        minLength: 1
+        desc: "Identifier for this named requirement."
+      - name: name
+        type: string
+        minLength: 1
+        desc: "Short descriptive name summarizing this requirement."
+      - name: description
+        type: string
+        minLength: 10
+        desc: "The requirement in plain language. Must be verifiable."
+      - name: rationale
+        type: string
+      - name: reqRefs
+        type: array
+        ref: req
 
 fields:
   - name: designGoals

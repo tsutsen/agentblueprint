@@ -3,6 +3,18 @@ title: TestSpec
 schemaVersion: "3.0.0"
 description: "Test specification for all API functions"
 
+namedTypes:
+  - name: glossaryRefItem
+    desc: "A text item with inline glossary references."
+    required: [description]
+    fields:
+      - name: description
+        type: string
+        minLength: 1
+      - name: glossaryRefs
+        type: array
+        ref: gl
+
 fields:
   - name: functionCoverage
     type: array
@@ -27,13 +39,7 @@ fields:
         - name: outOfScope
           type: array
           minItems: 1
-          of:
-            type: object
-            required: [description]
-            fields:
-              - name: description
-                type: string
-                minLength: 1
+          of: { $ref: "glossaryRefItem" }
         - name: reqRefs
           type: array
           ref: req

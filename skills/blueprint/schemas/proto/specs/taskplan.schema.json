@@ -88,6 +88,11 @@
       "description": "Design token identifier.",
       "x_idPattern": "dt"
     },
+    "arId": {
+      "type": "string",
+      "description": "Accessibility requirement identifier.",
+      "x_idPattern": "ar"
+    },
     "compId": {
       "type": "string",
       "description": "Component identifier.",
@@ -167,6 +172,10 @@
       "type": "string",
       "description": "Milestone identifier.",
       "x_idPattern": "mil"
+    },
+    "epicStatus": {
+      "type": "string",
+      "description": "Lifecycle status of an epic."
     }
   },
   "properties": {
