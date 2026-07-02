@@ -86,7 +86,13 @@ def load_artifact(artifact_type):
 # ── Schema Assembly ───────────────────────────────────────────────────────────
 
 def build_definitions(refs, custom_defs=None):
-    """Build the #/definitions section from refs + custom definitions."""
+    """Build the #/definitions section from refs + custom definitions.
+
+    NOTE: All refs from refs.yaml are included in every schema, not just
+    the ones used by this artifact. This keeps schemas self-contained
+    (no external $ref needed) at the cost of ~7-15% larger files.
+    Optimization possible via a "used refs" collection pass if needed.
+    """
     definitions = {}
 
     # ID pattern definitions from refs.yaml
