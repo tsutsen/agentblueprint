@@ -127,25 +127,20 @@
       "description": "Relationship identifier.",
       "x_idPattern": "rel"
     },
-    "FLDId": {
+    "fldId": {
       "type": "string",
       "description": "Entity field identifier.",
-      "x_idPattern": "FLD"
+      "x_idPattern": "fld"
     },
-    "FUNCId": {
+    "funcId": {
       "type": "string",
-      "description": "Entity method identifier.",
-      "x_idPattern": "FUNC"
+      "description": "Function identifier.",
+      "x_idPattern": "func"
     },
     "endpId": {
       "type": "string",
       "description": "Endpoint identifier.",
       "x_idPattern": "endp"
-    },
-    "funcId": {
-      "type": "string",
-      "description": "Internal function identifier.",
-      "x_idPattern": "func"
     },
     "tstId": {
       "type": "string",

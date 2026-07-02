@@ -46,7 +46,7 @@ fields:
           minItems: 1
           of:
             type: object
-            ref: FLD
+            ref: fld
             required: [type]
             fields:
               - name: type
@@ -63,7 +63,7 @@ fields:
           type: array
           of:
             type: object
-            ref: FUNC
+            ref: func
             required: [name, apiRef]
             fields:
               - name: apiRef
