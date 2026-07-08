@@ -2,7 +2,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import fs from "node:fs";
 import path from "node:path";
-import { execFilePromise } from "../utils";
+import { execFilePromise, resolvePython } from "../utils";
 
 export function registerGenerateDiagrams(pi: ExtensionAPI, extDir: string) {
   pi.registerTool({
@@ -50,7 +50,7 @@ export function registerGenerateDiagrams(pi: ExtensionAPI, extDir: string) {
       fs.mkdirSync(outPath, { recursive: true });
 
       try {
-        const { stdout, stderr } = await execFilePromise("python", [script, dataPath, formats, outPath], {
+        const { stdout, stderr } = await execFilePromise(resolvePython(ctx.cwd), [script, dataPath, formats, outPath], {
           cwd: ctx.cwd,
           timeout: 30000,
         });

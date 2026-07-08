@@ -148,13 +148,13 @@ export function registerInitWorkspace(pi: ExtensionAPI) {
       const pipCmd = fs.existsSync(venvPython) ? venvPython : 'pip';
       try {
         const { stdout, stderr } = await execFilePromise(
-          pipCmd, ['install', 'jsonschema'],
+          pipCmd, ['install', 'jsonschema', 'jinja2'],
           { timeout: 30000, cwd },
         );
         pipOutput = stdout || stderr || '';
         pipSuccess = true;
       } catch {
-        pipOutput = 'jsonschema installation failed — linting may not work without it.';
+        pipOutput = 'python deps installation failed — some tools may not work without them.';
       }
 
       // 6. Rename mismatched files
@@ -182,7 +182,7 @@ export function registerInitWorkspace(pi: ExtensionAPI) {
         lines.push(`  • artifact files already present — use force:true to overwrite`);
       }
 
-      lines.push(`  ✓ python deps: jsonschema ${pipSuccess ? 'installed' : '⚠ install failed'}`);
+      lines.push(`  ✓ python deps: jsonschema, jinja2 ${pipSuccess ? 'installed' : '⚠ install failed'}`);
       if (pipOutput) {
         const firstLine = pipOutput.split('\n')[0]?.trim();
         if (firstLine) lines.push(`    ${firstLine}`);

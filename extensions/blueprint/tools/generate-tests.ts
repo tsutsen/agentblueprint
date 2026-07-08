@@ -2,7 +2,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import fs from "node:fs";
 import path from "node:path";
-import { execFilePromise } from "../utils";
+import { execFilePromise, resolvePython } from "../utils";
 
 export function registerGenerateTests(pi: ExtensionAPI, extDir: string) {
   pi.registerTool({
@@ -63,7 +63,7 @@ export function registerGenerateTests(pi: ExtensionAPI, extDir: string) {
       if (mappingPath && fs.existsSync(mappingPath)) args.push(mappingPath);
 
       try {
-        const { stdout, stderr } = await execFilePromise("python", [script, ...args], {
+        const { stdout, stderr } = await execFilePromise(resolvePython(ctx.cwd), [script, ...args], {
           cwd: ctx.cwd,
           timeout: 30000,
         });

@@ -5,6 +5,14 @@ import util from "node:util";
 
 export const execFilePromise = util.promisify(execFile);
 
+/**
+ * Resolve the python command to use: prefer .venv if available, fall back to system python.
+ */
+export function resolvePython(cwd: string): string {
+  const venvPython = path.resolve(cwd, '.venv/bin/python');
+  return fs.existsSync(venvPython) ? venvPython : 'python';
+}
+
 // --- JSON Schema validation (via Python jsonschema) ---
 
 export async function validateAgainstSchema(

@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import path from "node:path";
-import { execFilePromise, resolvePkgResource } from "../utils";
+import { execFilePromise, resolvePkgResource, resolvePython } from "../utils";
 
 export function registerGenerateArtifactMarkdown(pi: ExtensionAPI, extDir: string) {
   pi.registerTool({
@@ -34,7 +34,7 @@ export function registerGenerateArtifactMarkdown(pi: ExtensionAPI, extDir: strin
       ];
 
       try {
-        const { stdout, stderr } = await execFilePromise("python", [script, ...args], {
+        const { stdout, stderr } = await execFilePromise(resolvePython(ctx.cwd), [script, ...args], {
           cwd: ctx.cwd,
           timeout: 30000,
         });

@@ -2,7 +2,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import fs from "node:fs";
 import path from "node:path";
-import { execFilePromise, resolvePkgResource } from "../utils";
+import { execFilePromise, resolvePkgResource, resolvePython } from "../utils";
 
 export function registerLint(pi: ExtensionAPI, extDir: string) {
   pi.registerTool({
@@ -89,7 +89,7 @@ export function registerLint(pi: ExtensionAPI, extDir: string) {
           if (params.epicsDir) args.push("--epics-dir", params.epicsDir);
         }
 
-        const { stdout, stderr } = await execFilePromise("python", args, {
+        const { stdout, stderr } = await execFilePromise(resolvePython(ctx.cwd), args, {
           cwd: ctx.cwd,
           timeout: 30000,
         });

@@ -2,7 +2,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import fs from "node:fs";
 import path from "node:path";
-import { execFilePromise } from "../utils";
+import { execFilePromise, resolvePython } from "../utils";
 
 export function registerGraphTools(pi: ExtensionAPI, extDir: string) {
   const metricsScript = path.join(extDir, "scripts", "graph_metrics.py");
@@ -23,7 +23,7 @@ export function registerGraphTools(pi: ExtensionAPI, extDir: string) {
     if (reportPath) args.push("--report", reportPath);
 
     try {
-      const { stdout, stderr } = await execFilePromise("python3", [metricsScript, ...args], {
+      const { stdout, stderr } = await execFilePromise(resolvePython(extDir), [metricsScript, ...args], {
         cwd: extDir,
         timeout: 60000,
       });
@@ -158,7 +158,7 @@ export function registerGraphTools(pi: ExtensionAPI, extDir: string) {
       if (noServer) args.push("--no-server");
 
       try {
-        const { stdout, stderr } = await execFilePromise("python3", args, {
+        const { stdout, stderr } = await execFilePromise(resolvePython(ctx.cwd), args, {
           cwd: ctx.cwd,
           timeout: 60000,
         });
