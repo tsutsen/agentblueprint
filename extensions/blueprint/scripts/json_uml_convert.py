@@ -38,6 +38,32 @@ def load(path: Path) -> dict:
         return json.load(fh)
 
 
+def _resolve_ids(data: dict) -> dict:
+    """Normalize a DataSpec so relationships use entity names instead of IDs.
+
+    Handles both old-style (from/to = entity names) and new-style
+    (from/to = entity IDs like ENT-001-Project) specs.
+    Also synthesises a 'label' from 'name' when missing.
+    """
+    import copy
+    data = copy.deepcopy(data)
+
+    # Build id → name map
+    id_to_name = {e["id"]: e["name"] for e in data.get("entities", [])}
+
+    for rel in data.get("relationships", []):
+        # Resolve from/to IDs to names
+        if rel.get("from") in id_to_name:
+            rel["from"] = id_to_name[rel["from"]]
+        if rel.get("to") in id_to_name:
+            rel["to"] = id_to_name[rel["to"]]
+        # Synthesise label from name if missing
+        if "label" not in rel and "name" in rel:
+            rel["label"] = rel["name"]
+
+    return data
+
+
 def write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as fh:
@@ -836,6 +862,7 @@ def main() -> None:
         sys.exit(1)
 
     data = load(input_path)
+    data = _resolve_ids(data)
     print(f"Converting {input_path}  →  {', '.join(selected)}")
     for fmt in selected:
         ext, converter = FORMATS[fmt]
