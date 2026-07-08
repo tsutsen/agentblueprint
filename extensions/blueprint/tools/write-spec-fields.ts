@@ -4,21 +4,77 @@ import fs from "node:fs";
 import path from "node:path";
 
 /**
- * Deep set a value on an object using a dot-separated path.
+ * Parse a JSON path like "userJourneys[0].description" into segments
+ * ["userJourneys", 0, "description"]. Array indices become numbers.
+ */
+function parsePath(jsonPath: string): (string | number)[] {
+  const segments: (string | number)[] = [];
+  // Split on "." and also tokenize bracket notation
+  const parts = jsonPath.split(".");
+  for (const part of parts) {
+    // Match patterns like "key[0][1]" or just "key"
+    const regex = /([^[\]]+)(\[(\d+)\])?/g;
+    let match;
+    // Handle the case where part is just an index like "[0]" (shouldn't normally happen but be safe)
+    if (part.startsWith("[")) {
+      const idxMatch = part.match(/^\[(\d+)\]$/);
+      if (idxMatch) {
+        segments.push(parseInt(idxMatch[1], 10));
+      }
+      continue;
+    }
+    while ((match = regex.exec(part)) !== null) {
+      segments.push(match[1]);
+      if (match[3] !== undefined) {
+        segments.push(parseInt(match[3], 10));
+      }
+    }
+  }
+  return segments;
+}
+
+/**
+ * Deep set a value on an object using a JSON path that supports both
+ * dot-notation and array brackets (e.g. "userJourneys[0].description").
  * Creates intermediate objects/arrays as needed.
  */
 function deepSet(obj: Record<string, unknown>, path: string, value: unknown): void {
-  const parts = path.split(".");
-  let current: Record<string, unknown> = obj;
-  for (let i = 0; i < parts.length - 1; i++) {
-    const key = parts[i];
-    if (!(key in current) || typeof current[key] !== "object" || current[key] === null) {
-      const nextKey = parts[i + 1];
-      current[key] = /^\d+$/.test(nextKey) ? [] : {};
+  const segments = parsePath(path);
+  let current: Record<string, unknown> | unknown[] = obj;
+  for (let i = 0; i < segments.length - 1; i++) {
+    const segment = segments[i];
+    const nextSegment = segments[i + 1];
+    const isIndex = typeof segment === "number";
+    const key = String(segment);
+
+    if (isIndex) {
+      // Ensure current is an array and long enough
+      if (!Array.isArray(current)) {
+        current = [];
+      }
+      const arr = current as unknown[];
+      if (arr.length <= segment) {
+        arr.length = segment + 1;
+      }
+      if (!arr[segment] || typeof arr[segment] !== "object" || arr[segment] === null) {
+        arr[segment] = typeof nextSegment === "number" ? [] : {};
+      }
+      current = arr[segment] as Record<string, unknown>;
+    } else {
+      if (!(key in current) || typeof (current as Record<string, unknown>)[key] !== "object" || (current as Record<string, unknown>)[key] === null) {
+        (current as Record<string, unknown>)[key] = typeof nextSegment === "number" ? [] : {};
+      }
+      current = (current as Record<string, unknown>)[key] as Record<string, unknown>;
     }
-    current = current[key] as Record<string, unknown>;
   }
-  current[parts[parts.length - 1]] = value;
+
+  // Set the final value
+  const lastSegment = segments[segments.length - 1];
+  if (typeof lastSegment === "number") {
+    (current as unknown as unknown[])[lastSegment] = value;
+  } else {
+    (current as Record<string, unknown>)[lastSegment] = value;
+  }
 }
 
 /**

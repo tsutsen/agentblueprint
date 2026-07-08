@@ -23,5 +23,8 @@
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
     "typebox": "*"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
   }
 }
