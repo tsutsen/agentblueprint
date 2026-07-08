@@ -700,14 +700,53 @@ _D2_ARROW = {
     "realization": "->", "inheritance": "->",
 }
 
-_D2_STYLE = {
-    "composition":  "style.stroke-width: 2\nstyle.stroke: \"#333\"",
-    "aggregation":   "style.stroke-dash: 4\nstyle.stroke-width: 1.5",
-    "association":   "style.stroke-dash: 6\nstyle.stroke: \"#888\"",
-    "dependency":    "style.stroke-dash: 5\nstyle.stroke-width: 1\nstyle.stroke: \"#aaa\"",
-    "realization":   "style.stroke-dash: 5\nstyle.stroke: \"#aaa\"",
-    "inheritance":   "style.stroke-width: 2\nstyle.stroke: \"#333\"",
-}
+
+def _d2_rel_edge(rel: dict, frm_path: str, to_path: str) -> list[str]:
+    """Generate a D2 relationship edge with proper UML arrowhead shapes."""
+    rel_type = rel.get("type", "association")
+    arrow = _D2_ARROW.get(rel_type, "->")
+    card = rel.get("cardinality", {})
+    fl, tl = card.get("fromLabel", ""), card.get("toLabel", "")
+    label = rel.get("label", "")
+    full_lbl = " ".join(filter(None, [fl, label, tl]))
+    lbl_str = f": {full_lbl}" if full_lbl else ""
+
+    lines = [f"{frm_path} {arrow} {to_path} {lbl_str} {{"]
+
+    # Arrowhead shapes per UML convention
+    if rel_type == "composition":
+        # Filled diamond on target side
+        lines.append("  target-arrowhead: * {")
+        lines.append("    shape: diamond")
+        lines.append("    style.filled: true")
+        lines.append("  }")
+    elif rel_type == "aggregation":
+        # Empty diamond on target side
+        lines.append("  target-arrowhead: * {")
+        lines.append("    shape: diamond")
+        lines.append("  }")
+    elif rel_type == "inheritance":
+        # Filled triangle on target side
+        lines.append("  target-arrowhead: * {")
+        lines.append("    shape: triangle")
+        lines.append("    style.filled: true")
+        lines.append("  }")
+    elif rel_type == "dependency":
+        # Dashed line, open arrow
+        lines.append("  style.stroke-dash: 5")
+    elif rel_type == "realization":
+        # Dashed line, open triangle
+        lines.append("  target-arrowhead: * {")
+        lines.append("    shape: triangle")
+        lines.append("  }")
+        lines.append("  style.stroke-dash: 5")
+    elif rel_type == "association":
+        # Plain line, no special arrowhead
+        pass
+
+    lines.append("}")
+    return lines
+
 
 _D2_VIS_STYLE = {
     "public":   ('"#e8f4fd"', '"#6c8ebf"'),
@@ -788,23 +827,10 @@ def to_d2(data: dict) -> str:
 
     lines.append("# Relationships")
     for rel in data.get("relationships", []):
-        frm, to  = rel["from"], rel["to"]
-        arrow    = _D2_ARROW.get(rel.get("type", "association"), "->")
-        card     = rel.get("cardinality", {})
-        fl, tl   = card.get("fromLabel", ""), card.get("toLabel", "")
-        label    = rel.get("label", "")
-        full_lbl = " ".join(filter(None, [fl, label, tl]))
-        lbl_str  = f": {full_lbl}" if full_lbl else ""
+        frm, to = rel["from"], rel["to"]
         frm_path = f"enums.{frm}" if frm in enum_set else f"{entity_group.get(frm, 'public_entities')}.{frm}"
-        to_path  = f"enums.{to}"  if to  in enum_set else f"{entity_group.get(to,  'public_entities')}.{to}"
-        style_block = _D2_STYLE.get(rel.get("type", "association"), "")
-        if style_block:
-            lines.append(f"{frm_path} {arrow} {to_path} {lbl_str} {{")
-            for sl in style_block.splitlines():
-                lines.append(f"  {sl}")
-            lines.append("}")
-        else:
-            lines.append(f"{frm_path} {arrow} {to_path} {lbl_str}")
+        to_path = f"enums.{to}" if to in enum_set else f"{entity_group.get(to, 'public_entities')}.{to}"
+        lines += _d2_rel_edge(rel, frm_path, to_path)
 
     lines.append("# Inheritance")
     entity_map = {e["name"]: e for e in data.get("entities", [])}
