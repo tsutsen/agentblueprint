@@ -65,14 +65,14 @@ def _check_relationship_label_keywords(spec: dict, result: LayerResult, extra_sp
             "association": ["is associated with", "maintains a reference to", "holds a reference to", "references"],
             "aggregation": ["maintains a list of", "maintains a set of", "maintains a collection of", "is an element of"],
             "composition": ["is responsible for creation and destruction", "is the aggregate root of", "is the container of", "is a part of", "creates and owns"],
-            "dependency": ["receives as parameter", "receives as argument", "uses as local variable", "references as parameter", "references as argument", "references as a local variable", "instantiates locally", "throws", "catches"],
+            "inheritance": ["is a subtype of", "is a specialized version of", "is derived from", "extends the behavior of"],
         }
 
         medium_keywords = {
             "association": ["delegates to", "notifies", "subscribes to", "publishes to", "queries", "retrieves from"],
             "aggregation": ["has", "contains", "consists of", "belongs to", "includes", "comprises", "groups", "collects"],
             "composition": ["owns", "is composed of", "manages", "controls", "is responsible for", "instantiates", "destroys", "is the parent of", "creates"],
-            "dependency": ["calls", "invokes", "uses", "imports", "depends on", "uses temporarily", "uses as a local variable"],
+            "inheritance": ["extends", "inherits from", "subclasses", "is a kind of", "is a type of"],
         }
 
         strong_matched = {}
@@ -297,7 +297,7 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "check": "non_empty",
         "target_label": "Relationship",
         "category": "rel_type_invalid",
-        "hint": "Valid types: association, composition, aggregation, dependency, realization.",
+        "hint": "Valid types: association, composition, aggregation, inheritance.",
     },
 ]
 
@@ -484,7 +484,7 @@ def _check_field_types(spec: dict, entity_names: Set[str], enum_names: Set[str],
 
 def _check_relationship_types(spec: dict, entity_names: Set[str], enum_names: Set[str], result: LayerResult) -> None:
     """Validate relationship endpoints and types."""
-    valid_types = {"association", "composition", "aggregation", "dependency", "realization"}
+    valid_types = {"association", "composition", "aggregation", "inheritance"}
 
     for rel in spec.get("relationships", []):
         from_entity = rel.get("from", "")
