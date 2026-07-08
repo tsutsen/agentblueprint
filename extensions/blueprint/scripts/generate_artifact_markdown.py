@@ -390,6 +390,11 @@ def render_template(artifact_type: str, data: dict, json_path: str,
     with open(template_file, "r") as f:
         template_str = f.read()
 
+    if not HAS_JINJA2:
+        print("Error: jinja2 is required but not installed.", file=sys.stderr)
+        print("Install it with: pip install jinja2", file=sys.stderr)
+        sys.exit(1)
+
     # Create Jinja2 environment with custom filters
     env = Environment(loader=FileSystemLoader(str(templates_dir)), trim_blocks=True, lstrip_blocks=True)
     env.filters['format_glossary_refs'] = format_glossary_refs
