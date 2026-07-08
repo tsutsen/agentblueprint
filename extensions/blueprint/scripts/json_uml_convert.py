@@ -713,18 +713,21 @@ def _d2_rel_edge(rel: dict, frm_path: str, to_path: str) -> list[str]:
 
     lines = [f"{frm_path} {arrow} {to_path} {lbl_str} {{"]
 
-    # Arrowhead shapes per UML convention
-    # Composition/aggregation: diamond on source (composite/whole) side
-    # Inheritance/realization: triangle on target (parent) side
+    # Arrowhead shapes per UML convention.
+    # D2 renders target-arrowhead prominently; source-arrowhead is subtle.
+    # For composition/aggregation the diamond belongs on the composite side,
+    # so we swap frm_path <-> to_path and place diamond on target-arrowhead.
     if rel_type == "composition":
-        # Filled diamond on source side (the composite owns the part)
-        lines.append("  source-arrowhead: * {")
+        # Filled diamond on composite side (swap direction)
+        lines = [f"{to_path} {arrow} {frm_path} {lbl_str} {{"]
+        lines.append("  target-arrowhead: * {")
         lines.append("    shape: diamond")
         lines.append("    style.filled: true")
         lines.append("  }")
     elif rel_type == "aggregation":
-        # Empty diamond on source side
-        lines.append("  source-arrowhead: * {")
+        # Empty diamond on composite side (swap direction)
+        lines = [f"{to_path} {arrow} {frm_path} {lbl_str} {{"]
+        lines.append("  target-arrowhead: * {")
         lines.append("    shape: diamond")
         lines.append("  }")
     elif rel_type == "inheritance":
