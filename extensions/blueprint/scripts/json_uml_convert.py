@@ -701,12 +701,12 @@ _D2_ARROW = {
 }
 
 _D2_STYLE = {
-    "composition": "style.stroke-dash: 0\nstyle.stroke-width: 2",
-    "aggregation": "style.stroke-dash: 3",
-    "association": "style.stroke-dash: 0",
-    "dependency":  "style.stroke-dash: 5\nstyle.stroke-width: 1",
-    "realization": "style.stroke-dash: 5",
-    "inheritance": "style.stroke-dash: 0",
+    "composition":  "style.stroke-width: 2\nstyle.stroke: \"#333\"",
+    "aggregation":   "style.stroke-dash: 4\nstyle.stroke-width: 1.5",
+    "association":   "style.stroke-dash: 6\nstyle.stroke: \"#888\"",
+    "dependency":    "style.stroke-dash: 5\nstyle.stroke-width: 1\nstyle.stroke: \"#aaa\"",
+    "realization":   "style.stroke-dash: 5\nstyle.stroke: \"#aaa\"",
+    "inheritance":   "style.stroke-width: 2\nstyle.stroke: \"#333\"",
 }
 
 _D2_VIS_STYLE = {
