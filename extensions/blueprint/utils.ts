@@ -40,7 +40,7 @@ else:
     const { stdout } = await execFilePromise('python', ['-c', script], {
       input: JSON.stringify(json),
       timeout: 10000,
-    });
+    } as any);
     const result = JSON.parse(stdout);
     return { valid: result.valid, errors: result.errors || [] };
   } catch (err: any) {
