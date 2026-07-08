@@ -734,6 +734,7 @@ def _d2_rel_edge(rel: dict, frm_path: str, to_path: str) -> list[str]:
         # Empty triangle on target side (points to parent)
         lines.append("  target-arrowhead: * {")
         lines.append("    shape: triangle")
+        lines.append("    style.filled: false")
         lines.append("  }")
     elif rel_type == "dependency":
         # Dashed line, open arrow
@@ -843,7 +844,12 @@ def to_d2(data: dict) -> str:
         if parent and parent in entity_map:
             frm_path = f"{entity_group.get(entity['name'], 'public_entities')}.{entity['name']}"
             to_path  = f"{entity_group.get(parent, 'public_entities')}.{parent}"
-            lines.append(f"{frm_path} --|> {to_path}")
+            lines.append(f"{frm_path} -> {to_path} {{")
+            lines.append("  target-arrowhead: * {")
+            lines.append("    shape: triangle")
+            lines.append("    style.filled: false")
+            lines.append("  }")
+            lines.append("}")
     return "\n".join(lines)
 
 
