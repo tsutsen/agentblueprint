@@ -56,7 +56,7 @@ def node_type(id_str: str) -> str:
     if re.match(r'^CON-\d{3}-', id_str):
         return "CON"
     if re.match(r'^FN-', id_str):
-        return "FN"
+        return "func"
     if re.match(r'^TST-', id_str):
         return "TST"
     if re.match(r'^EP-\d+$', id_str):
@@ -380,7 +380,7 @@ def load_graph(artifacts_dir: str):
             if not isinstance(fn, dict):
                 continue
             fid = fn.get("id", "")
-            g.add_node(fid, "FN", fn.get("name", fid), "ApiSpec.json")
+            g.add_node(fid, "func", fn.get("name", fid), "ApiSpec.json")
             # entity (singular string)
             entity = fn.get("entity")
             if isinstance(entity, str) and entity:
@@ -604,7 +604,7 @@ def metric_orphan_nodes(g: Graph) -> dict:
             result["orphan_req"].append(rid)
 
     # orphan_fn: FN with no incoming IS and no TST edge
-    for fid in g.nodes_of_type("FN"):
+    for fid in g.nodes_of_type("func"):
         has_tst = any(g.nodes.get(t, {}).get("type") == "TST" for t in g.radj.get(fid, set()))
         if not has_tst:
             result["orphan_fn"].append(fid)
@@ -660,7 +660,7 @@ def metric_traceability(g: Graph) -> dict:
     components reference requirements), we follow edges bidirectionally
     at each hop. IS is optional since tasks/ may not be loaded.
     """
-    CHAIN = ["CON", "FN", "TST"]
+    CHAIN = ["CON", "func", "TST"]
     has_is = bool(g.nodes_of_type("IS"))
     if has_is:
         CHAIN = CHAIN + ["IS"]
@@ -769,7 +769,7 @@ def metric_responsibility_load(g: Graph) -> dict:
     for cid in con_ids:
         load = {
             "req_count": len(g.reachable_by_type(cid, "REQ", direction="in")),
-            "fn_count": len(g.reachable_by_type(cid, "FN", direction="out")),
+            "fn_count": len(g.reachable_by_type(cid, "func", direction="out")),
             "entity_count": len(g.reachable_by_type(cid, "Entity", direction="out")),
             "is_count": len(g.reachable_by_type(cid, "IS", direction="in")),
         }
@@ -798,12 +798,12 @@ def metric_responsibility_load(g: Graph) -> dict:
 def metric_interface_pressure(g: Graph) -> dict:
     """Interface pressure per component."""
     con_ids = g.nodes_of_type("CON")
-    total_fns = len(g.nodes_of_type("FN"))
+    total_fns = len(g.nodes_of_type("func"))
     results = {}
     high_pressure = []
 
     for cid in con_ids:
-        fn_for_con = sum(1 for e in g.edges if e[0] == cid and g.nodes.get(e[1], {}).get("type") == "FN")
+        fn_for_con = sum(1 for e in g.edges if e[0] == cid and g.nodes.get(e[1], {}).get("type") == "func")
         pressure = fn_for_con / max(total_fns, 1)
         results[cid] = {
             "fn_count": fn_for_con,
@@ -821,11 +821,11 @@ def metric_interface_pressure(g: Graph) -> dict:
 def metric_test_density(g: Graph, scope_id: str = None) -> dict:
     """Test density for a scope or globally."""
     if scope_id:
-        fns = g.reachable_by_type(scope_id, "FN", direction="out")
+        fns = g.reachable_by_type(scope_id, "func", direction="out")
         reqs = g.reachable_by_type(scope_id, "REQ", direction="in")
         tsts = g.reachable_by_type(scope_id, "TST", direction="out")
     else:
-        fns = set(g.nodes_of_type("FN"))
+        fns = set(g.nodes_of_type("func"))
         reqs = set(g.nodes_of_type("REQ"))
         tsts = set(g.nodes_of_type("TST"))
 
@@ -919,9 +919,9 @@ ALLOWED_EDGES = {
     # Architecture → requirements (reverse refs)
     ("CON", "REQ"), ("CON", "NFR"),
     # Architecture → implementation
-    ("CON", "FN"), ("CON", "Entity"),
-    ("FN", "Entity"), ("FN", "GL"),
-    ("FN", "CON"), ("FN", "REQ"), ("FN", "NFR"), ("FN", "US"),
+    ("CON", "func"), ("CON", "Entity"),
+    ("func", "Entity"), ("func", "GL"),
+    ("func", "CON"), ("func", "REQ"), ("func", "NFR"), ("func", "US"),
     # Components → requirements/glossary/NFR
     ("COMP", "REQ"), ("COMP", "GL"), ("COMP", "NFR"),
     # Data flows → requirements/glossary
@@ -930,12 +930,10 @@ ALLOWED_EDGES = {
     ("SCR", "US"), ("SCR", "GL"),
     # Epics → NFR/success criteria
     ("EP", "NFR"), ("EP", "SC"),
-    # Allow edges to non-existent nodes (spec data may be incomplete)
-    ("EP", "Unknown"), ("CON", "Unknown"), ("COMP", "Unknown"), ("DF", "Unknown"),
     # Issues → implementation
-    ("IS", "FN"), ("IS", "REQ"), ("IS", "US"), ("IS", "EP"),
+    ("IS", "func"), ("IS", "REQ"), ("IS", "US"), ("IS", "EP"),
     # Tests
-    ("TST", "FN"), ("TST", "GL"),
+    ("TST", "func"), ("TST", "GL"),
     ("TST", "REQ"), ("TST", "NFR"), ("TST", "TST"),
     # User journeys
     ("UJ", "US"), ("UJ", "GL"),
@@ -945,13 +943,13 @@ ALLOWED_EDGES = {
     ("UJ", "US"),
     ("UXAC", "US"),
     ("UXAC", "NFR"), ("UXAC", "REQ"), ("UXAC", "GL"),
-    ("UXAC", "FN"), ("UXAC", "CON"),
+    ("UXAC", "func"), ("UXAC", "CON"),
     ("UXAC", "Entity"), ("UXAC", "TST"),
     ("UXAC", "US"), ("UXAC", "SC"),
     ("UXAC", "DCON"), ("UXAC", "VDR"), ("UXAC", "AR"),
     # Data
     ("Entity", "Entity"), ("Entity", "GL"),
-    ("Entity", "FN"),
+    ("Entity", "func"),
     ("Enum", "GL"),
     ("GL", "GL"),
     # Misc
@@ -961,7 +959,7 @@ ALLOWED_EDGES = {
     ("AR", "GL"), ("AR", "CON"), ("AR", "NFR"),
     ("AR", "US"), ("AR", "REQ"),
     # Self-loops
-    ("FN", "FN"), ("CON", "CON"),
+    ("func", "func"), ("CON", "CON"),
     ("REQ", "NFR"), ("NFR", "REQ"),
     ("REQ", "US"), ("US", "US"),
     ("NFR", "NFR"),

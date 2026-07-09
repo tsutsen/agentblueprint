@@ -110,6 +110,11 @@
       "description": "Data flow identifier.",
       "x_idPattern": "flw"
     },
+    "funcId": {
+      "type": "string",
+      "description": "Function/endpoint identifier.",
+      "x_idPattern": "func"
+    },
     "entId": {
       "type": "string",
       "description": "Entity identifier.",
@@ -527,6 +532,13 @@
               "$ref": "#/definitions/reqId"
             },
             "description": "Functional requirement IDs."
+          },
+          "fnRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/funcId"
+            },
+            "description": "Function/endpoint IDs."
           }
         },
         "required": [
