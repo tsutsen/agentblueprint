@@ -33,9 +33,13 @@ export function registerGraphTools(pi: ExtensionAPI, extDir: string) {
       };
     } catch (err: any) {
       const msg = err.stdout || err.stderr || err.message;
+      // Truncate to avoid flooding conversation with huge JSON
+      const truncated = typeof msg === 'string' && msg.length > 500
+        ? msg.substring(0, 500) + '\n...(truncated)'
+        : msg;
       return {
-        content: [{ type: "text", text: `graph_metrics failed:\n${msg}` }],
-        details: { success: false, error: err.stderr || err.message },
+        content: [{ type: "text", text: `graph_metrics failed:\n${truncated}` }],
+        details: { success: false, error: truncated },
         isError: true,
       };
     }
