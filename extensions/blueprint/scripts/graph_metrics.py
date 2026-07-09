@@ -527,6 +527,33 @@ def load_graph(artifacts_dir: str):
             if isinstance(gl, str):
                 pass  # no clear from node
 
+    # ── tasks/ (Epic/Issue JSON files) ─────────────────────────────────
+    tasks_dir = os.path.join(artifacts_dir, "..", "tasks")
+    if os.path.isdir(tasks_dir):
+        for entry in sorted(os.listdir(tasks_dir)):
+            ep_dir = os.path.join(tasks_dir, entry)
+            if not os.path.isdir(ep_dir):
+                continue
+            ep_json = os.path.join(ep_dir, f"{entry}.json")
+            if not os.path.exists(ep_json):
+                continue
+            ep_data = json.load(open(ep_json))
+            ep_id = ep_data.get("id", entry)
+            ep_name = ep_data.get("name", entry)
+            g.add_node(ep_id, "EP", ep_name, f"tasks/{entry}/{entry}.json")
+            for rr in (ep_data.get("reqRefs") or []):
+                if isinstance(rr, str):
+                    g.add_edge(ep_id, rr)
+            for ur in (ep_data.get("usRefs") or []):
+                if isinstance(ur, str):
+                    g.add_edge(ep_id, ur)
+            for nr in (ep_data.get("nfrRefs") or []):
+                if isinstance(nr, str):
+                    g.add_edge(ep_id, nr)
+            for sr in (ep_data.get("scRefs") or []):
+                if isinstance(sr, str):
+                    g.add_edge(ep_id, sr)
+
     # Post-process: ensure all GL IDs referenced in edges have nodes
     for frm, to in g.edges:
         if to.startswith("GL-"):
