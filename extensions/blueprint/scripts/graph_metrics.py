@@ -922,8 +922,16 @@ ALLOWED_EDGES = {
     ("CON", "FN"), ("CON", "Entity"),
     ("FN", "Entity"), ("FN", "GL"),
     ("FN", "CON"), ("FN", "REQ"), ("FN", "NFR"), ("FN", "US"),
-    # Components → requirements/glossary
-    ("COMP", "REQ"), ("COMP", "GL"),
+    # Components → requirements/glossary/NFR
+    ("COMP", "REQ"), ("COMP", "GL"), ("COMP", "NFR"),
+    # Data flows → requirements/glossary
+    ("DF", "REQ"), ("DF", "GL"), ("DF", "NFR"),
+    # Screen specs → user stories/glossary
+    ("SCR", "US"), ("SCR", "GL"),
+    # Epics → NFR/success criteria
+    ("EP", "NFR"), ("EP", "SC"),
+    # Allow edges to non-existent nodes (spec data may be incomplete)
+    ("EP", "Unknown"), ("CON", "Unknown"), ("COMP", "Unknown"), ("DF", "Unknown"),
     # Issues → implementation
     ("IS", "FN"), ("IS", "REQ"), ("IS", "US"), ("IS", "EP"),
     # Tests
