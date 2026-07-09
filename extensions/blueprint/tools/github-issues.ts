@@ -661,10 +661,10 @@ function createGhListIssues(): Tool {
       const repo = detectRepo();
       if (!repo) return { error: "Could not detect GitHub repo." };
 
-      const args: string[] = ["api", "repos", repo, "issues", "--state", state || "open"];
-      if (labels && labels.length) {
-        args.push("--label", labels.join(","));
-      }
+      const args: string[] = ["api", "repos", repo, "issues"];
+      // gh api doesn't support --state/--label directly; use -F for query params
+      if (state) args.push("-F", `state=${state}`);
+      if (labels && labels.length) args.push("-F", `labels=${labels.join(",")}`);
 
       const result = runGh(args);
       if (result.code !== 0) {
