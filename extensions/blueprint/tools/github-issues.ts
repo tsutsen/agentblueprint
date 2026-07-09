@@ -495,6 +495,9 @@ function createGhMergePr(): Tool {
       required: ["prNumber"],
     },
     execute: async ({ prNumber, jsonPath }: { prNumber: number; jsonPath?: string }) => {
+      if (!prNumber) {
+        return errorResponse("prNumber is required (e.g. 6)");
+      }
       const { readFileSync, writeFileSync, existsSync } = require("fs");
       const { resolve } = require("path");
 
