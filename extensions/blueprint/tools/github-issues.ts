@@ -609,8 +609,7 @@ function createGhUpdateIssue(): Tool {
         return { content: [{ type: "text", text: "No updates specified. Provide status, labels, or comment." }], isError: true };
       }
 
-      return successResponse(`Updated issue #${issueNumber}: ${updates.join(", ")}`, { success: true, issueNumber, updates, message: `Updated issue #${issueNumber}: ${updates.join(", ")}` }),
-      };
+      return successResponse(`Updated issue #${issueNumber}: ${updates.join(", ")}`, { success: true, issueNumber, updates, message: `Updated issue #${issueNumber}: ${updates.join(", ")}` });
     },
   };
 }
