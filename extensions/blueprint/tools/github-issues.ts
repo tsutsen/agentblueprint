@@ -655,7 +655,8 @@ function createGhListIssues(): Tool {
       }
 
       const issues = JSON.parse(result.stdout);
-      return successResponse(`Found ${issues.length} issue(s)`, { success: true, count: issues.length, issues: issues.map((i: any) => ({ number: i.number, title: i.title, state: i.state, labels: i.labels?.map((l: any) => l.name) ?? [] })), });
+      const details = issues.map((i: any) => `#${i.number} [${i.state}] ${i.title}${i.labels?.length ? ' (' + i.labels.map((l: any) => l.name).join(', ') + ')' : ''}`).join('\n');
+      return successResponse(`Found ${issues.length} issue(s):\n${details || '  (none)'}`, { success: true, count: issues.length, issues: issues.map((i: any) => ({ number: i.number, title: i.title, state: i.state, labels: i.labels?.map((l: any) => l.name) ?? [] })), });
     },
   };
 }
