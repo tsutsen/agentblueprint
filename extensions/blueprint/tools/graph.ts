@@ -64,6 +64,58 @@ export function registerGraphTools(pi: ExtensionAPI, extDir: string) {
       const artifacts = params.artifacts || path.resolve(ctx.cwd, "artifacts");
       const format = params.format || "text";
       const reportPath = params.reportPath || null;
+
+      // For text format, truncate to show only key metrics
+      if (format === "text") {
+        const result = await runMetrics(artifacts, "json", reportPath);
+        if (result.isError) return result;
+
+        try {
+          const data = JSON.parse(result.content[0].text);
+          const health = data.health_index || {};
+          const breakdown = health.breakdown || {};
+          const orphans = data.orphans || {};
+          const totalOrphans = Object.values(orphans).reduce((s: number, a: any) => s + a.length, 0);
+
+          // Build concise summary
+          const lines = [
+            `Health Index: ${health.score || 'N/A'} / 100`,
+            `  Coverage      ${breakdown.coverage ?? 'N/A'}`,
+            `  Verifiability ${breakdown.verifiability ?? 'N/A'}`,
+            `  Traceability  ${breakdown.traceability ?? 'N/A'}`,
+            `  Orphan Rate   ${breakdown.orphan_rate ?? 'N/A'} (${totalOrphans} orphans)`,
+            `  Layer OK      ${breakdown.layer_ok ?? 'N/A'}`,
+          ];
+
+          // Add traceability detail if available
+          if (data.traceability?.per_req) {
+            const full = Object.values(data.traceability.per_req).filter((r: any) => r.score === r.max).length;
+            const total = data.traceability.total || 0;
+            lines.push(`  Traceability: ${full}/${total} REQs fully traced`);
+          }
+
+          // Add layer violations count
+          if (data.layer_violations?.length) {
+            lines.push(`  Layer Violations: ${data.layer_violations.length}`);
+          }
+
+          return {
+            content: [{ type: "text", text: lines.join('\n') }],
+            details: {
+              success: true,
+              fullReport: data,
+              health,
+              orphans,
+              traceability: data.traceability,
+              layerViolations: data.layer_violations,
+            },
+          };
+        } catch {
+          // Fallback to raw output if JSON parse fails
+          return runMetrics(artifacts, format, reportPath);
+        }
+      }
+
       return runMetrics(artifacts, format, reportPath);
     },
   });
