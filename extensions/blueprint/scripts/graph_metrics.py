@@ -328,7 +328,7 @@ def load_graph(artifacts_dir: str):
             if not isinstance(comp, dict):
                 continue
             cid = comp.get("id", "")
-            g.add_node(cid, "CON", comp.get("name", cid), "ArchitectureSpec.json")
+            g.add_node(cid, "COMP", comp.get("name", cid), "ArchitectureSpec.json")
             for rr in (comp.get("reqRefs") or []):
                 if isinstance(rr, str):
                     g.add_edge(cid, rr)
@@ -343,7 +343,7 @@ def load_graph(artifacts_dir: str):
             if not isinstance(df, dict):
                 continue
             did = df.get("id", "")
-            g.add_node(did, "CON", df.get("name", did), "ArchitectureSpec.json")
+            g.add_node(did, "DF", df.get("name", did), "ArchitectureSpec.json")
             for rr in (df.get("reqRefs") or []):
                 if isinstance(rr, str):
                     g.add_edge(did, rr)
@@ -548,6 +548,8 @@ def metric_orphan_nodes(g: Graph) -> dict:
         "orphan_is": [],
         "orphan_gl": [],
         "orphan_con": [],
+        "orphan_comp": [],
+        "orphan_df": [],
     }
 
     goal_types = {"REQ", "NFR", "US"}
@@ -592,12 +594,24 @@ def metric_orphan_nodes(g: Graph) -> dict:
         if len(sources) <= 1:
             result["orphan_gl"].append(gl_id)
 
-    # orphan_con: CON with no REQ refs (either direction)
+    # orphan_con: CON with no REQ or NFR refs (either direction)
     for cid in g.nodes_of_type("CON"):
         connected = g.adj.get(cid, set()) | g.radj.get(cid, set())
-        has_req = any(g.nodes.get(t, {}).get("type") == "REQ" for t in connected)
+        has_req = any(g.nodes.get(t, {}).get("type") in ("REQ", "NFR") for t in connected)
         if not has_req:
             result["orphan_con"].append(cid)
+
+    # orphan_comp: COMP with no outgoing/incoming edges
+    for cid in g.nodes_of_type("COMP"):
+        connected = g.adj.get(cid, set()) | g.radj.get(cid, set())
+        if not connected:
+            result["orphan_comp"].append(cid)
+
+    # orphan_df: DF with no outgoing/incoming edges
+    for did in g.nodes_of_type("DF"):
+        connected = g.adj.get(did, set()) | g.radj.get(did, set())
+        if not connected:
+            result["orphan_df"].append(did)
 
     return result
 
