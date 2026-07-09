@@ -561,12 +561,13 @@ function createGhUpdateIssue(): Tool {
     execute: async ({ issueNumber, status, labels, comment }: { issueNumber: number; status?: string; labels?: string[]; comment?: string }) => {
       const repo = detectRepo();
       if (!repo) {
-        return { content: [{ type: "text", text: "Could not detect GitHub repo." }], isError: true };
+        return errorResponse("Could not detect GitHub repo.");
       }
 
       const updates: string[] = [];
 
       if (status) {
+        updates.push(`Adding status label: ${status}`);
         updates.push(`Adding status label: ${status}`);
         runGh(["issue", "edit", String(issueNumber), "--add-label", status]);
       }
@@ -584,7 +585,7 @@ function createGhUpdateIssue(): Tool {
       }
 
       if (!updates.length) {
-        return { content: [{ type: "text", text: "No updates specified. Provide status, labels, or comment." }], isError: true };
+        return errorResponse(`No updates specified. Received: status=${JSON.stringify(status)}, labels=${JSON.stringify(labels)}, comment=${JSON.stringify(comment)}`);
       }
 
       return successResponse(`Updated issue #${issueNumber}: ${updates.join(", ")}`, { success: true, issueNumber, updates, message: `Updated issue #${issueNumber}: ${updates.join(", ")}` });
