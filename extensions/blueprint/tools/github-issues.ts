@@ -216,13 +216,7 @@ function createGhCreateEpic(): Tool {
       // Push branch
       runGit(`push -u origin ${branch}`);
 
-      return {
-        success: true,
-        id,
-        branch,
-        githubIssueNumber: issueNumber,
-        message: `Created GitHub Issue #${issueNumber} and branch '${branch}' for epic ${id}`,
-      };
+      return successResponse(`Created GitHub Issue #${issueNumber} and branch '${branch}' for epic ${id}`, { success: true, id, branch, githubIssueNumber: issueNumber, message: `Created GitHub Issue #${issueNumber} and branch '${branch}' for epic ${id}` });
     },
   };
 }
@@ -315,13 +309,7 @@ function createGhCreateIssue(): Tool {
       // Push branch
       runGit(`push -u origin ${branch}`);
 
-      return {
-        success: true,
-        id,
-        branch,
-        githubIssueNumber: issueNumber,
-        message: `Created GitHub Issue #${issueNumber} and branch '${branch}' for issue ${id}`,
-      };
+      return successResponse(`Created GitHub Issue #${issueNumber} and branch '${branch}' for issue ${id}`, { success: true, id, branch, githubIssueNumber: issueNumber, message: `Created GitHub Issue #${issueNumber} and branch '${branch}' for issue ${id}` });
     },
   };
 }
@@ -405,14 +393,7 @@ function createGhCreateSubIssue(): Tool {
       const mdPath = resolve(siDir, `${siId}.md`);
       writeFileSync(mdPath, md);
 
-      return {
-        success: true,
-        id: siId,
-        jsonPath,
-        mdPath,
-        workDir,
-        message: `Created sub-issue ${siId} at ${siDir}`,
-      };
+      return successResponse(`Created sub-issue ${siId} at ${siDir}`, { success: true, id: siId, jsonPath, mdPath, workDir, message: `Created sub-issue ${siId} at ${siDir}` });
     },
   };
 }
@@ -490,13 +471,7 @@ function createGhCreatePr(): Tool {
         writeFileSync(resolve(jsonPath), JSON.stringify(data, null, 2));
       }
 
-      return {
-        success: true,
-        siId,
-        prNumber,
-        prUrl: prUrl,
-        message: `Created PR #${prNumber} from '${branch}' → '${base}'`,
-      };
+      return successResponse(`Created PR #${prNumber} from '${branch}' → '${base}'`, { success: true, siId, prNumber, prUrl: prUrl, message: `Created PR #${prNumber} from '${branch}' → '${base}'` });
     },
   };
 }
@@ -544,11 +519,7 @@ function createGhMergePr(): Tool {
         writeFileSync(resolve(jsonPath), JSON.stringify(data, null, 2));
       }
 
-      return {
-        success: true,
-        prNumber,
-        message: `Merged PR #${prNumber}. Local JSON updated.`,
-      };
+      return successResponse(`Merged PR #${prNumber}. Local JSON updated.`, { success: true, prNumber, message: `Merged PR #${prNumber}. Local JSON updated.` });
     },
   };
 }
@@ -681,16 +652,7 @@ function createGhListIssues(): Tool {
       }
 
       const issues = JSON.parse(result.stdout);
-      return {
-        success: true,
-        count: issues.length,
-        issues: issues.map((i: any) => ({
-          number: i.number,
-          title: i.title,
-          state: i.state,
-          labels: i.labels?.map((l: any) => l.name) ?? [],
-        })),
-      };
+      return successResponse(`Found ${issues.length} issue(s)`, { success: true, count: issues.length, issues: issues.map((i: any) => ({ number: i.number, title: i.title, state: i.state, labels: i.labels?.map((l: any) => l.name) ?? [] })), });
     },
   };
 }
@@ -791,12 +753,7 @@ function createGhCleanupBranches(): Tool {
       }
 
       if (dryRun || !orphaned.length) {
-        return {
-          success: true,
-          dryRun: true,
-          orphaned,
-          message: `Found ${orphaned.length} orphaned branch(es): ${orphaned.join(", ") || "none"}`,
-        };
+        return successResponse(`Found ${orphaned.length} orphaned branch(es): ${orphaned.join(", ") || "none"}`, { success: true, dryRun: true, orphaned, message: `Found ${orphaned.length} orphaned branch(es): ${orphaned.join(", ") || "none"}` });
       }
 
       // Delete orphaned branches
@@ -811,12 +768,7 @@ function createGhCleanupBranches(): Tool {
         }
       }
 
-      return {
-        success: true,
-        deleted,
-        failed,
-        message: `Deleted ${deleted.length} orphaned branch(es). Failed: ${failed.join(", ") || "none"}`,
-      };
+      return successResponse(`Deleted ${deleted.length} orphaned branch(es). Failed: ${failed.join(", ") || "none"}`, { success: true, deleted, failed, message: `Deleted ${deleted.length} orphaned branch(es). Failed: ${failed.join(", ") || "none"}` });
     },
   };
 }
@@ -883,13 +835,7 @@ function createGhUpdateSubIssue(): Tool {
 
       writeFileSync(absPath, JSON.stringify(data, null, 2));
 
-      return {
-        success: true,
-        id: data.id,
-        status: data.status,
-        files: data.files,
-        message: `Updated sub-issue ${data.id}: status=${data.status}, files=${data.files?.length ?? 0}`,
-      };
+      return successResponse(`Updated sub-issue ${data.id}: status=${data.status}, files=${data.files?.length ?? 0}`, { success: true, id: data.id, status: data.status, files: data.files, message: `Updated sub-issue ${data.id}: status=${data.status}, files=${data.files?.length ?? 0}` });
     },
   };
 }
@@ -943,13 +889,7 @@ function createGhListSubIssues(): Tool {
         }
       }
 
-      return {
-        success: true,
-        epId,
-        issueId,
-        count: subIssues.length,
-        subIssues,
-      };
+      return successResponse(`Found ${subIssues.length} sub-issue(s) for ${issueId}`, { success: true, epId, issueId, count: subIssues.length, subIssues });
     },
   };
 }
