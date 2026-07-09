@@ -600,10 +600,13 @@ function createGhGetIssue(): Tool {
       required: ["issueNumber"],
     },
     execute: async ({ issueNumber }: { issueNumber: number }) => {
+      if (!issueNumber) {
+        return errorResponse("issueNumber is required");
+      }
       const repo = detectRepo();
       if (!repo) return errorResponse("Could not detect GitHub repo.");
 
-      const result = runGh(["api", "repos", repo, "issues", String(issueNumber)]);
+      const result = runGh(["api", `repos/${repo}/issues/${issueNumber}`]);
       if (result.code !== 0) {
         return errorResponse(`Failed to fetch issue #${issueNumber}: ${result.stderr}`);
       }
@@ -859,6 +862,9 @@ function createGhListSubIssues(): Tool {
       required: ["epId", "issueId"],
     },
     execute: async ({ epId, issueId }: { epId: string; issueId: string }) => {
+      if (!epId || !issueId) {
+        return errorResponse("epId and issueId are required (e.g. EP-001-xxx, IS-001-xxx)");
+      }
       const { readdirSync, readFileSync, existsSync } = require("fs");
       const { resolve } = require("path");
       const { execSync } = require("child_process");
