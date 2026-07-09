@@ -494,9 +494,13 @@ function createGhMergePr(): Tool {
       },
       required: ["prNumber"],
     },
-    execute: async ({ prNumber, jsonPath }: { prNumber: number; jsonPath?: string }) => {
-      if (!prNumber) {
+    execute: async ({ prNumber, jsonPath }: { prNumber?: number | string; jsonPath?: string }) => {
+      if (prNumber === undefined || prNumber === null || prNumber === '') {
         return errorResponse("prNumber is required (e.g. 6)");
+      }
+      const prNum = typeof prNumber === 'string' ? parseInt(prNumber, 10) : prNumber;
+      if (isNaN(prNum)) {
+        return errorResponse(`prNumber must be a valid number, got: ${prNumber}`);
       }
       const { readFileSync, writeFileSync, existsSync } = require("fs");
       const { resolve } = require("path");
@@ -507,11 +511,11 @@ function createGhMergePr(): Tool {
       const mergeResult = runGh([
         "pr", "merge", "--merge", "--delete-branch",
         "--repo", repo,
-        String(prNumber),
+        String(prNum),
       ]);
 
       if (mergeResult.code !== 0) {
-        return errorResponse(`Failed to merge PR #${prNumber}: ${mergeResult.stderr}`);
+        return errorResponse(`Failed to merge PR #${prNum}: ${mergeResult.stderr}`);
       }
 
       // Update local JSON
@@ -522,7 +526,7 @@ function createGhMergePr(): Tool {
         writeFileSync(resolve(jsonPath), JSON.stringify(data, null, 2));
       }
 
-      return successResponse(`Merged PR #${prNumber}. Local JSON updated.`, { success: true, prNumber, message: `Merged PR #${prNumber}. Local JSON updated.` });
+      return successResponse(`Merged PR #${prNum}. Local JSON updated.`, { success: true, prNumber: prNum, message: `Merged PR #${prNum}. Local JSON updated.` });
     },
   };
 }
