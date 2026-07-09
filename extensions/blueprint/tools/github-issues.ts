@@ -713,7 +713,7 @@ function createGhCleanupBranches(): Tool {
       const allBranchNames = new Set(branches.map((b: any) => b.name));
 
       // Get all active issue labels to identify non-orphaned branches
-      const issueResult = runGh(["api", "repos", repo, "issues", "--state", "open"]);
+      const issueResult = runGh(["api", "repos", repo, "issues", "-F", "state=open"]);
       if (issueResult.code !== 0) {
         return { error: `Failed to list issues: ${issueResult.stderr}` };
       }
