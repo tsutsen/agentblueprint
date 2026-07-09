@@ -162,7 +162,7 @@ class Graph:
         self.radj[to_id].add(from_id)
 
     def bfs_reachable(self, start: str, direction: str = "out", max_depth: int = None) -> set:
-        """BFS from start, following edges. direction: 'out' or 'in'."""
+        """BFS from start, following edges. direction: 'out', 'in', or 'both'."""
         visited = set()
         if start not in self.nodes:
             return visited
@@ -174,8 +174,10 @@ class Graph:
                 continue
             if direction == "out":
                 neighbors = self.adj.get(node, set())
-            else:
+            elif direction == "in":
                 neighbors = self.radj.get(node, set())
+            else:  # both
+                neighbors = self.adj.get(node, set()) | self.radj.get(node, set())
             for nb in neighbors:
                 if nb not in visited:
                     visited.add(nb)
@@ -584,14 +586,14 @@ def metric_orphan_nodes(g: Graph) -> dict:
         if not has_goal:
             result["orphan_is"].append(iid)
 
-    # orphan_gl: GL term that appears in only one spec (edge source)
+    # orphan_gl: GL term that appears in only one artifact source (edge source)
     gl_sources = defaultdict(set)
     for frm, to in g.edges:
         if g.nodes.get(to, {}).get("type") == "GL":
             src_type = g.nodes.get(frm, {}).get("type", "Unknown")
             gl_sources[to].add(src_type)
     for gl_id, sources in gl_sources.items():
-        if len(sources) <= 1:
+        if len(sources) < 2:
             result["orphan_gl"].append(gl_id)
 
     # orphan_con: CON with no REQ or NFR refs (either direction)
@@ -623,12 +625,15 @@ def _severity_orphan(class_name: str) -> str:
 def metric_traceability(g: Graph) -> dict:
     """Traceability score for each REQ.
 
-    Chain: REQ → CON → FN → TST → IS
+    Chain: REQ → CON → FN → TST → (IS, optional)
     Since edges may go in either direction (e.g. CON → REQ means
     components reference requirements), we follow edges bidirectionally
-    at each hop.
+    at each hop. IS is optional since tasks/ may not be loaded.
     """
-    CHAIN = ["CON", "FN", "TST", "IS"]
+    CHAIN = ["CON", "FN", "TST"]
+    has_is = bool(g.nodes_of_type("IS"))
+    if has_is:
+        CHAIN = CHAIN + ["IS"]
     reqs = g.nodes_of_type("REQ")
     per_req = {}
     for req_id in sorted(reqs):
@@ -887,6 +892,8 @@ ALLOWED_EDGES = {
     ("CON", "FN"), ("CON", "Entity"),
     ("FN", "Entity"), ("FN", "GL"),
     ("FN", "CON"), ("FN", "REQ"), ("FN", "NFR"), ("FN", "US"),
+    # Components → requirements/glossary
+    ("COMP", "REQ"), ("COMP", "GL"),
     # Issues → implementation
     ("IS", "FN"), ("IS", "REQ"), ("IS", "US"), ("IS", "EP"),
     # Tests
@@ -960,11 +967,12 @@ def metric_health_index(g: Graph, trace_report: dict, orphans: dict,
     # Coverage = traceability global ratio
     coverage = trace_report.get("global_ratio", 0.0)
 
-    # Verifiability: fraction of REQs with at least one TST reachable
+    # Verifiability: fraction of REQs with at least one TST reachable (bidirectional)
+    # TST→FN edges go from test TO function, so REQ←FN←TST via reverse
     reqs = g.nodes_of_type("REQ")
     reqs_with_tests = sum(
         1 for r in reqs
-        if g.reachable_by_type(r, "TST", direction="out")
+        if g.reachable_by_type(r, "TST", direction="both")
     )
     verifiability = reqs_with_tests / max(len(reqs), 1)
 
