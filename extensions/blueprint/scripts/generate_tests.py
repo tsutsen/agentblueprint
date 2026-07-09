@@ -15,7 +15,7 @@ This script:
 5. Saves updated tests to TestSpec.json
 
 Test ID format: TST-{functionName}-{NNN} (e.g. TST-createSession-001)
-fnRef format: FN-{camelCase} (e.g. FN-createSession)
+endpRef format: FN-{camelCase} (e.g. FN-createSession)
 
 Requirements mapping:
   Tests are generated with reqRefs populated from GoalSpec if:
@@ -47,9 +47,9 @@ def save_json(path, data):
         f.write("\n")
 
 
-def get_existing_fn_refs(tests):
-    """Get set of fnRef values that already have tests."""
-    return {t["fnRef"] for t in tests}
+def get_existing_endp_refs(tests):
+    """Get set of endpRef values that already have tests."""
+    return {t["endpRef"] for t in tests}
 
 
 def get_input_value(param_name, param_type="string"):
@@ -125,7 +125,7 @@ def generate_test_for_function(fn, test_num, base_id, goal_spec=None, req_mappin
     """Generate tests for a single API function."""
     tests = []
     fn_name = fn["name"]
-    fn_id = fn["id"]
+    endp_id = fn["id"]
 
     # Build input from function inputs using type-aware defaults
     input_data = {}
@@ -140,7 +140,7 @@ def generate_test_for_function(fn, test_num, base_id, goal_spec=None, req_mappin
     # Generate happy-path test
     happy_test = {
         "id": f"TST-{fn_name}-{test_num:03d}",
-        "fnRef": fn_id,
+        "endpRef": endp_id,
         "category": "happy-path",
         "description": f"Call {fn_name} with valid input",
         "input": input_data if input_data else {},
@@ -156,7 +156,7 @@ def generate_test_for_function(fn, test_num, base_id, goal_spec=None, req_mappin
         for error in fn["errors"]:
             error_test = {
                 "id": f"TST-{fn_name}-{test_num:03d}",
-                "fnRef": fn_id,
+                "endpRef": endp_id,
                 "category": "error-path",
                 "description": f"Call {fn_name} when {error['condition'].lower()}",
                 "input": input_data if input_data else {},
@@ -175,7 +175,7 @@ def generate_test_for_function(fn, test_num, base_id, goal_spec=None, req_mappin
     if input_data and len(input_data) > 0:
         edge_test = {
             "id": f"TST-{fn_name}-{test_num:03d}",
-            "fnRef": fn_id,
+            "endpRef": endp_id,
             "category": "edge-case",
             "description": f"Call {fn_name} with empty or minimal input",
             "input": {k: "" if isinstance(v, str) else (0 if isinstance(v, int) else []) for k, v in input_data.items()},
@@ -267,23 +267,23 @@ def main():
     print(f"Loading TestSpec: {test_path}")
     ts = load_json(test_path)
     existing_tests = ts.get("tests", [])
-    existing_fn_refs = get_existing_fn_refs(existing_tests)
+    existing_endp_refs = get_existing_endp_refs(existing_tests)
     print(f"  Found {len(existing_tests)} existing tests")
-    print(f"  Functions with tests: {len(existing_fn_refs)}")
+    print(f"  Functions with tests: {len(existing_endp_refs)}")
 
     # Find functions without tests
-    all_fn_ids = {fn["id"] for fn in api["functions"]}
-    missing_fn_ids = all_fn_ids - existing_fn_refs
-    print(f"  Functions without tests: {len(missing_fn_ids)}")
+    all_endp_ids = {fn["id"] for fn in api["functions"]}
+    missing_endp_ids = all_endp_ids - existing_endp_refs
+    print(f"  Functions without tests: {len(missing_endp_ids)}")
 
-    if not missing_fn_ids:
+    if not missing_endp_ids:
         print("All functions already have tests. Nothing to generate.")
         return
 
     # Generate tests for missing functions
     new_tests = []
     test_num = 1
-    functions_without_tests = [fn for fn in api["functions"] if fn["id"] in missing_fn_ids]
+    functions_without_tests = [fn for fn in api["functions"] if fn["id"] in missing_endp_ids]
 
     for fn in functions_without_tests:
         fn_name = fn["name"]
@@ -298,13 +298,13 @@ def main():
     # Add function coverage entries for new functions
     for fn in functions_without_tests:
         fn_name = fn["name"]
-        fn_tests = [t for t in new_tests if t["fnRef"] == fn["id"]]
+        fn_tests = [t for t in new_tests if t["endpRef"] == fn["id"]]
         happy_count = len([t for t in fn_tests if t["category"] == "happy-path"])
         edge_count = len([t for t in fn_tests if t["category"] == "edge-case"])
         error_count = len([t for t in fn_tests if t["category"] == "error-path"])
 
         fc = {
-            "fnRef": fn["id"],
+            "endpRef": fn["id"],
             "happyPathCount": happy_count,
             "edgeCaseCount": edge_count,
             "errorPathCount": error_count,

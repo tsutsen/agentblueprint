@@ -408,9 +408,9 @@ def load_graph(artifacts_dir: str):
                 continue
             tid = test.get("id", "")
             g.add_node(tid, "TST", test.get("name", test.get("description", tid)), "TestSpec.json", test.get("description", ""))
-            fn_ref = test.get("fnRef")
-            if isinstance(fn_ref, str) and fn_ref:
-                g.add_edge(tid, fn_ref)
+            endp_ref = test.get("endpRef")
+            if isinstance(endp_ref, str) and endp_ref:
+                g.add_edge(tid, endp_ref)
             for gl in (test.get("glossaryRefs") or []):
                 if isinstance(gl, str):
                     g.add_edge(tid, gl)

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
 lint_testspec.py — Validate a TestSpec JSON against its schema and semantic rules.
-Optionally cross-checks against ApiSpec for fnRef and errorCode resolution.
+Optionally cross-checks against ApiSpec for endpRef and errorCode resolution.
 
 What this catches beyond JSON Schema:
   - Duplicate test IDs
-  - Test ID format inconsistent with fnRef (TST-NNN-testName must ref FN-NNN-testName)
+  - Test ID format inconsistent with endpRef (TST-NNN-testName must ref FN-NNN-testName)
   - Test IDs not following TST-NNN-testName pattern
   - error-path tests missing errorCode
   - happy-path / edge-case tests missing expectedOutput
-  - fnRefs that don't exist in ApiSpec
+  - endpRefs that don't exist in ApiSpec
   - errorCodes that don't exist on the referenced function in ApiSpec
   - Functions in ApiSpec with no tests
   - Error conditions in ApiSpec with no error-path test
@@ -65,26 +65,26 @@ def has_placeholder(value, _depth: int = 0) -> bool:
     return False
 
 
-def expected_test_prefix(fn_id: str) -> str:
+def expected_test_prefix(endp_id: str) -> str:
     """ENDP-001-CreateUser → TST-001-CreateUser, or FN-001-createUser → TST-001-createUser"""
-    match = re.match(r"^(?:ENDP|FN)-(\d{3})-(.+)$", fn_id)
+    match = re.match(r"^(?:ENDP|FN)-(\d{3})-(.+)$", endp_id)
     if match:
         return f"TST-{match.group(1)}-{match.group(2)}"
-    return f"TST-{fn_id.split('-', 1)[1]}" if '-' in fn_id else f"TST-{fn_id}"
+    return f"TST-{endp_id.split('-', 1)[1]}" if '-' in endp_id else f"TST-{endp_id}"
 
 
 # ── Checks ────────────────────────────────────────────────────────────────────
 
 def _check_id_fn_consistency(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
-    """Test ID prefix must match its fnRef."""
+    """Test ID prefix must match its endpRef."""
     for t in spec.get("tests", []):
         tid = t.get("id", "")
-        fn_ref = t.get("fnRef", "")
-        if fn_ref:
-            expected = expected_test_prefix(fn_ref)
+        endp_ref = t.get("endpRef", "")
+        if endp_ref:
+            expected = expected_test_prefix(endp_ref)
             if tid and not tid.startswith(expected + "-"):
                 result.add("error", "id_fn_mismatch",
-                    f"Test '{tid}': ID prefix does not match fnRef '{fn_ref}' (expected '{expected}-NNN').",
+                    f"Test '{tid}': ID prefix does not match endpRef '{endp_ref}' (expected '{expected}-NNN').",
                     hint=f"Rename to '{expected}-NNN' to keep IDs traceable to their function.")
 
 
@@ -143,17 +143,17 @@ def _check_api_refs(spec: dict, result: LayerResult, extra_specs: dict = None) -
 
     for t in spec.get("tests", []):
         tid = t.get("id", "?")
-        fn_ref = t.get("fnRef")
+        endp_ref = t.get("endpRef")
         error_code = t.get("errorCode")
 
-        if not fn_ref or not error_code:
+        if not endp_ref or not error_code:
             continue
 
-        fn_error_codes = {e["code"] for e in fn_map.get(fn_ref, {}).get("errors", [])}
+        fn_error_codes = {e["code"] for e in fn_map.get(endp_ref, {}).get("errors", [])}
         if error_code not in fn_error_codes:
             result.add("error", "error_code_undocumented",
-                f"Test '{tid}': errorCode '{error_code}' is not documented on '{fn_ref}' in ApiSpec.",
-                hint=f"Add error code '{error_code}' to '{fn_ref}' in ApiSpec or correct the test.")
+                f"Test '{tid}': errorCode '{error_code}' is not documented on '{endp_ref}' in ApiSpec.",
+                hint=f"Add error code '{error_code}' to '{endp_ref}' in ApiSpec or correct the test.")
 
 
 def _check_api_coverage(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
@@ -163,27 +163,27 @@ def _check_api_coverage(spec: dict, result: LayerResult, extra_specs: dict = Non
         return
 
     tests = spec.get("tests", [])
-    tested_fns = {t["fnRef"] for t in tests if t.get("fnRef")}
+    tested_fns = {t["endpRef"] for t in tests if t.get("endpRef")}
     tested_errors: Dict[str, Set[str]] = {}
     for t in tests:
-        if t.get("fnRef") and t.get("errorCode"):
-            tested_errors.setdefault(t["fnRef"], set()).add(t["errorCode"])
+        if t.get("endpRef") and t.get("errorCode"):
+            tested_errors.setdefault(t["endpRef"], set()).add(t["errorCode"])
 
     for fn in api.get("functions", []):
-        fn_id = fn["id"]
+        endp_id = fn["id"]
 
-        if fn_id not in tested_fns:
+        if endp_id not in tested_fns:
             result.add("error", "function_untested",
-                f"Function '{fn_id}' has no tests.",
-                hint=f"Add at least one test with fnRef='{fn_id}'.")
+                f"Function '{endp_id}' has no tests.",
+                hint=f"Add at least one test with endpRef='{endp_id}'.")
             continue
 
         for err in fn.get("errors", []):
             code = err["code"]
-            if code not in tested_errors.get(fn_id, set()):
+            if code not in tested_errors.get(endp_id, set()):
                 result.add("error", "error_code_untested",
-                    f"Function '{fn_id}': error code '{code}' has no error-path test.",
-                    hint=f"Add a test with fnRef='{fn_id}', category='error-path', errorCode='{code}'.")
+                    f"Function '{endp_id}': error code '{code}' has no error-path test.",
+                    hint=f"Add a test with endpRef='{endp_id}', category='error-path', errorCode='{code}'.")
 
 
 def _check_function_coverage_summary(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
@@ -200,7 +200,7 @@ def _check_function_coverage_summary(spec: dict, result: LayerResult, extra_spec
     # Count actual tests per function per category
     actual: Dict[str, Dict[str, int]] = {}
     for t in tests:
-        fn = t.get("fnRef")
+        fn = t.get("endpRef")
         cat = t.get("category")
         if fn and cat:
             actual.setdefault(fn, {"happy-path": 0, "edge-case": 0, "error-path": 0})
@@ -208,7 +208,7 @@ def _check_function_coverage_summary(spec: dict, result: LayerResult, extra_spec
 
     coverage_fns = set()
     for entry in coverage_entries:
-        fn = entry["fnRef"]
+        fn = entry["endpRef"]
         coverage_fns.add(fn)
         counts = actual.get(fn, {})
 
@@ -273,7 +273,7 @@ def _check_glossary_refs(spec: dict, result: LayerResult, extra_specs: dict = No
 
     # Check outOfScope items in functionCoverage
     for fc in spec.get("functionCoverage", []):
-        fn_ref = fc.get("fnRef", "?")
+        endp_ref = fc.get("endpRef", "?")
         for i, item in enumerate(fc.get("outOfScope", [])):
             if isinstance(item, dict):
                 desc = item.get("description", "")
@@ -283,7 +283,7 @@ def _check_glossary_refs(spec: dict, result: LayerResult, extra_specs: dict = No
                 refs = []
             if desc and not refs:
                 _warn(desc, [],
-                    f"functionCoverage '{fn_ref}' outOfScope #{i+1}: '{desc[:60]}...'")
+                    f"functionCoverage '{endp_ref}' outOfScope #{i+1}: '{desc[:60]}...'")
 
 
 def _check_lifecycle(spec: dict, result: LayerResult, extra_specs: dict = None) -> None:
@@ -319,9 +319,9 @@ SEMANTIC_RULES: list[SemanticRule] = [
         "category": "duplicate_id",
         "hint": "Each test must have a unique ID.",
     },
-    # fnRefs must exist in ApiSpec
+    # endpRefs must exist in ApiSpec
     {
-        "target": "tests.fnRef",
+        "target": "tests.endpRef",
         "check": "exists",
         "inside": "api:functions.id",
         "target_label": "Test",
@@ -331,13 +331,13 @@ SEMANTIC_RULES: list[SemanticRule] = [
     },
     # Every ApiSpec function must have tests
     {
-        "target": "tests.fnRef",
+        "target": "tests.endpRef",
         "check": "covers_all",
         "should_cover_all": "api:functions",
         "covered_label": "ApiSpec function",
         "target_label": "Test",
         "category": "function_untested",
-        "hint": "Add at least one test with fnRef set to this function.",
+        "hint": "Add at least one test with endpRef set to this function.",
     },
 ]
 
@@ -437,9 +437,9 @@ def _gate_api_function_coverage(spec: dict, extra_specs: dict) -> CompletenessGa
             detail="No ApiSpec available for cross-check",
         )
     tests = spec.get("tests", [])
-    fn_ids = {fn["id"] for fn in api.get("functions", [])}
-    tested_fns = {t["fnRef"] for t in tests if t.get("fnRef")}
-    untested = fn_ids - tested_fns
+    endp_ids = {fn["id"] for fn in api.get("functions", [])}
+    tested_fns = {t["endpRef"] for t in tests if t.get("endpRef")}
+    untested = endp_ids - tested_fns
     return CompletenessGate(
         description="All ApiSpec functions have tests",
         passed=len(untested) == 0, required_at="review",
@@ -462,8 +462,8 @@ def _gate_coverage_completeness(spec: dict, extra_specs: dict) -> CompletenessGa
     """functionCoverage covers all tested functions."""
     tests = spec.get("tests", [])
     coverage = spec.get("functionCoverage", [])
-    tested_fns = {t["fnRef"] for t in tests if t.get("fnRef")}
-    coverage_fns = {c["fnRef"] for c in coverage}
+    tested_fns = {t["endpRef"] for t in tests if t.get("endpRef")}
+    coverage_fns = {c["endpRef"] for c in coverage}
     missing_cov = tested_fns - coverage_fns
     return CompletenessGate(
         description="functionCoverage covers all tested functions",
