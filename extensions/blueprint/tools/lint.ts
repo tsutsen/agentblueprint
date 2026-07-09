@@ -172,10 +172,14 @@ export function registerLint(pi: ExtensionAPI, extDir: string) {
           },
         };
       } catch (err: any) {
-        const message = err.stderr || err.stdout || err.message;
+        const msg = err.stderr || err.stdout || err.message;
+        // Truncate to avoid flooding conversation with huge JSON
+        const truncated = typeof msg === 'string' && msg.length > 500
+          ? msg.substring(0, 500) + '\n...(truncated)'
+          : msg;
         return {
-          content: [{ type: "text", text: `Lint failed:\n${message}` }],
-          details: { verified: false },
+          content: [{ type: "text", text: `Lint failed:\n${truncated}` }],
+          details: { verified: false, _fullError: truncated },
           isError: true,
         };
       }
