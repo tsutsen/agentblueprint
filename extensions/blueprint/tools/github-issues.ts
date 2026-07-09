@@ -869,9 +869,9 @@ function createGhListSubIssues(): Tool {
       },
       required: ["epId", "issueId"],
     },
-    execute: async ({ epId, issueId }: { epId: string; issueId: string }) => {
+    execute: async ({ epId, issueId }: { epId?: string; issueId?: string }) => {
       if (!epId || !issueId) {
-        return errorResponse("epId and issueId are required (e.g. EP-001-xxx, IS-001-xxx)");
+        return errorResponse(`epId and issueId are required. Received: epId=${JSON.stringify(epId)}, issueId=${JSON.stringify(issueId)}`);
       }
       const { readdirSync, readFileSync, existsSync } = require("fs");
       const { resolve } = require("path");
