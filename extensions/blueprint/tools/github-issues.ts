@@ -106,6 +106,11 @@ function errorResponse(msg: string): { content: Array<{ type: string; text: stri
   return { content: [{ type: "text", text: msg }], isError: true };
 }
 
+/** Wrap a success response with a content field for pi renderer. */
+function successResponse(msg: string, rest: Record<string, unknown>) {
+  return { content: [{ type: "text", text: msg }], ...rest };
+}
+
 /** Run a gh CLI command and return stdout. */
 function runGh(args: string[]): { stdout: string; stderr: string; code: number } {
   const { execSync } = require("child_process");
@@ -604,11 +609,7 @@ function createGhUpdateIssue(): Tool {
         return { content: [{ type: "text", text: "No updates specified. Provide status, labels, or comment." }], isError: true };
       }
 
-      return {
-        success: true,
-        issueNumber,
-        updates,
-        message: `Updated issue #${issueNumber}: ${updates.join(", ")}`,
+      return successResponse(`Updated issue #${issueNumber}: ${updates.join(", ")}`, { success: true, issueNumber, updates, message: `Updated issue #${issueNumber}: ${updates.join(", ")}` }),
       };
     },
   };
