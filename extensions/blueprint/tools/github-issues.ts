@@ -572,7 +572,9 @@ function createGhUpdateIssue(): Tool {
     },
     execute: async ({ issueNumber, status, labels, comment }: { issueNumber: number; status?: string; labels?: string[]; comment?: string }) => {
       const repo = detectRepo();
-      if (!repo) return { error: "Could not detect GitHub repo." };
+      if (!repo) {
+        return { content: [{ type: "text", text: "Could not detect GitHub repo." }], isError: true };
+      }
 
       const updates: string[] = [];
 
@@ -594,7 +596,7 @@ function createGhUpdateIssue(): Tool {
       }
 
       if (!updates.length) {
-        return { error: "No updates specified. Provide status, labels, or comment." };
+        return { content: [{ type: "text", text: "No updates specified. Provide status, labels, or comment." }], isError: true };
       }
 
       return {
