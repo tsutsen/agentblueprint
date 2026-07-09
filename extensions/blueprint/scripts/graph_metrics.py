@@ -356,6 +356,9 @@ def load_graph(artifacts_dir: str):
                 continue
             cid = con.get("id", "")
             g.add_node(cid, "CON", con.get("name", con.get("description", cid)), "ArchitectureSpec.json", con.get("description", ""))
+            for rr in (con.get("reqRefs") or []):
+                if isinstance(rr, str):
+                    g.add_edge(cid, rr)
             for nr in (con.get("nfrRefs") or []):
                 if isinstance(nr, str):
                     g.add_edge(cid, nr)
