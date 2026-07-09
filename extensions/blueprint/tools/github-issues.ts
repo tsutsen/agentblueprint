@@ -343,6 +343,9 @@ function createGhCreateSubIssue(): Tool {
       const { resolve } = require("path");
       const { execSync } = require("child_process");
 
+      if (!data || !data.id) {
+        return { error: "data.id is required (e.g. SI-001-createLoginSchema)" };
+      }
       const siId = data.id as string;
       const cwd = execSync("git rev-parse --show-toplevel 2>/dev/null || pwd", { encoding: "utf-8" }).trim();
 
