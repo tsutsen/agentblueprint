@@ -144,17 +144,6 @@ export function registerLint(pi: ExtensionAPI, extDir: string) {
           message = `Lint clean — ${completeness.length} spec(s) checked.`;
         }
 
-        // Truncate details to avoid flooding the conversation
-        const summaryErrors = blockingErrors.slice(0, 3).map(e => ({
-          category: e.category, message: e.message, hint: e.hint,
-        }));
-        const summaryWarnings = allWarnings.slice(0, 3).map(e => ({
-          category: e.category, message: e.message, hint: e.hint,
-        }));
-        const summaryCompleteness = completeness.slice(0, 3).map(c => ({
-          name: c.name, readyForReview: c.readyForReview, readyForConfirm: c.readyForConfirm,
-        }));
-
         return {
           content: [{ type: "text", text: message }],
           details: {
@@ -162,13 +151,9 @@ export function registerLint(pi: ExtensionAPI, extDir: string) {
             clean: result.clean,
             totalErrors: result.totalErrors,
             totalWarnings: result.totalWarnings,
-            blockingErrors: summaryErrors,
-            warnings: summaryWarnings,
-            completeness: summaryCompleteness,
-            // Full counts for reference
-            _blockingErrorsTotal: blockingErrors.length,
-            _warningsTotal: allWarnings.length,
-            _completenessTotal: completeness.length,
+            blockingErrors,
+            warnings: allWarnings,
+            completeness,
           },
         };
       } catch (err: any) {
