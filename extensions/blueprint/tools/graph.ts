@@ -48,7 +48,11 @@ export function registerGraphTools(pi: ExtensionAPI, extDir: string) {
       "Run full architecture graph metrics analysis. Builds a unified graph from all " +
       "artifact JSON files and computes 10 quality metrics: health index, traceability, " +
       "orphan detection, blast radius, risk scores, component load, interface pressure, " +
-      "test density, epic coherence, and layer violations. Returns a detailed report.",
+      "test density, epic coherence, and layer violations. " +
+      "Use alongside lint: lint checks structural validity and completeness gates, " +
+      "while graph-metrics measures architectural health and cross-spec connectivity. " +
+      "Returns a concise summary; full report available in details.fullReport.",
+    parameters: Type.Object({
     parameters: Type.Object({
       artifacts: Type.Optional(Type.String({
         description: "Path to artifacts directory. Default: artifacts",
