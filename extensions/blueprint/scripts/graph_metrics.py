@@ -55,7 +55,7 @@ def node_type(id_str: str) -> str:
         return "FLW"
     if re.match(r'^CON-\d{3}-', id_str):
         return "CON"
-    if re.match(r'^FN-', id_str):
+    if re.match(r'^FN-', id_str) or re.match(r'^ENDP-', id_str):
         return "func"
     if re.match(r'^TST-', id_str):
         return "TST"
