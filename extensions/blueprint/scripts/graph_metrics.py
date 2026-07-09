@@ -364,9 +364,12 @@ def load_graph(artifacts_dir: str):
             for nr in (con.get("nfrRefs") or []):
                 if isinstance(nr, str):
                     g.add_edge(cid, nr)
-            for fr in (con.get("fnRefs") or []):
+            for fr in (con.get("funcRefs") or []):
                 if isinstance(fr, str):
                     g.add_edge(cid, fr)
+            for er in (con.get("endpRefs") or []):
+                if isinstance(er, str):
+                    g.add_edge(cid, er)
             for gl in (con.get("glossaryRefs") or []):
                 if isinstance(gl, str):
                     g.add_edge(cid, gl)

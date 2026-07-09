@@ -533,12 +533,19 @@
             },
             "description": "Functional requirement IDs."
           },
-          "fnRefs": {
+          "funcRefs": {
             "type": "array",
             "items": {
               "$ref": "#/definitions/funcId"
             },
-            "description": "Function/endpoint IDs."
+            "description": "DataSpec function IDs."
+          },
+          "endpRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/endpId"
+            },
+            "description": "ApiSpec endpoint IDs."
           }
         },
         "required": [
