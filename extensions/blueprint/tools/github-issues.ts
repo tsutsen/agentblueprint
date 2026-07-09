@@ -101,6 +101,11 @@ function buildLabels(kind: "epic" | "issue" | "sub-issue", data: Record<string, 
   return labels;
 }
 
+/** Return error response in pi-compatible format. */
+function errorResponse(msg: string): { content: Array<{ type: string; text: string }>; isError: true } {
+  return { content: [{ type: "text", text: msg }], isError: true };
+}
+
 /** Run a gh CLI command and return stdout. */
 function runGh(args: string[]): { stdout: string; stderr: string; code: number } {
   const { execSync } = require("child_process");
@@ -153,18 +158,18 @@ function createGhCreateEpic(): Tool {
 
       const absPath = resolve(jsonPath);
       if (!existsSync(absPath)) {
-        return { error: `Epic JSON not found: ${absPath}` };
+        return errorResponse(`Epic JSON not found: ${absPath}`);
       }
 
       const data = JSON.parse(readFileSync(absPath, "utf-8"));
       const repo = detectRepo();
       if (!repo) {
-        return { error: "Could not detect GitHub repo from git remote. Run 'git remote -v' to verify." };
+        return errorResponse("Could not detect GitHub repo from git remote. Run 'git remote -v' to verify.");
       }
 
       const token = getToken();
       if (!token) {
-        return { error: "No gh auth token. Run 'gh auth login' first." };
+        return errorResponse("No gh auth token. Run 'gh auth login' first.");
       }
 
       const id = data.id as string;
@@ -176,7 +181,7 @@ function createGhCreateEpic(): Tool {
         // Branch may already exist — try checkout
         const switchResult = runGit(`checkout ${branch}`);
         if (switchResult.code !== 0) {
-          return { error: `Failed to create/checkout branch '${branch}': ${switchResult.stderr}` };
+          return errorResponse(`Failed to create/checkout branch '${branch}': ${switchResult.stderr}`);
         }
       }
 
@@ -193,7 +198,7 @@ function createGhCreateEpic(): Tool {
       ]);
 
       if (issueResult.code !== 0) {
-        return { error: `Failed to create GitHub Issue: ${issueResult.stderr}` };
+        return errorResponse(`Failed to create GitHub Issue: ${issueResult.stderr}`);
       }
 
       const issueJson = JSON.parse(issueResult.stdout);
@@ -241,15 +246,15 @@ function createGhCreateIssue(): Tool {
 
       const absPath = resolve(jsonPath);
       if (!existsSync(absPath)) {
-        return { error: `Issue JSON not found: ${absPath}` };
+        return errorResponse(`Issue JSON not found: ${absPath}`);
       }
 
       const data = JSON.parse(readFileSync(absPath, "utf-8"));
       const repo = detectRepo();
-      if (!repo) return { error: "Could not detect GitHub repo." };
+      if (!repo) return errorResponse("Could not detect GitHub repo.");
 
       const token = getToken();
-      if (!token) return { error: "No gh auth token." };
+      if (!token) return errorResponse("No gh auth token.");
 
       const id = data.id as string;
       const branch = (data.githubBranch as string) || id;
@@ -268,14 +273,14 @@ function createGhCreateIssue(): Tool {
       // Create branch from EP branch
       const fetchResult = runGit("fetch origin");
       if (fetchResult.code !== 0) {
-        return { error: `Failed to fetch: ${fetchResult.stderr}` };
+        return errorResponse(`Failed to fetch: ${fetchResult.stderr}`);
       }
 
       const branchResult = runGit(`checkout -b ${branch} origin/${epBranch || "main"}`);
       if (branchResult.code !== 0) {
         const switchResult = runGit(`checkout ${branch}`);
         if (switchResult.code !== 0) {
-          return { error: `Failed to create/checkout branch '${branch}': ${switchResult.stderr}` };
+          return errorResponse(`Failed to create/checkout branch '${branch}': ${switchResult.stderr}`);
         }
       }
 
@@ -292,7 +297,7 @@ function createGhCreateIssue(): Tool {
       ]);
 
       if (issueResult.code !== 0) {
-        return { error: `Failed to create GitHub Issue: ${issueResult.stderr}` };
+        return errorResponse(`Failed to create GitHub Issue: ${issueResult.stderr}`);
       }
 
       const issueJson = JSON.parse(issueResult.stdout);
@@ -344,7 +349,7 @@ function createGhCreateSubIssue(): Tool {
       const { execSync } = require("child_process");
 
       if (!data || !data.id) {
-        return { error: "data.id is required (e.g. SI-001-createLoginSchema)" };
+        return errorResponse("data.id is required (e.g. SI-001-createLoginSchema)");
       }
       const siId = data.id as string;
       const cwd = execSync("git rev-parse --show-toplevel 2>/dev/null || pwd", { encoding: "utf-8" }).trim();
@@ -438,7 +443,7 @@ function createGhCreatePr(): Tool {
       const { resolve } = require("path");
 
       const repo = detectRepo();
-      if (!repo) return { error: "Could not detect GitHub repo." };
+      if (!repo) return errorResponse("Could not detect GitHub repo.");
 
       const branch = siId; // SI branch name
       const base = targetBranch || epBranch || "main";
@@ -464,7 +469,7 @@ function createGhCreatePr(): Tool {
       ]);
 
       if (prResult.code !== 0) {
-        return { error: `Failed to create PR: ${prResult.stderr}` };
+        return errorResponse(`Failed to create PR: ${prResult.stderr}`);
       }
 
       // Extract PR number from output
@@ -514,7 +519,7 @@ function createGhMergePr(): Tool {
       const { resolve } = require("path");
 
       const repo = detectRepo();
-      if (!repo) return { error: "Could not detect GitHub repo." };
+      if (!repo) return errorResponse("Could not detect GitHub repo.");
 
       const mergeResult = runGh([
         "pr", "merge", "--merge", "--delete-branch",
@@ -523,7 +528,7 @@ function createGhMergePr(): Tool {
       ]);
 
       if (mergeResult.code !== 0) {
-        return { error: `Failed to merge PR #${prNumber}: ${mergeResult.stderr}` };
+        return errorResponse(`Failed to merge PR #${prNumber}: ${mergeResult.stderr}`);
       }
 
       // Update local JSON
@@ -625,11 +630,11 @@ function createGhGetIssue(): Tool {
     },
     execute: async ({ issueNumber }: { issueNumber: number }) => {
       const repo = detectRepo();
-      if (!repo) return { error: "Could not detect GitHub repo." };
+      if (!repo) return errorResponse("Could not detect GitHub repo.");
 
       const result = runGh(["api", "repos", repo, "issues", String(issueNumber)]);
       if (result.code !== 0) {
-        return { error: `Failed to fetch issue #${issueNumber}: ${result.stderr}` };
+        return errorResponse(`Failed to fetch issue #${issueNumber}: ${result.stderr}`);
       }
 
       return {
@@ -661,7 +666,7 @@ function createGhListIssues(): Tool {
     },
     execute: async ({ labels, state }: { labels?: string[]; state?: string }) => {
       const repo = detectRepo();
-      if (!repo) return { error: "Could not detect GitHub repo." };
+      if (!repo) return errorResponse("Could not detect GitHub repo.");
 
       const args: string[] = ["api", "repos", repo, "issues"];
       // gh api doesn't support --state/--label directly; use -F for query params
@@ -670,7 +675,7 @@ function createGhListIssues(): Tool {
 
       const result = runGh(args);
       if (result.code !== 0) {
-        return { error: `Failed to list issues: ${result.stderr}` };
+        return errorResponse(`Failed to list issues: ${result.stderr}`);
       }
 
       const issues = JSON.parse(result.stdout);
@@ -703,12 +708,12 @@ function createGhCleanupBranches(): Tool {
     },
     execute: async ({ dryRun }: { dryRun?: boolean }) => {
       const repo = detectRepo();
-      if (!repo) return { error: "Could not detect GitHub repo." };
+      if (!repo) return errorResponse("Could not detect GitHub repo.");
 
       // Get all remote branches
       const branchResult = runGh(["api", "repos", repo, "branches"]);
       if (branchResult.code !== 0) {
-        return { error: `Failed to list branches: ${branchResult.stderr}` };
+        return errorResponse(`Failed to list branches: ${branchResult.stderr}`);
       }
 
       const branches = JSON.parse(branchResult.stdout);
@@ -717,7 +722,7 @@ function createGhCleanupBranches(): Tool {
       // Get all active issue labels to identify non-orphaned branches
       const issueResult = runGh(["api", "repos", repo, "issues", "-F", "state=open"]);
       if (issueResult.code !== 0) {
-        return { error: `Failed to list issues: ${issueResult.stderr}` };
+        return errorResponse(`Failed to list issues: ${issueResult.stderr}`);
       }
 
       const openIssues = JSON.parse(issueResult.stdout);
@@ -851,7 +856,7 @@ function createGhUpdateSubIssue(): Tool {
 
       const absPath = resolve(jsonPath);
       if (!existsSync(absPath)) {
-        return { error: `Sub-issue JSON not found: ${absPath}` };
+        return errorResponse(`Sub-issue JSON not found: ${absPath}`);
       }
 
       const data = JSON.parse(readFileSync(absPath, "utf-8"));
@@ -914,7 +919,7 @@ function createGhListSubIssues(): Tool {
       const issueDir = resolve(cwd, `tasks/${epId}/${issueId}`);
 
       if (!existsSync(issueDir)) {
-        return { error: `Issue directory not found: ${issueDir}` };
+        return errorResponse(`Issue directory not found: ${issueDir}`);
       }
 
       const subIssues: any[] = [];
