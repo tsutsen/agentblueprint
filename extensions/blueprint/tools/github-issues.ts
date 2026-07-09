@@ -668,12 +668,14 @@ function createGhListIssues(): Tool {
       const repo = detectRepo();
       if (!repo) return errorResponse("Could not detect GitHub repo.");
 
-      const args: string[] = ["api", "repos", repo, "issues"];
-      // gh api doesn't support --state/--label directly; use -F for query params
-      if (state) args.push("-F", `state=${state}`);
-      if (labels && labels.length) args.push("-F", `labels=${labels.join(",")}`);
+      // Build URL with query params: gh api repos/.../issues?state=open&labels=bug
+      let url = `repos/${repo}/issues`;
+      const params: string[] = [];
+      if (state) params.push(`state=${state}`);
+      if (labels && labels.length) params.push(`labels=${labels.join(",")}`);
+      if (params.length) url += `?${params.join("&")}`;
 
-      const result = runGh(args);
+      const result = runGh(["api", url]);
       if (result.code !== 0) {
         return errorResponse(`Failed to list issues: ${result.stderr}`);
       }
@@ -720,7 +722,7 @@ function createGhCleanupBranches(): Tool {
       const allBranchNames = new Set(branches.map((b: any) => b.name));
 
       // Get all active issue labels to identify non-orphaned branches
-      const issueResult = runGh(["api", "repos", repo, "issues", "-F", "state=open"]);
+      const issueResult = runGh(["api", `repos/${repo}/issues?state=open`]);
       if (issueResult.code !== 0) {
         return errorResponse(`Failed to list issues: ${issueResult.stderr}`);
       }
