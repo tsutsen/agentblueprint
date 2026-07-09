@@ -15,7 +15,7 @@ export function registerLint(pi: ExtensionAPI, extDir: string) {
       'mode: "assess" (default) — runs linter, interprets results, returns "block" or "proceed". ' +
       'mode: "raw" — returns raw JSON report. ' +
       "Use alongside graph-metrics: lint validates structure/completeness, " +
-      "graph-metrics measures architectural health and traceability."
+      "graph-metrics measures architectural health and traceability.",
     parameters: Type.Object({
       artifacts: Type.Optional(Type.Array(Type.String(), {
         description: "Optional filter: only lint these artifact types. " +

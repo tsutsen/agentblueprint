@@ -53,7 +53,6 @@ export function registerGraphTools(pi: ExtensionAPI, extDir: string) {
       "while graph-metrics measures architectural health and cross-spec connectivity. " +
       "Returns a concise summary; full report available in details.fullReport.",
     parameters: Type.Object({
-    parameters: Type.Object({
       artifacts: Type.Optional(Type.String({
         description: "Path to artifacts directory. Default: artifacts",
       })),
